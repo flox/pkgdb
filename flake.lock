@@ -1,0 +1,110 @@
+{
+  "nodes": {
+    "floco": {
+      "inputs": {
+        "nixpkgs": "nixpkgs"
+      },
+      "locked": {
+        "lastModified": 1690039563,
+        "narHash": "sha256-Se9D7FX6gHyooTmHVZoeRrTZHa8pbAMhzla/Y89LRas=",
+        "owner": "aakropotkin",
+        "repo": "floco",
+        "rev": "3918e8df2e941df5f84500170bb34c9cd7329a85",
+        "type": "github"
+      },
+      "original": {
+        "owner": "aakropotkin",
+        "repo": "floco",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1689413807,
+        "narHash": "sha256-exuzOvOhGAEKWQKwDuZAL4N8a1I837hH5eocaTcIbLc=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "46ed466081b9cad1125b11f11a2af5cc40b942c7",
+        "type": "github"
+      },
+      "original": {
+        "id": "nixpkgs",
+        "type": "indirect"
+      }
+    },
+    "nixpkgs_2": {
+      "locked": {
+        "lastModified": 1690735428,
+        "narHash": "sha256-CRW6tutgaLhPYGE0UtwI1om4emRNEEGf6Ksen9MyOEQ=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "5fab052af457e2607995cf0ca850d1412d0cc752",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_3": {
+      "locked": {
+        "lastModified": 1690729170,
+        "narHash": "sha256-uWHLUuBVUUJDx2zQNxAnhrLI/w93Pd5MXi1TovL0Nhk=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "195110917ecbeebf27946990cf0a260b99178ded",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "floco": "floco",
+        "nixpkgs": "nixpkgs_2",
+        "sql-builder": "sql-builder",
+        "sqlite3pp": "sqlite3pp"
+      }
+    },
+    "sql-builder": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1595725605,
+        "narHash": "sha256-wSZr/HwDBz1rzmfSh8++dmfGv2m+tu43NsDiYdkZGhI=",
+        "owner": "six-ddc",
+        "repo": "sql-builder",
+        "rev": "efd9bea42162a0e0ab06e7d45c537ac6a02cc10d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "six-ddc",
+        "repo": "sql-builder",
+        "type": "github"
+      }
+    },
+    "sqlite3pp": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_3"
+      },
+      "locked": {
+        "lastModified": 1690735629,
+        "narHash": "sha256-f7ETvNoeNheVMLKEZUr2FQDYt3zT0vpz/2FMxL33Mpg=",
+        "owner": "aakropotkin",
+        "repo": "sqlite3pp",
+        "rev": "a910baaf5bafdd8322a696aa3333765bb246a0b1",
+        "type": "github"
+      },
+      "original": {
+        "owner": "aakropotkin",
+        "repo": "sqlite3pp",
+        "type": "github"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
