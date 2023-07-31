@@ -4,6 +4,7 @@
  *
  * -------------------------------------------------------------------------- */
 
+#include "flox/exceptions.hh"
 #include "flox/flake-package.hh"
 #include "semver.hh"
 
@@ -11,7 +12,6 @@
 /* -------------------------------------------------------------------------- */
 
 namespace flox {
-  namespace resolve {
 
 /* -------------------------------------------------------------------------- */
 
@@ -20,7 +20,7 @@ FlakePackage::init( bool checkDrv )
 {
   if ( this->_path.size() < 3 )
     {
-      throw ResolverException(
+      throw FloxException(
         "Package::init(): Package attribute paths must have at least 3 "
         "elements - the path '" + this->_cursor->getAttrPathStr() +
         "' is too short."
@@ -29,7 +29,7 @@ FlakePackage::init( bool checkDrv )
 
   if ( checkDrv && ( ! this->_cursor->isDerivation() ) )
     {
-      throw ResolverException(
+      throw FloxException(
         "Package::init(): Packages must be derivations but the attrset at '"
         + this->_cursor->getAttrPathStr() +
         "' does not set `.type = \"derivation\"'."
@@ -51,7 +51,7 @@ FlakePackage::init( bool checkDrv )
     }
   else
     {
-      throw ResolverException(
+      throw FloxException(
         "FlakePackage::init(): Invalid subtree name '" + this->_pathS[0] +
         "' at path '" + this->_cursor->getAttrPathStr() + "'."
       );
@@ -95,7 +95,7 @@ FlakePackage::init( bool checkDrv )
 
 /* -------------------------------------------------------------------------- */
 
-  std::vector<std::string>
+  std::vector<std::string_view>
 FlakePackage::getOutputsToInstall() const
 {
   if ( this->_hasMetaAttr )
@@ -107,10 +107,10 @@ FlakePackage::getOutputsToInstall() const
           return m->getListOfStrings();
         }
     }
-  std::vector<std::string> rsl;
+  std::vector<std::string_view> rsl;
   for ( std::string o : this->getOutputs() )
     {
-      rsl.push_back( o );
+      rsl.emplace_back( o );
       if ( o == "out" ) { break; }
     }
   return rsl;
@@ -156,7 +156,6 @@ FlakePackage::isUnfree() const
 
 /* -------------------------------------------------------------------------- */
 
-  }  /* End Namespace `flox::resolve' */
 }  /* End Namespace `flox' */
 
 

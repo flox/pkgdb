@@ -9,18 +9,9 @@
 
 #pragma once
 
-#include <cstdio>
-#include <functional>
-#include <optional>
-#include <vector>
-#include <map>
-#include <algorithm>
-#include <nix/eval-inline.hh>
-#include <nix/eval.hh>
-#include <nix/eval-cache.hh>
-#include <nix/flake/flake.hh>
-#include <nix/shared.hh>
-#include <nix/store-api.hh>
+#include <functional>  // For `std::hash'
+#include <string>      // For `std::string' and `std::string_view'
+#include <list>        // For `std::list'
 
 
 /* -------------------------------------------------------------------------- */
@@ -75,7 +66,6 @@ operator==( const std::list<std::string_view> & lhs
 /* -------------------------------------------------------------------------- */
 
 namespace flox {
-  namespace resolve {
 
 /* -------------------------------------------------------------------------- */
 
@@ -125,7 +115,6 @@ bool isSubstitutable( std::string_view storePath );
 
 /* -------------------------------------------------------------------------- */
 
-  }  /* End namespace `flox::resolve' */
 }    /* End namespace `flox' */
 
 

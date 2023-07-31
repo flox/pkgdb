@@ -4,10 +4,6 @@
  *
  * @brief Interfaces for operating on a SQLite3 package set database.
  *
- * TODO: Description field
- * TODO: Optimize filtering by `parent' by reading `pathId's into a
- *       `std::map<long, std::vector<std::string>>'.
- *
  *
  * -------------------------------------------------------------------------- */
 
@@ -20,7 +16,7 @@
 #include <nix/eval-cache.hh>
 #include <sqlite3pp.hh>
 
-#include "flox/raw-package.hh"
+#include "flox/exceptions.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -43,6 +39,13 @@ using AttrPathV   = std::vector<std::string_view>;
 using AttrPath    = std::vector<std::string>;
 using Cursor      = nix::ref<nix::eval_cache::AttrCursor>;
 using row_id      = uint64_t;
+
+
+/* -------------------------------------------------------------------------- */
+
+struct PkgDbException : public FloxException {
+  PkgDbException( std::string_view msg ) : FloxException( msg ) {}
+};  /* End struct `PkgDbException' */
 
 
 /* -------------------------------------------------------------------------- */
@@ -77,7 +80,6 @@ class PkgDb {
 
 
   public:
-
           SQLiteDb    db;           /**< SQLite3 database handle.         */
     const Fingerprint fingerprint;  /**< Unique hash of associated flake. */
 
@@ -95,11 +97,19 @@ class PkgDb {
   public:
     PkgDb() : fingerprint( nix::htSHA256 ) {}
 
-    /** Opens a DB associated with a locked flake. */
-    PkgDb( const nix::flake::LockedFlake & flake );
-
     /** Opens a DB directly by its fingerprint hash. */
-    PkgDb( const Fingerprint & fingerprint );
+    PkgDb( const Fingerprint & fingerprint )
+      : fingerprint( fingerprint )
+      , db( getPkgDbName( this->fingerprint ) )
+    {
+      this->initTables();
+      this->loadLockedRef();
+    }
+
+    /** Opens a DB associated with a locked flake. */
+    PkgDb( const nix::flake::LockedFlake & flake )
+      : PkgDb( flake.getFingerprint() )
+    {}
 
 
 /* -------------------------------------------------------------------------- */

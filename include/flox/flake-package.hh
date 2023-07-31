@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
-#include <variant>
 #include <vector>
 #include <optional>
 #include <functional>
@@ -16,19 +16,21 @@
 #include <nix/fetchers.hh>
 #include <nix/eval-cache.hh>
 #include <nix/names.hh>
-#include <unordered_map>
-#include <unordered_set>
+
 #include "flox/package.hh"
 
 
 /* -------------------------------------------------------------------------- */
 
 namespace flox {
-  namespace resolve {
 
 /* -------------------------------------------------------------------------- */
 
 class FlakePackage : public Package {
+
+  public:
+    using Cursor      = nix::ref<nix::eval_cache::AttrCursor>;
+    using MaybeCursor = std::shared_ptr<nix::eval_cache::AttrCursor>;
 
   private:
     Cursor                   _cursor;
@@ -84,26 +86,25 @@ class FlakePackage : public Package {
 
 /* -------------------------------------------------------------------------- */
 
-    std::vector<std::string> getOutputsToInstall() const override;
-    std::optional<bool>      isBroken()            const override;
-    std::optional<bool>      isUnfree()            const override;
+    std::vector<std::string_view> getOutputsToInstall() const override;
+    std::optional<bool>           isBroken()            const override;
+    std::optional<bool>           isUnfree()            const override;
 
     std::vector<nix::Symbol> getPath() const { return this->_path; }
 
-      std::vector<std::string>
+      std::vector<std::string_view>
     getPathStrs() const override
     {
-      return this->_pathS;
+      std::vector<std::string_view> path;
+      for ( const auto & p : this->_pathS ) { path.emplace_back( p ); }
+      return path;
     }
 
-    std::string  getPname()       const override { return this->_pname;    }
-    Cursor       getCursor()      const          { return this->_cursor;   }
-    subtree_type getSubtreeType() const override { return this->_subtree;  }
-    std::string  getFullName()    const override { return this->_fullName; }
+    std::string_view getFullName() const override { return this->_fullName; }
+    std::string_view getPname()    const override { return this->_pname;    }
 
-    bool hasMetaAttr()    const override { return this->_hasMetaAttr;    }
-    bool hasPnameAttr()   const override { return this->_hasPnameAttr;   }
-    bool hasVersionAttr() const override { return this->_hasVersionAttr; }
+    Cursor       getCursor()      const          { return this->_cursor;  }
+    subtree_type getSubtreeType() const override { return this->_subtree; }
 
       nix::DrvName
     getParsedDrvName() const override
@@ -111,27 +112,27 @@ class FlakePackage : public Package {
       return nix::DrvName( this->_fullName );
     }
 
-      std::optional<std::string>
+      std::optional<std::string_view>
     getVersion() const override
     {
       if ( this->_version.empty() ) { return std::nullopt;   }
       else                          { return this->_version; }
     }
 
-      std::optional<std::string>
+      std::optional<std::string_view>
     getSemver() const override
     {
       return this->_semver;
     }
 
-      std::optional<std::string>
+      std::optional<std::string_view>
     getStability() const override
     {
       if ( this->_subtree != ST_CATALOG ) { return std::nullopt; }
       return this->_pathS[2];
     }
 
-      std::optional<std::string>
+      std::optional<std::string_view>
     getLicense() const override
     {
       if ( ! this->_hasMetaAttr ) { return std::nullopt; }
@@ -142,12 +143,22 @@ class FlakePackage : public Package {
       catch( ... ) { return std::nullopt; }
     }
 
-      std::vector<std::string>
+      std::vector<std::string_view>
     getOutputs() const override
     {
       MaybeCursor o = this->_cursor->maybeGetAttr( "outputs" );
       if ( o == nullptr ) { return { "out" }; }
       else { return o->getListOfStrings(); }
+    }
+
+      std::optional<std::string_view>
+    getDescription() const override
+    {
+      if ( ! this->_hasMetaAttr ) { return std::nullopt; }
+      MaybeCursor l =
+        this->_cursor->getAttr( "meta" )->maybeGetAttr( "description" );
+      if ( l == nullptr ) { return std::nullopt; }
+      try { return l->getString(); } catch( ... ) { return std::nullopt; }
     }
 
 
@@ -158,7 +169,6 @@ class FlakePackage : public Package {
 
 /* -------------------------------------------------------------------------- */
 
-  }  /* End Namespace `flox::resolve' */
 }  /* End Namespace `flox' */
 
 

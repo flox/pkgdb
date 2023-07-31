@@ -22,14 +22,23 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "flox/types.hh"
+#include "flox/exceptions.hh"
 #include "semver.hh"
 
 
 /* -------------------------------------------------------------------------- */
 
 namespace flox {
-  namespace resolve {
+
+/* -------------------------------------------------------------------------- */
+
+enum subtree_type {
+  ST_NONE     = 0
+, ST_LEGACY   = 1
+, ST_PACKAGES = 2
+, ST_CATALOG  = 3
+};
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -37,40 +46,34 @@ namespace flox {
  * Abstract representation of a "package", analogous to a Nix `derivation'.
  * This abstraction provides a common base for various backends that store,
  * evaluate, and communicate package definitions.
- *
- * Notable Implementation of this interface include:
- * - @a RawPackage    : Comprised of raw C++ values, often used for testing.
- * - @a CachedPackage : A package definition stored in a SQL database.
- * - @a FlakePackage  : A package definition evaluated from a Nix `flake'.
  */
 class Package {
   public:
-    virtual std::vector<std::string>    getPathStrs()         const = 0;
-    virtual std::string                 getFullName()         const = 0;
-    virtual std::string                 getPname()            const = 0;
-    virtual std::optional<std::string>  getVersion()          const = 0;
-    virtual std::optional<std::string>  getLicense()          const = 0;
-    virtual std::vector<std::string>    getOutputs()          const = 0;
-    virtual std::vector<std::string>    getOutputsToInstall() const = 0;
-    virtual std::optional<bool>         isBroken()            const = 0;
-    virtual std::optional<bool>         isUnfree()            const = 0;
-    virtual bool                        hasMetaAttr()         const = 0;
-    virtual bool                        hasPnameAttr()        const = 0;
-    virtual bool                        hasVersionAttr()      const = 0;
+    virtual std::vector<std::string_view>    getPathStrs()         const = 0;
+    virtual std::string_view                 getFullName()         const = 0;
+    virtual std::string_view                 getPname()            const = 0;
+    virtual std::optional<std::string_view>  getVersion()          const = 0;
+    virtual std::optional<std::string_view>  getLicense()          const = 0;
+    virtual std::vector<std::string_view>    getOutputs()          const = 0;
+    virtual std::vector<std::string_view>    getOutputsToInstall() const = 0;
+    virtual std::optional<bool>              isBroken()            const = 0;
+    virtual std::optional<bool>              isUnfree()            const = 0;
+    virtual std::optional<std::string_view>  getDescription()      const = 0;
 
       virtual subtree_type
     getSubtreeType() const
     {
-      std::vector<std::string> pathS = this->getPathStrs();
+      std::vector<std::string_view> pathS = this->getPathStrs();
       if ( pathS[0] == "legacyPackages" ) { return ST_LEGACY;   }
       if ( pathS[0] == "packages" )       { return ST_PACKAGES; }
-      if ( pathS[0] == "catalog" )        { return ST_PACKAGES; }
-      throw ResolverException(
-        "Package::getSubtreeType(): Unrecognized subtree '" + pathS[0] + "'."
-      );
+      if ( pathS[0] == "catalog" )        { return ST_CATALOG;  }
+      std::string msg( "Package::getSubtreeType(): Unrecognized subtree '" );
+      msg += pathS[0];
+      msg += "'.";
+      throw FloxException( msg );
     }
 
-      virtual std::optional<std::string>
+      virtual std::optional<std::string_view>
     getStability() const
     {
       if ( this->getSubtreeType() != ST_CATALOG ) { return std::nullopt; }
@@ -83,10 +86,10 @@ class Package {
       return nix::DrvName( this->getFullName() );
     }
 
-      virtual std::string
+      virtual std::string_view
     getPkgAttrName() const
     {
-      std::vector<std::string> pathS = this->getPathStrs();
+      std::vector<std::string_view> pathS = this->getPathStrs();
       if ( this->getSubtreeType() == ST_CATALOG )
         {
           return pathS[pathS.size() - 2];
@@ -94,36 +97,38 @@ class Package {
       return pathS[pathS.size() - 1];
     }
 
-      virtual std::optional<std::string>
+      virtual std::optional<std::string_view>
     getSemver() const
     {
-      std::optional<std::string> version = this->getVersion();
+      std::optional<std::string_view> version = this->getVersion();
       if ( ! version.has_value() ) { return std::nullopt; }
       return versions::coerceSemver( version.value() );
     }
 
       virtual std::string
-    toURIString( const FloxFlakeRef & ref ) const
+    toURIString( const nix::FlakeRef & ref ) const
     {
-      std::string uri                = ref.to_string() + "#";
-      std::vector<std::string> pathS = this->getPathStrs();
+      std::string uri                     = ref.to_string() + "#";
+      std::vector<std::string_view> pathS = this->getPathStrs();
       for ( size_t i = 0; i < pathS.size(); ++i )
         {
-          uri += "\"" + pathS[i] + "\"";
+          uri += '"';
+          uri += pathS[i];
+          uri += '"';
           if ( ( i + 1 ) < pathS.size() ) uri += ".";
         }
       return uri;
     }
 
       virtual nlohmann::json
-    getInfo() const
+    getInfo( bool withDescription = false ) const
     {
-      std::string system = this->getPathStrs()[1];
+      std::string_view system = this->getPathStrs()[1];
       nlohmann::json j = { { system, {
         { "name",  this->getFullName() }
       , { "pname", this->getPname() }
       } } };
-      std::optional<std::string> os = this->getVersion();
+      std::optional<std::string_view> os = this->getVersion();
 
       if ( os.has_value() ) { j[system].emplace( "version", os.value() ); }
       else { j[system].emplace( "version", nlohmann::json() ); }
@@ -147,6 +152,19 @@ class Package {
       if ( ob.has_value() ) { j[system].emplace( "unfree", ob.value() ); }
       else { j[system].emplace( "unfree", nlohmann::json() ); }
 
+      if ( withDescription )
+        {
+          std::optional<std::string_view> od = this->getDescription();
+          if ( od.has_value() )
+            {
+              j[system].emplace( "description", od.value() );
+            }
+          else
+            {
+              j[system].emplace( "description", nlohmann::json() );
+            }
+        }
+
       return j;
     }
 
@@ -158,7 +176,6 @@ class Package {
 
 /* -------------------------------------------------------------------------- */
 
-  }  /* End Namespace `flox::resolve' */
 }  /* End Namespace `flox' */
 
 
