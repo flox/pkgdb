@@ -113,16 +113,6 @@ isPkgsSubtree( std::string_view attrName )
 
 /* -------------------------------------------------------------------------- */
 
-/** `nix' configuration options used when locking flakes. */
-static nix::flake::LockFlags floxFlakeLockFlags = {
-  .updateLockFile = false
-, .writeLockFile  = false
-, .applyNixConfig = false
-};
-
-
-/* -------------------------------------------------------------------------- */
-
 /**
  * Predicate which indicates whether a `storePath' is "substitutable".
  * @param storePath an absolute path in the `/nix/store'.
