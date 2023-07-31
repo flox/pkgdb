@@ -6,58 +6,45 @@
 
 #pragma once
 
-#include "flox/types.hh"
+#include <vector>
+#include <memory>
+#include <nix/eval.hh>
+#include <nix/eval-inline.hh>
+#include <nix/flake/flake.hh>
 
 
 /* -------------------------------------------------------------------------- */
 
 namespace flox {
-  namespace resolve {
 
 /* -------------------------------------------------------------------------- */
 
 /**
  * A convenience wrapper that provides various operations on a `flake'.
  *
- * Notably this class is responsible for owning both the `nix' `EvalState',
- * `EvalCache' database, and our extended `DrvDb' database associated with
- * a `flake'.
+ * Notably this class is responsible for a `nix' `EvalState' and an
+ * `EvalCache' database associated with a `flake'.
  *
  * It is recommended that only one `FloxFlake' be created for a unique `flake'
  * to avoid synchronization slowdowns with its databases.
  */
 class FloxFlake : public std::enable_shared_from_this<FloxFlake> {
-  private:
-    nix::ref<nix::EvalState> _state;
-    FloxFlakeRef             _flakeRef;
-    std::list<std::string>   _systems;
-    std::vector<std::string> _prefsPrefixes;
-    std::vector<std::string> _prefsStabilities;
+  public:
+    using Cursor      = nix::ref<nix::eval_cache::AttrCursor>;
+    using MaybeCursor = std::shared_ptr<nix::eval_cache::AttrCursor>;
 
-    std::shared_ptr<nix::flake::LockedFlake> lockedFlake;
+  private:
+    nix::ref<nix::EvalState>                    _state;
+    std::shared_ptr<nix::eval_cache::EvalCache> _cache;
 
   public:
+    const nix::flake::LockedFlake lockedFlake;
+
     FloxFlake(       nix::ref<nix::EvalState>   state
-             ,       std::string_view           id
-             , const FloxFlakeRef             & ref
-             , const Preferences              & prefs
-             , const std::list<std::string>   & systems = defaultSystems
+             , const nix::FlakeRef            & ref
              );
 
-    std::shared_ptr<nix::flake::LockedFlake> getLockedFlake();
-    nix::ref<nix::eval_cache::EvalCache>     openEvalCache();
-
-    FloxFlakeRef getFlakeRef() const { return this->_flakeRef; }
-
-      FloxFlakeRef
-    getLockedFlakeRef()
-    {
-      return this->getLockedFlake()->flake.lockedRef;
-    }
-
-    std::list<std::string> getSystems() const { return this->_systems; }
-
-    std::list<std::list<std::string>> getFlakeAttrPathPrefixes() const;
+    nix::ref<nix::eval_cache::EvalCache> openEvalCache();
 
     /**
      * Like `findAttrAlongPath' but without suggestions.
@@ -66,15 +53,11 @@ class FloxFlake : public std::enable_shared_from_this<FloxFlake> {
     Cursor      openCursor(      const std::vector<nix::Symbol> & path );
     MaybeCursor maybeOpenCursor( const std::vector<nix::Symbol> & path );
 
-    /** Opens `EvalCache' once, staying open until all cursors die. */
-    std::list<Cursor> getFlakePrefixCursors();
-
 };
 
 
 /* -------------------------------------------------------------------------- */
 
-  }  /* End Namespace `flox::resolve' */
 }  /* End Namespace `flox' */
 
 
