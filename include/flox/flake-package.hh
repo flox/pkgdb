@@ -147,8 +147,19 @@ class FlakePackage : public Package {
     getOutputs() const override
     {
       MaybeCursor o = this->_cursor->maybeGetAttr( "outputs" );
-      if ( o == nullptr ) { return { "out" }; }
-      else { return o->getListOfStrings(); }
+      if ( o == nullptr )
+        {
+          return { "out" };
+        }
+      else
+        {
+          std::vector<std::string_view> rsl;
+          for ( const auto & p : o->getListOfStrings() )
+            {
+              rsl.emplace_back( p );
+            }
+          return rsl;
+        }
     }
 
       std::optional<std::string_view>

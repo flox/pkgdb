@@ -58,9 +58,9 @@ LIBS           = $(LIBFLOXPKGDB)
 COMMON_HEADERS = $(wildcard include/*.hh) $(wildcard include/flox/*.hh)
 TESTS          = $(wildcard tests/*.cc)
 SRCS           = $(wildcard src/*.cc)
-bin_SRCS       = $(filter src/main%.cc, $(SRCS))
+bin_SRCS       = src/main.cc
 lib_SRCS       = $(filter-out $(bin_SRCS),$(SRCS))
-BINS           = $(patsubst src/main-%.cc,%,$(bin_SRCS))
+BINS           = pkgdb
 
 
 # ---------------------------------------------------------------------------- #
@@ -122,7 +122,7 @@ endif
 nix_LDFLAGS := $(nix_LDFLAGS)
 
 ifndef floxresolve_LDFLAGS
-	floxresolve_LDFLAGS =  '-L$(MAKEFILE_DIR)/lib' -lflox-resolve
+	floxresolve_LDFLAGS =  '-L$(MAKEFILE_DIR)/lib' -lflox-pkgdb
 	floxresolve_LDFLAGS += -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
 endif
 
@@ -186,9 +186,9 @@ lib/$(LIBFLOXPKGDB): $(lib_SRCS:.cc=.o)
 
 # ---------------------------------------------------------------------------- #
 
-bin/%: CXXFLAGS += $(bin_CXXFLAGS)
-bin/%: LDFLAGS  += $(bin_LDFLAGS)
-$(addprefix bin/,$(BINS)): bin/%: src/main-%.o lib/$(LIBFLOXPKGDB)
+bin/pkgdb: CXXFLAGS += $(bin_CXXFLAGS)
+bin/pkgdb: LDFLAGS  += $(bin_LDFLAGS)
+bin/pkgdb: src/main.o lib/$(LIBFLOXPKGDB)
 	$(MKDIR_P) $(@D)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) "$<" -o "$@"
 

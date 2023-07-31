@@ -104,13 +104,18 @@ FlakePackage::getOutputsToInstall() const
         this->_cursor->getAttr( "meta" )->maybeGetAttr( "outputsToInstall" );
       if ( m != nullptr )
         {
-          return m->getListOfStrings();
+          std::vector<std::string_view> rsl;
+          for ( const auto & o : m->getListOfStrings() )
+            {
+              rsl.emplace_back( o );
+            }
+          return rsl;
         }
     }
   std::vector<std::string_view> rsl;
-  for ( std::string o : this->getOutputs() )
+  for ( std::string_view o : this->getOutputs() )
     {
-      rsl.emplace_back( o );
+      rsl.push_back( o );
       if ( o == "out" ) { break; }
     }
   return rsl;

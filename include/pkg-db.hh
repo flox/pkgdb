@@ -100,7 +100,7 @@ class PkgDb {
     /** Opens a DB directly by its fingerprint hash. */
     PkgDb( const Fingerprint & fingerprint )
       : fingerprint( fingerprint )
-      , db( getPkgDbName( this->fingerprint ) )
+      , db( getPkgDbName( this->fingerprint ).c_str() )
     {
       this->initTables();
       this->loadLockedRef();
