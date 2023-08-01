@@ -96,7 +96,7 @@ $(function() {
 <div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="preprocessor">#include &lt;nix/eval-cache.hh&gt;</span></div>
 <div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="preprocessor">#include &lt;nix/names.hh&gt;</span></div>
 <div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span> </div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="preprocessor">#include &quot;flox/package.hh&quot;</span></div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span><span class="preprocessor">#include &quot;<a class="code" href="package_8hh.html">flox/package.hh</a>&quot;</span></div>
 <div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span> </div>
 <div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span> </div>
 <div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span><span class="comment">/* -------------------------------------------------------------------------- */</span></div>
@@ -105,7 +105,7 @@ $(function() {
 <div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span> </div>
 <div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="comment">/* -------------------------------------------------------------------------- */</span></div>
 <div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span> </div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span><span class="keyword">class </span>FlakePackage : <span class="keyword">public</span> Package {</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno"><a class="line" href="classflox_1_1FlakePackage.html">   29</a></span><span class="keyword">class </span><a class="code hl_class" href="classflox_1_1FlakePackage.html">FlakePackage</a> : <span class="keyword">public</span> <a class="code hl_class" href="classflox_1_1Package.html">Package</a> {</div>
 <div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span> </div>
 <div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>  <span class="keyword">public</span>:</div>
 <div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    <span class="keyword">using </span>Cursor      = nix::ref&lt;nix::eval_cache::AttrCursor&gt;;</div>
@@ -134,7 +134,7 @@ $(function() {
 <div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span> </div>
 <div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>  <span class="keyword">public</span>:</div>
 <div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span> </div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>    FlakePackage(       Cursor                     cursor</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>    <a class="code hl_class" href="classflox_1_1FlakePackage.html">FlakePackage</a>(       Cursor                     cursor</div>
 <div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>                , <span class="keyword">const</span> std::vector&lt;nix::Symbol&gt; &amp; path</div>
 <div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>                ,       nix::SymbolTable         * symtab</div>
 <div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>                ,       <span class="keywordtype">bool</span>                       checkDrv = <span class="keyword">true</span></div>
@@ -155,11 +155,11 @@ $(function() {
 <div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>      this-&gt;init( checkDrv );</div>
 <div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>    }</div>
 <div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span> </div>
-<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    FlakePackage( Cursor             cursor</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    <a class="code hl_class" href="classflox_1_1FlakePackage.html">FlakePackage</a>( Cursor             cursor</div>
 <div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>                , nix::SymbolTable * symtab</div>
 <div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>                , <span class="keywordtype">bool</span>               checkDrv = <span class="keyword">true</span></div>
 <div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>                )</div>
-<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>      : FlakePackage( cursor, cursor-&gt;getAttrPath(), symtab, checkDrv )</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>      : <a class="code hl_class" href="classflox_1_1FlakePackage.html">FlakePackage</a>( cursor, cursor-&gt;getAttrPath(), symtab, checkDrv )</div>
 <div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>    {}</div>
 <div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span> </div>
 <div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span> </div>
@@ -267,6 +267,9 @@ $(function() {
 <div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span><span class="comment"> *</span></div>
 <div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span><span class="comment"> *</span></div>
 <div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span><span class="comment"> * ========================================================================== */</span></div>
+<div class="ttc" id="aclassflox_1_1FlakePackage_html"><div class="ttname"><a href="classflox_1_1FlakePackage.html">flox::FlakePackage</a></div><div class="ttdef"><b>Definition</b> flake-package.hh:29</div></div>
+<div class="ttc" id="aclassflox_1_1Package_html"><div class="ttname"><a href="classflox_1_1Package.html">flox::Package</a></div><div class="ttdef"><b>Definition</b> package.hh:50</div></div>
+<div class="ttc" id="apackage_8hh_html"><div class="ttname"><a href="package_8hh.html">package.hh</a></div><div class="ttdoc">Abstract representation of a package.</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
