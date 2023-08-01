@@ -156,8 +156,22 @@ PkgDb::getPackageSetId( const AttrPathV & path )
   std::string
 PkgDb::getDescription( row_id descriptionId )
 {
-  // TODO
-  return "";
+  /* Lookup the `Description.id' ( if one exists ) */
+  sqlite3pp::query qryId(
+    this->db
+  , "SELECT id FROM Descriptions WHERE path = :descriptionId"
+  );
+  qryId.bind( ":descriptionId", (long long int) descriptionId );
+  auto i = qryId.begin();
+  /* Handle no such path. */
+  if ( i == qryId.end() )
+    {
+      std::string msg( "No such Description.id " );
+      msg += descriptionId;
+      msg += '.';
+      throw PkgDbException( msg );
+    }
+  return ( * i ).get<std::string>( 0 );
 }
 
 
@@ -166,8 +180,30 @@ PkgDb::getDescription( row_id descriptionId )
   bool
 PkgDb::hasPackage( const AttrPathV & path )
 {
-  // TODO
-  return false;
+  nlohmann::json j = nlohmann::json::array();
+  for ( size_t i = 0; i < ( path.size() - 1 ); ++i )
+    {
+      j.emplace_back( path[i] );
+    }
+  /* Lookup the `PackageSet.id' ( if one exists ) */
+  sqlite3pp::query qryId(
+    this->db
+  , "SELECT pathId FROM PackageSets WHERE path = :path"
+  );
+  qryId.bind( ":path", j.dump(), sqlite3pp::copy );
+  auto i = qryId.begin();
+  if ( i == qryId.end() ) { return false; }  /* No such path. */
+
+  /* Make sure there are actually packages in the set. */
+  row_id id = ( * i ).get<long long int>( 0 );
+  sqlite3pp::query qryPkgs(
+    this->db
+  , "SELECT id FROM Packages WHERE ( parentId = :parentId ) "
+    "AND ( attrName = :attrName ) LIMIT 1"
+  );
+  qryPkgs.bind( ":parentId", (long long int) id );
+  qryPkgs.bind( "attrName", path.back() );
+  return 0 < ( * qryPkgs.begin() ).get<int>( 0 );
 }
 
 
