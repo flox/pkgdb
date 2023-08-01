@@ -9,6 +9,12 @@
 
 #include "pkg-db.hh"
 
+#include "sql/versions.hh"
+#include "sql/input.hh"
+#include "sql/package-sets.hh"
+#include "sql/packages.hh"
+//#include "sql/tmp-paths.hh"
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -31,18 +37,50 @@ getPkgDbName( const Fingerprint & fingerprint )
 /* -------------------------------------------------------------------------- */
 
   void
-PkgDb::initTables()
+PkgDb::loadLockedRef()
 {
-  // TODO
+  sqlite3pp::query qry(
+    this->db
+  , "SELECT string, attrs FROM LockedFlake LIMIT 1"
+  );
+  auto r = * qry.begin();
+  this->lockedRef.string = r.get<std::string>( 0 );
+  this->lockedRef.attrs  = nlohmann::json::parse( r.get<std::string>( 1 ) );
 }
 
 
 /* -------------------------------------------------------------------------- */
 
   void
-PkgDb::loadLockedRef()
+PkgDb::writeInput()
 {
-  // TODO
+  sqlite3pp::command cmd(
+    this->db
+  , "INSERT OR IGNORE INTO LockedFlake ( fingerprint, string, attrs ) VALUES "
+    "  ( :fingerprint, :string, :attrs )"
+  );
+  std::string fpStr = fingerprint.to_string( nix::Base16, false );
+  cmd.bind( ":fingerprint", fpStr, sqlite3pp::copy );
+  cmd.bind( ":string", this->lockedRef.string, sqlite3pp::nocopy );
+  cmd.bind( ":attrs",  this->lockedRef.attrs.dump(), sqlite3pp::copy );
+  cmd.execute();
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
+PkgDb::initTables()
+{
+  this->execute( sql_versions );
+  this->execute( sql_input );
+  this->execute( sql_packageSets );
+  this->execute( sql_packages );
+  static const char * stmtVersions =
+    "INSERT OR IGNORE INTO DbVersions ( name, version ) VALUES "
+    "  ( 'pkgdb',        '" FLOX_PKGDB_VERSION        "' )"
+    ", ( 'pkgdb_schema', '" FLOX_PKGDB_SCHEMA_VERSION "' )";
+  this->execute( stmtVersions );
 }
 
 
@@ -51,18 +89,11 @@ PkgDb::loadLockedRef()
   std::string
 PkgDb::getDbVersion()
 {
-  // TODO
-  return "";
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  int
-PkgDb::execute( std::string_view stmt )
-{
-  // TODO
-  return 0;
+  sqlite3pp::query qry(
+    this->db
+  , "SELECT version FROM DbVersions WHERE name = 'pkgdb_schema' LIMIT 1"
+  );
+  return ( * qry.begin() ).get<std::string>( 0 );
 }
 
 
@@ -71,8 +102,23 @@ PkgDb::execute( std::string_view stmt )
   bool
 PkgDb::hasPackageSet( const AttrPathV & path )
 {
-  // TODO
-  return false;
+  /* Lookup the `PackageSet.id' ( if one exists ) */
+  sqlite3pp::query qryId(
+    this->db
+  , "SELECT pathId FROM PackageSets WHERE path = :path"
+  );
+  qryId.bind( ":path", nlohmann::json( path ).dump(), sqlite3pp::copy );
+  auto i = qryId.begin();
+  if ( i == qryId.end() ) { return false; }  /* No such path. */
+
+  /* Make sure there are actually packages in the set. */
+  row_id id = ( * i ).get<long long int>( 0 );
+  sqlite3pp::query qryPkgs(
+    this->db
+  , "SELECT COUNT( id ) FROM Packages WHERE parentId = :parentId"
+  );
+  qryPkgs.bind( ":parentId", (long long int) id );
+  return 0 < ( * qryPkgs.begin() ).get<int>( 0 );
 }
 
 
@@ -81,8 +127,27 @@ PkgDb::hasPackageSet( const AttrPathV & path )
   row_id
 PkgDb::getPackageSetId( const AttrPathV & path )
 {
-  // TODO
-  return 0;
+  /* Lookup the `PackageSet.id' ( if one exists ) */
+  sqlite3pp::query qryId(
+    this->db
+  , "SELECT pathId FROM PackageSets WHERE path = :path"
+  );
+  qryId.bind( ":path", nlohmann::json( path ).dump(), sqlite3pp::copy );
+  auto i = qryId.begin();
+  /* Handle no such path. */
+  if ( i == qryId.end() )
+    {
+      std::string msg( "No such PackageSet '" );
+      bool first = true;
+      for ( const auto p : path )
+        {
+          if ( first ) { first = false; } else { msg += '.'; }
+          msg += p;
+        }
+      msg += "'.";
+      throw PkgDbException( msg );
+    }
+  return ( * i ).get<long long int>( 0 );
 }
 
 

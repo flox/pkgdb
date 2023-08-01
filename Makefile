@@ -169,6 +169,7 @@ clean: FORCE
 	-$(RM) -r doc/html
 	-$(RM) $(TESTS:.cc=)
 	-$(RM) gmon.out *.log
+	$(MAKE) -C src/sql clean
 
 
 # ---------------------------------------------------------------------------- #
@@ -275,6 +276,22 @@ doc: doc/html/index.html
 
 doc/html/index.html: FORCE
 	$(DOXYGEN) ./Doxyfile
+
+
+# ---------------------------------------------------------------------------- #
+
+# Generates SQL -> C++ schema headers
+
+SQL_FILES    := $(wildcard src/sql/*.sql)
+SQL_HH_FILES := $(SQL_FILES:.sql=.hh)
+
+$(SQL_HH_FILES): %.hh: %.sql src/sql/Makefile
+	$(MAKE) -C src/sql $(%F)
+
+.PHONY: sql-headers
+sql-headers: $(SQL_HH_FILES)
+
+src/pkg-db.o: $(SQL_HH_FILES)
 
 
 # ---------------------------------------------------------------------------- #

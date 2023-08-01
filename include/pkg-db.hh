@@ -21,6 +21,8 @@
 
 /* -------------------------------------------------------------------------- */
 
+// TODO: Create a `config.h' for these
+#define FLOX_PKGDB_VERSION         "0.1.0"
 #define FLOX_PKGDB_SCHEMA_VERSION  "0.1.0"
 
 
@@ -69,22 +71,17 @@ getPkgDbName( const nix::flake::LockedFlake & flake )
  */
 class PkgDb {
 
+/* -------------------------------------------------------------------------- */
+
   /* Data */
 
-  private:
-    /** Create tables in database if they do not exist. */
-    void initTables();
-
-    /** Set @a this `PkgDb` `lockedRef` fields from database metadata. */
-    void loadLockedRef();
-
-
   public:
+
           SQLiteDb    db;           /**< SQLite3 database handle.         */
     const Fingerprint fingerprint;  /**< Unique hash of associated flake. */
 
     /** Locked _flake reference_ for database's flake. */
-    const struct {
+    struct {
       std::string    string;  /**< Locked URI string.  */
       nlohmann::json attrs;   /**< Exploded form of URI as an attr-set. */
     } lockedRef;
@@ -92,9 +89,29 @@ class PkgDb {
 
 /* -------------------------------------------------------------------------- */
 
+  /* Internal Helpers */
+
+  private:
+
+    /** Create tables in database if they do not exist. */
+    void initTables();
+
+    /** Set @a this `PkgDb` `lockedRef` fields from database metadata. */
+    void loadLockedRef();
+
+    /**
+     * Write @a this `PkgDb` `lockedRef` and `fingerprint` fields to
+     * database metadata.
+     */
+    void writeInput();
+
+
+/* -------------------------------------------------------------------------- */
+
   /* Constructors */
 
   public:
+
     PkgDb() : fingerprint( nix::htSHA256 ) {}
 
     /** Opens a DB directly by its fingerprint hash. */
@@ -108,8 +125,15 @@ class PkgDb {
 
     /** Opens a DB associated with a locked flake. */
     PkgDb( const nix::flake::LockedFlake & flake )
-      : PkgDb( flake.getFingerprint() )
-    {}
+      : fingerprint( flake.getFingerprint() )
+      , lockedRef( {
+          flake.flake.lockedRef.to_string()
+        , nix::fetchers::attrsToJSON( flake.flake.lockedRef.toAttrs() )
+        } )
+    {
+      initTables();
+      writeInput();
+    }
 
 
 /* -------------------------------------------------------------------------- */
@@ -121,12 +145,43 @@ class PkgDb {
     /** @return The Package Database schema version. */
     std::string getDbVersion();
 
+
     /**
      * Execute a raw sqlite statement on the database.
      * @param stmt String statement to execute.
      * @return `SQLITE_*` [error code](https://www.sqlite.org/rescode.html).
      */
-     int execute( std::string_view stmt );
+       inline int
+     execute( const char * stmt )
+     {
+       sqlite3pp::command cmd( this->db, stmt );
+       return cmd.execute_all();
+     }
+
+    /**
+     * Execute a raw sqlite statement on the database.
+     * @param stmt String statement to execute.
+     * @return `SQLITE_*` [error code](https://www.sqlite.org/rescode.html).
+     */
+       inline int
+     execute( const std::string & stmt )
+     {
+       sqlite3pp::command cmd( this->db, stmt.c_str() );
+       return cmd.execute_all();
+     }
+
+    /**
+     * Execute a raw sqlite statement on the database.
+     * @param stmt String statement to execute.
+     * @return `SQLITE_*` [error code](https://www.sqlite.org/rescode.html).
+     */
+       inline int
+     execute( std::string_view stmt )
+     {
+       std::string cpy( stmt );
+       sqlite3pp::command cmd( this->db, cpy.c_str() );
+       return cmd.execute_all();
+     }
 
 
 /* -------------------------------------------------------------------------- */
