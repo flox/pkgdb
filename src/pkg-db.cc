@@ -23,7 +23,6 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
-/** Get an absolute path to the `PkgDb' for a given fingerprint hash. */
   std::string
 getPkgDbName( const Fingerprint & fingerprint )
 {
@@ -202,8 +201,8 @@ PkgDb::hasPackage( const AttrPathV & path )
     "AND ( attrName = :attrName ) LIMIT 1"
   );
   qryPkgs.bind( ":parentId", (long long int) id );
-  qryPkgs.bind( "attrName", path.back() );
-  return 0 < ( * qryPkgs.begin() ).get<int>( 0 );
+  qryPkgs.bind( ":attrName", std::string( path.back() ), sqlite3pp::copy );
+  return ( * qryPkgs.begin() ).get<int>( 0 ) != 0;
 }
 
 
@@ -212,8 +211,15 @@ PkgDb::hasPackage( const AttrPathV & path )
   row_id
 PkgDb::addOrGetPackageSetId( const AttrPathV & path )
 {
-  // TODO
-  return 0;
+  try { return this->getPackageSetId( path ); }
+  catch ( const PkgDbException & e ) { /* Ignored */ }
+  sqlite3pp::command cmd(
+    this->db
+  , "INSERT INTO PackageSets ( path ) VALUES ( :path )"
+  );
+  cmd.bind( ":path", nlohmann::json( path ).dump(), sqlite3pp::copy );
+  cmd.execute();
+  return this->db.last_insert_rowid();
 }
 
 
@@ -222,8 +228,22 @@ PkgDb::addOrGetPackageSetId( const AttrPathV & path )
   row_id
 PkgDb::addOrGetDescriptionId( std::string_view description )
 {
-  // TODO
-  return 0;
+  std::string s( description );
+  sqlite3pp::query qry(
+    this->db
+  , "SELECT id FROM Descriptions WHERE description = :description"
+  );
+  qry.bind( ":description", s, sqlite3pp::copy );
+  auto i = qry.begin();
+  if ( i != qry.end() ) { return ( * i ).get<long long int>( 0 ); }
+
+  sqlite3pp::command cmd(
+    this->db
+  , "INSERT INTO PackageSets ( path ) VALUES ( :path )"
+  );
+  cmd.bind( ":path", s, sqlite3pp::copy );
+  cmd.execute();
+  return this->db.last_insert_rowid();
 }
 
 /* -------------------------------------------------------------------------- */
