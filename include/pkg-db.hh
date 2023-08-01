@@ -126,6 +126,7 @@ class PkgDb {
     /** Opens a DB associated with a locked flake. */
     PkgDb( const nix::flake::LockedFlake & flake )
       : fingerprint( flake.getFingerprint() )
+      , db( getPkgDbName( this->fingerprint ).c_str() )
       , lockedRef( {
           flake.flake.lockedRef.to_string()
         , nix::fetchers::attrsToJSON( flake.flake.lockedRef.toAttrs() )

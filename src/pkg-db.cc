@@ -246,6 +246,7 @@ PkgDb::addOrGetDescriptionId( std::string_view description )
   return this->db.last_insert_rowid();
 }
 
+
 /* -------------------------------------------------------------------------- */
 
   row_id
