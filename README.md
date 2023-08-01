@@ -1,4 +1,4 @@
 # Flox Package Database
 
-CRUD operations on =`nix` package metadata.
+CRUD operations on `nix` package metadata.
 
