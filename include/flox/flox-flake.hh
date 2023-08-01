@@ -20,12 +20,12 @@ namespace flox {
 /* -------------------------------------------------------------------------- */
 
 /**
- * A convenience wrapper that provides various operations on a `flake'.
+ * A convenience wrapper that provides various operations on a `flake`.
  *
- * Notably this class is responsible for a `nix' `EvalState' and an
- * `EvalCache' database associated with a `flake'.
+ * Notably this class is responsible for a `nix` `EvalState` and an
+ * `EvalCache` database associated with a `flake`.
  *
- * It is recommended that only one `FloxFlake' be created for a unique `flake'
+ * It is recommended that only one `FloxFlake` be created for a unique `flake`
  * to avoid synchronization slowdowns with its databases.
  */
 class FloxFlake : public std::enable_shared_from_this<FloxFlake> {
