@@ -56,7 +56,7 @@ PkgDb::writeInput()
 {
   sqlite3pp::command cmd(
     this->db
-  , "INSERT OR IGNORE INTO LockedFlake ( fingerprint, string, attrs ) VALUES "
+  , "INSERT OR IGNORE INTO LockedFlake ( fingerprint, string, attrs ) VALUES"
     "  ( :fingerprint, :string, :attrs )"
   );
   std::string fpStr = fingerprint.to_string( nix::Base16, false );
@@ -77,7 +77,7 @@ PkgDb::initTables()
   this->execute( sql_packageSets );
   this->execute( sql_packages );
   static const char * stmtVersions =
-    "INSERT OR IGNORE INTO DbVersions ( name, version ) VALUES "
+    "INSERT OR IGNORE INTO DbVersions ( name, version ) VALUES"
     "  ( 'pkgdb',        '" FLOX_PKGDB_VERSION        "' )"
     ", ( 'pkgdb_schema', '" FLOX_PKGDB_SCHEMA_VERSION "' )";
   this->execute( stmtVersions );

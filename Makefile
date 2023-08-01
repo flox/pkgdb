@@ -166,10 +166,11 @@ clean: FORCE
 	-$(RM) src/*.o tests/*.o
 	-$(RM) result
 	-$(RM) -r $(PREFIX)
-	-$(RM) -r doc/html
 	-$(RM) $(TESTS:.cc=)
 	-$(RM) gmon.out *.log
 	$(MAKE) -C src/sql clean
+	-$(RM) $(addprefix docs/,*.png *.html *.svg *.css *.js)
+	-$(RM) -r docs/search
 
 
 # ---------------------------------------------------------------------------- #
@@ -272,9 +273,9 @@ ccls: .ccls
 
 .PHONY: doc
 
-doc: doc/html/index.html
+doc: docs/index.html
 
-doc/html/index.html: FORCE
+docs/index.html: FORCE
 	$(DOXYGEN) ./Doxyfile
 
 
