@@ -9,7 +9,7 @@
 RM  ?= rm -f
 SED ?= sed
 
-HEADERS ::=
+HEADERS =
 
 
 # ---------------------------------------------------------------------------- #
@@ -17,6 +17,7 @@ HEADERS ::=
 .PHONY: all headers clean FORCE
 .DEFAULT_GOAL = all
 all: headers
+clean: FORCE ; -$(RM) $(HEADERS)
 
 
 # ---------------------------------------------------------------------------- #
@@ -39,7 +40,6 @@ $(eval $(call SQL_HH_template,tmpPaths,tmp-paths.sql))
 $(eval $(call SQL_HH_template,versions,versions.sql))
 
 headers: $(HEADERS)
-clean: FORCE ; -$(RM) $(HEADERS)
 
 
 # ---------------------------------------------------------------------------- #
