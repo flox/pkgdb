@@ -1,5 +1,8 @@
 /* ========================================================================== *
  *
+ * @file main.cc
+ *
+ * @brief executable exposing CRUD operations for package metadata.
  *
  *
  * -------------------------------------------------------------------------- */
@@ -27,6 +30,9 @@
   int
 main( int argc, char * argv[], char ** envp )
 {
+
+  /* Define arg parsers. */
+
   argparse::ArgumentParser prog( "pkgdb", FLOX_PKGDB_VERSION );
   prog.add_description( "CRUD operations for package metadata" );
 
@@ -35,16 +41,19 @@ main( int argc, char * argv[], char ** envp )
 
   cmdScrape.add_argument( "--system" )
     .help( "indicate that a system should be scraped" )
+    .metavar( "SYSTEM" )
     .append()
     .default_value( std::list<std::string> { nix::settings.thisSystem.get() } )
   ;
 
+  /*  TODO
   cmdScrape.add_argument( "-o", "--out" )
     .help( "write database to FILE" )
     .default_value( "" )
     .metavar( "FILE" )
     .nargs( 1 )
   ;
+  */
 
   cmdScrape.add_argument( "flake-ref" )
     .help( "A flake-reference URI string ( preferably locked )" )
@@ -55,6 +64,9 @@ main( int argc, char * argv[], char ** envp )
   prog.add_subparser( cmdScrape );
 
 
+/* -------------------------------------------------------------------------- */
+
+  /* Parse Args */
   try
     {
       prog.parse_args( argc, argv );
@@ -79,6 +91,8 @@ main( int argc, char * argv[], char ** envp )
       )
     : nix::parseFlakeRef( refStr );
 
+  // TODO
+  #if 0
   char * outFile = nullptr;
   try
     {
@@ -89,6 +103,7 @@ main( int argc, char * argv[], char ** envp )
     {
       /* Ignored: Uses fingerprint */
     }
+  #endif
 
 
 /* -------------------------------------------------------------------------- */
@@ -196,12 +211,11 @@ main( int argc, char * argv[], char ** envp )
 
 /* -------------------------------------------------------------------------- */
 
+  /* Print path to database. */
   std::cout << dbPathStr << std::endl;
 
+  return EXIT_SUCCESS;  /* GG, GG */
 
-/* -------------------------------------------------------------------------- */
-
-  return EXIT_SUCCESS;
 }
 
 
