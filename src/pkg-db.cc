@@ -279,7 +279,7 @@ PkgDb::addPackage( row_id           parentId
 
   if ( pkg._version.empty() )
     {
-      cmd.bind( ":version" ); /* bind NULL */
+      cmd.bind( ":version" );  /* bind NULL */
     }
   else
     {

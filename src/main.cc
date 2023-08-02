@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <list>
 #include <filesystem>
+#include <assert.h>
 
 #include <nix/shared.hh>
 #include <nix/eval.hh>
@@ -36,8 +37,59 @@ main( int argc, char * argv[], char ** envp )
   argparse::ArgumentParser prog( "pkgdb", FLOX_PKGDB_VERSION );
   prog.add_description( "CRUD operations for package metadata" );
 
+  /* Nix verbosity levels for reference:
+   *   typedef enum {
+   *     lvlError = 0   ( --quiet --quiet --quiet )
+   *   , lvlWarn        ( --quiet --quiet )
+   *   , lvlNotice      ( --quiet )
+   *   , lvlInfo        ( **Default** )
+   *   , lvlTalkative   ( -v  )
+   *   , lvlChatty      ( -vv   | --debug --quiet )
+   *   , lvlDebug       ( -vvv  | --debug )
+   *   , lvlVomit       ( -vvvv | --debug -v )
+   *   } Verbosity;
+   */
+  nix::Verbosity verbosity = nix::lvlInfo;  /* Nix's default as well. */
+
+  /* Add `-v+,--verbose' and `-q+,--quiet' to a parser. */
+  auto addVerbosity = [&]( argparse::ArgumentParser & parser )
+  {
+    parser.add_argument( "-q", "--quiet" )
+      .help(
+        "Decreate the logging verbosity level. May be used up to 3 times."
+      )
+      .action(
+        [&]( const auto & )
+        {
+          verbosity =
+            ( verbosity <= nix::lvlError ) ? nix::lvlError
+                                           : (nix::Verbosity) ( verbosity - 1 );
+        }
+      ).default_value( false ).implicit_value( true )
+      .append()
+    ;
+    parser.add_argument( "-v", "--verbose" )
+      .help(
+        "Increase the logging verbosity level. May be up to 4 times."
+      )
+      .action(
+        [&]( const auto & )
+        {
+          verbosity =
+            ( nix::lvlVomit <= verbosity ) ? nix::lvlVomit
+                                           : (nix::Verbosity) ( verbosity + 1 );
+        }
+      ).default_value( false ).implicit_value( true )
+      .append()
+    ;
+  };
+
+  addVerbosity( prog );
+
   argparse::ArgumentParser cmdScrape( "scrape" );
   cmdScrape.add_description( "Scrape a flake and emit a SQLite3 DB" );
+
+  addVerbosity( cmdScrape );
 
   cmdScrape.add_argument( "--system" )
     .help( "indicate that a system should be scraped" )
@@ -56,7 +108,7 @@ main( int argc, char * argv[], char ** envp )
   */
 
   cmdScrape.add_argument( "flake-ref" )
-    .help( "A flake-reference URI string ( preferably locked )" )
+    .help( "a flake-reference URI string ( preferably locked )" )
     .required()
     .metavar( "FLAKE-REF" )
   ;
@@ -105,6 +157,9 @@ main( int argc, char * argv[], char ** envp )
     }
   #endif
 
+  /* Assign verbosity to `nix' global setting */
+  nix::verbosity = verbosity;
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -113,6 +168,8 @@ main( int argc, char * argv[], char ** envp )
   nix::setStackSize( 64 * 1024 * 1024 );
   nix::initNix();
   nix::initGC();
+  nix::initPlugins();
+
   // TODO: make this an option. It risks making cross-system eval impossible.
   nix::evalSettings.enableImportFromDerivation.setDefault( false );
   nix::evalSettings.pureEval.setDefault( true );
@@ -145,7 +202,6 @@ main( int argc, char * argv[], char ** envp )
     {
       std::filesystem::create_directories( dbPath.parent_path() );
     }
-
 
   flox::pkgdb::PkgDb db( flake.lockedFlake );
 
