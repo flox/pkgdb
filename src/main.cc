@@ -57,8 +57,7 @@ main( int argc, char * argv[], char ** envp )
     parser.add_argument( "-q", "--quiet" )
       .help(
         "Decreate the logging verbosity level. May be used up to 3 times."
-      )
-      .action(
+      ).action(
         [&]( const auto & )
         {
           verbosity =
@@ -69,9 +68,7 @@ main( int argc, char * argv[], char ** envp )
       .append()
     ;
     parser.add_argument( "-v", "--verbose" )
-      .help(
-        "Increase the logging verbosity level. May be up to 4 times."
-      )
+      .help( "Increase the logging verbosity level. May be up to 4 times." )
       .action(
         [&]( const auto & )
         {
