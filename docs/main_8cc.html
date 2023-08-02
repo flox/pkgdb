@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Flox Package Database: Class Members - Functions</title>
+<title>Flox Package Database: src/main.cc File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -47,7 +47,6 @@ $(function() {
 /* @license-end */
 </script>
 <div id="main-nav"></div>
-</div><!-- top -->
 <!-- window showing the filter options -->
 <div id="MSearchSelectWindow"
      onmouseover="return searchBox.OnSearchSelectShow()"
@@ -69,26 +68,43 @@ $(function() {
 </div>
 </div>
 
+<div id="nav-path" class="navpath">
+  <ul>
+<li class="navelem"><a class="el" href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li>  </ul>
+</div>
+</div><!-- top -->
+<div class="header">
+  <div class="summary">
+<a href="#func-members">Functions</a>  </div>
+  <div class="headertitle"><div class="title">main.cc File Reference</div></div>
+</div><!--header-->
 <div class="contents">
-<div class="textblock">Here is a list of all documented functions with links to the class documentation for each member:</div><ul>
-<li>addOrGetDescriptionId()&#160;:&#160;<a class="el" href="classflox_1_1pkgdb_1_1PkgDb.html#a998c2a5b72fce412ef45308059f6baf2">flox::pkgdb::PkgDb</a></li>
-<li>addOrGetPackageSetId()&#160;:&#160;<a class="el" href="classflox_1_1pkgdb_1_1PkgDb.html#a32dce99771a912b8ab11e97c57805444">flox::pkgdb::PkgDb</a></li>
-<li>addPackage()&#160;:&#160;<a class="el" href="classflox_1_1pkgdb_1_1PkgDb.html#a9106935421ac069627b382e7000ea8a0">flox::pkgdb::PkgDb</a></li>
-<li>execute()&#160;:&#160;<a class="el" href="classflox_1_1pkgdb_1_1PkgDb.html#a631061ee5fc9aca93c3f375ab421f9b3">flox::pkgdb::PkgDb</a></li>
-<li>execute_all()&#160;:&#160;<a class="el" href="classflox_1_1pkgdb_1_1PkgDb.html#a78782c71aa2aa5d6c4eb1dfafdb1dd17">flox::pkgdb::PkgDb</a></li>
-<li>getDbVersion()&#160;:&#160;<a class="el" href="classflox_1_1pkgdb_1_1PkgDb.html#ac9e2b85e229e27ae3968c8389c856ef6">flox::pkgdb::PkgDb</a></li>
-<li>getDescription()&#160;:&#160;<a class="el" href="classflox_1_1pkgdb_1_1PkgDb.html#af6736c853796f7df5adabe06c4589206">flox::pkgdb::PkgDb</a></li>
-<li>getPackageSetId()&#160;:&#160;<a class="el" href="classflox_1_1pkgdb_1_1PkgDb.html#a8e45b0e08c71e6f7298523852e2d69fe">flox::pkgdb::PkgDb</a></li>
-<li>hasPackage()&#160;:&#160;<a class="el" href="classflox_1_1pkgdb_1_1PkgDb.html#ab05b6089d0bf332cd542f5a59780b0fa">flox::pkgdb::PkgDb</a></li>
-<li>hasPackageSet()&#160;:&#160;<a class="el" href="classflox_1_1pkgdb_1_1PkgDb.html#a1160e8462d25f935f7de0867e6733797">flox::pkgdb::PkgDb</a></li>
-<li>initTables()&#160;:&#160;<a class="el" href="classflox_1_1pkgdb_1_1PkgDb.html#aca9adc86b9be2675ff8faae0498e6641">flox::pkgdb::PkgDb</a></li>
-<li>loadLockedRef()&#160;:&#160;<a class="el" href="classflox_1_1pkgdb_1_1PkgDb.html#ab7fdfdb85dd23b2455abc2b83abebe4b">flox::pkgdb::PkgDb</a></li>
-<li>openEvalCache()&#160;:&#160;<a class="el" href="classflox_1_1FloxFlake.html#ad3413e7c7d4ea8d4f9dc50fb7a94e947">flox::FloxFlake</a></li>
-<li>operator()()&#160;:&#160;<a class="el" href="structstd_1_1hash_3_01std_1_1list_3_01std_1_1string__view_01_4_01_4.html#a1ffa3f282f468a054a0b4e157ffc8111">std::hash&lt; std::list&lt; std::string_view &gt; &gt;</a></li>
-<li>PkgDb()&#160;:&#160;<a class="el" href="classflox_1_1pkgdb_1_1PkgDb.html#a73bc51719e54272930ca8d7d2f479089">flox::pkgdb::PkgDb</a></li>
-<li>writeInput()&#160;:&#160;<a class="el" href="classflox_1_1pkgdb_1_1PkgDb.html#aa42b263d198f34dfd2ded10e6d09b585">flox::pkgdb::PkgDb</a></li>
-</ul>
-</div><!-- contents -->
+
+<p>executable exposing CRUD operations for package metadata.  
+<a href="#details">More...</a></p>
+<div class="textblock"><code>#include &lt;iostream&gt;</code><br />
+<code>#include &lt;stdlib.h&gt;</code><br />
+<code>#include &lt;list&gt;</code><br />
+<code>#include &lt;filesystem&gt;</code><br />
+<code>#include &lt;nix/shared.hh&gt;</code><br />
+<code>#include &lt;nix/eval.hh&gt;</code><br />
+<code>#include &lt;nix/eval-cache.hh&gt;</code><br />
+<code>#include &lt;nix/store-api.hh&gt;</code><br />
+<code>#include &lt;nix/flake/flake.hh&gt;</code><br />
+<code>#include &lt;argparse/argparse.hpp&gt;</code><br />
+<code>#include &lt;nlohmann/json.hpp&gt;</code><br />
+<code>#include &quot;flox/flox-flake.hh&quot;</code><br />
+<code>#include &quot;<a class="el" href="pkg-db_8hh_source.html">pkg-db.hh</a>&quot;</code><br />
+</div><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:af9f20e08914b990ce83431d5dc6df07b"><td class="memItemLeft" align="right" valign="top"><a id="af9f20e08914b990ce83431d5dc6df07b" name="af9f20e08914b990ce83431d5dc6df07b"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>main</b> (int argc, char *argv[], char **envp)</td></tr>
+<tr class="separator:af9f20e08914b990ce83431d5dc6df07b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>executable exposing CRUD operations for package metadata. </p>
+</div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
 Generated by&#160;<a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.7

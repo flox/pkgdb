@@ -106,8 +106,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:abe1bf45249db2a403e49c2eec0a810a1"><td class="memItemLeft" align="right" valign="top"><a id="abe1bf45249db2a403e49c2eec0a810a1" name="abe1bf45249db2a403e49c2eec0a810a1"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>FloxFlake</b> (nix::ref&lt; nix::EvalState &gt; state, const nix::FlakeRef &amp;ref)</td></tr>
 <tr class="separator:abe1bf45249db2a403e49c2eec0a810a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad3413e7c7d4ea8d4f9dc50fb7a94e947"><td class="memItemLeft" align="right" valign="top"><a id="ad3413e7c7d4ea8d4f9dc50fb7a94e947" name="ad3413e7c7d4ea8d4f9dc50fb7a94e947"></a>
-nix::ref&lt; nix::eval_cache::EvalCache &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>openEvalCache</b> ()</td></tr>
+<tr class="memitem:ad3413e7c7d4ea8d4f9dc50fb7a94e947"><td class="memItemLeft" align="right" valign="top">nix::ref&lt; nix::eval_cache::EvalCache &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classflox_1_1FloxFlake.html#ad3413e7c7d4ea8d4f9dc50fb7a94e947">openEvalCache</a> ()</td></tr>
 <tr class="separator:ad3413e7c7d4ea8d4f9dc50fb7a94e947"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a773b802497d838798599dd521e83c021"><td class="memItemLeft" align="right" valign="top"><a id="a773b802497d838798599dd521e83c021" name="a773b802497d838798599dd521e83c021"></a>
 Cursor&#160;</td><td class="memItemRight" valign="bottom"><b>openCursor</b> (const std::vector&lt; nix::Symbol &gt; &amp;path)</td></tr>
@@ -135,7 +134,34 @@ std::shared_ptr&lt; nix::eval_cache::EvalCache &gt;&#160;</td><td class="memItem
 <div class="textblock"><p>A convenience wrapper that provides various operations on a <code>flake</code>.</p>
 <p>Notably this class is responsible for a <code>nix</code> <code>EvalState</code> and an <code>EvalCache</code> database associated with a <code>flake</code>.</p>
 <p>It is recommended that only one <code><a class="el" href="classflox_1_1FloxFlake.html">FloxFlake</a></code> be created for a unique <code>flake</code> to avoid synchronization slowdowns with its databases. </p>
-</div><hr/>The documentation for this class was generated from the following file:<ul>
+</div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="ad3413e7c7d4ea8d4f9dc50fb7a94e947" name="ad3413e7c7d4ea8d4f9dc50fb7a94e947"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad3413e7c7d4ea8d4f9dc50fb7a94e947">&#9670;&#160;</a></span>openEvalCache()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">nix::ref&lt; nix::eval_cache::EvalCache &gt; flox::FloxFlake::openEvalCache </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Open a <code>nix</code> evaluator ( with an eval cache when possible ) with the evaluated <code>flake</code> and its outputs in global scope. </p><dl class="section return"><dt>Returns</dt><dd>A <code>nix</code> evaluator, potentially with caching. </dd></dl>
+
+</div>
+</div>
+<hr/>The documentation for this class was generated from the following file:<ul>
 <li>include/flox/<a class="el" href="flox-flake_8hh_source.html">flox-flake.hh</a></li>
 </ul>
 </div><!-- contents -->

@@ -169,10 +169,9 @@ main( int argc, char * argv[], char ** envp )
       );
 
       MaybeCursor root = flake.maybeOpenCursor( {
-          flake.state->symbols.create( "legacyPackages" )
-        , flake.state->symbols.create( system )
-        }
-      );
+        flake.state->symbols.create( "legacyPackages" )
+      , flake.state->symbols.create( system )
+      } );
       if ( root == nullptr ) { continue; }
 
       /* Start a transaction */
@@ -191,6 +190,7 @@ main( int argc, char * argv[], char ** envp )
             , flake.state->symbols[aname]
             )
           );
+
           try
             {
               Cursor child = root->getAttr( aname );

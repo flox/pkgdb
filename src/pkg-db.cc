@@ -194,15 +194,11 @@ PkgDb::getPackageSetId( const AttrPathV & path )
   /* Handle no such path. */
   if ( i == qryId.end() )
     {
-      std::string msg( "No such PackageSet '" );
-      bool first = true;
-      for ( const auto p : path )
-        {
-          if ( first ) { first = false; } else { msg += '.'; }
-          msg += p;
-        }
-      msg += "'.";
-      throw PkgDbException( msg );
+      throw PkgDbException(
+        nix::fmt( "No such PackageSet '%s'."
+                , nix::concatStringsSep( ".", path )
+                )
+      );
     }
   return ( * i ).get<long long int>( 0 );
 }

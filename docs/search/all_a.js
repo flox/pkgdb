@@ -1,9 +1,5 @@
 var searchData=
 [
-  ['package_0',['Package',['../classflox_1_1Package.html',1,'flox']]],
-  ['package_2ehh_1',['package.hh',['../package_8hh.html',1,'']]],
-  ['pkg_2ddb_2ecc_2',['pkg-db.cc',['../pkg-db_8cc.html',1,'']]],
-  ['pkg_2ddb_2ehh_3',['pkg-db.hh',['../pkg-db_8hh.html',1,'']]],
-  ['pkgdb_4',['PkgDb',['../classflox_1_1pkgdb_1_1PkgDb.html',1,'flox::pkgdb::PkgDb'],['../classflox_1_1pkgdb_1_1PkgDb.html#a73bc51719e54272930ca8d7d2f479089',1,'flox::pkgdb::PkgDb::PkgDb(const Fingerprint &amp;fingerprint)'],['../classflox_1_1pkgdb_1_1PkgDb.html#ab962dfc3e631dbdc27c2a7d076e0a325',1,'flox::pkgdb::PkgDb::PkgDb(const nix::flake::LockedFlake &amp;flake)']]],
-  ['pkgdbexception_5',['PkgDbException',['../structflox_1_1pkgdb_1_1PkgDbException.html',1,'flox::pkgdb']]]
+  ['openevalcache_0',['openEvalCache',['../classflox_1_1FloxFlake.html#ad3413e7c7d4ea8d4f9dc50fb7a94e947',1,'flox::FloxFlake']]],
+  ['operator_28_29_1',['operator()',['../structstd_1_1hash_3_01std_1_1list_3_01std_1_1string__view_01_4_01_4.html#a1ffa3f282f468a054a0b4e157ffc8111',1,'std::hash&lt; std::list&lt; std::string_view &gt; &gt;']]]
 ];

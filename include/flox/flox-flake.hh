@@ -59,6 +59,11 @@ class FloxFlake : public std::enable_shared_from_this<FloxFlake> {
         ) )
     {}
 
+    /**
+     * Open a `nix` evaluator ( with an eval cache when possible ) with the
+     * evaluated `flake` and its outputs in global scope.
+     * @return A `nix` evaluator, potentially with caching.
+     */
       nix::ref<nix::eval_cache::EvalCache>
     openEvalCache()
     {
