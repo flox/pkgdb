@@ -84,11 +84,12 @@
           pkgsFor.jq
           # For profiling
           pkgsFor.lcov
-          # For debugging
-          pkgsFor.valgrind
           ( if pkgsFor.stdenv.cc.isGNU then pkgsFor.gdb else pkgsFor.lldb )
           # For doc
           pkgsFor.doxygen
+        ] ++ nixpkgs.lib.optionals pkgsFor.stdenv.isLinux [
+          # For debugging
+          pkgsFor.valgrind
         ];
         inherit (pkgsFor.flox-pkgdb)
           nix_INCDIR
