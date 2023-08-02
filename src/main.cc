@@ -79,13 +79,6 @@ main( int argc, char * argv[], char ** envp )
       )
     : nix::parseFlakeRef( refStr );
 
-  if ( ! ref.input.hasAllInfo() )
-    {
-      nix::logger->warn(
-        "flake-reference is unlocked/dirty - resulting DB may not be cached."
-      );
-    }
-
   char * outFile = nullptr;
   try
     {
@@ -122,6 +115,14 @@ main( int argc, char * argv[], char ** envp )
 
   flox::FloxFlake flake( (nix::ref<nix::EvalState>) state, ref );
 
+  if ( ! flake.lockedFlake.flake.lockedRef.input.hasAllInfo() )
+    {
+      nix::logger->warn(
+        "flake-reference is unlocked/dirty - resulting DB may not be cached."
+      );
+    }
+
+
   std::string dbPathStr( flox::pkgdb::getPkgDbName( flake.lockedFlake ) );
 
   std::filesystem::path dbPath( dbPathStr );
@@ -140,10 +141,10 @@ main( int argc, char * argv[], char ** envp )
 
   for ( auto & system : systems  )
     {
-      std::vector<std::string> attrPathS = { "legacyPackages", system };
+      std::vector<std::string>      attrPathS = { "legacyPackages", system };
+      std::vector<std::string_view> attrPath  = { "legacyPackages", system };
 
-      flox::pkgdb::row_id parentId =
-        db.addOrGetPackageSetId( { "legacyPackages", system } );
+      flox::pkgdb::row_id parentId = db.addOrGetPackageSetId( attrPath );
 
       nix::Activity act(
         * nix::logger
@@ -152,14 +153,17 @@ main( int argc, char * argv[], char ** envp )
       , nix::fmt( "evaluating '%s'", nix::concatStringsSep( ".", attrPathS ) )
       );
 
-      sqlite3pp::transaction addPkgTxn( db.db );
-
       MaybeCursor root = flake.maybeOpenCursor( {
           flake.state->symbols.create( "legacyPackages" )
         , flake.state->symbols.create( system )
         }
       );
       if ( root == nullptr ) { continue; }
+
+      /* Start a transaction */
+      sqlite3pp::transaction txn( db.db );
+
+      /* Scrape loop over attrs */
       for ( nix::Symbol & aname : root->getAttrs() )
         {
           nix::Activity act(
@@ -186,7 +190,7 @@ main( int argc, char * argv[], char ** envp )
             }
         }
 
-      addPkgTxn.commit();
+      txn.commit();  /* Close transaction */
     }
 
 

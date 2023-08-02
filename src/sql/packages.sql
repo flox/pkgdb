@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS Packages (
 
 , FOREIGN KEY ( parentId      ) REFERENCES PackageSets  ( pathId )
 , FOREIGN KEY ( descriptionId ) REFERENCES Descriptions ( id     )
+, CONSTRAINT UC_Packages UNIQUE ( parentId, attrName )
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_Packages

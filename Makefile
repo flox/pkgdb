@@ -168,7 +168,7 @@ clean: FORCE
 	-$(RM) -r $(PREFIX)
 	-$(RM) $(TESTS:.cc=)
 	-$(RM) gmon.out *.log
-	$(MAKE) -C src/sql clean
+	-$(MAKE) -C src/sql clean
 	-$(RM) $(addprefix docs/,*.png *.html *.svg *.css *.js)
 	-$(RM) -r docs/search
 
@@ -287,7 +287,7 @@ SQL_FILES    := $(wildcard src/sql/*.sql)
 SQL_HH_FILES := $(SQL_FILES:.sql=.hh)
 
 $(SQL_HH_FILES): %.hh: %.sql src/sql/Makefile
-	$(MAKE) -C src/sql $(%F)
+	$(MAKE) -C src/sql $(@F)
 
 .PHONY: sql-headers
 sql-headers: $(SQL_HH_FILES)

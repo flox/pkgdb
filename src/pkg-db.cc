@@ -124,35 +124,6 @@ PkgDb::hasPackageSet( const AttrPathV & path )
 
 /* -------------------------------------------------------------------------- */
 
-  row_id
-PkgDb::getPackageSetId( const AttrPathV & path )
-{
-  /* Lookup the `PackageSet.id' ( if one exists ) */
-  sqlite3pp::query qryId(
-    this->db
-  , "SELECT pathId FROM PackageSets WHERE path = :path"
-  );
-  qryId.bind( ":path", nlohmann::json( path ).dump(), sqlite3pp::copy );
-  auto i = qryId.begin();
-  /* Handle no such path. */
-  if ( i == qryId.end() )
-    {
-      std::string msg( "No such PackageSet '" );
-      bool first = true;
-      for ( const auto p : path )
-        {
-          if ( first ) { first = false; } else { msg += '.'; }
-          msg += p;
-        }
-      msg += "'.";
-      throw PkgDbException( msg );
-    }
-  return ( * i ).get<long long int>( 0 );
-}
-
-
-/* -------------------------------------------------------------------------- */
-
   std::string
 PkgDb::getDescription( row_id descriptionId )
 {
@@ -180,17 +151,18 @@ PkgDb::getDescription( row_id descriptionId )
   bool
 PkgDb::hasPackage( const AttrPathV & path )
 {
-  nlohmann::json j = nlohmann::json::array();
-  for ( size_t i = 0; i < ( path.size() - 1 ); ++i )
-    {
-      j.emplace_back( path[i] );
-    }
+  std::string pathStr;
+  {
+    nlohmann::json j = path;
+    j.erase( j.size() - 1 );
+    pathStr = j.dump();
+  }
   /* Lookup the `PackageSet.id' ( if one exists ) */
   sqlite3pp::query qryId(
     this->db
-  , "SELECT pathId FROM PackageSets WHERE path = :path"
+  , "SELECT pathId FROM PackageSets WHERE path = :path LIMIT 1"
   );
-  qryId.bind( ":path", j.dump(), sqlite3pp::copy );
+  qryId.bind( ":path", pathStr, sqlite3pp::copy );
   auto i = qryId.begin();
   if ( i == qryId.end() ) { return false; }  /* No such path. */
 
@@ -210,13 +182,42 @@ PkgDb::hasPackage( const AttrPathV & path )
 /* -------------------------------------------------------------------------- */
 
   row_id
+PkgDb::getPackageSetId( const AttrPathV & path )
+{
+  /* Lookup the `PackageSet.id' ( if one exists ) */
+  sqlite3pp::query qryId(
+    this->db
+  , "SELECT pathId FROM PackageSets WHERE path = :path LIMIT 1"
+  );
+  qryId.bind( ":path", nlohmann::json( path ).dump(), sqlite3pp::copy );
+  auto i = qryId.begin();
+  /* Handle no such path. */
+  if ( i == qryId.end() )
+    {
+      std::string msg( "No such PackageSet '" );
+      bool first = true;
+      for ( const auto p : path )
+        {
+          if ( first ) { first = false; } else { msg += '.'; }
+          msg += p;
+        }
+      msg += "'.";
+      throw PkgDbException( msg );
+    }
+  return ( * i ).get<long long int>( 0 );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  row_id
 PkgDb::addOrGetPackageSetId( const AttrPathV & path )
 {
   try { return this->getPackageSetId( path ); }
   catch ( const PkgDbException & e ) { /* Ignored */ }
   sqlite3pp::command cmd(
     this->db
-  , "INSERT INTO PackageSets ( path ) VALUES ( :path )"
+  , "INSERT OR IGNORE INTO PackageSets ( path ) VALUES ( :path )"
   );
   cmd.bind( ":path", nlohmann::json( path ).dump(), sqlite3pp::copy );
   cmd.execute();
@@ -232,7 +233,7 @@ PkgDb::addOrGetDescriptionId( std::string_view description )
   std::string s( description );
   sqlite3pp::query qry(
     this->db
-  , "SELECT id FROM Descriptions WHERE description = :description"
+  , "SELECT id FROM Descriptions WHERE description = :description LIMIT 1"
   );
   qry.bind( ":description", s, sqlite3pp::copy );
   auto i = qry.begin();
@@ -240,9 +241,9 @@ PkgDb::addOrGetDescriptionId( std::string_view description )
 
   sqlite3pp::command cmd(
     this->db
-  , "INSERT INTO PackageSets ( path ) VALUES ( :path )"
+  , "INSERT INTO Descriptions ( description ) VALUES ( :description )"
   );
-  cmd.bind( ":path", s, sqlite3pp::copy );
+  cmd.bind( ":description", s, sqlite3pp::copy );
   cmd.execute();
   return this->db.last_insert_rowid();
 }
@@ -277,7 +278,7 @@ PkgDb::addPackage( row_id           parentId
   FlakePackage pkg( cursor, { "packages", "x86_64-linux", "phony" }, checkDrv );
 
   cmd.bind( ":parentId", (long long int) parentId );
-  cmd.bind( ":attrName", std::string( attrName ), sqlite3pp::copy   );
+  cmd.bind( ":attrName", std::string( attrName ), sqlite3pp::copy );
   cmd.bind( ":name",     pkg._fullName,           sqlite3pp::nocopy );
 
   if ( pkg._version.empty() )
@@ -313,7 +314,7 @@ PkgDb::addPackage( row_id           parentId
     {
       if ( auto m = pkg.getLicense(); m.has_value() )
         {
-          cmd.bind( ":license", std::string( m.value() ), sqlite3pp::copy );
+          cmd.bind( ":license", std::string( m.value() ), sqlite3pp::nocopy );
         }
       else
         {
