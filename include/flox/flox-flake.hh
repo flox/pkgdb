@@ -19,6 +19,14 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
+static const nix::flake::LockFlags defaultLockFlags = {
+  .updateLockFile = false
+, .writeLockFile  = false
+};
+
+
+/* -------------------------------------------------------------------------- */
+
 /**
  * A convenience wrapper that provides various operations on a `flake`.
  *
@@ -45,11 +53,9 @@ class FloxFlake : public std::enable_shared_from_this<FloxFlake> {
              )
       : state( state )
       , lockedFlake( nix::flake::lockFlake(
-          * this->state
+          * state
         , ref
-        , (nix::flake::LockFlags) {
-            .updateLockFile = false, .writeLockFile = false
-          }
+        , defaultLockFlags
         ) )
     {}
 
@@ -58,9 +64,10 @@ class FloxFlake : public std::enable_shared_from_this<FloxFlake> {
     {
       if ( this->_cache == nullptr )
         {
+          auto fingerprint = this->lockedFlake.getFingerprint();
           this->_cache = std::make_shared<nix::eval_cache::EvalCache>(
             ( nix::evalSettings.useEvalCache && nix::evalSettings.pureEval )
-            ? std::optional { std::cref( this->lockedFlake->getFingerprint() ) }
+            ? std::optional { std::cref( fingerprint ) }
             : std::nullopt
           , * this->state
           , [&]()

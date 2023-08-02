@@ -8,6 +8,7 @@
  * -------------------------------------------------------------------------- */
 
 #include "pkg-db.hh"
+#include "flox/flake-package.hh"
 
 #include "sql/versions.hh"
 #include "sql/input.hh"
@@ -73,8 +74,8 @@ PkgDb::initTables()
 {
   this->execute( sql_versions );
   this->execute( sql_input );
-  this->execute( sql_packageSets );
-  this->execute( sql_packages );
+  this->execute_all( sql_packageSets );
+  this->execute_all( sql_packages );
   static const char * stmtVersions =
     "INSERT OR IGNORE INTO DbVersions ( name, version ) VALUES"
     "  ( 'pkgdb',        '" FLOX_PKGDB_VERSION        "' )"
@@ -254,10 +255,109 @@ PkgDb::addPackage( row_id           parentId
                  , std::string_view attrName
                  , Cursor           cursor
                  , bool             replace
+                 , bool             checkDrv
                  )
 {
-  // TODO
-  return 0;
+  #define _ADD_PKG_BODY                                                  \
+   " INTO Packages ("                                                    \
+   "  parentId, attrName, name, pname, version, semver, license"         \
+   ", outputs, outputsToInstall, broken, unfree, descriptionId"          \
+   ") VALUES ("                                                          \
+   "  :parentId, :attrName, :name, :pname, :version, :semver, :license"  \
+   ", :outputs, :outputsToInstall, :broken, :unfree, :descriptionId"     \
+   ")"
+  static const char * qryIgnore  = "INSERT OR IGNORE"  _ADD_PKG_BODY;
+  static const char * qryReplace = "INSERT OR REPLACE" _ADD_PKG_BODY;
+
+  sqlite3pp::command cmd( this->db, replace ? qryReplace : qryIgnore );
+
+  /* We don't need to reference any `attrPath' related info here, so
+   * we can avoid looking up the parent path by passing a phony one to the
+   * `FlakePackage' constructor here. */
+  FlakePackage pkg( cursor, { "packages", "x86_64-linux", "phony" }, checkDrv );
+
+  cmd.bind( ":parentId", (long long int) parentId );
+  cmd.bind( ":attrName", std::string( attrName ), sqlite3pp::copy   );
+  cmd.bind( ":name",     pkg._fullName,           sqlite3pp::nocopy );
+
+  if ( pkg._version.empty() )
+    {
+      cmd.bind( ":version" ); /* bind NULL */
+    }
+  else
+    {
+      cmd.bind( ":version",  pkg._version, sqlite3pp::nocopy );
+    }
+
+  if ( pkg._semver.has_value() )
+    {
+      cmd.bind( ":semver", pkg._semver.value(), sqlite3pp::nocopy );
+    }
+  else
+    {
+      cmd.bind( ":semver" );  /* binds NULL */
+    }
+
+  {
+    nlohmann::json j = pkg.getOutputsS();
+    cmd.bind( ":outputs", j.dump(), sqlite3pp::copy );
+  }
+  {
+    nlohmann::json j = pkg.getOutputsToInstallS();
+    cmd.bind( ":outputsToInstall", j.dump(), sqlite3pp::copy );
+  }
+
+
+  /* `getOutputsToInstall' returns `std::string_views' - this avoids copies. */
+  if ( pkg._hasMetaAttr )
+    {
+      if ( auto m = pkg.getLicense(); m.has_value() )
+        {
+          cmd.bind( ":license", std::string( m.value() ), sqlite3pp::copy );
+        }
+      else
+        {
+          cmd.bind( ":license" );
+        }
+
+      if ( auto m = pkg.isBroken(); m.has_value() )
+        {
+          cmd.bind( ":broken", (int) m.value() );
+        }
+      else
+        {
+          cmd.bind( ":broken" );
+        }
+
+      if ( auto m = pkg.isUnfree(); m.has_value() )
+        {
+          cmd.bind( ":unfree", (int) m.value() );
+        }
+      else /* TODO: Derive value from `license'? */
+        {
+          cmd.bind( ":unfree" );
+        }
+
+      if ( auto m = pkg.getDescription(); m.has_value() )
+        {
+          row_id descriptionId = this->addOrGetDescriptionId( m.value() );
+          cmd.bind( ":descriptionId", (long long int) descriptionId );
+        }
+      else
+        {
+          cmd.bind( ":descriptionId" );
+        }
+    }
+  else
+    {
+      /* binds NULL */
+      cmd.bind( ":license" );
+      cmd.bind( ":broken" );
+      cmd.bind( ":unfree" );
+      cmd.bind( ":descriptionId" );
+    }
+  cmd.execute();
+  return this->db.last_insert_rowid();
 }
 
 

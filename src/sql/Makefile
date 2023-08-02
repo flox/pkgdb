@@ -6,8 +6,9 @@
 #
 # ---------------------------------------------------------------------------- #
 
-RM  ?= rm -f
-SED ?= sed
+RM   ?= rm -f
+SED  ?= sed
+GREP ?= grep
 
 HEADERS =
 
@@ -22,11 +23,13 @@ clean: FORCE ; -$(RM) $(HEADERS)
 
 # ---------------------------------------------------------------------------- #
 
+# If file
 define SQL_HH_template =
 $(2:.sql=.hh): $(2)
-	echo 'static const char * sql_$(1) = R"SQL(' >  $$@
-	$(SED) -e '/^--/d' -e '/^$$$$/d' $(2)        >> $$@
-	echo ')SQL";'                                >> $$@
+	echo 'static const char * sql_$(1) = R"SQL('         >  $$@
+	$(SED) -e '/^--/d' -e '/^$$$$/d' -e '/^.read/d' $(2) >> $$@
+	$(GREP) -q ';' $(2) && echo 'SELECT NULL'            >> $$@
+	echo ')SQL";'                                        >> $$@
 HEADERS += $(2:.sql=.hh)
 endef
 

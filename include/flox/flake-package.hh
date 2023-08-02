@@ -26,15 +26,21 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
+  /* Forward declare a friend. */
+  namespace pkgdb { class PkgDb; }
+
+/* -------------------------------------------------------------------------- */
+
 class FlakePackage : public Package {
 
   public:
     using Cursor      = nix::ref<nix::eval_cache::AttrCursor>;
     using MaybeCursor = std::shared_ptr<nix::eval_cache::AttrCursor>;
 
+    friend class pkgdb::PkgDb;
+
   private:
     Cursor                   _cursor;
-    std::vector<nix::Symbol> _path;
     std::vector<std::string> _pathS;
 
     bool _hasMetaAttr    = false;
@@ -56,12 +62,28 @@ class FlakePackage : public Package {
   public:
 
     FlakePackage(       Cursor                     cursor
+                , const std::vector<std::string> & path
+                ,       bool                       checkDrv = true
+                )
+      : _cursor( cursor )
+      , _pathS( path )
+      , _fullName( cursor->getAttr( "name" )->getString() )
+    {
+      {
+        nix::DrvName dname( this->_fullName );
+        this->_pname   = dname.name;
+        this->_version = dname.version;
+      }
+      this->init( checkDrv );
+    }
+
+
+    FlakePackage(       Cursor                     cursor
                 , const std::vector<nix::Symbol> & path
                 ,       nix::SymbolTable         * symtab
                 ,       bool                       checkDrv = true
                 )
       : _cursor( cursor )
-      , _path( path )
       , _fullName( cursor->getAttr( "name" )->getString() )
     {
       {
@@ -76,6 +98,7 @@ class FlakePackage : public Package {
       this->init( checkDrv );
     }
 
+
     FlakePackage( Cursor             cursor
                 , nix::SymbolTable * symtab
                 , bool               checkDrv = true
@@ -86,11 +109,18 @@ class FlakePackage : public Package {
 
 /* -------------------------------------------------------------------------- */
 
-    std::vector<std::string_view> getOutputsToInstall() const override;
-    std::optional<bool>           isBroken()            const override;
-    std::optional<bool>           isUnfree()            const override;
+    std::vector<std::string>      getOutputsToInstallS() const;
+    std::optional<bool>           isBroken()             const override;
+    std::optional<bool>           isUnfree()             const override;
 
-    std::vector<nix::Symbol> getPath() const { return this->_path; }
+
+      std::vector<std::string_view>
+    getOutputsToInstall() const override
+    {
+      std::vector<std::string_view> rsl;
+      for ( auto & s : this->getOutputsToInstallS() ) { rsl.emplace_back( s ); }
+      return rsl;
+    }
 
       std::vector<std::string_view>
     getPathStrs() const override
@@ -143,6 +173,14 @@ class FlakePackage : public Package {
       catch( ... ) { return std::nullopt; }
     }
 
+      std::vector<std::string>
+    getOutputsS() const
+    {
+      MaybeCursor o = this->_cursor->maybeGetAttr( "outputs" );
+      if ( o == nullptr ) { return { "out" };             }
+      else                { return o->getListOfStrings(); }
+    }
+
       std::vector<std::string_view>
     getOutputs() const override
     {
@@ -160,6 +198,9 @@ class FlakePackage : public Package {
             }
           return rsl;
         }
+      std::vector<std::string_view> rsl;
+      for ( auto & s : this->getOutputsS() ) { rsl.emplace_back( s ); }
+      return rsl;
     }
 
       std::optional<std::string_view>

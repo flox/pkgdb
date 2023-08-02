@@ -137,7 +137,7 @@ lib_LDFLAGS += -Wl,--as-needed
 lib_LDFLAGS += $(nix_LDFLAGS) $(sqlite3_LDFLAGS)
 lib_LDFLAGS += -Wl,--no-as-needed
 
-bin_LDFLAGS += $(nix_LDFLAGS) $(floxresolve_LDFLAGS)
+bin_LDFLAGS += $(nix_LDFLAGS) $(floxresolve_LDFLAGS) $(sqlite3_LDFLAGS)
 
 
 # ---------------------------------------------------------------------------- #

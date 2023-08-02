@@ -18,7 +18,7 @@ namespace flox {
   void
 FlakePackage::init( bool checkDrv )
 {
-  if ( this->_path.size() < 3 )
+  if ( this->_pathS.size() < 3 )
     {
       throw FloxException(
         "Package::init(): Package attribute paths must have at least 3 "
@@ -95,25 +95,17 @@ FlakePackage::init( bool checkDrv )
 
 /* -------------------------------------------------------------------------- */
 
-  std::vector<std::string_view>
-FlakePackage::getOutputsToInstall() const
+  std::vector<std::string>
+FlakePackage::getOutputsToInstallS() const
 {
   if ( this->_hasMetaAttr )
     {
       MaybeCursor m =
         this->_cursor->getAttr( "meta" )->maybeGetAttr( "outputsToInstall" );
-      if ( m != nullptr )
-        {
-          std::vector<std::string_view> rsl;
-          for ( const auto & o : m->getListOfStrings() )
-            {
-              rsl.emplace_back( o );
-            }
-          return rsl;
-        }
+      if ( m != nullptr ) { return m->getListOfStrings(); }
     }
-  std::vector<std::string_view> rsl;
-  for ( std::string_view o : this->getOutputs() )
+  std::vector<std::string> rsl;
+  for ( std::string o : this->getOutputsS() )
     {
       rsl.push_back( o );
       if ( o == "out" ) { break; }

@@ -117,7 +117,7 @@ class PkgDb {
     /** Opens a DB directly by its fingerprint hash. */
     PkgDb( const Fingerprint & fingerprint )
       : fingerprint( fingerprint )
-      , db( getPkgDbName( this->fingerprint ).c_str() )
+      , db( getPkgDbName( fingerprint ).c_str() )
     {
       this->initTables();
       this->loadLockedRef();
@@ -126,7 +126,7 @@ class PkgDb {
     /** Opens a DB associated with a locked flake. */
     PkgDb( const nix::flake::LockedFlake & flake )
       : fingerprint( flake.getFingerprint() )
-      , db( getPkgDbName( this->fingerprint ).c_str() )
+      , db( getPkgDbName( flake.getFingerprint() ).c_str() )
       , lockedRef( {
           flake.flake.lockedRef.to_string()
         , nix::fetchers::attrsToJSON( flake.flake.lockedRef.toAttrs() )
@@ -156,7 +156,7 @@ class PkgDb {
      execute( const char * stmt )
      {
        sqlite3pp::command cmd( this->db, stmt );
-       return cmd.execute_all();
+       return cmd.execute();
      }
 
     /**
@@ -168,7 +168,7 @@ class PkgDb {
      execute( const std::string & stmt )
      {
        sqlite3pp::command cmd( this->db, stmt.c_str() );
-       return cmd.execute_all();
+       return cmd.execute();
      }
 
     /**
@@ -178,6 +178,44 @@ class PkgDb {
      */
        inline int
      execute( std::string_view stmt )
+     {
+       std::string cpy( stmt );
+       sqlite3pp::command cmd( this->db, cpy.c_str() );
+       return cmd.execute();
+     }
+
+
+    /**
+     * Execute raw sqlite statements on the database.
+     * @param stmt String statement to execute.
+     * @return `SQLITE_*` [error code](https://www.sqlite.org/rescode.html).
+     */
+       inline int
+     execute_all( const char * stmt )
+     {
+       sqlite3pp::command cmd( this->db, stmt );
+       return cmd.execute_all();
+     }
+
+    /**
+     * Execute raw sqlite statements on the database.
+     * @param stmt String statement to execute.
+     * @return `SQLITE_*` [error code](https://www.sqlite.org/rescode.html).
+     */
+       inline int
+     execute_all( const std::string & stmt )
+     {
+       sqlite3pp::command cmd( this->db, stmt.c_str() );
+       return cmd.execute_all();
+     }
+
+    /**
+     * Execute raw sqlite statements on the database.
+     * @param stmt String statement to execute.
+     * @return `SQLITE_*` [error code](https://www.sqlite.org/rescode.html).
+     */
+       inline int
+     execute_all( std::string_view stmt )
      {
        std::string cpy( stmt );
        sqlite3pp::command cmd( this->db, cpy.c_str() );
@@ -259,12 +297,16 @@ class PkgDb {
      *                 of the attribute path ).
      * @param cursor An attribute cursor to scrape data from.
      * @param replace Whether to replace/ignore existing rows.
+     * @param checkDrv Whether to check `isDerivation` for @a cursor.
+     *                 Skipping this check is a slight optimization for cases
+     *                 where the caller has already checked themselves.
      * @return The `Packages.id` value for the added package.
      */
     row_id addPackage( row_id           parentId
                      , std::string_view attrName
                      , Cursor           cursor
-                     , bool             replace = false
+                     , bool             replace  = false
+                     , bool             checkDrv = true
                      );
 
 
