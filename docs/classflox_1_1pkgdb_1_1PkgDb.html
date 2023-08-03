@@ -87,8 +87,12 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:abd425cec98a7146fc9cfd75b612b0603"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classflox_1_1pkgdb_1_1PkgDb.html#abd425cec98a7146fc9cfd75b612b0603">PkgDb</a> (const Fingerprint &amp;<a class="el" href="classflox_1_1pkgdb_1_1PkgDb.html#a65b5e576e4b999671e0316e7659f761e">fingerprint</a>, std::string_view <a class="el" href="classflox_1_1pkgdb_1_1PkgDb.html#ad381616809f45cbf6aa7416d304d751e">dbPath</a>)</td></tr>
+<tr class="separator:abd425cec98a7146fc9cfd75b612b0603"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a73bc51719e54272930ca8d7d2f479089"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classflox_1_1pkgdb_1_1PkgDb.html#a73bc51719e54272930ca8d7d2f479089">PkgDb</a> (const Fingerprint &amp;<a class="el" href="classflox_1_1pkgdb_1_1PkgDb.html#a65b5e576e4b999671e0316e7659f761e">fingerprint</a>)</td></tr>
 <tr class="separator:a73bc51719e54272930ca8d7d2f479089"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5936164917d7c666dca545ade3f5e6a6"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classflox_1_1pkgdb_1_1PkgDb.html#a5936164917d7c666dca545ade3f5e6a6">PkgDb</a> (const nix::flake::LockedFlake &amp;flake, std::string_view <a class="el" href="classflox_1_1pkgdb_1_1PkgDb.html#ad381616809f45cbf6aa7416d304d751e">dbPath</a>)</td></tr>
+<tr class="separator:a5936164917d7c666dca545ade3f5e6a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab962dfc3e631dbdc27c2a7d076e0a325"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classflox_1_1pkgdb_1_1PkgDb.html#ab962dfc3e631dbdc27c2a7d076e0a325">PkgDb</a> (const nix::flake::LockedFlake &amp;flake)</td></tr>
 <tr class="separator:ab962dfc3e631dbdc27c2a7d076e0a325"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac9e2b85e229e27ae3968c8389c856ef6"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classflox_1_1pkgdb_1_1PkgDb.html#ac9e2b85e229e27ae3968c8389c856ef6">getDbVersion</a> ()</td></tr>
@@ -126,6 +130,8 @@ Public Attributes</h2></td></tr>
 <tr class="separator:a78870853ff6829e4cf16eea1dbdb11b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a65b5e576e4b999671e0316e7659f761e"><td class="memItemLeft" align="right" valign="top">const Fingerprint&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classflox_1_1pkgdb_1_1PkgDb.html#a65b5e576e4b999671e0316e7659f761e">fingerprint</a></td></tr>
 <tr class="separator:a65b5e576e4b999671e0316e7659f761e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad381616809f45cbf6aa7416d304d751e"><td class="memItemLeft" align="right" valign="top">const std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classflox_1_1pkgdb_1_1PkgDb.html#ad381616809f45cbf6aa7416d304d751e">dbPath</a></td></tr>
+<tr class="separator:ad381616809f45cbf6aa7416d304d751e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa333f0bffbb3b37d8d4babb9c822279b"><td class="memItemLeft" >struct {&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6fc6345ffd39bc9b9bfe4b3950ba7616"><td class="memItemLeft" >&#160;&#160;&#160;std::string&#160;&#160;&#160;<a class="el" href="classflox_1_1pkgdb_1_1PkgDb.html#ae358a12d29ac759316bdbab92380d77f">string</a>&#160;</td><td class="memItemRight" valign="bottom"></td></tr>
@@ -147,8 +153,51 @@ Private Member Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A SQLite3 database used to cache derivation/package information about a single locked flake. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="abd425cec98a7146fc9cfd75b612b0603" name="abd425cec98a7146fc9cfd75b612b0603"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abd425cec98a7146fc9cfd75b612b0603">&#9670;&#160;</a></span>PkgDb() <span class="overload">[1/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">flox::pkgdb::PkgDb::PkgDb </td>
+          <td>(</td>
+          <td class="paramtype">const Fingerprint &amp;&#160;</td>
+          <td class="paramname"><em>fingerprint</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::string_view&#160;</td>
+          <td class="paramname"><em>dbPath</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Opens a DB directly by its fingerprint hash. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">fingerprint</td><td>Unique hash associated with locked flake. </td></tr>
+    <tr><td class="paramname">dbPath</td><td>Absolute path to database file. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a73bc51719e54272930ca8d7d2f479089" name="a73bc51719e54272930ca8d7d2f479089"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a73bc51719e54272930ca8d7d2f479089">&#9670;&#160;</a></span>PkgDb() <span class="overload">[1/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a73bc51719e54272930ca8d7d2f479089">&#9670;&#160;</a></span>PkgDb() <span class="overload">[2/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -170,12 +219,60 @@ Private Member Functions</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>Opens a DB directly by its fingerprint hash. </p>
+<p>Opens a DB directly by its fingerprint hash. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">fingerprint</td><td>Unique hash associated with locked flake. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="a5936164917d7c666dca545ade3f5e6a6" name="a5936164917d7c666dca545ade3f5e6a6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5936164917d7c666dca545ade3f5e6a6">&#9670;&#160;</a></span>PkgDb() <span class="overload">[3/4]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">flox::pkgdb::PkgDb::PkgDb </td>
+          <td>(</td>
+          <td class="paramtype">const nix::flake::LockedFlake &amp;&#160;</td>
+          <td class="paramname"><em>flake</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::string_view&#160;</td>
+          <td class="paramname"><em>dbPath</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Opens a DB associated with a locked flake. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">flake</td><td>Flake associated with the db. Used to write input metadata. </td></tr>
+    <tr><td class="paramname">dbPath</td><td>Absolute path to database file. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
 <a id="ab962dfc3e631dbdc27c2a7d076e0a325" name="ab962dfc3e631dbdc27c2a7d076e0a325"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab962dfc3e631dbdc27c2a7d076e0a325">&#9670;&#160;</a></span>PkgDb() <span class="overload">[2/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#ab962dfc3e631dbdc27c2a7d076e0a325">&#9670;&#160;</a></span>PkgDb() <span class="overload">[4/4]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -197,7 +294,12 @@ Private Member Functions</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>Opens a DB associated with a locked flake. </p>
+<p>Opens a DB associated with a locked flake. </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">flake</td><td>Flake associated with the db. Used to write input metadata. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -731,6 +833,22 @@ Private Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <p>SQLite3 database handle. <br  />
+ </p>
+
+</div>
+</div>
+<a id="ad381616809f45cbf6aa7416d304d751e" name="ad381616809f45cbf6aa7416d304d751e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad381616809f45cbf6aa7416d304d751e">&#9670;&#160;</a></span>dbPath</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::string flox::pkgdb::PkgDb::dbPath</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Absolute path to database. <br  />
  </p>
 
 </div>

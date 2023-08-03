@@ -112,22 +112,22 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>row_id</b> = uint64_
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ade5eec4f3dc04870b1001005501a808f"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceflox_1_1pkgdb.html#ade5eec4f3dc04870b1001005501a808f">getPkgDbName</a> (const Fingerprint &amp;fingerprint)</td></tr>
-<tr class="separator:ade5eec4f3dc04870b1001005501a808f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a22f4c45e2290c5ba69d1c2f1c26c5ea6"><td class="memItemLeft" align="right" valign="top">static std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceflox_1_1pkgdb.html#a22f4c45e2290c5ba69d1c2f1c26c5ea6">getPkgDbName</a> (const nix::flake::LockedFlake &amp;flake)</td></tr>
-<tr class="separator:a22f4c45e2290c5ba69d1c2f1c26c5ea6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acf65b3c4a2d8d821e1f8ae895583111d"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceflox_1_1pkgdb.html#acf65b3c4a2d8d821e1f8ae895583111d">genPkgDbName</a> (const Fingerprint &amp;fingerprint)</td></tr>
+<tr class="separator:acf65b3c4a2d8d821e1f8ae895583111d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe6efb0c4110b4191ded863ca0c3ede5"><td class="memItemLeft" align="right" valign="top">static std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceflox_1_1pkgdb.html#abe6efb0c4110b4191ded863ca0c3ede5">genPkgDbName</a> (const nix::flake::LockedFlake &amp;flake)</td></tr>
+<tr class="separator:abe6efb0c4110b4191ded863ca0c3ede5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Interfaces for caching package metadata in SQLite3 databases. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a id="ade5eec4f3dc04870b1001005501a808f" name="ade5eec4f3dc04870b1001005501a808f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ade5eec4f3dc04870b1001005501a808f">&#9670;&#160;</a></span>getPkgDbName() <span class="overload">[1/2]</span></h2>
+<a id="acf65b3c4a2d8d821e1f8ae895583111d" name="acf65b3c4a2d8d821e1f8ae895583111d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acf65b3c4a2d8d821e1f8ae895583111d">&#9670;&#160;</a></span>genPkgDbName() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::string flox::pkgdb::getPkgDbName </td>
+          <td class="memname">std::string flox::pkgdb::genPkgDbName </td>
           <td>(</td>
           <td class="paramtype">const Fingerprint &amp;&#160;</td>
           <td class="paramname"><em>fingerprint</em></td><td>)</td>
@@ -139,8 +139,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a22f4c45e2290c5ba69d1c2f1c26c5ea6" name="a22f4c45e2290c5ba69d1c2f1c26c5ea6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a22f4c45e2290c5ba69d1c2f1c26c5ea6">&#9670;&#160;</a></span>getPkgDbName() <span class="overload">[2/2]</span></h2>
+<a id="abe6efb0c4110b4191ded863ca0c3ede5" name="abe6efb0c4110b4191ded863ca0c3ede5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abe6efb0c4110b4191ded863ca0c3ede5">&#9670;&#160;</a></span>genPkgDbName() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -149,7 +149,7 @@ Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">static std::string flox::pkgdb::getPkgDbName </td>
+          <td class="memname">static std::string flox::pkgdb::genPkgDbName </td>
           <td>(</td>
           <td class="paramtype">const nix::flake::LockedFlake &amp;&#160;</td>
           <td class="paramname"><em>flake</em></td><td>)</td>

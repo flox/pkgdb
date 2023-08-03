@@ -95,14 +95,12 @@ main( int argc, char * argv[], char ** envp )
     .default_value( std::list<std::string> { nix::settings.thisSystem.get() } )
   ;
 
-  /*  TODO
-  cmdScrape.add_argument( "-o", "--out" )
+  cmdScrape.add_argument( "-o", "--outfile" )
     .help( "write database to FILE" )
     .default_value( "" )
     .metavar( "FILE" )
     .nargs( 1 )
   ;
-  */
 
   cmdScrape.add_argument( "flake-ref" )
     .help( "a flake-reference URI string ( preferably locked )" )
@@ -140,20 +138,6 @@ main( int argc, char * argv[], char ** envp )
       )
     : nix::parseFlakeRef( refStr );
 
-  // TODO
-  #if 0
-  char * outFile = nullptr;
-  try
-    {
-      outFile = cmdScrape.get<char *>( "-o" );
-      if ( std::string_view( outFile ).empty() ) { outFile = nullptr; }
-    }
-  catch( const std::runtime_error & e )
-    {
-      /* Ignored: Uses fingerprint */
-    }
-  #endif
-
   /* Assign verbosity to `nix' global setting */
   nix::verbosity = verbosity;
 
@@ -186,13 +170,26 @@ main( int argc, char * argv[], char ** envp )
 
   if ( ! flake.lockedFlake.flake.lockedRef.input.hasAllInfo() )
     {
-      nix::logger->warn(
-        "flake-reference is unlocked/dirty - resulting DB may not be cached."
-      );
+      if ( nix::lvlWarn <= nix::verbosity )
+        {
+          nix::logger->warn(
+            "flake-reference is unlocked/dirty - "
+            "resulting DB may not be cached."
+          );
+        }
     }
 
+  std::string dbPathStr;
+  if ( cmdScrape.is_used( "-o" ) )
+    {
+      dbPathStr = cmdScrape.get<std::string>( "-o" );
+      if ( ! dbPathStr.empty() ) { dbPathStr = nix::absPath( dbPathStr ); }
+    }
 
-  std::string dbPathStr( flox::pkgdb::getPkgDbName( flake.lockedFlake ) );
+  if ( dbPathStr.empty() )
+    {
+      dbPathStr = flox::pkgdb::genPkgDbName( flake.lockedFlake );
+    }
 
   std::filesystem::path dbPath( dbPathStr );
   if ( ! std::filesystem::exists( dbPath.parent_path() ) )
@@ -200,7 +197,7 @@ main( int argc, char * argv[], char ** envp )
       std::filesystem::create_directories( dbPath.parent_path() );
     }
 
-  flox::pkgdb::PkgDb db( flake.lockedFlake );
+  flox::pkgdb::PkgDb db( flake.lockedFlake, dbPathStr );
 
   /* TODO: handle prefixes/system */
 

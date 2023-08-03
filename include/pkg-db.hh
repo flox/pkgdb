@@ -53,13 +53,13 @@ struct PkgDbException : public FloxException {
 /* -------------------------------------------------------------------------- */
 
 /** Get an absolute path to the `PkgDb' for a given fingerprint hash. */
-std::string getPkgDbName( const Fingerprint & fingerprint );
+std::string genPkgDbName( const Fingerprint & fingerprint );
 
 /** Get an absolute path to the `PkgDb' for a locked flake. */
   static inline std::string
-getPkgDbName( const nix::flake::LockedFlake & flake )
+genPkgDbName( const nix::flake::LockedFlake & flake )
 {
-  return getPkgDbName( flake.getFingerprint() );
+  return genPkgDbName( flake.getFingerprint() );
 }
 
 
@@ -79,6 +79,7 @@ class PkgDb {
 
           SQLiteDb    db;           /**< SQLite3 database handle.         */
     const Fingerprint fingerprint;  /**< Unique hash of associated flake. */
+    const std::string dbPath;       /**< Absolute path to database.       */
 
     /** Locked _flake reference_ for database's flake. */
     struct {
@@ -112,21 +113,39 @@ class PkgDb {
 
   public:
 
-    PkgDb() : fingerprint( nix::htSHA256 ) {}
-
-    /** Opens a DB directly by its fingerprint hash. */
-    PkgDb( const Fingerprint & fingerprint )
-      : fingerprint( fingerprint )
-      , db( getPkgDbName( fingerprint ).c_str() )
+    /**
+     * Opens a DB directly by its fingerprint hash.
+     * @param fingerprint Unique hash associated with locked flake.
+     * @param dbPath Absolute path to database file.
+     */
+    PkgDb( const Fingerprint      & fingerprint
+         ,       std::string_view   dbPath
+         )
+      : fingerprint( fingerprint ), dbPath( dbPath ), db( dbPath )
     {
       this->initTables();
       this->loadLockedRef();
     }
 
-    /** Opens a DB associated with a locked flake. */
-    PkgDb( const nix::flake::LockedFlake & flake )
+    /**
+     * Opens a DB directly by its fingerprint hash.
+     * @param fingerprint Unique hash associated with locked flake.
+     */
+    PkgDb( const Fingerprint & fingerprint )
+      : PkgDb( fingerprint, genPkgDbName( fingerprint ) )
+    {}
+
+    /**
+     * Opens a DB associated with a locked flake.
+     * @param flake Flake associated with the db. Used to write input metadata.
+     * @param dbPath Absolute path to database file.
+     */
+    PkgDb( const nix::flake::LockedFlake & flake
+         ,       std::string_view          dbPath
+         )
       : fingerprint( flake.getFingerprint() )
-      , db( getPkgDbName( flake.getFingerprint() ).c_str() )
+      , db( dbPath )
+      , dbPath( dbPath )
       , lockedRef( {
           flake.flake.lockedRef.to_string()
         , nix::fetchers::attrsToJSON( flake.flake.lockedRef.toAttrs() )
@@ -135,6 +154,14 @@ class PkgDb {
       initTables();
       writeInput();
     }
+
+    /**
+     * Opens a DB associated with a locked flake.
+     * @param flake Flake associated with the db. Used to write input metadata.
+     */
+    PkgDb( const nix::flake::LockedFlake & flake )
+      : PkgDb( flake, genPkgDbName( flake.getFingerprint() ) )
+    {}
 
 
 /* -------------------------------------------------------------------------- */
@@ -145,7 +172,6 @@ class PkgDb {
 
     /** @return The Package Database schema version. */
     std::string getDbVersion();
-
 
     /**
      * Execute a raw sqlite statement on the database.

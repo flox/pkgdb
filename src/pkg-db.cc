@@ -25,7 +25,7 @@ namespace flox {
 /* -------------------------------------------------------------------------- */
 
   std::string
-getPkgDbName( const Fingerprint & fingerprint )
+genPkgDbName( const Fingerprint & fingerprint )
 {
   nix::Path   cacheDir = nix::getCacheDir() + "/flox/pkgdb-v0";
   std::string fpStr    = fingerprint.to_string( nix::Base16, false );

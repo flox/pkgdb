@@ -91,11 +91,11 @@
         "nixpkgs": "nixpkgs_3"
       },
       "locked": {
-        "lastModified": 1690735629,
-        "narHash": "sha256-f7ETvNoeNheVMLKEZUr2FQDYt3zT0vpz/2FMxL33Mpg=",
+        "lastModified": 1691067598,
+        "narHash": "sha256-oSVMmgoWqHAEWcOGXMjY9n56moK+EQUQHsYjuuFY/48=",
         "owner": "aakropotkin",
         "repo": "sqlite3pp",
-        "rev": "a910baaf5bafdd8322a696aa3333765bb246a0b1",
+        "rev": "ca405e2f00a4f77dcab3c75a46d475bee1055099",
         "type": "github"
       },
       "original": {
