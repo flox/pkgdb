@@ -95,10 +95,10 @@ main( int argc, char * argv[], char ** envp )
     .default_value( std::list<std::string> { nix::settings.thisSystem.get() } )
   ;
 
-  cmdScrape.add_argument( "-o", "--outfile" )
-    .help( "write database to FILE" )
+  cmdScrape.add_argument( "-d", "--database" )
+    .help( "use database at PATH" )
     .default_value( "" )
-    .metavar( "FILE" )
+    .metavar( "PATH" )
     .nargs( 1 )
   ;
 
@@ -180,9 +180,9 @@ main( int argc, char * argv[], char ** envp )
     }
 
   std::string dbPathStr;
-  if ( cmdScrape.is_used( "-o" ) )
+  if ( cmdScrape.is_used( "-d" ) )
     {
-      dbPathStr = cmdScrape.get<std::string>( "-o" );
+      dbPathStr = cmdScrape.get<std::string>( "-d" );
       if ( ! dbPathStr.empty() ) { dbPathStr = nix::absPath( dbPathStr ); }
     }
 
