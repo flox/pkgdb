@@ -12,6 +12,8 @@
 #include <list>
 #include <filesystem>
 #include <assert.h>
+#include <queue>
+#include <functional>
 
 #include <nix/shared.hh>
 #include <nix/eval.hh>
@@ -24,6 +26,173 @@
 
 #include "flox/flox-flake.hh"
 #include "pkg-db.hh"
+
+
+/* -------------------------------------------------------------------------- */
+
+using MaybeCursor = std::shared_ptr<nix::eval_cache::AttrCursor>;
+using Cursor      = nix::ref<nix::eval_cache::AttrCursor>;
+
+
+/* -------------------------------------------------------------------------- */
+
+/** Provides various representations of an attribute path. */
+struct AttrPath {
+  std::vector<std::string>      strings;
+  std::vector<std::string_view> views;
+  std::vector<nix::Symbol>      symbols;
+  AttrPath( nix::SymbolTable         & syms
+          , std::vector<std::string> & path
+          )
+    : strings( std::move( path ) )
+  {
+    for ( const auto & a : this->strings )
+      {
+        this->views.emplace_back( a );
+        this->symbols.push_back( syms.create( a ) );
+      }
+  }
+};
+
+using Target = std::pair<AttrPath,Cursor>;
+using Todos  = std::queue<Target,std::list<Target>>;
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Scrape package definitions from an attribute set, adding any attributes
+ * marked with `recurseForDerivatsions = true` to @a todo list.
+ * @param db     Database to write to.
+ * @param syms   Symbol table from @a cursor evaluator.
+ * @param prefix Attribute path to scrape.
+ * @param cursor `nix` evaluator cursor associated with @a prefix
+ * @param todo Queue to add `recurseForDerivations = true` cursors to so they
+ *             may be scraped by later invocations.
+ */
+  void
+scrape(       flox::pkgdb::PkgDb & db
+      ,       nix::SymbolTable   & syms
+      , const AttrPath           & prefix
+      ,       Cursor               cursor
+      ,       Todos              & todo
+      )
+{
+
+  bool tryRecur = prefix.views[0] != "packages";
+
+  nix::Activity act(
+    * nix::logger
+  , nix::lvlInfo
+  , nix::actUnknown
+  , nix::fmt( "evaluating '%s'", nix::concatStringsSep( ".", prefix.strings ) )
+  );
+
+  /* Lookup/create the `pathId' for for this attr-path in our DB. */
+  flox::pkgdb::row_id parentId = 0;
+  try
+    {
+      parentId = db.addOrGetPackageSetId( prefix.views );
+    }
+ catch( const std::exception & e )
+   {
+     /* Ignore errors in `legacyPackages' and `catalog' */
+     if ( tryRecur )
+       {
+         if ( nix::lvlDebug <= nix::verbosity )
+           {
+             nix::logger->warn( e.what() );
+           }
+         return;
+       }
+     else
+       {
+         throw e;
+       }
+   }
+ catch ( ... )
+   {
+     if ( nix::lvlDebug <= nix::verbosity )
+       {
+         nix::logger->warn( "encountered unrecognized exception" );
+       }
+     return;
+   }
+
+  /* Start a transaction */
+  sqlite3pp::transaction txn( db.db );
+
+  /* Scrape loop over attrs */
+  for ( nix::Symbol & aname : cursor->getAttrs() )
+    {
+      const std::string pathS =
+        nix::concatStringsSep( ".", prefix.strings ) + "." + syms[aname];
+
+      if ( syms[aname] == "recurseForDerivations" ) { continue; }
+
+      nix::Activity act(
+        * nix::logger
+      , nix::lvlTalkative
+      , nix::actUnknown
+      , nix::fmt( "\tevaluating '%s'", pathS )
+      );
+
+      try
+        {
+          Cursor child = cursor->getAttr( aname );
+          if ( child->isDerivation() )
+            {
+              db.addPackage( parentId, syms[aname], child );
+              continue;
+            }
+          if ( ! tryRecur ) { continue; }
+          if ( auto m = child->maybeGetAttr( "recurseForDerivations" );
+                    ( m != nullptr ) && m->getBool()
+                  )
+            {
+              AttrPath path = prefix;
+              path.strings.emplace_back( syms[aname] );
+              path.views.push_back( path.strings.back() );
+              path.symbols.emplace_back( aname );
+              nix::logger->log( nix::lvlTalkative
+                              , nix::fmt( "\tpushing target '%s'", pathS )
+                              );
+              todo.push( std::make_pair( std::move( path ), child ) );
+            }
+        }
+      catch( const nix::EvalError & err )
+        {
+          /* Only print eval errors in "debug" mode. */
+          nix::ignoreException( nix::lvlDebug );
+        }
+      catch( const std::exception & e )
+        {
+          /* Ignore errors in `legacyPackages' and `catalog' */
+          if ( tryRecur )
+            {
+              if ( nix::lvlDebug <= nix::verbosity )
+                {
+                  nix::logger->warn( nix::fmt( "\t%s", e.what() ) );
+                }
+            }
+          else
+            {
+              throw e;
+            }
+        }
+      catch ( ... )
+        {
+          if ( nix::lvlDebug <= nix::verbosity )
+            {
+              nix::logger->warn( "\tencountered unrecognized exception" );
+            }
+        }
+    }
+
+  txn.commit();  /* Close transaction */
+
+}
+
 
 
 /* -------------------------------------------------------------------------- */
@@ -222,78 +391,36 @@ main( int argc, char * argv[], char ** envp )
    * If no system is given use the current system.
    * If we're searching a catalog and no stability is given, use "stable". */
 
-  std::vector<std::string> attrPath =
+  std::vector<std::string> attrPathS =
     cmdScrape.get<std::vector<std::string>>( "attr-path" );
-  if ( attrPath.size() < 2 )
+  if ( attrPathS.size() < 2 )
     {
-      attrPath.push_back( nix::settings.thisSystem.get() );
+      attrPathS.push_back( nix::settings.thisSystem.get() );
     }
-  if ( ( attrPath.size() < 3 ) && ( attrPath[0] == "catalog" ) )
+  if ( ( attrPathS.size() < 3 ) && ( attrPathS[0] == "catalog" ) )
     {
-      attrPath.push_back( "stable" );
+      attrPathS.push_back( "stable" );
     }
-
-  std::vector<nix::Symbol>      attrPathS;
-  std::vector<std::string_view> attrPathV;
-  for ( const auto & a : attrPath )
-    {
-      attrPathS.push_back( flake.state->symbols.create( a ) );
-      attrPathV.emplace_back( a );
-    }
-
-  /* Lookup/create the `pathId' for for this attr-path in our DB. */
-  flox::pkgdb::row_id parentId = db.addOrGetPackageSetId( attrPathV );
+  AttrPath attrPath( flake.state->symbols, attrPathS );
 
 
 /* -------------------------------------------------------------------------- */
 
   /* Open eval cache and start scraping. */
 
-  nix::Activity act(
-    * nix::logger
-  , nix::lvlInfo
-  , nix::actUnknown
-  , nix::fmt( "evaluating '%s'", nix::concatStringsSep( ".", attrPath ) )
-  );
-
-  using MaybeCursor = std::shared_ptr<nix::eval_cache::AttrCursor>;
-  using Cursor      = nix::ref<nix::eval_cache::AttrCursor>;
-
-  MaybeCursor root = flake.maybeOpenCursor( attrPathS );
-  if ( root != nullptr )
+  Todos todo;
+  if ( MaybeCursor root = flake.maybeOpenCursor( attrPath.symbols );
+       root != nullptr
+     )
     {
-      /* Start a transaction */
-      sqlite3pp::transaction txn( db.db );
+      todo.push( std::make_pair( std::move( attrPath ), (Cursor) root ) );
+    }
 
-      /* Scrape loop over attrs */
-      for ( nix::Symbol & aname : root->getAttrs() )
-        {
-          nix::Activity act(
-            * nix::logger
-          , nix::lvlTalkative
-          , nix::actUnknown
-          , nix::fmt(
-              "\tevaluating '%s.%s'"
-            , nix::concatStringsSep( ".", attrPath )
-            , flake.state->symbols[aname]
-            )
-          );
-
-          try
-            {
-              Cursor child = root->getAttr( aname );
-              /* TODO: recurseForDerivations */
-              if ( ! child->isDerivation() ) { continue; }
-              db.addPackage( parentId, flake.state->symbols[aname], child );
-            }
-          catch( nix::EvalError & err )
-            {
-              /* Only print eval errors in "debug" mode. */
-              nix::ignoreException( nix::Verbosity::lvlDebug );
-            }
-        }
-
-      txn.commit();  /* Close transaction */
+  while ( ! todo.empty() )
+    {
+      auto & [prefix, cursor] = todo.front();
+      scrape( db, flake.state->symbols, prefix, cursor, todo );
+      todo.pop();
     }
 
 
