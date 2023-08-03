@@ -117,6 +117,7 @@ main( int argc, char * argv[], char ** envp )
 /* -------------------------------------------------------------------------- */
 
   /* Parse Args */
+
   try
     {
       prog.parse_args( argc, argv );
@@ -131,37 +132,10 @@ main( int argc, char * argv[], char ** envp )
   // TODO: remove when you have more commands.
   assert( prog.is_subcommand_used( "scrape" ) );
 
-  /* Set attribute path to be scraped.
-   * If no system is given use the current system.
-   * If we're searching a catalog and no stability is given, use "stable". */
-  std::vector<std::string> attrPath =
-    cmdScrape.get<std::vector<std::string>>( "attr-path" );
-  if ( attrPath.size() < 2 )
-    {
-      attrPath.push_back( nix::settings.thisSystem.get() );
-    }
-  if ( ( attrPath.size() < 3 ) && ( attrPath[0] == "catalog" ) )
-    {
-      attrPath.push_back( "stable" );
-    }
-
-
-  std::string   refStr = cmdScrape.get<std::string>( "flake-ref" );
-  nix::FlakeRef ref    =
-    ( refStr.find( '{' ) != refStr.npos )
-    ? nix::FlakeRef::fromAttrs(
-        nix::fetchers::jsonToAttrs( nlohmann::json::parse( refStr ) )
-      )
-    : nix::parseFlakeRef( refStr );
-
-  /* Assign verbosity to `nix' global setting */
-  nix::verbosity = verbosity;
-
 
 /* -------------------------------------------------------------------------- */
 
-  /* Boilerplate */
-
+  /* Initialize `nix' */
 
   /* Assign verbosity to `nix' global setting */
   nix::verbosity = verbosity;
@@ -189,6 +163,16 @@ main( int argc, char * argv[], char ** envp )
 
 /* -------------------------------------------------------------------------- */
 
+  /* Fetch and lock our flake. */
+
+  std::string   refStr = cmdScrape.get<std::string>( "flake-ref" );
+  nix::FlakeRef ref    =
+    ( refStr.find( '{' ) != refStr.npos )
+    ? nix::FlakeRef::fromAttrs(
+        nix::fetchers::jsonToAttrs( nlohmann::json::parse( refStr ) )
+      )
+    : nix::parseFlakeRef( refStr );
+
   flox::FloxFlake flake( (nix::ref<nix::EvalState>) state, ref );
 
   if ( ! flake.lockedFlake.flake.lockedRef.input.hasAllInfo() )
@@ -202,6 +186,12 @@ main( int argc, char * argv[], char ** envp )
         }
     }
 
+
+/* -------------------------------------------------------------------------- */
+
+  /* Open our database. */
+
+  /* Maybe use path from arguments. */
   std::string dbPathStr;
   if ( cmdScrape.is_used( "-d" ) )
     {
@@ -209,23 +199,39 @@ main( int argc, char * argv[], char ** envp )
       if ( ! dbPathStr.empty() ) { dbPathStr = nix::absPath( dbPathStr ); }
     }
 
+  /* Fallback to generated path under `XDG_CACHE_DIR/flox/pkgdb-v0/' */
   if ( dbPathStr.empty() )
     {
       dbPathStr = flox::pkgdb::genPkgDbName( flake.lockedFlake );
     }
 
+  /* Create directories if needed. */
   std::filesystem::path dbPath( dbPathStr );
   if ( ! std::filesystem::exists( dbPath.parent_path() ) )
     {
       std::filesystem::create_directories( dbPath.parent_path() );
     }
 
+  /* Open/Create database. */
   flox::pkgdb::PkgDb db( flake.lockedFlake, dbPathStr );
 
-  /* TODO: handle prefixes/system */
 
-  using MaybeCursor = std::shared_ptr<nix::eval_cache::AttrCursor>;
-  using Cursor      = nix::ref<nix::eval_cache::AttrCursor>;
+/* -------------------------------------------------------------------------- */
+
+  /* Set attribute path to be scraped.
+   * If no system is given use the current system.
+   * If we're searching a catalog and no stability is given, use "stable". */
+
+  std::vector<std::string> attrPath =
+    cmdScrape.get<std::vector<std::string>>( "attr-path" );
+  if ( attrPath.size() < 2 )
+    {
+      attrPath.push_back( nix::settings.thisSystem.get() );
+    }
+  if ( ( attrPath.size() < 3 ) && ( attrPath[0] == "catalog" ) )
+    {
+      attrPath.push_back( "stable" );
+    }
 
   std::vector<nix::Symbol>      attrPathS;
   std::vector<std::string_view> attrPathV;
@@ -235,7 +241,13 @@ main( int argc, char * argv[], char ** envp )
       attrPathV.emplace_back( a );
     }
 
+  /* Lookup/create the `pathId' for for this attr-path in our DB. */
   flox::pkgdb::row_id parentId = db.addOrGetPackageSetId( attrPathV );
+
+
+/* -------------------------------------------------------------------------- */
+
+  /* Open eval cache and start scraping. */
 
   nix::Activity act(
     * nix::logger
@@ -243,6 +255,9 @@ main( int argc, char * argv[], char ** envp )
   , nix::actUnknown
   , nix::fmt( "evaluating '%s'", nix::concatStringsSep( ".", attrPath ) )
   );
+
+  using MaybeCursor = std::shared_ptr<nix::eval_cache::AttrCursor>;
+  using Cursor      = nix::ref<nix::eval_cache::AttrCursor>;
 
   MaybeCursor root = flake.maybeOpenCursor( attrPathS );
   if ( root != nullptr )
