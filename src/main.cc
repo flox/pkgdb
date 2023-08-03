@@ -88,24 +88,27 @@ main( int argc, char * argv[], char ** envp )
 
   addVerbosity( cmdScrape );
 
-  cmdScrape.add_argument( "--system" )
-    .help( "indicate that a system should be scraped" )
-    .metavar( "SYSTEM" )
-    .append()
-    .default_value( std::list<std::string> { nix::settings.thisSystem.get() } )
-  ;
-
   cmdScrape.add_argument( "-d", "--database" )
-    .help( "use database at PATH" )
+    .help( "Use database at PATH" )
     .default_value( "" )
     .metavar( "PATH" )
     .nargs( 1 )
   ;
 
   cmdScrape.add_argument( "flake-ref" )
-    .help( "a flake-reference URI string ( preferably locked )" )
+    .help( "A flake-reference URI string ( preferably locked )" )
     .required()
     .metavar( "FLAKE-REF" )
+  ;
+
+  cmdScrape.add_argument( "attr-path" )
+    .help( "Attribute path to scrape" )
+    .metavar( "ATTR" )
+    .remaining()
+    .default_value( std::list<std::string> {
+      "packages"
+    , nix::settings.thisSystem.get()
+    } )
   ;
 
   prog.add_subparser( cmdScrape );
@@ -128,7 +131,20 @@ main( int argc, char * argv[], char ** envp )
   // TODO: remove when you have more commands.
   assert( prog.is_subcommand_used( "scrape" ) );
 
-  auto systems = cmdScrape.get<std::list<std::string>>( "--system" );
+  /* Set attribute path to be scraped.
+   * If no system is given use the current system.
+   * If we're searching a catalog and no stability is given, use "stable". */
+  std::vector<std::string> attrPath =
+    cmdScrape.get<std::vector<std::string>>( "attr-path" );
+  if ( attrPath.size() < 2 )
+    {
+      attrPath.push_back( nix::settings.thisSystem.get() );
+    }
+  if ( ( attrPath.size() < 3 ) && ( attrPath[0] == "catalog" ) )
+    {
+      attrPath.push_back( "stable" );
+    }
+
 
   std::string   refStr = cmdScrape.get<std::string>( "flake-ref" );
   nix::FlakeRef ref    =
@@ -146,10 +162,17 @@ main( int argc, char * argv[], char ** envp )
 
   /* Boilerplate */
 
+
+  /* Assign verbosity to `nix' global setting */
+  nix::verbosity = verbosity;
   nix::setStackSize( 64 * 1024 * 1024 );
   nix::initNix();
   nix::initGC();
+  /* Suppress benign warnings about `nix.conf'. */
+  nix::verbosity = nix::lvlError;
   nix::initPlugins();
+  /* Restore verbosity to `nix' global setting */
+  nix::verbosity = verbosity;
 
   // TODO: make this an option. It risks making cross-system eval impossible.
   nix::evalSettings.enableImportFromDerivation.setDefault( false );
@@ -204,26 +227,26 @@ main( int argc, char * argv[], char ** envp )
   using MaybeCursor = std::shared_ptr<nix::eval_cache::AttrCursor>;
   using Cursor      = nix::ref<nix::eval_cache::AttrCursor>;
 
-  for ( auto & system : systems  )
+  std::vector<nix::Symbol>      attrPathS;
+  std::vector<std::string_view> attrPathV;
+  for ( const auto & a : attrPath )
     {
-      std::vector<std::string>      attrPathS = { "legacyPackages", system };
-      std::vector<std::string_view> attrPath  = { "legacyPackages", system };
+      attrPathS.push_back( flake.state->symbols.create( a ) );
+      attrPathV.emplace_back( a );
+    }
 
-      flox::pkgdb::row_id parentId = db.addOrGetPackageSetId( attrPath );
+  flox::pkgdb::row_id parentId = db.addOrGetPackageSetId( attrPathV );
 
-      nix::Activity act(
-        * nix::logger
-      , nix::lvlInfo
-      , nix::actUnknown
-      , nix::fmt( "evaluating '%s'", nix::concatStringsSep( ".", attrPathS ) )
-      );
+  nix::Activity act(
+    * nix::logger
+  , nix::lvlInfo
+  , nix::actUnknown
+  , nix::fmt( "evaluating '%s'", nix::concatStringsSep( ".", attrPath ) )
+  );
 
-      MaybeCursor root = flake.maybeOpenCursor( {
-        flake.state->symbols.create( "legacyPackages" )
-      , flake.state->symbols.create( system )
-      } );
-      if ( root == nullptr ) { continue; }
-
+  MaybeCursor root = flake.maybeOpenCursor( attrPathS );
+  if ( root != nullptr )
+    {
       /* Start a transaction */
       sqlite3pp::transaction txn( db.db );
 
@@ -236,7 +259,7 @@ main( int argc, char * argv[], char ** envp )
           , nix::actUnknown
           , nix::fmt(
               "\tevaluating '%s.%s'"
-            , nix::concatStringsSep( ".", attrPathS )
+            , nix::concatStringsSep( ".", attrPath )
             , flake.state->symbols[aname]
             )
           );
