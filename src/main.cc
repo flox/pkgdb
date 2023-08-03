@@ -32,28 +32,9 @@
 
 using MaybeCursor = std::shared_ptr<nix::eval_cache::AttrCursor>;
 using Cursor      = nix::ref<nix::eval_cache::AttrCursor>;
-
-
-/* -------------------------------------------------------------------------- */
-
-/** Provides symbol and string representations of an attribute path. */
-struct AttrPath {
-  std::vector<std::string> strings;
-  std::vector<nix::Symbol> symbols;
-  AttrPath( nix::SymbolTable         & syms
-          , std::vector<std::string> & path
-          )
-    : strings( std::move( path ) )
-  {
-    for ( const auto & a : this->strings )
-      {
-        this->symbols.push_back( syms.create( a ) );
-      }
-  }
-};
-
-using Target = std::pair<AttrPath,Cursor>;
-using Todos  = std::queue<Target,std::list<Target>>;
+using AttrPath    = std::vector<std::string>;
+using Target      = std::pair<AttrPath,Cursor>;
+using Todos       = std::queue<Target,std::list<Target>>;
 
 
 /* -------------------------------------------------------------------------- */
@@ -77,19 +58,19 @@ scrape(       flox::pkgdb::PkgDb & db
       )
 {
 
-  bool tryRecur = prefix.strings[0] != "packages";
+  bool tryRecur = prefix[0] != "packages";
 
   nix::Activity act(
     * nix::logger
   , nix::lvlInfo
   , nix::actUnknown
   , nix::fmt( "evaluating package set '%s'"
-            , nix::concatStringsSep( ".", prefix.strings )
+            , nix::concatStringsSep( ".", prefix )
             )
   );
 
   /* Lookup/create the `pathId' for for this attr-path in our DB. */
-  flox::pkgdb::row_id parentId = db.addOrGetPackageSetId( prefix.strings );
+  flox::pkgdb::row_id parentId = db.addOrGetPackageSetId( prefix );
 
   /* Start a transaction */
   sqlite3pp::transaction txn( db.db );
@@ -98,7 +79,7 @@ scrape(       flox::pkgdb::PkgDb & db
   for ( nix::Symbol & aname : cursor->getAttrs() )
     {
       const std::string pathS =
-        nix::concatStringsSep( ".", prefix.strings ) + "." + syms[aname];
+        nix::concatStringsSep( ".", prefix ) + "." + syms[aname];
 
       if ( syms[aname] == "recurseForDerivations" ) { continue; }
 
@@ -123,8 +104,7 @@ scrape(       flox::pkgdb::PkgDb & db
                   )
             {
               AttrPath path = prefix;
-              path.strings.emplace_back( syms[aname] );
-              path.symbols.emplace_back( aname );
+              path.emplace_back( syms[aname] );
               nix::logger->log( nix::lvlTalkative
                               , nix::fmt( "\tpushing target '%s'", pathS )
                               );
@@ -348,17 +328,21 @@ main( int argc, char * argv[], char ** envp )
    * If no system is given use the current system.
    * If we're searching a catalog and no stability is given, use "stable". */
 
-  std::vector<std::string> attrPathS =
-    cmdScrape.get<std::vector<std::string>>( "attr-path" );
-  if ( attrPathS.size() < 2 )
+  AttrPath attrPath = cmdScrape.get<std::vector<std::string>>( "attr-path" );
+  if ( attrPath.size() < 2 )
     {
-      attrPathS.push_back( nix::settings.thisSystem.get() );
+      attrPath.push_back( nix::settings.thisSystem.get() );
     }
-  if ( ( attrPathS.size() < 3 ) && ( attrPathS[0] == "catalog" ) )
+  if ( ( attrPath.size() < 3 ) && ( attrPath[0] == "catalog" ) )
     {
-      attrPathS.push_back( "stable" );
+      attrPath.push_back( "stable" );
     }
-  AttrPath attrPath( flake.state->symbols, attrPathS );
+
+  std::vector<nix::Symbol> symbolPath;
+  for ( const auto & a : attrPath )
+    {
+      symbolPath.emplace_back( flake.state->symbols.create( a ) );
+    }
 
 
 /* -------------------------------------------------------------------------- */
@@ -366,7 +350,7 @@ main( int argc, char * argv[], char ** envp )
   /* Open eval cache and start scraping. */
 
   Todos todo;
-  if ( MaybeCursor root = flake.maybeOpenCursor( attrPath.symbols );
+  if ( MaybeCursor root = flake.maybeOpenCursor( symbolPath );
        root != nullptr
      )
     {
