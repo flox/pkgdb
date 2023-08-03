@@ -52,7 +52,7 @@ jobs:
             timeout = 0
 
       - name: Build Docs
-        run: nix develop -c make doc
+        run: nix develop -c make docs
 
       - name: Fix permissions
         run: |

@@ -271,9 +271,9 @@ ccls: .ccls
 
 # ---------------------------------------------------------------------------- #
 
-.PHONY: doc
+.PHONY: docs
 
-doc: docs/index.html
+docs: docs/index.html
 
 docs/index.html: FORCE
 	$(DOXYGEN) ./Doxyfile
