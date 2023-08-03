@@ -100,7 +100,7 @@ PkgDb::getDbVersion()
 /* -------------------------------------------------------------------------- */
 
   bool
-PkgDb::hasPackageSet( const AttrPathV & path )
+PkgDb::hasPackageSet( const AttrPath & path )
 {
   /* Lookup the `PackageSet.id' ( if one exists ) */
   sqlite3pp::query qryId(
@@ -149,7 +149,7 @@ PkgDb::getDescription( row_id descriptionId )
 /* -------------------------------------------------------------------------- */
 
   bool
-PkgDb::hasPackage( const AttrPathV & path )
+PkgDb::hasPackage( const AttrPath & path )
 {
   std::string pathStr;
   {
@@ -182,7 +182,7 @@ PkgDb::hasPackage( const AttrPathV & path )
 /* -------------------------------------------------------------------------- */
 
   row_id
-PkgDb::getPackageSetId( const AttrPathV & path )
+PkgDb::getPackageSetId( const AttrPath & path )
 {
   /* Lookup the `PackageSet.id' ( if one exists ) */
   sqlite3pp::query qryId(
@@ -207,7 +207,7 @@ PkgDb::getPackageSetId( const AttrPathV & path )
 /* -------------------------------------------------------------------------- */
 
   row_id
-PkgDb::addOrGetPackageSetId( const AttrPathV & path )
+PkgDb::addOrGetPackageSetId( const AttrPath & path )
 {
   try { return this->getPackageSetId( path ); }
   catch ( const PkgDbException & e ) { /* Ignored */ }

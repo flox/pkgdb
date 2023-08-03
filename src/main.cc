@@ -36,11 +36,10 @@ using Cursor      = nix::ref<nix::eval_cache::AttrCursor>;
 
 /* -------------------------------------------------------------------------- */
 
-/** Provides various representations of an attribute path. */
+/** Provides symbol and string representations of an attribute path. */
 struct AttrPath {
-  std::vector<std::string>      strings;
-  std::vector<std::string_view> views;
-  std::vector<nix::Symbol>      symbols;
+  std::vector<std::string> strings;
+  std::vector<nix::Symbol> symbols;
   AttrPath( nix::SymbolTable         & syms
           , std::vector<std::string> & path
           )
@@ -48,7 +47,6 @@ struct AttrPath {
   {
     for ( const auto & a : this->strings )
       {
-        this->views.emplace_back( a );
         this->symbols.push_back( syms.create( a ) );
       }
   }
@@ -79,45 +77,19 @@ scrape(       flox::pkgdb::PkgDb & db
       )
 {
 
-  bool tryRecur = prefix.views[0] != "packages";
+  bool tryRecur = prefix.strings[0] != "packages";
 
   nix::Activity act(
     * nix::logger
   , nix::lvlInfo
   , nix::actUnknown
-  , nix::fmt( "evaluating '%s'", nix::concatStringsSep( ".", prefix.strings ) )
+  , nix::fmt( "evaluating package set '%s'"
+            , nix::concatStringsSep( ".", prefix.strings )
+            )
   );
 
   /* Lookup/create the `pathId' for for this attr-path in our DB. */
-  flox::pkgdb::row_id parentId = 0;
-  try
-    {
-      parentId = db.addOrGetPackageSetId( prefix.views );
-    }
- catch( const std::exception & e )
-   {
-     /* Ignore errors in `legacyPackages' and `catalog' */
-     if ( tryRecur )
-       {
-         if ( nix::lvlDebug <= nix::verbosity )
-           {
-             nix::logger->warn( e.what() );
-           }
-         return;
-       }
-     else
-       {
-         throw e;
-       }
-   }
- catch ( ... )
-   {
-     if ( nix::lvlDebug <= nix::verbosity )
-       {
-         nix::logger->warn( "encountered unrecognized exception" );
-       }
-     return;
-   }
+  flox::pkgdb::row_id parentId = db.addOrGetPackageSetId( prefix.strings );
 
   /* Start a transaction */
   sqlite3pp::transaction txn( db.db );
@@ -134,7 +106,7 @@ scrape(       flox::pkgdb::PkgDb & db
         * nix::logger
       , nix::lvlTalkative
       , nix::actUnknown
-      , nix::fmt( "\tevaluating '%s'", pathS )
+      , nix::fmt( "\tevaluating attribute '%s'", pathS )
       );
 
       try
@@ -152,7 +124,6 @@ scrape(       flox::pkgdb::PkgDb & db
             {
               AttrPath path = prefix;
               path.strings.emplace_back( syms[aname] );
-              path.views.push_back( path.strings.back() );
               path.symbols.emplace_back( aname );
               nix::logger->log( nix::lvlTalkative
                               , nix::fmt( "\tpushing target '%s'", pathS )
@@ -160,31 +131,17 @@ scrape(       flox::pkgdb::PkgDb & db
               todo.push( std::make_pair( std::move( path ), child ) );
             }
         }
-      catch( const nix::EvalError & err )
-        {
-          /* Only print eval errors in "debug" mode. */
-          nix::ignoreException( nix::lvlDebug );
-        }
-      catch( const std::exception & e )
+      catch( const nix::EvalError & e )
         {
           /* Ignore errors in `legacyPackages' and `catalog' */
           if ( tryRecur )
             {
-              if ( nix::lvlDebug <= nix::verbosity )
-                {
-                  nix::logger->warn( nix::fmt( "\t%s", e.what() ) );
-                }
+              /* Only print eval errors in "debug" mode. */
+              nix::ignoreException( nix::lvlDebug );
             }
           else
             {
               throw e;
-            }
-        }
-      catch ( ... )
-        {
-          if ( nix::lvlDebug <= nix::verbosity )
-            {
-              nix::logger->warn( "\tencountered unrecognized exception" );
             }
         }
     }

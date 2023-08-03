@@ -37,7 +37,6 @@ namespace flox {
 
 using Fingerprint = nix::flake::Fingerprint;
 using SQLiteDb    = sqlite3pp::database;
-using AttrPathV   = std::vector<std::string_view>;
 using AttrPath    = std::vector<std::string>;
 using Cursor      = nix::ref<nix::eval_cache::AttrCursor>;
 using row_id      = uint64_t;
@@ -263,7 +262,7 @@ class PkgDb {
      * @return `true` iif the database has one or more rows in the `Packages`
      *         table with `path` as the _parent_.
      */
-    bool hasPackageSet( const AttrPathV & path );
+    bool hasPackageSet( const AttrPath & path );
 
     /**
      * Get the `PackageSet.pathId` for a given path.
@@ -271,7 +270,7 @@ class PkgDb {
      *             `legacyPackages.aarch64-darwin.python3Packages`.
      * @return A unique `row_id` ( unsigned 64bit int ) associated with @a path.
      */
-    row_id getPackageSetId( const AttrPathV & path );
+    row_id getPackageSetId( const AttrPath & path );
 
 
     /**
@@ -289,7 +288,7 @@ class PkgDb {
      * @return `true` iif the database has a rows in the `Packages`
      *         table with `path` as the _absolute path_.
      */
-    bool hasPackage( const AttrPathV & path );
+    bool hasPackage( const AttrPath & path );
 
 
 /* -------------------------------------------------------------------------- */
@@ -305,7 +304,7 @@ class PkgDb {
      *             `legacyPackages.aarch64-darwin.python3Packages`.
      * @return A unique `row_id` ( unsigned 64bit int ) associated with @a path.
      */
-    row_id addOrGetPackageSetId( const AttrPathV & path );
+    row_id addOrGetPackageSetId( const AttrPath & path );
 
     /**
      * Get the `Descriptions.id` for a given string if it exists, or insert a
