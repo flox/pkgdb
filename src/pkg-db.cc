@@ -252,15 +252,11 @@ addOrGetAttrSetId(       sqlite3pp::database & db
 
 /* -------------------------------------------------------------------------- */
 
-// TODO
   row_id
 PkgDb::addOrGetPackageSetId( const AttrPath & path )
 {
   row_id id = 0;
-  for ( const auto & p : path )
-    {
-      id = addOrGetAttrSetId( this->db, p, id );
-    }
+  for ( const auto & p : path ) { id = addOrGetAttrSetId( this->db, p, id ); }
   return id;
 }
 
