@@ -2,7 +2,7 @@
  *
  * @file main.cc
  *
- * @brief executable exposing CRUD operations for package metadata.
+ * @brief Executable exposing CRUD operations for package metadata.
  *
  *
  * -------------------------------------------------------------------------- */
@@ -69,7 +69,9 @@ scrape(       flox::pkgdb::PkgDb & db
             )
   );
 
-  /* Lookup/create the `pathId' for for this attr-path in our DB. */
+  /* Lookup/create the `pathId' for for this attr-path in our DB.
+   * This must be done before starting a transaction in the database
+   * because it may need to read/write multiple times. */
   flox::pkgdb::row_id parentId = db.addOrGetPackageSetId( prefix );
 
   /* Start a transaction */
@@ -121,12 +123,13 @@ scrape(       flox::pkgdb::PkgDb & db
             }
           else
             {
+              txn.rollback();  /* Revert transaction changes */
               throw e;
             }
         }
     }
 
-  txn.commit();  /* Close transaction */
+  txn.commit();  /* Commit transaction changes */
 
 }
 
@@ -279,7 +282,14 @@ main( int argc, char * argv[], char ** envp )
       )
     : nix::parseFlakeRef( refStr );
 
+  nix::Activity act(
+    * nix::logger
+  , nix::lvlInfo
+  , nix::actUnknown
+  , nix::fmt( "fetching flake '%s'", ref.to_string() )
+  );
   flox::FloxFlake flake( (nix::ref<nix::EvalState>) state, ref );
+  nix::logger->stopActivity( act.id );
 
   if ( ! flake.lockedFlake.flake.lockedRef.input.hasAllInfo() )
     {

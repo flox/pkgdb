@@ -11,6 +11,8 @@
 
 #include <string>
 #include <vector>
+#include <filesystem>
+
 #include <nlohmann/json.hpp>
 #include <nix/flake/flake.hh>
 #include <nix/eval-cache.hh>
@@ -77,7 +79,7 @@ class PkgDb {
   public:
 
           SQLiteDb    db;           /**< SQLite3 database handle.         */
-    const Fingerprint fingerprint;  /**< Unique hash of associated flake. */
+          Fingerprint fingerprint;  /**< Unique hash of associated flake. */
     const std::string dbPath;       /**< Absolute path to database.       */
 
     /** Locked _flake reference_ for database's flake. */
@@ -97,7 +99,7 @@ class PkgDb {
     void initTables();
 
     /** Set @a this `PkgDb` `lockedRef` fields from database metadata. */
-    void loadLockedRef();
+    void loadLockedFlake();
 
     /**
      * Write @a this `PkgDb` `lockedRef` and `fingerprint` fields to
@@ -111,6 +113,20 @@ class PkgDb {
   /* Constructors */
 
   public:
+    /**
+     * Opens an existing database.
+     * @param dbPath Absolute path to database file.
+     */
+    PkgDb( std::string_view dbPath )
+      : dbPath( dbPath ), db( dbPath ), fingerprint( nix::htSHA256 )
+    {
+      if ( ! std::filesystem::exists( dbPath ) )
+        {
+          throw PkgDbException( nix::fmt( "No such database '%s'.", dbPath ) );
+        }
+      this->initTables();
+      this->loadLockedFlake();
+    }
 
     /**
      * Opens a DB directly by its fingerprint hash.
@@ -123,7 +139,7 @@ class PkgDb {
       : fingerprint( fingerprint ), dbPath( dbPath ), db( dbPath )
     {
       this->initTables();
-      this->loadLockedRef();
+      this->loadLockedFlake();
     }
 
     /**
@@ -185,32 +201,6 @@ class PkgDb {
      }
 
     /**
-     * Execute a raw sqlite statement on the database.
-     * @param stmt String statement to execute.
-     * @return `SQLITE_*` [error code](https://www.sqlite.org/rescode.html).
-     */
-       inline int
-     execute( const std::string & stmt )
-     {
-       sqlite3pp::command cmd( this->db, stmt.c_str() );
-       return cmd.execute();
-     }
-
-    /**
-     * Execute a raw sqlite statement on the database.
-     * @param stmt String statement to execute.
-     * @return `SQLITE_*` [error code](https://www.sqlite.org/rescode.html).
-     */
-       inline int
-     execute( std::string_view stmt )
-     {
-       std::string cpy( stmt );
-       sqlite3pp::command cmd( this->db, cpy.c_str() );
-       return cmd.execute();
-     }
-
-
-    /**
      * Execute raw sqlite statements on the database.
      * @param stmt String statement to execute.
      * @return `SQLITE_*` [error code](https://www.sqlite.org/rescode.html).
@@ -219,31 +209,6 @@ class PkgDb {
      execute_all( const char * stmt )
      {
        sqlite3pp::command cmd( this->db, stmt );
-       return cmd.execute_all();
-     }
-
-    /**
-     * Execute raw sqlite statements on the database.
-     * @param stmt String statement to execute.
-     * @return `SQLITE_*` [error code](https://www.sqlite.org/rescode.html).
-     */
-       inline int
-     execute_all( const std::string & stmt )
-     {
-       sqlite3pp::command cmd( this->db, stmt.c_str() );
-       return cmd.execute_all();
-     }
-
-    /**
-     * Execute raw sqlite statements on the database.
-     * @param stmt String statement to execute.
-     * @return `SQLITE_*` [error code](https://www.sqlite.org/rescode.html).
-     */
-       inline int
-     execute_all( std::string_view stmt )
-     {
-       std::string cpy( stmt );
-       sqlite3pp::command cmd( this->db, cpy.c_str() );
        return cmd.execute_all();
      }
 
@@ -265,12 +230,20 @@ class PkgDb {
     bool hasPackageSet( const AttrPath & path );
 
     /**
-     * Get the `PackageSet.pathId` for a given path.
+     * Get the `AttrSet.id` for a given path.
      * @param path An attribute path prefix such as `packages.x86_64-linux` or
      *             `legacyPackages.aarch64-darwin.python3Packages`.
      * @return A unique `row_id` ( unsigned 64bit int ) associated with @a path.
      */
     row_id getPackageSetId( const AttrPath & path );
+
+    /**
+     * Get the attribute path for a given `AttrSet.id`.
+     * @param id A unique `row_id` ( unsigned 64bit int ).
+     * @return An attribute path prefix such as `packages.x86_64-linux` or
+     *         `legacyPackages.aarch64-darwin.python3Packages`.
+     */
+    AttrPath getPackageSetPath( row_id id );
 
 
     /**
@@ -298,7 +271,20 @@ class PkgDb {
   public:
 
     /**
-     * Get the `PackageSet.pathId` for a given path if it exists, or insert a
+     * Get the `AttrSet.id` for a given child of the attribute set associated
+     * with `parent` if it exists, or insert a new row for @a path and return
+     * its `id`.
+     * @param attrName An attribute set field name.
+     * @param parent The `AttrSet.id` containing @a attrName.
+     *               The `id` 0 may be used to indicate that @a attrName has no
+     *               parent attribute set.
+     * @return A unique `row_id` ( unsigned 64bit int ) associated with
+     *         @a attrName under @a parent.
+     */
+    row_id addOrGetAttrSetId( const std::string & attrName, row_id parent = 0 );
+
+    /**
+     * Get the `AttrSet.id` for a given path if it exists, or insert a
      * new row for @a path and return its `pathId`.
      * @param path An attribute path prefix such as `packages.x86_64-linux` or
      *             `legacyPackages.aarch64-darwin.python3Packages`.

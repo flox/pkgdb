@@ -7,6 +7,8 @@
  *
  * -------------------------------------------------------------------------- */
 
+#include <limits>
+
 #include "pkg-db.hh"
 #include "flox/flake-package.hh"
 
@@ -24,6 +26,22 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
+  static inline bool
+isSQLError( int rc )
+{
+  switch ( rc )
+  {
+    case SQLITE_OK:   return false; break;
+    case SQLITE_ROW:  return false; break;
+    case SQLITE_DONE: return false; break;
+    default:          return true;  break;
+  }
+}
+
+
+
+/* -------------------------------------------------------------------------- */
+
   std::string
 genPkgDbName( const Fingerprint & fingerprint )
 {
@@ -37,15 +55,34 @@ genPkgDbName( const Fingerprint & fingerprint )
 /* -------------------------------------------------------------------------- */
 
   void
-PkgDb::loadLockedRef()
+PkgDb::loadLockedFlake()
 {
   sqlite3pp::query qry(
     this->db
-  , "SELECT string, attrs FROM LockedFlake LIMIT 1"
+  , "SELECT fingerprint, string, attrs FROM LockedFlake LIMIT 1"
   );
   auto r = * qry.begin();
-  this->lockedRef.string = r.get<std::string>( 0 );
-  this->lockedRef.attrs  = nlohmann::json::parse( r.get<std::string>( 1 ) );
+  std::string fingerprintStr = r.get<std::string>( 0 );
+  nix::Hash   fingerprint    =
+    nix::Hash::parseNonSRIUnprefixed( fingerprintStr, nix::htSHA256 );
+  this->lockedRef.string = r.get<std::string>( 1 );
+  this->lockedRef.attrs  = nlohmann::json::parse( r.get<std::string>( 2 ) );
+  /* Check to see if our fingerprint is already known.
+   * If it isn't load it, otherwise assert it matches. */
+  if ( this->fingerprint == nix::Hash( nix::htSHA256 ) )
+    {
+      this->fingerprint = fingerprint;
+    }
+  else if ( this->fingerprint != fingerprint )
+    {
+      throw PkgDbException(
+        nix::fmt( "database '%s' fingerprint '%s' does not match expected '%s'"
+                , this->dbPath
+                , fingerprintStr
+                , this->fingerprint.to_string( nix::Base16, false )
+                )
+      );
+    }
 }
 
 
@@ -63,7 +100,15 @@ PkgDb::writeInput()
   cmd.bind( ":fingerprint", fpStr, sqlite3pp::copy );
   cmd.bind( ":string", this->lockedRef.string, sqlite3pp::nocopy );
   cmd.bind( ":attrs",  this->lockedRef.attrs.dump(), sqlite3pp::copy );
-  cmd.execute();
+  if ( int rc = cmd.execute(); isSQLError( rc ) )
+    {
+      throw PkgDbException(
+        nix::fmt( "Failed to write LockedFlaked info:(%d) %s"
+                , rc
+                , this->db.error_msg()
+                )
+      );
+    }
 }
 
 
@@ -72,15 +117,60 @@ PkgDb::writeInput()
   void
 PkgDb::initTables()
 {
-  this->execute( sql_versions );
-  this->execute( sql_input );
-  this->execute_all( sql_packageSets );
-  this->execute_all( sql_packages );
+  if ( int rc = this->execute( sql_versions ); isSQLError( rc ) )
+    {
+      throw PkgDbException(
+        nix::fmt( "Failed to initialize DbVersions table:(%d) %s"
+                , rc
+                , this->db.error_msg()
+                )
+      );
+    }
+
+  if ( int rc = this->execute_all( sql_input ); isSQLError( rc ) )
+    {
+      throw PkgDbException(
+        nix::fmt( "Failed to initialize LockedFlake table:(%d) %s"
+                , rc
+                , this->db.error_msg()
+                )
+      );
+    }
+
+  if ( int rc = this->execute_all( sql_packageSets ); isSQLError( rc ) )
+    {
+      throw PkgDbException(
+        nix::fmt( "Failed to initialize AttrSets table:(%d) %s"
+                , rc
+                , this->db.error_msg()
+                )
+      );
+    }
+
+  if ( int rc = this->execute_all( sql_packages ); isSQLError( rc ) )
+    {
+      throw PkgDbException(
+        nix::fmt( "Failed to initialize Packages table:(%d) %s"
+                , rc
+                , this->db.error_msg()
+                )
+      );
+    }
+
   static const char * stmtVersions =
     "INSERT OR IGNORE INTO DbVersions ( name, version ) VALUES"
     "  ( 'pkgdb',        '" FLOX_PKGDB_VERSION        "' )"
     ", ( 'pkgdb_schema', '" FLOX_PKGDB_SCHEMA_VERSION "' )";
-  this->execute( stmtVersions );
+
+  if ( int rc = this->execute( stmtVersions ); isSQLError( rc ) )
+    {
+      throw PkgDbException(
+        nix::fmt( "Failed to write DbVersions info:(%d) %s"
+                , rc
+                , this->db.error_msg()
+                )
+      );
+    }
 }
 
 
@@ -112,10 +202,10 @@ PkgDb::hasPackageSet( const AttrPath & path )
         "WHERE ( attrName = :attrName ) AND ( parent = :parent )"
       );
       qryId.bind( ":attrName", a, sqlite3pp::copy );
-      qryId.bind( ":parent", (long long int) id );
+      qryId.bind( ":parent", (long long) id );
       auto i = qryId.begin();
       if ( i == qryId.end() ) { return false; }  /* No such path. */
-      id = ( * i ).get<long long int>( 0 );
+      id = ( * i ).get<long long>( 0 );
     }
 
   /* Make sure there are actually packages in the set. */
@@ -123,7 +213,7 @@ PkgDb::hasPackageSet( const AttrPath & path )
     this->db
   , "SELECT COUNT( id ) FROM Packages WHERE parentId = :parentId"
   );
-  qryPkgs.bind( ":parentId", (long long int) id );
+  qryPkgs.bind( ":parentId", (long long) id );
   return 0 < ( * qryPkgs.begin() ).get<int>( 0 );
 }
 
@@ -138,7 +228,7 @@ PkgDb::getDescription( row_id descriptionId )
     this->db
   , "SELECT id FROM Descriptions WHERE path = :descriptionId"
   );
-  qryId.bind( ":descriptionId", (long long int) descriptionId );
+  qryId.bind( ":descriptionId", (long long) descriptionId );
   auto i = qryId.begin();
   /* Handle no such path. */
   if ( i == qryId.end() )
@@ -173,13 +263,13 @@ PkgDb::hasPackage( const AttrPath & path )
   if ( i == qryId.end() ) { return false; }  /* No such path. */
 
   /* Make sure there are actually packages in the set. */
-  row_id id = ( * i ).get<long long int>( 0 );
+  row_id id = ( * i ).get<long long>( 0 );
   sqlite3pp::query qryPkgs(
     this->db
   , "SELECT id FROM Packages WHERE ( parentId = :parentId ) "
     "AND ( attrName = :attrName ) LIMIT 1"
   );
-  qryPkgs.bind( ":parentId", (long long int) id );
+  qryPkgs.bind( ":parentId", (long long) id );
   qryPkgs.bind( ":attrName", std::string( path.back() ), sqlite3pp::copy );
   return ( * qryPkgs.begin() ).get<int>( 0 ) != 0;
 }
@@ -197,10 +287,10 @@ PkgDb::getPackageSetId( const AttrPath & path )
       sqlite3pp::query qryId(
         this->db
       , "SELECT id FROM AttrSets "
-        "WHERE ( attrName = :attrName ) AND ( parent = :parent )"
+        "WHERE ( attrName = :attrName ) AND ( parent = :parent ) LIMIT 1"
       );
       qryId.bind( ":attrName", a, sqlite3pp::copy );
-      qryId.bind( ":parent", (long long int) id );
+      qryId.bind( ":parent", (long long) id );
       auto i = qryId.begin();
       /* Handle no such path. */
       if ( i == qryId.end() )
@@ -211,7 +301,7 @@ PkgDb::getPackageSetId( const AttrPath & path )
                     )
           );
         }
-      id = ( * i ).get<long long int>( 0 );
+      id = ( * i ).get<long long>( 0 );
     }
 
   return id;
@@ -220,33 +310,68 @@ PkgDb::getPackageSetId( const AttrPath & path )
 
 /* -------------------------------------------------------------------------- */
 
-  static inline row_id
-addOrGetAttrSetId(       sqlite3pp::database & db
-                 , const std::string         & attrName
-                 ,       row_id                parent   = 0
-                 )
+  AttrPath
+PkgDb::getPackageSetPath( row_id id )
+{
+  std::list<std::string> path;
+  while ( id != 0 )
+    {
+      sqlite3pp::query qry(
+        this->db
+      , "SELECT ( parent, attrName ) FROM AttrSets WHERE ( id = :id )"
+      );
+      qry.bind( ":id", (long long) id );
+      auto i = qry.begin();
+      /* Handle no such path. */
+      if ( i == qry.end() )
+        {
+          throw PkgDbException( nix::fmt( "No such `AttrSet.id' %llu.", id ) );
+        }
+      id = ( * i ).get<long long>( 0 );
+      path.push_front( ( * i ).get<std::string>( 1 ) );
+    }
+  return AttrPath { std::make_move_iterator( std::begin( path ) )
+                  , std::make_move_iterator( std::end( path ) )
+                  };
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  row_id
+PkgDb::addOrGetAttrSetId( const std::string & attrName, row_id parent )
 {
   sqlite3pp::query qryId(
-    db
+    this->db
   , "SELECT id FROM AttrSets "
     "WHERE ( attrName = :attrName ) AND ( parent = :parent )"
   );
   qryId.bind( ":attrName", attrName, sqlite3pp::copy );
-  qryId.bind( ":parent", (long long int) parent );
+  qryId.bind( ":parent", (long long) parent );
   auto i = qryId.begin();
   if ( i == qryId.end() )
     {
       sqlite3pp::command cmd(
-        db
+        this->db
       , "INSERT OR IGNORE INTO AttrSets ( attrName, parent ) "
         "VALUES ( :attrName, :parent )"
       );
       cmd.bind( ":attrName", attrName, sqlite3pp::copy );
-      cmd.bind( ":parent", (long long int) parent );
-      cmd.execute();
-      return db.last_insert_rowid();
+      cmd.bind( ":parent", (long long) parent );
+      if ( int rc = cmd.execute(); isSQLError( rc ) )
+        {
+          throw PkgDbException(
+            nix::fmt( "Failed to add AttrSet.id 'AttrSets[%ull].%s':(%d) %s"
+                    , parent
+                    , attrName
+                    , rc
+                    , this->db.error_msg()
+                    )
+          );
+        }
+      return this->db.last_insert_rowid();
     }
-  return ( * i ).get<long long int>( 0 );
+  return ( * i ).get<long long>( 0 );
 }
 
 
@@ -256,7 +381,7 @@ addOrGetAttrSetId(       sqlite3pp::database & db
 PkgDb::addOrGetPackageSetId( const AttrPath & path )
 {
   row_id id = 0;
-  for ( const auto & p : path ) { id = addOrGetAttrSetId( this->db, p, id ); }
+  for ( const auto & p : path ) { id = addOrGetAttrSetId( p, id ); }
   return id;
 }
 
@@ -273,14 +398,23 @@ PkgDb::addOrGetDescriptionId( std::string_view description )
   );
   qry.bind( ":description", s, sqlite3pp::copy );
   auto i = qry.begin();
-  if ( i != qry.end() ) { return ( * i ).get<long long int>( 0 ); }
+  if ( i != qry.end() ) { return ( * i ).get<long long>( 0 ); }
 
   sqlite3pp::command cmd(
     this->db
   , "INSERT INTO Descriptions ( description ) VALUES ( :description )"
   );
   cmd.bind( ":description", s, sqlite3pp::copy );
-  cmd.execute();
+  if ( int rc = cmd.execute(); isSQLError( rc ) )
+    {
+      throw PkgDbException(
+        nix::fmt( "Failed to add Description '%s':(%d) %s"
+                , description
+                , rc
+                , this->db.error_msg()
+                )
+      );
+    }
   return this->db.last_insert_rowid();
 }
 
@@ -313,7 +447,7 @@ PkgDb::addPackage( row_id           parentId
    * `FlakePackage' constructor here. */
   FlakePackage pkg( cursor, { "packages", "x86_64-linux", "phony" }, checkDrv );
 
-  cmd.bind( ":parentId", (long long int) parentId );
+  cmd.bind( ":parentId", (long long) parentId );
   cmd.bind( ":attrName", std::string( attrName ), sqlite3pp::copy );
   cmd.bind( ":name",     pkg._fullName,           sqlite3pp::nocopy );
 
@@ -378,7 +512,7 @@ PkgDb::addPackage( row_id           parentId
       if ( auto m = pkg.getDescription(); m.has_value() )
         {
           row_id descriptionId = this->addOrGetDescriptionId( m.value() );
-          cmd.bind( ":descriptionId", (long long int) descriptionId );
+          cmd.bind( ":descriptionId", (long long) descriptionId );
         }
       else
         {
@@ -393,7 +527,16 @@ PkgDb::addPackage( row_id           parentId
       cmd.bind( ":unfree" );
       cmd.bind( ":descriptionId" );
     }
-  cmd.execute();
+  if ( int rc = cmd.execute(); isSQLError( rc ) )
+    {
+      throw PkgDbException(
+        nix::fmt( "Failed to write Package '%s':(%d) %s"
+                , pkg._fullName
+                , rc
+                , this->db.error_msg()
+                )
+      );
+    }
   return this->db.last_insert_rowid();
 }
 

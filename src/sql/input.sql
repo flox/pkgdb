@@ -16,6 +16,16 @@ CREATE TABLE IF NOT EXISTS LockedFlake (
 
 
 -- -------------------------------------------------------------------------- --
+
+-- Limit the table to a single row.
+CREATE TRIGGER IF NOT EXISTS IT_LockedFlake AFTER INSERT ON LockedFlake
+  WHEN ( 1 < ( SELECT COUNT( fingerprint ) FROM LockedFlake ) )
+  BEGIN
+    SELECT RAISE( ABORT, 'Cannot write conflicting LockedFlake info.' );
+  END;
+
+
+-- -------------------------------------------------------------------------- --
 --
 --
 --
