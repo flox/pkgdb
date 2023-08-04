@@ -72,6 +72,33 @@ setup_file() {
 
 
 # ---------------------------------------------------------------------------- #
+
+# Check the version of a package.
+@test "akkoma-emoji version" {
+  run $PKGDB scrape --database "$DBPATH" "$NIXPKGS_REF"           \
+                    legacyPackages "$NIX_SYSTEM" 'akkoma-emoji';
+  assert_success;
+  run sqlite3 "$DBPATH" "SELECT version FROM Packages      \
+    WHERE name = 'blobs.gg-unstable-2019-07-24' LIMIT 1";
+  assert_output --partial 'unstable-2019-07-24';
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# Check the semver of a package with a non-semantic version.
+@test "akkoma-emoji semver" {
+  run $PKGDB scrape --database "$DBPATH" "$NIXPKGS_REF"           \
+                    legacyPackages "$NIX_SYSTEM" 'akkoma-emoji';
+  assert_success;
+  unset output;  # Clear `output' to ensure we can empty check properly.
+  run sqlite3 "$DBPATH" "SELECT semver FROM Packages      \
+    WHERE name = 'blobs.gg-unstable-2019-07-24' LIMIT 1";
+  refute_output --regexp '.';
+}
+
+
+# ---------------------------------------------------------------------------- #
 #
 #
 #
