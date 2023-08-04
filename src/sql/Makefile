@@ -39,7 +39,6 @@ endef
 $(eval $(call SQL_HH_template,input,input.sql))
 $(eval $(call SQL_HH_template,packageSets,package-sets.sql))
 $(eval $(call SQL_HH_template,packages,packages.sql))
-$(eval $(call SQL_HH_template,tmpPaths,tmp-paths.sql))
 $(eval $(call SQL_HH_template,versions,versions.sql))
 
 headers: $(HEADERS)

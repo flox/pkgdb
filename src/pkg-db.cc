@@ -102,17 +102,23 @@ PkgDb::getDbVersion()
   bool
 PkgDb::hasPackageSet( const AttrPath & path )
 {
-  /* Lookup the `PackageSet.id' ( if one exists ) */
-  sqlite3pp::query qryId(
-    this->db
-  , "SELECT pathId FROM PackageSets WHERE path = :path"
-  );
-  qryId.bind( ":path", nlohmann::json( path ).dump(), sqlite3pp::copy );
-  auto i = qryId.begin();
-  if ( i == qryId.end() ) { return false; }  /* No such path. */
+  /* Lookup the `AttrName.id' ( if one exists ) */
+  row_id id = 0;
+  for ( const auto & a : path )
+    {
+      sqlite3pp::query qryId(
+        this->db
+      , "SELECT id FROM AttrSets "
+        "WHERE ( attrName = :attrName ) AND ( parent = :parent )"
+      );
+      qryId.bind( ":attrName", a, sqlite3pp::copy );
+      qryId.bind( ":parent", (long long int) id );
+      auto i = qryId.begin();
+      if ( i == qryId.end() ) { return false; }  /* No such path. */
+      id = ( * i ).get<long long int>( 0 );
+    }
 
   /* Make sure there are actually packages in the set. */
-  row_id id = ( * i ).get<long long int>( 0 );
   sqlite3pp::query qryPkgs(
     this->db
   , "SELECT COUNT( id ) FROM Packages WHERE parentId = :parentId"
@@ -184,21 +190,61 @@ PkgDb::hasPackage( const AttrPath & path )
   row_id
 PkgDb::getPackageSetId( const AttrPath & path )
 {
-  /* Lookup the `PackageSet.id' ( if one exists ) */
+  /* Lookup the `AttrName.id' ( if one exists ) */
+  row_id id = 0;
+  for ( const auto & a : path )
+    {
+      sqlite3pp::query qryId(
+        this->db
+      , "SELECT id FROM AttrSets "
+        "WHERE ( attrName = :attrName ) AND ( parent = :parent )"
+      );
+      qryId.bind( ":attrName", a, sqlite3pp::copy );
+      qryId.bind( ":parent", (long long int) id );
+      auto i = qryId.begin();
+      /* Handle no such path. */
+      if ( i == qryId.end() )
+        {
+          throw PkgDbException(
+            nix::fmt( "No such PackageSet '%s'."
+                    , nix::concatStringsSep( ".", path )
+                    )
+          );
+        }
+      id = ( * i ).get<long long int>( 0 );
+    }
+
+  return id;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  static inline row_id
+addOrGetAttrSetId(       sqlite3pp::database & db
+                 , const std::string         & attrName
+                 ,       row_id                parent   = 0
+                 )
+{
   sqlite3pp::query qryId(
-    this->db
-  , "SELECT pathId FROM PackageSets WHERE path = :path LIMIT 1"
+    db
+  , "SELECT id FROM AttrSets "
+    "WHERE ( attrName = :attrName ) AND ( parent = :parent )"
   );
-  qryId.bind( ":path", nlohmann::json( path ).dump(), sqlite3pp::copy );
+  qryId.bind( ":attrName", attrName, sqlite3pp::copy );
+  qryId.bind( ":parent", (long long int) parent );
   auto i = qryId.begin();
-  /* Handle no such path. */
   if ( i == qryId.end() )
     {
-      throw PkgDbException(
-        nix::fmt( "No such PackageSet '%s'."
-                , nix::concatStringsSep( ".", path )
-                )
+      sqlite3pp::command cmd(
+        db
+      , "INSERT OR IGNORE INTO AttrSets ( attrName, parent ) "
+        "VALUES ( :attrName, :parent )"
       );
+      cmd.bind( ":attrName", attrName, sqlite3pp::copy );
+      cmd.bind( ":parent", (long long int) parent );
+      cmd.execute();
+      return db.last_insert_rowid();
     }
   return ( * i ).get<long long int>( 0 );
 }
@@ -206,18 +252,16 @@ PkgDb::getPackageSetId( const AttrPath & path )
 
 /* -------------------------------------------------------------------------- */
 
+// TODO
   row_id
 PkgDb::addOrGetPackageSetId( const AttrPath & path )
 {
-  try { return this->getPackageSetId( path ); }
-  catch ( const PkgDbException & e ) { /* Ignored */ }
-  sqlite3pp::command cmd(
-    this->db
-  , "INSERT OR IGNORE INTO PackageSets ( path ) VALUES ( :path )"
-  );
-  cmd.bind( ":path", nlohmann::json( path ).dump(), sqlite3pp::copy );
-  cmd.execute();
-  return this->db.last_insert_rowid();
+  row_id id = 0;
+  for ( const auto & p : path )
+    {
+      id = addOrGetAttrSetId( this->db, p, id );
+    }
+  return id;
 }
 
 
