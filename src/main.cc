@@ -204,6 +204,13 @@ main( int argc, char * argv[], char ** envp )
     .nargs( 1 )
   ;
 
+  cmdScrape.add_argument( "-f", "--force" )
+    .help( "Force re-evaluation of prefix" )
+    .default_value( false )
+    .implicit_value( true )
+    .nargs( 0 )
+  ;
+
   cmdScrape.add_argument( "flake-ref" )
     .help( "A flake-reference URI string ( preferably locked )" )
     .required()
@@ -348,30 +355,34 @@ main( int argc, char * argv[], char ** envp )
       attrPath.push_back( "stable" );
     }
 
-  std::vector<nix::Symbol> symbolPath;
-  for ( const auto & a : attrPath )
-    {
-      symbolPath.emplace_back( flake.state->symbols.create( a ) );
-    }
-
 
 /* -------------------------------------------------------------------------- */
 
-  /* Open eval cache and start scraping. */
+  /* If we haven't processed this prefix before or `--force' was given, open the
+   * eval cache and start scraping. */
 
-  Todos todo;
-  if ( MaybeCursor root = flake.maybeOpenCursor( symbolPath );
-       root != nullptr
-     )
+  if ( cmdScrape.get<bool>( "-f" ) || ( ! db.hasPackageSet( attrPath ) ) )
     {
-      todo.push( std::make_pair( std::move( attrPath ), (Cursor) root ) );
-    }
+      std::vector<nix::Symbol> symbolPath;
+      for ( const auto & a : attrPath )
+        {
+          symbolPath.emplace_back( flake.state->symbols.create( a ) );
+        }
 
-  while ( ! todo.empty() )
-    {
-      auto & [prefix, cursor] = todo.front();
-      scrape( db, flake.state->symbols, prefix, cursor, todo );
-      todo.pop();
+      Todos todo;
+      if ( MaybeCursor root = flake.maybeOpenCursor( symbolPath );
+           root != nullptr
+         )
+        {
+          todo.push( std::make_pair( std::move( attrPath ), (Cursor) root ) );
+        }
+
+      while ( ! todo.empty() )
+        {
+          auto & [prefix, cursor] = todo.front();
+          scrape( db, flake.state->symbols, prefix, cursor, todo );
+          todo.pop();
+        }
     }
 
 

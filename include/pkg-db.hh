@@ -42,6 +42,7 @@ using SQLiteDb    = sqlite3pp::database;
 using AttrPath    = std::vector<std::string>;
 using Cursor      = nix::ref<nix::eval_cache::AttrCursor>;
 using row_id      = uint64_t;
+using sql_rc      = int;       /**< `SQLITE_*` result code. */
 
 
 /* -------------------------------------------------------------------------- */
@@ -193,7 +194,7 @@ class PkgDb {
      * @param stmt String statement to execute.
      * @return `SQLITE_*` [error code](https://www.sqlite.org/rescode.html).
      */
-       inline int
+       inline sql_rc
      execute( const char * stmt )
      {
        sqlite3pp::command cmd( this->db, stmt );
@@ -205,7 +206,7 @@ class PkgDb {
      * @param stmt String statement to execute.
      * @return `SQLITE_*` [error code](https://www.sqlite.org/rescode.html).
      */
-       inline int
+       inline sql_rc
      execute_all( const char * stmt )
      {
        sqlite3pp::command cmd( this->db, stmt );

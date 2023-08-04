@@ -100,7 +100,7 @@ PkgDb::writeInput()
   cmd.bind( ":fingerprint", fpStr, sqlite3pp::copy );
   cmd.bind( ":string", this->lockedRef.string, sqlite3pp::nocopy );
   cmd.bind( ":attrs",  this->lockedRef.attrs.dump(), sqlite3pp::copy );
-  if ( int rc = cmd.execute(); isSQLError( rc ) )
+  if ( sql_rc rc = cmd.execute(); isSQLError( rc ) )
     {
       throw PkgDbException(
         nix::fmt( "Failed to write LockedFlaked info:(%d) %s"
@@ -117,7 +117,7 @@ PkgDb::writeInput()
   void
 PkgDb::initTables()
 {
-  if ( int rc = this->execute( sql_versions ); isSQLError( rc ) )
+  if ( sql_rc rc = this->execute( sql_versions ); isSQLError( rc ) )
     {
       throw PkgDbException(
         nix::fmt( "Failed to initialize DbVersions table:(%d) %s"
@@ -127,7 +127,7 @@ PkgDb::initTables()
       );
     }
 
-  if ( int rc = this->execute_all( sql_input ); isSQLError( rc ) )
+  if ( sql_rc rc = this->execute_all( sql_input ); isSQLError( rc ) )
     {
       throw PkgDbException(
         nix::fmt( "Failed to initialize LockedFlake table:(%d) %s"
@@ -137,7 +137,7 @@ PkgDb::initTables()
       );
     }
 
-  if ( int rc = this->execute_all( sql_packageSets ); isSQLError( rc ) )
+  if ( sql_rc rc = this->execute_all( sql_packageSets ); isSQLError( rc ) )
     {
       throw PkgDbException(
         nix::fmt( "Failed to initialize AttrSets table:(%d) %s"
@@ -147,7 +147,7 @@ PkgDb::initTables()
       );
     }
 
-  if ( int rc = this->execute_all( sql_packages ); isSQLError( rc ) )
+  if ( sql_rc rc = this->execute_all( sql_packages ); isSQLError( rc ) )
     {
       throw PkgDbException(
         nix::fmt( "Failed to initialize Packages table:(%d) %s"
@@ -162,7 +162,7 @@ PkgDb::initTables()
     "  ( 'pkgdb',        '" FLOX_PKGDB_VERSION        "' )"
     ", ( 'pkgdb_schema', '" FLOX_PKGDB_SCHEMA_VERSION "' )";
 
-  if ( int rc = this->execute( stmtVersions ); isSQLError( rc ) )
+  if ( sql_rc rc = this->execute( stmtVersions ); isSQLError( rc ) )
     {
       throw PkgDbException(
         nix::fmt( "Failed to write DbVersions info:(%d) %s"
@@ -223,6 +223,7 @@ PkgDb::hasPackageSet( const AttrPath & path )
   std::string
 PkgDb::getDescription( row_id descriptionId )
 {
+  if ( descriptionId == 0 ) { return ""; }
   /* Lookup the `Description.id' ( if one exists ) */
   sqlite3pp::query qryId(
     this->db
@@ -313,6 +314,7 @@ PkgDb::getPackageSetId( const AttrPath & path )
   AttrPath
 PkgDb::getPackageSetPath( row_id id )
 {
+  if ( id == 0 ) { return {}; }
   std::list<std::string> path;
   while ( id != 0 )
     {
@@ -358,7 +360,7 @@ PkgDb::addOrGetAttrSetId( const std::string & attrName, row_id parent )
       );
       cmd.bind( ":attrName", attrName, sqlite3pp::copy );
       cmd.bind( ":parent", (long long) parent );
-      if ( int rc = cmd.execute(); isSQLError( rc ) )
+      if ( sql_rc rc = cmd.execute(); isSQLError( rc ) )
         {
           throw PkgDbException(
             nix::fmt( "Failed to add AttrSet.id 'AttrSets[%ull].%s':(%d) %s"
@@ -405,7 +407,7 @@ PkgDb::addOrGetDescriptionId( std::string_view description )
   , "INSERT INTO Descriptions ( description ) VALUES ( :description )"
   );
   cmd.bind( ":description", s, sqlite3pp::copy );
-  if ( int rc = cmd.execute(); isSQLError( rc ) )
+  if ( sql_rc rc = cmd.execute(); isSQLError( rc ) )
     {
       throw PkgDbException(
         nix::fmt( "Failed to add Description '%s':(%d) %s"
@@ -527,7 +529,7 @@ PkgDb::addPackage( row_id           parentId
       cmd.bind( ":unfree" );
       cmd.bind( ":descriptionId" );
     }
-  if ( int rc = cmd.execute(); isSQLError( rc ) )
+  if ( sql_rc rc = cmd.execute(); isSQLError( rc ) )
     {
       throw PkgDbException(
         nix::fmt( "Failed to write Package '%s':(%d) %s"
