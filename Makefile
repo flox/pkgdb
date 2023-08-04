@@ -56,11 +56,12 @@ LIBFLOXPKGDB = libflox-pkgdb$(libExt)
 
 LIBS           = $(LIBFLOXPKGDB)
 COMMON_HEADERS = $(wildcard include/*.hh) $(wildcard include/flox/*.hh)
-TESTS          = $(wildcard tests/*.cc)
 SRCS           = $(wildcard src/*.cc)
 bin_SRCS       = src/main.cc
 lib_SRCS       = $(filter-out $(bin_SRCS),$(SRCS))
+test_SRCS      = $(wildcard tests/*.cc)
 BINS           = pkgdb
+TESTS          = $(test_SRCS:.cc=)
 
 
 # ---------------------------------------------------------------------------- #
@@ -155,7 +156,7 @@ CXXFLAGS += -DSEMVER_PATH='$(SEMVER_PATH)'
 bin:     $(addprefix bin/,$(BINS))
 lib:     $(addprefix lib/,$(LIBS))
 include: $(COMMON_HEADERS)
-tests:   $(TESTS:.cc=)
+tests:   $(TESTS)
 
 
 # ---------------------------------------------------------------------------- #
@@ -166,7 +167,7 @@ clean: FORCE
 	-$(RM) src/*.o tests/*.o
 	-$(RM) result
 	-$(RM) -r $(PREFIX)
-	-$(RM) $(TESTS:.cc=)
+	-$(RM) $(TESTS)
 	-$(RM) gmon.out *.log
 	-$(MAKE) -C src/sql clean
 	-$(RM) $(addprefix docs/,*.png *.html *.svg *.css *.js)
@@ -197,6 +198,14 @@ bin/pkgdb: src/main.o lib/$(LIBFLOXPKGDB)
 
 # ---------------------------------------------------------------------------- #
 
+$(TESTS): CXXFLAGS += $(bin_CXXFLAGS)
+$(TESTS): LDFLAGS  += $(bin_LDFLAGS)
+$(TESTS): tests/%: tests/%.cc lib/$(LIBFLOXPKGDB)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) "$<" -o "$@"
+
+
+# ---------------------------------------------------------------------------- #
+
 .PHONY: install-dirs install-bin install-lib install-include install
 install: install-dirs install-bin install-lib install-include
 
@@ -221,14 +230,6 @@ install-include:                                                    \
 # ---------------------------------------------------------------------------- #
 
 .PHONY: check
-
-tests/%: CXXFLAGS += $(sqlite3_CFLAGS) $(nljson_CFLAGS)
-tests/%: CXXFLAGS += $(nix_CFLAGS) $(nljson_CFLAGS) $(bin_CXXFLAGS)
-tests/%: LDFLAGS  += $(floxresolve_LDFLAGS) $(bin_LDFLAGS)
-tests/%: LDFLAGS  += $(sqlite3_LDFLAGS) $(nix_LDFLAGS)
-$(TESTS:.cc=): %: %.o lib/$(LIBFLOXPKGDB)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) "$<" -o "$@"
-
 
 check: $(TESTS:.cc=)
 	@_ec=0;                     \

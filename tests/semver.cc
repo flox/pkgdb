@@ -13,7 +13,7 @@
   bool
 test_semverSat1()
 {
-  std::list<std::string> sats = semverSat( "^4.2.0", {
+  std::list<std::string> sats = versions::semverSat( "^4.2.0", {
     "4.0.0", "4.2.0", "4.2.1", "4.3.0", "5.0.0", "3.9.9"
   } );
   return ( sats.size() == 3 ) &&

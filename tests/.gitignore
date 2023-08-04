@@ -11,3 +11,4 @@ drv-cache
 package-set
 cursor-iter
 attrs-iter
+pkgdb
