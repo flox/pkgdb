@@ -32,34 +32,6 @@ using flox::pkgdb::row_id;
 
 /* -------------------------------------------------------------------------- */
 
-#define EXPECT( EXPR )                      \
-  if ( ! ( EXPR ) )                         \
-    {                                       \
-      std::cerr << "Expectation failed: ";  \
-      std::cerr << ( # EXPR );              \
-      std::cerr << std::endl;               \
-      return false;                         \
-    }
-
-#define EXPECT_EQ( EXPR_A, EXPR_B )                                            \
-  {                                                                            \
-    auto _a = ( EXPR_A );                                                      \
-    auto _b = ( EXPR_B );                                                      \
-    if ( _a != _b )                                                            \
-      {                                                                        \
-        std::cerr << "Expectation failed: ( ";                                 \
-        std::cerr << ( # EXPR_A );                                             \
-        std::cerr << " ) == ( ";                                               \
-        std::cerr << ( # EXPR_B );                                             \
-        std::cerr << " ). Got '" << _a << "' != '" << _b << "'" << std::endl;  \
-        return false;                                                          \
-      }                                                                        \
-  }
-
-
-
-/* -------------------------------------------------------------------------- */
-
   bool
 test_addOrGetAttrSetId0( flox::pkgdb::PkgDb & db )
 {
@@ -69,11 +41,12 @@ test_addOrGetAttrSetId0( flox::pkgdb::PkgDb & db )
   EXPECT_EQ( 2, id );
   try
     {
+      /* Ensure we throw an error for undefined `AttrSet.id' parents. */
       id = db.addOrGetAttrSetId( "phony", 99999999 );
       std::cerr << id << std::endl;
       return false;
     }
-  catch( const flox::pkgdb::PkgDbException & e ) {}
+  catch( const flox::pkgdb::PkgDbException & e ) { /* Expected */ }
   catch( const std::exception & e )
     {
       std::cerr << e.what() << std::endl;

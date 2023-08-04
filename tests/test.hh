@@ -76,6 +76,43 @@ runTest( std::string_view name, F f, Args && ... args )
   }
 
 
+/* -------------------------------------------------------------------------- */
+
+/**
+ * For use inside of a function which returns a boolean.
+ * Assert that and expression is `true', otherwise print it and return `false'.
+ */
+#define EXPECT( EXPR )                      \
+  if ( ! ( EXPR ) )                         \
+    {                                       \
+      std::cerr << "Expectation failed: ";  \
+      std::cerr << ( # EXPR );              \
+      std::cerr << std::endl;               \
+      return false;                         \
+    }
+
+
+/**
+ * For use inside of a function which returns a boolean.
+ * Assert that two expressions produce equal results, otherwise print them and
+ * return `false'.
+ */
+#define EXPECT_EQ( EXPR_A, EXPR_B )                                            \
+  {                                                                            \
+    auto _a = ( EXPR_A );                                                      \
+    auto _b = ( EXPR_B );                                                      \
+    if ( _a != _b )                                                            \
+      {                                                                        \
+        std::cerr << "Expectation failed: ( ";                                 \
+        std::cerr << ( # EXPR_A );                                             \
+        std::cerr << " ) == ( ";                                               \
+        std::cerr << ( # EXPR_B );                                             \
+        std::cerr << " ). Got '" << _a << "' != '" << _b << "'" << std::endl;  \
+        return false;                                                          \
+      }                                                                        \
+  }
+
+
 /* -------------------------------------------------------------------------- *
  *
  *
