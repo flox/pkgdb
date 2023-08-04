@@ -1,0 +1,66 @@
+name: Test
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      -  main
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  all-tests:
+    runs-on: ubuntu-latest
+    env:
+      SYSTEM: x86_64-linux
+    steps:
+      - uses: actions/checkout@v3
+      - uses: cachix/install-nix-action@11f4ad19be46fd34c005a2864996d8f197fb51c6
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+            substituters = https://cache.nixos.org
+            trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
+            max-jobs = auto
+            cores = 0
+            substitute = true
+            builders-use-substitutes = true
+            fallback = true
+            connect-timeout = 5
+            stalled-download-timeout = 90
+            timeout = 0
+
+      - name: Setup
+        run: |
+          echo "# ============================================================================ #" >&2;
+          { printf '    bash   version: '; bash   --version|head -n1; } >&2;
+          { printf '    nix    version: '; nix    --version; } >&2;
+          echo "# ---------------------------------------------------------------------------- #" >&2;
+
+      - name: Nix Flake Check
+        run: nix flake check
+
+      - name: Run Build
+        run: nix develop --no-update-lock-file --command make -j4
+
+      - name: Run Help
+        run: ./bin/pkgdb --help
+
+      # This is performed to reduce cpu/memory overhead in tests later.
+      - name: Run list-pkgs
+        run: |
+          set -eu;
+          set -o pipefail;
+          rev="e8039594435c68eb4f780f3e9bf3972a7399c4b1"
+          echo "Priming Eval Cache: nixpkgs/$rev (x86_64-linux)" >&2;
+          nix flake show --legacy "github:NixOS/nixpkgs/$rev"  \
+                         --system x86_64-linux >/dev/null;
+
+      - name: Build Tests
+        run: nix develop --no-update-lock-file --command make tests -j4
+
+      - name: Run Tests
+        run: nix develop --no-update-lock-file --command make check -j4
