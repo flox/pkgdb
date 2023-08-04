@@ -50,7 +50,7 @@ jobs:
         run: ./bin/pkgdb --help
 
       # This is performed to reduce cpu/memory overhead in tests later.
-      - name: Run list-pkgs
+      - name: Warm Nix Eval Caches
         run: |
           set -eu;
           set -o pipefail;
