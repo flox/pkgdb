@@ -41,23 +41,19 @@ using flox::pkgdb::row_id;
       return false;                         \
     }
 
-#define EXPECT_EQ( EXPR_A, EXPR_B )             \
-  {                                             \
-    auto _a = ( EXPR_A );                       \
-    auto _b = ( EXPR_B );                       \
-    if ( _a != _b )                             \
-      {                                         \
-        std::cerr << "Expectation failed: ( ";  \
-        std::cerr << ( # EXPR_A );              \
-        std::cerr << " ) == ( ";                \
-        std::cerr << ( # EXPR_B );              \
-        std::cerr << " ). Got '";               \
-        std::cerr << _a;                        \
-        std::cerr << "' != '";                  \
-        std::cerr << _b;                        \
-        std::cerr << "'" << std::endl;          \
-        return false;                           \
-      }                                         \
+#define EXPECT_EQ( EXPR_A, EXPR_B )                                            \
+  {                                                                            \
+    auto _a = ( EXPR_A );                                                      \
+    auto _b = ( EXPR_B );                                                      \
+    if ( _a != _b )                                                            \
+      {                                                                        \
+        std::cerr << "Expectation failed: ( ";                                 \
+        std::cerr << ( # EXPR_A );                                             \
+        std::cerr << " ) == ( ";                                               \
+        std::cerr << ( # EXPR_B );                                             \
+        std::cerr << " ). Got '" << _a << "' != '" << _b << "'" << std::endl;  \
+        return false;                                                          \
+      }                                                                        \
   }
 
 
