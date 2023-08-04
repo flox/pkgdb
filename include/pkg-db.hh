@@ -300,7 +300,7 @@ class PkgDb {
      * @return A unique `row_id` ( unsigned 64bit int ) associated
      *         with @a description.
      */
-    row_id addOrGetDescriptionId( std::string_view description );
+    row_id addOrGetDescriptionId( const std::string & description );
 
     /**
      * Adds a package to the database.

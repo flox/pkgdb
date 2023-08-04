@@ -391,14 +391,13 @@ PkgDb::addOrGetPackageSetId( const AttrPath & path )
 /* -------------------------------------------------------------------------- */
 
   row_id
-PkgDb::addOrGetDescriptionId( std::string_view description )
+PkgDb::addOrGetDescriptionId( const std::string & description )
 {
-  std::string s( description );
   sqlite3pp::query qry(
     this->db
   , "SELECT id FROM Descriptions WHERE description = :description LIMIT 1"
   );
-  qry.bind( ":description", s, sqlite3pp::copy );
+  qry.bind( ":description", description, sqlite3pp::copy );
   auto i = qry.begin();
   if ( i != qry.end() ) { return ( * i ).get<long long>( 0 ); }
 
@@ -406,7 +405,7 @@ PkgDb::addOrGetDescriptionId( std::string_view description )
     this->db
   , "INSERT INTO Descriptions ( description ) VALUES ( :description )"
   );
-  cmd.bind( ":description", s, sqlite3pp::copy );
+  cmd.bind( ":description", description, sqlite3pp::copy );
   if ( sql_rc rc = cmd.execute(); isSQLError( rc ) )
     {
       throw PkgDbException(

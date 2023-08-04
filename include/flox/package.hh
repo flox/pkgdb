@@ -58,7 +58,7 @@ class Package {
     virtual std::vector<std::string_view>    getOutputsToInstall() const = 0;
     virtual std::optional<bool>              isBroken()            const = 0;
     virtual std::optional<bool>              isUnfree()            const = 0;
-    virtual std::optional<std::string_view>  getDescription()      const = 0;
+    virtual std::optional<std::string>       getDescription()      const = 0;
 
       virtual subtree_type
     getSubtreeType() const
@@ -154,7 +154,7 @@ class Package {
 
       if ( withDescription )
         {
-          std::optional<std::string_view> od = this->getDescription();
+          std::optional<std::string> od = this->getDescription();
           if ( od.has_value() )
             {
               j[system].emplace( "description", od.value() );

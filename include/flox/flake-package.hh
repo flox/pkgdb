@@ -203,7 +203,7 @@ class FlakePackage : public Package {
       return rsl;
     }
 
-      std::optional<std::string_view>
+      std::optional<std::string>
     getDescription() const override
     {
       if ( ! this->_hasMetaAttr ) { return std::nullopt; }

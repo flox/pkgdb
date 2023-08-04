@@ -69,8 +69,8 @@ runTest( std::string_view name, F f, Args && ... args )
 #define _RUN_TEST( _EC, _NAME, ... )                      \
   {                                                       \
     int __ec = runTest(             ( # _NAME )           \
-                      ,               ( test_ ## _NAME )  \
-                      __VA_OPT__( , ) __VA_ARGS__         \
+                      ,             ( test_ ## _NAME )    \
+          __VA_OPT__( , ) __VA_ARGS__                     \
                       );                                  \
     if ( __ec != EXIT_SUCCESS ) { _EC = __ec; }           \
   }

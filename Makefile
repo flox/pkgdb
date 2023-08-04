@@ -229,9 +229,11 @@ install-include:                                                    \
 
 # ---------------------------------------------------------------------------- #
 
-.PHONY: check
+.PHONY: check cc-check bats-check
 
-check: $(TESTS:.cc=)
+check: cc-check bats-check
+
+cc-check: $(TESTS:.cc=)
 	@_ec=0;                     \
 	echo '';                    \
 	for t in $(TESTS:.cc=); do  \
@@ -245,6 +247,11 @@ check: $(TESTS:.cc=)
 	  echo '';                  \
 	done;                       \
 	exit "$$_ec"
+
+bats-check: bin
+	PKGDB="$(MAKEFILE_DIR)/bin/pkgdb"                        \
+	  bats --print-output-on-failure --verbose-run --timing  \
+	       "$(MAKEFILE_DIR)/tests"
 
 
 # ---------------------------------------------------------------------------- #
