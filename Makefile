@@ -8,8 +8,8 @@ MAKEFILE_DIR ?= $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 
 # ---------------------------------------------------------------------------- #
 
-.PHONY: all clean FORCE
-.DEFAULT_GOAL = bin
+.PHONY: all clean FORCE ignores most
+.DEFAULT_GOAL = most
 
 
 # ---------------------------------------------------------------------------- #
@@ -256,7 +256,8 @@ bats-check: bin
 
 # ---------------------------------------------------------------------------- #
 
-all: bin lib tests
+all: bin lib tests ignores
+most: bin lib ignores
 
 
 # ---------------------------------------------------------------------------- #
@@ -301,6 +302,13 @@ $(SQL_HH_FILES): %.hh: %.sql src/sql/Makefile
 sql-headers: $(SQL_HH_FILES)
 
 src/pkg-db.o: $(SQL_HH_FILES)
+
+
+# ---------------------------------------------------------------------------- #
+
+ignores: tests/.gitignore
+tests/.gitignore: FORCE
+	printf '%s\n' $(patsubst tests/%,%,$(TESTS)) > $@
 
 
 # ---------------------------------------------------------------------------- #

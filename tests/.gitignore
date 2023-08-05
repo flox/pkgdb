@@ -1,14 +1,2 @@
-descriptor
-preferences
-inputs
-resolved
-walk
-attr-path-glob
-resolve
-semver
-predicates
-drv-cache
-package-set
-cursor-iter
-attrs-iter
 pkgdb
+semver
