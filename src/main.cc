@@ -24,8 +24,9 @@
 #include <argparse/argparse.hpp>
 #include <nlohmann/json.hpp>
 
+#include "flox/util.hh"
 #include "flox/flox-flake.hh"
-#include "pkg-db.hh"
+#include "pkgdb.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -253,28 +254,8 @@ main( int argc, char * argv[], char ** envp )
 
   /* Initialize `nix' */
 
-  /* Assign verbosity to `nix' global setting */
-  nix::verbosity = verbosity;
-  nix::setStackSize( 64 * 1024 * 1024 );
-  nix::initNix();
-  nix::initGC();
-  /* Suppress benign warnings about `nix.conf'. */
-  nix::verbosity = nix::lvlError;
-  nix::initPlugins();
-  /* Restore verbosity to `nix' global setting */
-  nix::verbosity = verbosity;
-
-  // TODO: make this an option. It risks making cross-system eval impossible.
-  nix::evalSettings.enableImportFromDerivation.setDefault( false );
-  nix::evalSettings.pureEval.setDefault( true );
-  nix::evalSettings.useEvalCache.setDefault( true );
-
-  /* TODO: --store PATH */
-  nix::ref<nix::Store> store = nix::ref<nix::Store>( nix::openStore() );
-
-  std::shared_ptr<nix::EvalState> state =
-    std::make_shared<nix::EvalState>( std::list<std::string> {}, store, store );
-  state->repair = nix::NoRepair;
+  // TODO: Handle `--store'
+  flox::NixState nstate( verbosity );
 
 
 /* -------------------------------------------------------------------------- */
@@ -295,7 +276,7 @@ main( int argc, char * argv[], char ** envp )
   , nix::actUnknown
   , nix::fmt( "fetching flake '%s'", ref.to_string() )
   );
-  flox::FloxFlake flake( (nix::ref<nix::EvalState>) state, ref );
+  flox::FloxFlake flake( (nix::ref<nix::EvalState>) nstate.state, ref );
   nix::logger->stopActivity( act.id );
 
   if ( ! flake.lockedFlake.flake.lockedRef.input.hasAllInfo() )

@@ -1,6 +1,6 @@
 /* ========================================================================== *
  *
- * @file pkg-db.hh
+ * @file pkgdb.hh
  *
  * @brief Interfaces for operating on a SQLite3 package set database.
  *

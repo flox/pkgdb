@@ -1,6 +1,6 @@
 /* ========================================================================== *
  *
- * @file pkg-db.cc
+ * @file pkgdb.cc
  *
  * @brief Implementations for operating on a SQLite3 package set database.
  *
@@ -9,7 +9,7 @@
 
 #include <limits>
 
-#include "pkg-db.hh"
+#include "pkgdb.hh"
 #include "flox/flake-package.hh"
 
 #include "sql/versions.hh"

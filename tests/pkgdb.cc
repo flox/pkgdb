@@ -21,7 +21,8 @@
 #include <nix/flake/flake.hh>
 
 #include "flox/flox-flake.hh"
-#include "pkg-db.hh"
+#include "flox/util.hh"
+#include "pkgdb.hh"
 #include "test.hh"
 
 
@@ -77,27 +78,7 @@ main( int argc, char * argv[], char ** envp )
     }
 
   /* Initialize `nix' */
-
-  /* Assign verbosity to `nix' global setting */
-  nix::verbosity = verbosity;
-  nix::setStackSize( 64 * 1024 * 1024 );
-  nix::initNix();
-  nix::initGC();
-  /* Suppress benign warnings about `nix.conf'. */
-  nix::verbosity = nix::lvlError;
-  nix::initPlugins();
-  /* Restore verbosity to `nix' global setting */
-  nix::verbosity = verbosity;
-
-  nix::evalSettings.enableImportFromDerivation = false;
-  nix::evalSettings.pureEval                   = false;
-  nix::evalSettings.useEvalCache               = true;
-
-  nix::ref<nix::Store> store = nix::ref<nix::Store>( nix::openStore() );
-
-  std::shared_ptr<nix::EvalState> state =
-    std::make_shared<nix::EvalState>( std::list<std::string> {}, store, store );
-  state->repair = nix::NoRepair;
+  flox::NixState nstate( verbosity );
 
 
 /* -------------------------------------------------------------------------- */
@@ -113,7 +94,7 @@ main( int argc, char * argv[], char ** envp )
   , nix::actUnknown
   , nix::fmt( "fetching flake '%s'", ref.to_string() )
   );
-  flox::FloxFlake flake( (nix::ref<nix::EvalState>) state, ref );
+  flox::FloxFlake flake( (nix::ref<nix::EvalState>) nstate.state, ref );
   nix::logger->stopActivity( act.id );
 
 

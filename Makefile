@@ -301,7 +301,7 @@ $(SQL_HH_FILES): %.hh: %.sql src/sql/Makefile
 .PHONY: sql-headers
 sql-headers: $(SQL_HH_FILES)
 
-src/pkg-db.o: $(SQL_HH_FILES)
+src/pkgdb.o: $(SQL_HH_FILES)
 
 
 # ---------------------------------------------------------------------------- #
