@@ -35,9 +35,9 @@ OS ?= $(shell $(UNAME))
 OS := $(OS)
 ifndef libExt
 ifeq (Linux,$(OS))
-	libExt ?= .so
+libExt ?= .so
 else
-	libExt ?= .dylib
+libExt ?= .dylib
 endif  # ifeq (Linux,$(OS))
 endif  # ifndef libExt
 
@@ -79,8 +79,8 @@ bin_CXXFLAGS ?=
 bin_LDFLAGS  ?=
 
 ifneq ($(DEBUG),)
-	CXXFLAGS += -ggdb3 -pg
-	LDFLAGS  += -ggdb3 -pg
+CXXFLAGS += -ggdb3 -pg
+LDFLAGS  += -ggdb3 -pg
 endif
 
 
@@ -112,25 +112,25 @@ sqlite3pp_CFLAGS := $(sqlite3pp_CFLAGS)
 nix_INCDIR  ?= $(shell $(PKG_CONFIG) --variable=includedir nix-cmd)
 nix_INCDIR  := $(nix_INCDIR)
 ifndef nix_CFLAGS
-  nix_CFLAGS  =  $(boost_CFLAGS)
-  nix_CFLAGS  += $(shell $(PKG_CONFIG) --cflags nix-main nix-cmd nix-expr)
-  nix_CFLAGS  += -isystem $(shell $(PKG_CONFIG) --variable=includedir nix-cmd)
-  nix_CFLAGS  += -include $(nix_INCDIR)/nix/config.h
+nix_CFLAGS  =  $(boost_CFLAGS)
+nix_CFLAGS  += $(shell $(PKG_CONFIG) --cflags nix-main nix-cmd nix-expr)
+nix_CFLAGS  += -isystem $(shell $(PKG_CONFIG) --variable=includedir nix-cmd)
+nix_CFLAGS  += -include $(nix_INCDIR)/nix/config.h
 endif
 nix_CFLAGS := $(nix_CFLAGS)
 
 ifndef nix_LDFLAGS
-  nix_LDFLAGS =                                                        \
-	  $(shell $(PKG_CONFIG) --libs nix-main nix-cmd nix-expr nix-store)
-  nix_LDFLAGS += -lnixfetchers
+nix_LDFLAGS =                                                        \
+	$(shell $(PKG_CONFIG) --libs nix-main nix-cmd nix-expr nix-store)
+nix_LDFLAGS += -lnixfetchers
 endif
 nix_LDFLAGS := $(nix_LDFLAGS)
 
 ifndef floxresolve_LDFLAGS
-	floxresolve_LDFLAGS =  '-L$(MAKEFILE_DIR)/lib' -lflox-pkgdb
-	ifeq (Linux,$(OS))
-	floxresolve_LDFLAGS += -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
-	endif
+floxresolve_LDFLAGS =  '-L$(MAKEFILE_DIR)/lib' -lflox-pkgdb
+ifeq (Linux,$(OS))
+floxresolve_LDFLAGS += -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
+endif
 endif
 
 
