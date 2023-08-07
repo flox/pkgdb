@@ -71,9 +71,9 @@ CXXFLAGS     += '-I$(MAKEFILE_DIR)/include'
 LDFLAGS      ?= $(EXTRA_LDFLAGS)
 lib_CXXFLAGS ?= -shared -fPIC
 ifeq (Linux,$(OS))
-	lib_LDFLAGS  ?= -shared -fPIC -Wl,--no-undefined
+lib_LDFLAGS  ?= -shared -fPIC -Wl,--no-undefined
 else
-	lib_LDFLAGS  ?= -shared -fPIC -Wl,-undefined,error
+lib_LDFLAGS  ?= -shared -fPIC -Wl,-undefined,error
 endif
 bin_CXXFLAGS ?=
 bin_LDFLAGS  ?=
@@ -129,7 +129,7 @@ nix_LDFLAGS := $(nix_LDFLAGS)
 ifndef floxresolve_LDFLAGS
 	floxresolve_LDFLAGS =  '-L$(MAKEFILE_DIR)/lib' -lflox-pkgdb
 	ifeq (Linux,$(OS))
-		floxresolve_LDFLAGS += -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
+	floxresolve_LDFLAGS += -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
 	endif
 endif
 
@@ -142,8 +142,8 @@ CXXFLAGS     += $(nix_CFLAGS) $(nljson_CFLAGS)
 
 lib_LDFLAGS += $(nix_LDFLAGS) $(sqlite3_LDFLAGS)
 ifeq (Linux,$(OS))
-	lib_LDFLAGS += -Wl,--as-needed
-	lib_LDFLAGS += -Wl,--no-as-needed
+lib_LDFLAGS += -Wl,--as-needed
+lib_LDFLAGS += -Wl,--no-as-needed
 endif
 
 bin_LDFLAGS += $(nix_LDFLAGS) $(floxresolve_LDFLAGS) $(sqlite3_LDFLAGS)
