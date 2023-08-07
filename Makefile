@@ -70,7 +70,11 @@ CXXFLAGS     ?= $(EXTRA_CFLAGS) $(EXTRA_CXXFLAGS)
 CXXFLAGS     += '-I$(MAKEFILE_DIR)/include'
 LDFLAGS      ?= $(EXTRA_LDFLAGS)
 lib_CXXFLAGS ?= -shared -fPIC
-lib_LDFLAGS  ?= -shared -fPIC -Wl,--no-undefined
+ifeq (Linux,$(OS))
+	lib_LDFLAGS  ?= -shared -fPIC -Wl,--no-undefined
+else
+	lib_LDFLAGS  ?= -shared -fPIC -Wl,-undefined,error
+endif
 bin_CXXFLAGS ?=
 bin_LDFLAGS  ?=
 
@@ -124,7 +128,9 @@ nix_LDFLAGS := $(nix_LDFLAGS)
 
 ifndef floxresolve_LDFLAGS
 	floxresolve_LDFLAGS =  '-L$(MAKEFILE_DIR)/lib' -lflox-pkgdb
-	floxresolve_LDFLAGS += -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
+	ifeq (Linux,$(OS))
+		floxresolve_LDFLAGS += -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
+	endif
 endif
 
 
@@ -134,9 +140,11 @@ lib_CXXFLAGS += $(sqlite3_CFLAGS) $(sql_builder_CFLAGS) $(sqlite3pp_CFLAGS)
 bin_CXXFLAGS += $(argparse_CFLAGS)
 CXXFLAGS     += $(nix_CFLAGS) $(nljson_CFLAGS)
 
-lib_LDFLAGS += -Wl,--as-needed
 lib_LDFLAGS += $(nix_LDFLAGS) $(sqlite3_LDFLAGS)
-lib_LDFLAGS += -Wl,--no-as-needed
+ifeq (Linux,$(OS))
+	lib_LDFLAGS += -Wl,--as-needed
+	lib_LDFLAGS += -Wl,--no-as-needed
+endif
 
 bin_LDFLAGS += $(nix_LDFLAGS) $(floxresolve_LDFLAGS) $(sqlite3_LDFLAGS)
 
@@ -153,7 +161,7 @@ CXXFLAGS += -DSEMVER_PATH='$(SEMVER_PATH)'
 
 .PHONY: bin lib include tests
 
-bin:     $(addprefix bin/,$(BINS))
+bin:     lib $(addprefix bin/,$(BINS))
 lib:     $(addprefix lib/,$(LIBS))
 include: $(COMMON_HEADERS)
 tests:   $(TESTS)
