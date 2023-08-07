@@ -140,9 +140,11 @@ lib_CXXFLAGS += $(sqlite3_CFLAGS) $(sql_builder_CFLAGS) $(sqlite3pp_CFLAGS)
 bin_CXXFLAGS += $(argparse_CFLAGS)
 CXXFLAGS     += $(nix_CFLAGS) $(nljson_CFLAGS)
 
-lib_LDFLAGS += $(nix_LDFLAGS) $(sqlite3_LDFLAGS)
 ifeq (Linux,$(OS))
 lib_LDFLAGS += -Wl,--as-needed
+endif
+lib_LDFLAGS += $(nix_LDFLAGS) $(sqlite3_LDFLAGS)
+ifeq (Linux,$(OS))
 lib_LDFLAGS += -Wl,--no-as-needed
 endif
 
