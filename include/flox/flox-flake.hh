@@ -37,11 +37,24 @@ static const nix::flake::LockFlags defaultLockFlags = {
  * to avoid synchronization slowdowns with its databases.
  */
 class FloxFlake : public std::enable_shared_from_this<FloxFlake> {
+
   public:
-    using Cursor      = nix::ref<nix::eval_cache::AttrCursor>;
+    /**
+     * A `std::shared_ptr<nix::eval_cache::AttrCursor>` which may be `nullptr`.
+     */
     using MaybeCursor = std::shared_ptr<nix::eval_cache::AttrCursor>;
+    /**
+     * A non-`nullptr` `std::shared_ptr<nix::eval_cache::AttrCursor>`.
+     */
+    using Cursor = nix::ref<nix::eval_cache::AttrCursor>;
+
 
   private:
+    /**
+     * A handle for a cached `nix` evaluator associated with @a this flake.
+     * This is opened lazily by @a openEvalCache and remains open until @a this
+     * object is destroyed.
+     */
     std::shared_ptr<nix::eval_cache::EvalCache> _cache;
 
   public:
@@ -97,14 +110,13 @@ class FloxFlake : public std::enable_shared_from_this<FloxFlake> {
       return (nix::ref<nix::eval_cache::EvalCache>) this->_cache;
     }
 
-      Cursor
-    openCursor( const std::vector<nix::Symbol> & path )
-    {
-      Cursor cur = this->openEvalCache()->getRoot();
-      for ( const nix::Symbol & p : path ) { cur = cur->getAttr( p ); }
-      return cur;
-    }
-
+    /**
+     * Try to open a `nix` evaluator cursor at a given path.
+     * If there is no such attribute this routine will return `nullptr`.
+     * @param path The attribute path try opening.
+     * @return `nullptr` iff there is no such path, otherwise a
+     *         @a nix::eval_cache::AttrCursor at @a path.
+     */
       MaybeCursor
     maybeOpenCursor( const std::vector<nix::Symbol> & path )
     {
@@ -117,6 +129,19 @@ class FloxFlake : public std::enable_shared_from_this<FloxFlake> {
       return cur;
     }
 
+    /**
+     * Open a `nix` evaluator cursor at a given path.
+     * If there is no such attribute this routine will throw an error.
+     * @param path The attribute path to open.
+     * @return A @a nix::eval_cache::AttrCursor at @a path.
+     */
+      Cursor
+    openCursor( const std::vector<nix::Symbol> & path )
+    {
+      Cursor cur = this->openEvalCache()->getRoot();
+      for ( const nix::Symbol & p : path ) { cur = cur->getAttr( p ); }
+      return cur;
+    }
 
 };  /* End class `FloxFlake' */
 
