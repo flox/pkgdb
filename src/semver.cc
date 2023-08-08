@@ -165,7 +165,7 @@ runSemver( const std::list<std::string> & args )
   static const std::string semverProg =
     nix::getEnv( "SEMVER" ).value_or( SEMVER_PATH_STR );
   static const std::map<std::string, std::string> env = nix::getEnv();
-  return nix::runProgram( {
+  return nix::runProgram( nix::RunOptions {
     .program     = semverProg
   , .searchPath  = true
   , .args        = args

@@ -35,9 +35,9 @@ OS ?= $(shell $(UNAME))
 OS := $(OS)
 ifndef libExt
 ifeq (Linux,$(OS))
-	libExt ?= .so
+libExt ?= .so
 else
-	libExt ?= .dylib
+libExt ?= .dylib
 endif  # ifeq (Linux,$(OS))
 endif  # ifndef libExt
 
@@ -70,13 +70,17 @@ CXXFLAGS     ?= $(EXTRA_CFLAGS) $(EXTRA_CXXFLAGS)
 CXXFLAGS     += '-I$(MAKEFILE_DIR)/include'
 LDFLAGS      ?= $(EXTRA_LDFLAGS)
 lib_CXXFLAGS ?= -shared -fPIC
+ifeq (Linux,$(OS))
 lib_LDFLAGS  ?= -shared -fPIC -Wl,--no-undefined
+else
+lib_LDFLAGS  ?= -shared -fPIC -Wl,-undefined,error
+endif
 bin_CXXFLAGS ?=
 bin_LDFLAGS  ?=
 
 ifneq ($(DEBUG),)
-	CXXFLAGS += -ggdb3 -pg
-	LDFLAGS  += -ggdb3 -pg
+CXXFLAGS += -ggdb3 -pg
+LDFLAGS  += -ggdb3 -pg
 endif
 
 
@@ -108,23 +112,25 @@ sqlite3pp_CFLAGS := $(sqlite3pp_CFLAGS)
 nix_INCDIR  ?= $(shell $(PKG_CONFIG) --variable=includedir nix-cmd)
 nix_INCDIR  := $(nix_INCDIR)
 ifndef nix_CFLAGS
-  nix_CFLAGS  =  $(boost_CFLAGS)
-  nix_CFLAGS  += $(shell $(PKG_CONFIG) --cflags nix-main nix-cmd nix-expr)
-  nix_CFLAGS  += -isystem $(shell $(PKG_CONFIG) --variable=includedir nix-cmd)
-  nix_CFLAGS  += -include $(nix_INCDIR)/nix/config.h
+nix_CFLAGS  =  $(boost_CFLAGS)
+nix_CFLAGS  += $(shell $(PKG_CONFIG) --cflags nix-main nix-cmd nix-expr)
+nix_CFLAGS  += -isystem $(shell $(PKG_CONFIG) --variable=includedir nix-cmd)
+nix_CFLAGS  += -include $(nix_INCDIR)/nix/config.h
 endif
 nix_CFLAGS := $(nix_CFLAGS)
 
 ifndef nix_LDFLAGS
-  nix_LDFLAGS =                                                        \
-	  $(shell $(PKG_CONFIG) --libs nix-main nix-cmd nix-expr nix-store)
-  nix_LDFLAGS += -lnixfetchers
+nix_LDFLAGS =                                                        \
+	$(shell $(PKG_CONFIG) --libs nix-main nix-cmd nix-expr nix-store)
+nix_LDFLAGS += -lnixfetchers
 endif
 nix_LDFLAGS := $(nix_LDFLAGS)
 
 ifndef floxresolve_LDFLAGS
-	floxresolve_LDFLAGS =  '-L$(MAKEFILE_DIR)/lib' -lflox-pkgdb
-	floxresolve_LDFLAGS += -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
+floxresolve_LDFLAGS =  '-L$(MAKEFILE_DIR)/lib' -lflox-pkgdb
+ifeq (Linux,$(OS))
+floxresolve_LDFLAGS += -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
+endif
 endif
 
 
@@ -134,9 +140,13 @@ lib_CXXFLAGS += $(sqlite3_CFLAGS) $(sql_builder_CFLAGS) $(sqlite3pp_CFLAGS)
 bin_CXXFLAGS += $(argparse_CFLAGS)
 CXXFLAGS     += $(nix_CFLAGS) $(nljson_CFLAGS)
 
+ifeq (Linux,$(OS))
 lib_LDFLAGS += -Wl,--as-needed
+endif
 lib_LDFLAGS += $(nix_LDFLAGS) $(sqlite3_LDFLAGS)
+ifeq (Linux,$(OS))
 lib_LDFLAGS += -Wl,--no-as-needed
+endif
 
 bin_LDFLAGS += $(nix_LDFLAGS) $(floxresolve_LDFLAGS) $(sqlite3_LDFLAGS)
 
@@ -153,7 +163,7 @@ CXXFLAGS += -DSEMVER_PATH='$(SEMVER_PATH)'
 
 .PHONY: bin lib include tests
 
-bin:     $(addprefix bin/,$(BINS))
+bin:     lib $(addprefix bin/,$(BINS))
 lib:     $(addprefix lib/,$(LIBS))
 include: $(COMMON_HEADERS)
 tests:   $(TESTS)
