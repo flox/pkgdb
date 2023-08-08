@@ -1,5 +1,9 @@
 /* ========================================================================== *
  *
+ * @file flox/flox-flake.hh
+ *
+ * @brief Defines a convenience wrapper that provides various operations on
+ *        a `flake`.
  *
  *
  * -------------------------------------------------------------------------- */
@@ -19,6 +23,12 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Default flags used when locking flakes.
+ * - Disable `updateLockFile` and read existing lockfiles directly.
+ * - Disable `writeLockFile` to avoid writing generated lockfiles to the
+ *   filesystem; this will only occur if there is no existing lockfile.
+ */
 static const nix::flake::LockFlags defaultLockFlags = {
   .updateLockFile = false
 , .writeLockFile  = false

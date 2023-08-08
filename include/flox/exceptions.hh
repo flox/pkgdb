@@ -1,5 +1,9 @@
 /* ========================================================================== *
  *
+ * @file flox/exceptions.hh
+ *
+ * @brief Definitions of various `std::exception` children used for throwing
+ *        throwing errors with nice messages and typed discrimination.
  *
  *
  * -------------------------------------------------------------------------- */
@@ -16,6 +20,7 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
+/** Typed exception wrapper used for misc errors. */
 class FloxException : public std::exception {
   private:
     std::string msg;

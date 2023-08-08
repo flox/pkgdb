@@ -1,5 +1,9 @@
 /* ========================================================================== *
  *
+ * @file flox/flake-package.hh
+ *
+ * @brief Provides a @a flox::Package implementation which are pulled from
+ *        evaluation of a `nix` flake.
  *
  *
  * -------------------------------------------------------------------------- */
@@ -31,6 +35,10 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
+/** /
+ * A @a flox::Package implementation which are pulled from evaluation of a
+ * `nix` flake.
+ */
 class FlakePackage : public Package {
 
   public:

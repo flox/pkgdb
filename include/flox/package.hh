@@ -14,13 +14,15 @@
 #include <vector>
 #include <optional>
 #include <functional>
+#include <unordered_map>
+#include <unordered_set>
+
 #include <nlohmann/json.hpp>
+
 #include <nix/flake/flake.hh>
 #include <nix/fetchers.hh>
 #include <nix/eval-cache.hh>
 #include <nix/names.hh>
-#include <unordered_map>
-#include <unordered_set>
 
 #include "flox/exceptions.hh"
 #include "semver.hh"
