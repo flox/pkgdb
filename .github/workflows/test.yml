@@ -17,7 +17,7 @@ jobs:
       SYSTEM: x86_64-linux
     steps:
       - uses: actions/checkout@v3
-      - uses: cachix/install-nix-action@11f4ad19be46fd34c005a2864996d8f197fb51c6
+      - uses: cachix/install-nix-action@v22
         with:
           extra_nix_config: |
             experimental-features = nix-command flakes
