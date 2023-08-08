@@ -17,8 +17,8 @@ _as_me="fixup-headers.sh";
 
 _version="0.1.0";
 
-_usage_msg="USAGE: $_as_me [OPTIONS...]
-Pre-processor for C++ source files.
+_usage_msg="USAGE: $_as_me [OPTIONS...] FILE
+Pre-processor for a C/C++ source file.
 ";
 
 _help_msg="$_usage_msg
