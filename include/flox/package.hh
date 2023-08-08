@@ -82,12 +82,21 @@ class Package {
       return this->getPathStrs()[2];
     }
 
+    /**
+     * @return The parsed "package name" prefix of @a this package's
+     *         `name` field.
+     */
       virtual nix::DrvName
     getParsedDrvName() const
     {
       return nix::DrvName( this->getFullName() );
     }
 
+    /**
+     * @return The attribute name assocaited with @a this package.
+     *         For `catalog` packages this is the second to last member of
+     *         @a this package's attribute path, for other flake subtrees.
+     */
       virtual std::string_view
     getPkgAttrName() const
     {
@@ -99,6 +108,11 @@ class Package {
       return pathS[pathS.size() - 1];
     }
 
+    /**
+     * @return `std::nullopt` iff @a this package does not use semantic
+     *         versioning, otherwise a normalized semantic version number
+     *         coerces from @a this package's `version` information.
+     */
       virtual std::optional<std::string_view>
     getSemver() const
     {
@@ -107,6 +121,13 @@ class Package {
       return versions::coerceSemver( version.value() );
     }
 
+    /**
+     * Create an installable URI string associated with this package using
+     * @a ref as its _input_ part.
+     * @param ref Input flake reference associated with @a this package.
+     *            This is used to construct the URI on the left side of `#`.
+     * @return An installable URI string associated with this package using.
+     */
       virtual std::string
     toURIString( const nix::FlakeRef & ref ) const
     {
@@ -122,6 +143,12 @@ class Package {
       return uri;
     }
 
+    /**
+     * Serialize notable package metadata as a JSON object.
+     * This may only contains a subset of all available information.
+     * @param withDescription Whether to include `description` strings.
+     * @return A JSON object with notable package metadata.
+     */
       virtual nlohmann::json
     getInfo( bool withDescription = false ) const
     {
