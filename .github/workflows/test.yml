@@ -4,6 +4,10 @@ on:
   push:
     branches:
       -  main
+    paths:
+      - '**'
+      - '!**/README*'
+      - '!**/CONTRIBUTING*'
   pull_request:
     types: [opened, synchronize, reopened]
 
@@ -12,9 +16,13 @@ concurrency:
   cancel-in-progress: true
 jobs:
   all-tests:
-    runs-on: ubuntu-latest
-    env:
-      SYSTEM: x86_64-linux
+    name: Tests ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
     steps:
       - uses: actions/checkout@v3
       - uses: cachix/install-nix-action@v22
@@ -64,3 +72,17 @@ jobs:
 
       - name: Run Tests
         run: nix develop --no-update-lock-file --command make check -j4
+
+  # Aggregate test results
+  all-tests-success:
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    name: Tests ( All Systems )
+    needs: all-tests
+    steps:
+      - if: >-
+          ${{
+              contains( needs.*.result, 'failure'   ) ||
+              contains( needs.*.result, 'cancelled' )
+           }}
+        run: exit 1
