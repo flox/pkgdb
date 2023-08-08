@@ -222,7 +222,7 @@ main( int argc, char * argv[], char ** envp )
     .help( "Attribute path to scrape" )
     .metavar( "ATTR" )
     .remaining()
-    .default_value( std::list<std::string> {
+    .default_value( std::vector<std::string> {
       "packages"
     , nix::settings.thisSystem.get()
     } )
