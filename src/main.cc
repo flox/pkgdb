@@ -73,7 +73,7 @@ scrape(       flox::pkgdb::PkgDb & db
   /* Lookup/create the `pathId' for for this attr-path in our DB.
    * This must be done before starting a transaction in the database
    * because it may need to read/write multiple times. */
-  flox::pkgdb::row_id parentId = db.addOrGetPackageSetId( prefix );
+  flox::pkgdb::row_id parentId = db.addOrGetAttrSetId( prefix );
 
   /* Start a transaction */
   sqlite3pp::transaction txn( db.db );
