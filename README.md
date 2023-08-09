@@ -33,7 +33,7 @@ By default, packages will be scraped from packages.[system arch] and stored in `
 $ pkgdb scrape github:NixOS/nixpkgs --database flakedb.sqlite legacyPackages aarch64-darwin
 ```
 
-If the database already exists, it won't be updated. Use `--force` to force an update.
+If the database for a given flake already exists and is asked to reprocess an existing package set, it will be skipped. Use `--force` to force an update/regeneration.
 
 Once generated, the database can be opened and queried using `sqlite3`.
 
@@ -53,11 +53,12 @@ $ sqlite3 flakedb.sqlite 'SELECT name, version FROM Packages LIMIT 10'
 
 ### Schema
 
-The data is represented in a tree format matching the attrPath structure. The two entities are AttrSets (branches) and Packages (leaves). Packages and AttrSets each have a parentId, which is always found in AttrSets.
+The data is represented in a tree format matching the attrPath structure.
+The two entities are AttrSets (branches) and Packages (leaves). Packages and AttrSets each have a parentId, which is always found in AttrSets.
 
 Descriptions are de-duplicated (for instance between two packages for separate architectures) by a Descriptions table.
 
-DbVersions and LockedFlake tables store metadata about the version of pkgdb that generated the database and the flakes which have been scraped, respectively.
+`DbVersions` and `LockedFlake` tables store metadata about the version of `pkgdb` that generated the database and the flakes which have been scraped, respectively.
 
 ```mermaid
 erDiagram
