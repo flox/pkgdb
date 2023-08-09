@@ -67,7 +67,7 @@ setup_file() {
   assert test "$_dID" = 1;
   run sqlite3 "$DBPATH"                                               \
     "SELECT description FROM Descriptions WHERE id = $_dID LIMIT 1";
-  assert_output --partial 'Blob emoji from blobs.gg repacked as APNG';
+  assert_output 'Blob emoji from blobs.gg repacked as APNG';
 }
 
 
@@ -80,7 +80,7 @@ setup_file() {
   assert_success;
   run sqlite3 "$DBPATH" "SELECT version FROM Packages      \
     WHERE name = 'blobs.gg-unstable-2019-07-24' LIMIT 1";
-  assert_output --partial 'unstable-2019-07-24';
+  assert_output 'unstable-2019-07-24';
 }
 
 
@@ -91,10 +91,101 @@ setup_file() {
   run $PKGDB scrape --database "$DBPATH" "$NIXPKGS_REF"           \
                     legacyPackages "$NIX_SYSTEM" 'akkoma-emoji';
   assert_success;
-  unset output;  # Clear `output' to ensure we can empty check properly.
   run sqlite3 "$DBPATH" "SELECT semver FROM Packages      \
     WHERE name = 'blobs.gg-unstable-2019-07-24' LIMIT 1";
   refute_output --regexp '.';
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# Check the pname of a package.
+@test "akkoma-emoji pname" {
+  skip FIXME;
+  run $PKGDB scrape --database "$DBPATH" "$NIXPKGS_REF"           \
+                    legacyPackages "$NIX_SYSTEM" 'akkoma-emoji';
+  assert_success;
+  run sqlite3 "$DBPATH" "SELECT pname FROM Packages      \
+    WHERE name = 'blobs.gg-unstable-2019-07-24' LIMIT 1";
+  assert_output 'blobs.gg';
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# Check the attribute name of a package
+@test "akkoma-emoji attrName" {
+  run $PKGDB scrape --database "$DBPATH" "$NIXPKGS_REF"           \
+                    legacyPackages "$NIX_SYSTEM" 'akkoma-emoji';
+  assert_success;
+  run sqlite3 "$DBPATH" "SELECT attrName FROM Packages      \
+    WHERE name = 'blobs.gg-unstable-2019-07-24' LIMIT 1";
+  assert_output 'blobs_gg';
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# Check the license of a package
+@test "akkoma-emoji license" {
+  run $PKGDB scrape --database "$DBPATH" "$NIXPKGS_REF"           \
+                    legacyPackages "$NIX_SYSTEM" 'akkoma-emoji';
+  assert_success;
+  run sqlite3 "$DBPATH" "SELECT license FROM Packages      \
+    WHERE name = 'blobs.gg-unstable-2019-07-24' LIMIT 1";
+  assert_output 'Apache-2.0';
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# Check the outputs of a package
+@test "akkoma-emoji outputs" {
+  run $PKGDB scrape --database "$DBPATH" "$NIXPKGS_REF"           \
+                    legacyPackages "$NIX_SYSTEM" 'akkoma-emoji';
+  assert_success;
+  run sqlite3 "$DBPATH" "SELECT outputs FROM Packages      \
+    WHERE name = 'blobs.gg-unstable-2019-07-24' LIMIT 1";
+  assert_output '["out"]';
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# Check the outputs to install from a package
+@test "akkoma-emoji outputsToInstall" {
+  run $PKGDB scrape --database "$DBPATH" "$NIXPKGS_REF"           \
+                    legacyPackages "$NIX_SYSTEM" 'akkoma-emoji';
+  assert_success;
+  run sqlite3 "$DBPATH" "SELECT outputsToInstall FROM Packages      \
+    WHERE name = 'blobs.gg-unstable-2019-07-24' LIMIT 1";
+  assert_output '["out"]';
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# Check whether a package is broken
+@test "akkoma-emoji broken" {
+  run $PKGDB scrape --database "$DBPATH" "$NIXPKGS_REF"           \
+                    legacyPackages "$NIX_SYSTEM" 'akkoma-emoji';
+  assert_success;
+  run sqlite3 "$DBPATH" "SELECT broken FROM Packages      \
+    WHERE name = 'blobs.gg-unstable-2019-07-24' LIMIT 1";
+  assert_output '0';
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# Check whether a package is unfree
+@test "akkoma-emoji unfree" {
+  run $PKGDB scrape --database "$DBPATH" "$NIXPKGS_REF"           \
+                    legacyPackages "$NIX_SYSTEM" 'akkoma-emoji';
+  assert_success;
+  run sqlite3 "$DBPATH" "SELECT unfree FROM Packages      \
+    WHERE name = 'blobs.gg-unstable-2019-07-24' LIMIT 1";
+  assert_output '0';
 }
 
 
