@@ -207,9 +207,8 @@ setup_file() {
     "SELECT descriptionId FROM Packages  \
      WHERE attrName = 'foreign-env'";
   )";
-  assert test "$_dID" = 1;
   run sqlite3 "$DBPATH_NIXPKGS_FLOX"                                               \
-    "SELECT description FROM Descriptions WHERE id = $_dID LIMIT 1";
+    "SELECT description FROM Descriptions WHERE id = $_dID";
   assert_output 'A foreign environment interface for Fish shell';
 }
 
