@@ -197,7 +197,6 @@ setup_file() {
 
 # ---------------------------------------------------------------------------- #
 
-# Check the description of a package.
 @test "nixpkgs-flox fishPlugins.foreign-env description" {
   run $PKGDB scrape --database "$DBPATH_NIXPKGS_FLOX" "$NIXPKGS_FLOX_REF"           \
                     evalCatalog "$NIX_SYSTEM" stable fishPlugins;
@@ -227,7 +226,7 @@ setup_file() {
 
 # ---------------------------------------------------------------------------- #
 
-# Check the semver of a package with a non-semantic version.
+# foreign-env has a non-semantic version.
 @test "nixpkgs-flox fishPlugins.foreign-env semver" {
   run $PKGDB scrape --database "$DBPATH_NIXPKGS_FLOX" "$NIXPKGS_FLOX_REF"           \
                     evalCatalog "$NIX_SYSTEM" stable fishPlugins;
@@ -240,7 +239,6 @@ setup_file() {
 
 # ---------------------------------------------------------------------------- #
 
-# Check the pname of a package.
 @test "nixpkgs-flox fishPlugins.foreign-env pname" {
   skip FIXME;
   run $PKGDB scrape --database "$DBPATH_NIXPKGS_FLOX" "$NIXPKGS_FLOX_REF"           \
@@ -316,7 +314,6 @@ setup_file() {
 
 # ---------------------------------------------------------------------------- #
 
-# Check whether a package is unfree
 @test "nixpkgs-flox fishPlugins.foreign-env unfree" {
   run $PKGDB scrape --database "$DBPATH_NIXPKGS_FLOX" "$NIXPKGS_FLOX_REF"           \
                     evalCatalog "$NIX_SYSTEM" stable fishPlugins;
