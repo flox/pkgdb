@@ -112,7 +112,9 @@ test_getDbVersion0( flox::pkgdb::PkgDb & db )
 /* -------------------------------------------------------------------------- */
 
 /**
- * Ensure `PkgDb::hasPackageSet` checks that `Packages` exist in an `AttrSet`.
+ * Ensure `PkgDb::hasPackageSet` checks that `Packages` exist in an `AttrSet`
+ * such that attribute sets with no packages are not identified as
+ * "Package Sets".
  */
   bool
 test_hasPackageSet0( flox::pkgdb::PkgDb & db )
@@ -130,6 +132,38 @@ test_hasPackageSet0( flox::pkgdb::PkgDb & db )
   EXPECT( ! db.hasPackageSet(
               std::vector<std::string> { "legacyPackages", "x86_64-linux" }
             )
+        );
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Ensure `PkgDb::hasPackageSet` checks that `Packages` exist in an `AttrSet`
+ * such that attribute sets with packages are identified as "Package Sets".
+ */
+  bool
+test_hasPackageSet1( flox::pkgdb::PkgDb & db )
+{
+  /* Make sure the attr-set exists, and clear it. */
+  row_id id = db.addOrGetAttrSetId( "x86_64-linux"
+                                  , db.addOrGetAttrSetId( "legacyPackages" )
+                                  );
+  /* Add a minimal package with this `id` as its parent. */
+  sqlite3pp::command cmd(
+    db.db
+  , R"SQL(
+      INSERT OR IGNORE INTO Packages ( parentId, attrName, name, outputs )
+      VALUES( :id, 'phony', 'phony', '["out"]' )
+    )SQL"
+  );
+  cmd.bind( ":id", (long long int) id );
+  cmd.execute();
+
+  EXPECT( db.hasPackageSet(
+            std::vector<std::string> { "legacyPackages", "x86_64-linux" }
+          )
         );
   return true;
 }
@@ -188,6 +222,7 @@ main( int argc, char * argv[], char ** envp )
     RUN_TEST( getDbVersion0, db );
 
     RUN_TEST( hasPackageSet0, db );
+    RUN_TEST( hasPackageSet1, db );
 
   }
 
