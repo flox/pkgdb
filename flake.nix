@@ -8,10 +8,12 @@
 
 # ---------------------------------------------------------------------------- #
 
-  inputs.nixpkgs.url   = "github:NixOS/nixpkgs";
-  inputs.floco.url     = "github:aakropotkin/floco";
-  inputs.sqlite3pp.url = "github:aakropotkin/sqlite3pp";
-  inputs.sql-builder = {
+  inputs.nixpkgs.url                      = "github:NixOS/nixpkgs";
+  inputs.floco.url                        = "github:aakropotkin/floco";
+  inputs.floco.inputs.nixpkgs.follows     = "/nixpkgs";
+  inputs.sqlite3pp.url                    = "github:aakropotkin/sqlite3pp";
+  inputs.sqlite3pp.inputs.nixpkgs.follows = "/nixpkgs";
+  inputs.sql-builder                      = {
     url   = "github:six-ddc/sql-builder";
     flake = false;
   };

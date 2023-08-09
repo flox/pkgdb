@@ -455,8 +455,9 @@ PkgDb::addPackage( row_id           parentId
   FlakePackage pkg( cursor, { "packages", "x86_64-linux", "phony" }, checkDrv );
 
   cmd.bind( ":parentId", (long long) parentId );
-  cmd.bind( ":attrName", std::string( attrName ), sqlite3pp::copy );
+  cmd.bind( ":attrName", std::string( attrName ), sqlite3pp::copy   );
   cmd.bind( ":name",     pkg._fullName,           sqlite3pp::nocopy );
+  cmd.bind( ":pname",    pkg._pname,              sqlite3pp::nocopy );
 
   if ( pkg._version.empty() )
     {
@@ -491,7 +492,7 @@ PkgDb::addPackage( row_id           parentId
     {
       if ( auto m = pkg.getLicense(); m.has_value() )
         {
-          cmd.bind( ":license", std::string( m.value() ), sqlite3pp::nocopy );
+          cmd.bind( ":license", std::string( m.value() ), sqlite3pp::copy );
         }
       else
         {
