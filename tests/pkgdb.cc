@@ -4,6 +4,12 @@
  *
  * @brief Tests for `flox::pkgdb::PkgDb` interfaces.
  *
+ * NOTE: These tests may be order dependant simply because each test case shares
+ *       a single database.
+ *       Having said that we make a concerted effort to avoid dependence on past
+ *       test state by doing things like clearing tables in test cases where
+ *       it may be relevant to an action we're about to test.
+ *
  *
  * -------------------------------------------------------------------------- */
 
@@ -111,7 +117,20 @@ test_getDbVersion0( flox::pkgdb::PkgDb & db )
   bool
 test_hasPackageSet0( flox::pkgdb::PkgDb & db )
 {
-  EXPECT( ! db.hasPackageSet( std::vector<std::string> {} ) );
+  /* Make sure the attr-set exists, and clear it. */
+  row_id id = db.addOrGetAttrSetId( "x86_64-linux"
+                                  , db.addOrGetAttrSetId( "legacyPackages" )
+                                  );
+  sqlite3pp::command cmd( db.db
+                        , "DELETE FROM Packages WHERE ( parentId = :id )"
+                        );
+  cmd.bind( ":id", (long long int) id );
+  cmd.execute();
+
+  EXPECT( ! db.hasPackageSet(
+              std::vector<std::string> { "legacyPackages", "x86_64-linux" }
+            )
+        );
   return true;
 }
 
