@@ -65,7 +65,7 @@ $ for subtree in packages legacyPackages catalog; do
     for system in x86_64-linux x86_64-darwin aarch64-darwin aarch64-linux; do
       if [[ "$subtree" = 'catalog' ]]; then
         for stability in unstable staging stable; do
-          if [[ -z "$dbPath" ]]; then  # get the DB name and locked reference
+          if [[ -z "$dbPath" ]]; then  # get the DB name
             dbPath="$( pkgdb "$lockedRef" "$subtree" "$system" "$stability"; )";
           else
             pkgdb "$lockedRef" "$subtree" "$system" "$stability";
