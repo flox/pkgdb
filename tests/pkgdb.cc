@@ -19,6 +19,7 @@
 #include <nix/eval-cache.hh>
 #include <nix/store-api.hh>
 #include <nix/flake/flake.hh>
+#include <sqlite3pp.hh>
 
 #include "flox/flox-flake.hh"
 #include "flox/util.hh"
@@ -33,18 +34,52 @@ using flox::pkgdb::row_id;
 
 /* -------------------------------------------------------------------------- */
 
+  static row_id
+getRowCount( flox::pkgdb::PkgDb & db, const std::string table )
+{
+  std::string qryS = "SELECT COUNT( * ) FROM ";
+  qryS += table;
+  sqlite3pp::query qry( db.db, qryS.c_str() );
+  return ( * qry.begin() ).get<long long int>( 0 );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Test ability to add `AttrSet` rows.
+ * This test should run before all others since it essentially expects
+ * `AttrSets` to be empty.
+ */
   bool
 test_addOrGetAttrSetId0( flox::pkgdb::PkgDb & db )
 {
+  /* Make sure `AttrSets` is empty. */
+  row_id startId = getRowCount( db, "AttrSets" );
+  EXPECT_EQ( startId, 0 );
+
+  /* Add two `AttrSets` */
   row_id id = db.addOrGetAttrSetId( "legacyPackages" );
-  EXPECT_EQ( 1, id );
+  EXPECT_EQ( startId + 1, id );
+
   id = db.addOrGetAttrSetId( "x86_64-linux", id );
-  EXPECT_EQ( 2, id );
+  EXPECT_EQ( startId + 2, id );
+
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+/** Ensure we throw an error for undefined `AttrSet.id' parents. */
+  bool
+test_addOrGetAttrSetId1( flox::pkgdb::PkgDb & db )
+{
+  row_id startId = getRowCount( db, "AttrSets" );
   try
     {
       /* Ensure we throw an error for undefined `AttrSet.id' parents. */
-      id = db.addOrGetAttrSetId( "phony", 99999999 );
-      std::cerr << id << std::endl;
+      row_id id = db.addOrGetAttrSetId( "phony", startId + 99999999 );
       return false;
     }
   catch( const flox::pkgdb::PkgDbException & e ) { /* Expected */ }
@@ -58,6 +93,30 @@ test_addOrGetAttrSetId0( flox::pkgdb::PkgDb & db )
 
 
 /* -------------------------------------------------------------------------- */
+
+/** Ensure database version matches our header's version */
+  bool
+test_getDbVersion0( flox::pkgdb::PkgDb & db )
+{
+  EXPECT_EQ( db.getDbVersion(), FLOX_PKGDB_SCHEMA_VERSION );
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Ensure `PkgDb::hasPackageSet` checks that `Packages` exist in an `AttrSet`.
+ */
+  bool
+test_hasPackageSet0( flox::pkgdb::PkgDb & db )
+{
+  EXPECT( ! db.hasPackageSet( std::vector<std::string> {} ) );
+  return true;
+}
+
+
+/* ========================================================================== */
 
   int
 main( int argc, char * argv[], char ** envp )
@@ -105,6 +164,11 @@ main( int argc, char * argv[], char ** envp )
     flox::pkgdb::PkgDb db( flake.lockedFlake, path );
 
     RUN_TEST( addOrGetAttrSetId0, db );
+    RUN_TEST( addOrGetAttrSetId1, db );
+
+    RUN_TEST( getDbVersion0, db );
+
+    RUN_TEST( hasPackageSet0, db );
 
   }
 

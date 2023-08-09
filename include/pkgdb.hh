@@ -225,7 +225,7 @@ class PkgDb {
      * prefix @a path.
      * @param path An attribute path prefix such as `packages.x86_64-linux` or
      *             `legacyPackages.aarch64-darwin.python3Packages`.
-     * @return `true` iif the database has one or more rows in the `Packages`
+     * @return `true` iff the database has one or more rows in the `Packages`
      *         table with `path` as the _parent_.
      */
     bool hasPackageSet( const AttrPath & path );
@@ -259,7 +259,7 @@ class PkgDb {
      * Check to see if database has a package at the attribute path @a path.
      * @param path An attribute path such as `packages.x86_64-linux.hello` or
      *             `legacyPackages.aarch64-darwin.python3Packages.pip`.
-     * @return `true` iif the database has a rows in the `Packages`
+     * @return `true` iff the database has a rows in the `Packages`
      *         table with `path` as the _absolute path_.
      */
     bool hasPackage( const AttrPath & path );
