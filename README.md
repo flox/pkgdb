@@ -53,10 +53,9 @@ $ sqlite3 flakedb.sqlite 'SELECT name, version FROM Packages LIMIT 10'
 
 #### Expected Client Usage
 This utility is expected to be run multiple times if a client wishes to "fully scrape all the things" in a flake.
-Because this utility is intended to be a plumbing command used by a client application, we aren't particuarly
-concerned with the repetitive strain injuries a regular user would suffer if they really tried to scrape
-everything in a flake; rather we aim to do the less in a single run and avoid scraping info the caller might not
-need for their use case.
+This utility is a plumbing command used by a client application, we aren't particuarly concerned with the repetitive
+strain injury a user would suffer if they tried to scrape everything in a flake interactively; rather we aim to do
+less in a single run and avoid scraping info the caller might not need for their use case.
 
 A given client application that did want to scrape a flake completely would run something along the lines of:
 ```shell
