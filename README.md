@@ -72,7 +72,7 @@ $ for subtree in packages legacyPackages catalog; do
           fi
         done
       else
-        pkgdb "$lockedRef" "$subtree" "$system"; )}";
+        pkgdb "$lockedRef" "$subtree" "$system";
       fi
     done
 $ sqlite3 "$dbPath" 'SELECT COUNT( * ) FROM Packages';
