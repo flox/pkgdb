@@ -191,7 +191,7 @@ setup_file() {
 
 # ---------------------------------------------------------------------------- #
 
-@test "Scraping full attrPath to derivation should error (or just scrape that derivation?)" {
+@test "Scraping full attrPath to derivation should error" {
   skip FIXME;
   run $PKGDB scrape --database "$DBPATH" "$NIXPKGS_REF"           \
                     legacyPackages "$NIX_SYSTEM" hello;
