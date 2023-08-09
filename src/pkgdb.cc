@@ -227,17 +227,17 @@ PkgDb::getDescription( row_id descriptionId )
   /* Lookup the `Description.id' ( if one exists ) */
   sqlite3pp::query qryId(
     this->db
-  , "SELECT id FROM Descriptions WHERE path = :descriptionId"
+  , "SELECT description FROM Descriptions WHERE id = :descriptionId"
   );
   qryId.bind( ":descriptionId", (long long) descriptionId );
   auto i = qryId.begin();
   /* Handle no such path. */
   if ( i == qryId.end() )
     {
-      std::string msg( "No such Description.id " );
-      msg += descriptionId;
-      msg += '.';
-      throw PkgDbException( msg );
+      throw PkgDbException( nix::fmt( "No such Descriptions.id %llu."
+                                    , descriptionId
+                                    )
+                          );
     }
   return ( * i ).get<std::string>( 0 );
 }
@@ -248,23 +248,14 @@ PkgDb::getDescription( row_id descriptionId )
   bool
 PkgDb::hasPackage( const AttrPath & path )
 {
-  std::string pathStr;
-  {
-    nlohmann::json j = path;
-    j.erase( j.size() - 1 );
-    pathStr = j.dump();
-  }
-  /* Lookup the `PackageSet.id' ( if one exists ) */
-  sqlite3pp::query qryId(
-    this->db
-  , "SELECT pathId FROM PackageSets WHERE path = :path LIMIT 1"
-  );
-  qryId.bind( ":path", pathStr, sqlite3pp::copy );
-  auto i = qryId.begin();
-  if ( i == qryId.end() ) { return false; }  /* No such path. */
+  AttrPath parent;
+  for ( size_t i = 0; i < ( path.size() - 1 ); ++i )
+    {
+      parent.emplace_back( path[i] );
+    }
 
   /* Make sure there are actually packages in the set. */
-  row_id id = ( * i ).get<long long>( 0 );
+  row_id id = this->getAttrSetId( parent );
   sqlite3pp::query qryPkgs(
     this->db
   , "SELECT id FROM Packages WHERE ( parentId = :parentId ) "
@@ -320,7 +311,7 @@ PkgDb::getAttrSetPath( row_id id )
     {
       sqlite3pp::query qry(
         this->db
-      , "SELECT ( parent, attrName ) FROM AttrSets WHERE ( id = :id )"
+      , "SELECT parent, attrName FROM AttrSets WHERE ( id = :id )"
       );
       qry.bind( ":id", (long long) id );
       auto i = qry.begin();
@@ -399,13 +390,28 @@ PkgDb::addOrGetDescriptionId( const std::string & description )
   );
   qry.bind( ":description", description, sqlite3pp::copy );
   auto i = qry.begin();
-  if ( i != qry.end() ) { return ( * i ).get<long long>( 0 ); }
+  if ( i != qry.end() )
+    {
+      nix::Activity act(
+        * nix::logger
+      , nix::lvlDebug
+      , nix::actUnknown
+      , nix::fmt( "Found existing description in database: %s.", description )
+      );
+      return ( * i ).get<long long>( 0 );
+    }
 
   sqlite3pp::command cmd(
     this->db
   , "INSERT INTO Descriptions ( description ) VALUES ( :description )"
   );
   cmd.bind( ":description", description, sqlite3pp::copy );
+  nix::Activity act(
+    * nix::logger
+  , nix::lvlDebug
+  , nix::actUnknown
+  , nix::fmt( "Adding new description to database: %s.", description )
+  );
   if ( sql_rc rc = cmd.execute(); isSQLError( rc ) )
     {
       throw PkgDbException(

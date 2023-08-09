@@ -248,14 +248,6 @@ class PkgDb {
 
 
     /**
-     * Get the `Description.description` for a given `Description.id`.
-     * @param descriptionId The row id to lookup.
-     * @return A string describing a package.
-     */
-    std::string getDescription( row_id descriptionId );
-
-
-    /**
      * Check to see if database has a package at the attribute path @a path.
      * @param path An attribute path such as `packages.x86_64-linux.hello` or
      *             `legacyPackages.aarch64-darwin.python3Packages.pip`.
@@ -263,6 +255,14 @@ class PkgDb {
      *         table with `path` as the _absolute path_.
      */
     bool hasPackage( const AttrPath & path );
+
+
+    /**
+     * Get the `Description.description` for a given `Description.id`.
+     * @param descriptionId The row id to lookup.
+     * @return A string describing a package.
+     */
+    std::string getDescription( row_id descriptionId );
 
 
 /* -------------------------------------------------------------------------- */

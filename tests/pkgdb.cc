@@ -146,7 +146,7 @@ test_hasPackageSet0( flox::pkgdb::PkgDb & db )
   bool
 test_hasPackageSet1( flox::pkgdb::PkgDb & db )
 {
-  /* Make sure the attr-set exists, and clear it. */
+  /* Make sure the attr-set exists. */
   row_id id = db.addOrGetAttrSetId( "x86_64-linux"
                                   , db.addOrGetAttrSetId( "legacyPackages" )
                                   );
@@ -155,7 +155,7 @@ test_hasPackageSet1( flox::pkgdb::PkgDb & db )
     db.db
   , R"SQL(
       INSERT OR IGNORE INTO Packages ( parentId, attrName, name, outputs )
-      VALUES( :id, 'phony', 'phony', '["out"]' )
+      VALUES ( :id, 'phony', 'phony', '["out"]' )
     )SQL"
   );
   cmd.bind( ":id", (long long int) id );
@@ -178,7 +178,7 @@ test_hasPackageSet1( flox::pkgdb::PkgDb & db )
   bool
 test_getAttrSetId0( flox::pkgdb::PkgDb & db )
 {
-  /* Make sure the attr-set exists, and clear it. */
+  /* Make sure the attr-set exists. */
   row_id id = db.addOrGetAttrSetId( "x86_64-linux"
                                   , db.addOrGetAttrSetId( "legacyPackages" )
                                   );
@@ -187,6 +187,70 @@ test_getAttrSetId0( flox::pkgdb::PkgDb & db )
                std::vector<std::string> { "legacyPackages", "x86_64-linux" }
              )
            );
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Ensure we properly reconstruct an attribute path from the `AttrSets` table.
+ */
+  bool
+test_getAttrSetPath0( flox::pkgdb::PkgDb & db )
+{
+  /* Make sure the attr-set exists. */
+  row_id id = db.addOrGetAttrSetId( "x86_64-linux"
+                                  , db.addOrGetAttrSetId( "legacyPackages" )
+                                  );
+  std::vector<std::string> path { "legacyPackages", "x86_64-linux" };
+  EXPECT( path == db.getAttrSetPath( id ) );
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  bool
+test_hasPackage0( flox::pkgdb::PkgDb & db )
+{
+  /* Make sure the attr-set exists. */
+  row_id id = db.addOrGetAttrSetId( "x86_64-linux"
+                                  , db.addOrGetAttrSetId( "legacyPackages" )
+                                  );
+  /* Add a minimal package with this `id` as its parent. */
+  sqlite3pp::command cmd(
+    db.db
+  , R"SQL(
+      INSERT OR IGNORE INTO Packages ( parentId, attrName, name, outputs )
+      VALUES ( :id, 'phony', 'phony', '["out"]' )
+    )SQL"
+  );
+  cmd.bind( ":id", (long long) id );
+  cmd.execute();
+
+  EXPECT(
+    db.hasPackage(
+      std::vector<std::string> { "legacyPackages", "x86_64-linux", "phony" }
+    )
+  );
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Tests `addOrGetDesciptionId` and `getDescription`.
+ */
+  bool
+test_descriptions0( flox::pkgdb::PkgDb & db )
+{
+  row_id id = db.addOrGetDescriptionId( "Hello, World!" );
+  /* Ensure we get the same `id`. */
+  EXPECT_EQ( id, db.addOrGetDescriptionId( "Hello, World!" ) );
+  /* Ensure we get back our original string. */
+  EXPECT_EQ( "Hello, World!", db.getDescription( id ) );
   return true;
 }
 
@@ -204,7 +268,7 @@ main( int argc, char * argv[], char ** envp )
   nix::Verbosity verbosity;
   if ( ( 1 < argc ) && ( std::string_view( argv[1] ) == "-v" ) )
     {
-      verbosity = nix::lvlTalkative;
+      verbosity = nix::lvlDebug;
     }
   else
     {
@@ -247,6 +311,12 @@ main( int argc, char * argv[], char ** envp )
     RUN_TEST( hasPackageSet1, db );
 
     RUN_TEST( getAttrSetId0, db );
+
+    RUN_TEST( getAttrSetPath0, db );
+
+    RUN_TEST( hasPackage0, db );
+
+    RUN_TEST( descriptions0, db );
 
   }
 
