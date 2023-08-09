@@ -92,7 +92,7 @@
       pkgsFor = ( builtins.getAttr system nixpkgs.legacyPackages ).extend
                   overlays.default;
     in {
-      inherit (pkgsFor) pkg0 pkg1 pkg2 pkg3;
+      inherit (pkgsFor) pkg0 pkg1 pkg2 pkg3 pkg4;
       default = pkgsFor.pkg0;
     } );
 
