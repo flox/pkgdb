@@ -101,7 +101,6 @@ setup_file() {
 
 # Check the pname of a package.
 @test "akkoma-emoji pname" {
-  skip FIXME;
   run $PKGDB scrape --database "$DBPATH" "$NIXPKGS_REF"           \
                     legacyPackages "$NIX_SYSTEM" 'akkoma-emoji';
   assert_success;
