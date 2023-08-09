@@ -76,7 +76,7 @@ $ for subtree in packages legacyPackages catalog; do
         pkgdb "$lockedRef" "$subtree" "$system"; )}";
       fi
     done
-$ sqlite3 "$dbPath" 'SELECT COUNT( * ) FROM PACKAGES';
+$ sqlite3 "$dbPath" 'SELECT COUNT( * ) FROM Packages';
 ```
 In the example above we the caller would passes in a locked ref, this was technically optional, but is strongly recommended.
 What's important is that invocations that intend to append to an existing database ABSOLUTELY SHOULD be using
