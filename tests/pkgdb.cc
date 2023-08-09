@@ -169,6 +169,28 @@ test_hasPackageSet1( flox::pkgdb::PkgDb & db )
 }
 
 
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Ensure the `row_id` returned when adding an `AttrSet` matches the one
+ * returned by @a flox::pkgdb::PkgDb::getAttrSetId.
+ */
+  bool
+test_getAttrSetId0( flox::pkgdb::PkgDb & db )
+{
+  /* Make sure the attr-set exists, and clear it. */
+  row_id id = db.addOrGetAttrSetId( "x86_64-linux"
+                                  , db.addOrGetAttrSetId( "legacyPackages" )
+                                  );
+  EXPECT_EQ( id
+           , db.getAttrSetId(
+               std::vector<std::string> { "legacyPackages", "x86_64-linux" }
+             )
+           );
+  return true;
+}
+
+
 /* ========================================================================== */
 
   int
@@ -223,6 +245,8 @@ main( int argc, char * argv[], char ** envp )
 
     RUN_TEST( hasPackageSet0, db );
     RUN_TEST( hasPackageSet1, db );
+
+    RUN_TEST( getAttrSetId0, db );
 
   }
 

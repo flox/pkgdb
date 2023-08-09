@@ -279,7 +279,7 @@ PkgDb::hasPackage( const AttrPath & path )
 /* -------------------------------------------------------------------------- */
 
   row_id
-PkgDb::getPackageSetId( const AttrPath & path )
+PkgDb::getAttrSetId( const AttrPath & path )
 {
   /* Lookup the `AttrName.id' ( if one exists ) */
   row_id id = 0;
@@ -312,7 +312,7 @@ PkgDb::getPackageSetId( const AttrPath & path )
 /* -------------------------------------------------------------------------- */
 
   AttrPath
-PkgDb::getPackageSetPath( row_id id )
+PkgDb::getAttrSetPath( row_id id )
 {
   if ( id == 0 ) { return {}; }
   std::list<std::string> path;
@@ -380,7 +380,7 @@ PkgDb::addOrGetAttrSetId( const std::string & attrName, row_id parent )
 /* -------------------------------------------------------------------------- */
 
   row_id
-PkgDb::addOrGetPackageSetId( const AttrPath & path )
+PkgDb::addOrGetAttrSetId( const AttrPath & path )
 {
   row_id id = 0;
   for ( const auto & p : path ) { id = addOrGetAttrSetId( p, id ); }

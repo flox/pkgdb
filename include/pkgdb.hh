@@ -236,7 +236,7 @@ class PkgDb {
      *             `legacyPackages.aarch64-darwin.python3Packages`.
      * @return A unique `row_id` ( unsigned 64bit int ) associated with @a path.
      */
-    row_id getPackageSetId( const AttrPath & path );
+    row_id getAttrSetId( const AttrPath & path );
 
     /**
      * Get the attribute path for a given `AttrSet.id`.
@@ -244,7 +244,7 @@ class PkgDb {
      * @return An attribute path prefix such as `packages.x86_64-linux` or
      *         `legacyPackages.aarch64-darwin.python3Packages`.
      */
-    AttrPath getPackageSetPath( row_id id );
+    AttrPath getAttrSetPath( row_id id );
 
 
     /**
@@ -291,7 +291,7 @@ class PkgDb {
      *             `legacyPackages.aarch64-darwin.python3Packages`.
      * @return A unique `row_id` ( unsigned 64bit int ) associated with @a path.
      */
-    row_id addOrGetPackageSetId( const AttrPath & path );
+    row_id addOrGetAttrSetId( const AttrPath & path );
 
     /**
      * Get the `Descriptions.id` for a given string if it exists, or insert a
