@@ -33,7 +33,7 @@ By default, packages will be scraped from packages.[system arch] and stored in `
 $ pkgdb scrape github:NixOS/nixpkgs --database flakedb.sqlite legacyPackages aarch64-darwin
 ```
 
-If the database for a given flake already exists and is asked to reprocess existing packages, it will be skipped. Use `--force` to force an update/regeneration.
+If the database for a given flake already exists and is asked to reprocess an existing package set, it will be skipped. Use `--force` to force an update/regeneration.
 
 Once generated, the database can be opened and queried using `sqlite3`.
 
