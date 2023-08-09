@@ -51,6 +51,50 @@ $ sqlite3 flakedb.sqlite 'SELECT name, version FROM Packages LIMIT 10'
 {"name":"CoinMP-1.8.4","version":"1.8.4"}]
 ```
 
+#### Expected Client Usage
+This utility is expected to be run multiple times if a client wishes to "fully scrape all the things" in a flake.
+Because this utility is intended to be a plumbing command used by a client application, we aren't particuarly
+concerned with the repetitive strain injuries a regular user would suffer if they really tried to scrape
+everything in a flake; rather we aim to do the less in a single run and avoid scraping info the caller might not
+need for their use case.
+
+A given client application that did want to scrape a flake completely would run something along the lines of:
+```shell
+$ lockedRef="github:NixOS/nixpkgs/e8039594435c68eb4f780f3e9bf3972a7399c4b1";
+$ dbPath= lockedRef=;
+$ for subtree in packages legacyPackages catalog; do
+    for system in x86_64-linux x86_64-darwin aarch64-darwin aarch64-linux; do
+      if [[ "$subtree" = 'catalog' ]]; then
+        for stability in unstable staging stable; do
+          if [[ -z "$dbPath" ]]; then  # get the DB name and locked reference
+            dbPath="$( pkgdb "$lockedRef" "$subtree" "$system" "$stability"; )";
+          else
+            pkgdb "$lockedRef" "$subtree" "$system" "$stability";
+          fi
+        done
+      else
+        pkgdb "$lockedRef" "$subtree" "$system"; )}";
+      fi
+    done
+$ sqlite3 "$dbPath" 'SELECT COUNT( * ) FROM PACKAGES';
+```
+In the example above we the caller would passes in a locked ref, this was technically optional, but is strongly recommended.
+What's important is that invocations that intend to append to an existing database ABSOLUTELY SHOULD be using
+locked flake references.
+In the event that you want to use an unlocked reference on the first call, you can extract a locked flake reference from a
+database for later runs, but official recommendation is to lock flakes before looping.
+
+If the caller _really_ wants to they could pass an unlocked ref on the first invocation, and yank the locked reference from
+the resulting database.
+This is potentially useful for working with local flakes in the event that you don't want to use a utility like
+`nix flake prefetch` or `parser-util` to lock your references for you :
+```shell
+$ dbPath="$( pkgdb scrape "$PWD/my-flake" packages x86_64-linux; )";
+$ lockedRef="$( sqlite3 "$dbPath" 'SELECT string FROM LockedFlake'; )";
+$ pkgdb scrape "$lockedRef" packages aarch64-linux;
+...<SNIP>...
+```
+
 ### Schema
 
 The data is represented in a tree format matching the attrPath structure.
