@@ -16,7 +16,7 @@
 #include "sql/input.hh"
 #include "sql/package-sets.hh"
 #include "sql/packages.hh"
-//#include "sql/tmp-paths.hh"
+
 
 
 /* -------------------------------------------------------------------------- */
@@ -190,7 +190,7 @@ PkgDb::getDbVersion()
 /* -------------------------------------------------------------------------- */
 
   bool
-PkgDb::hasPackageSet( const AttrPath & path )
+PkgDb::hasPackageSet( const flox::AttrPath & path )
 {
   /* Lookup the `AttrName.id' ( if one exists ) */
   row_id id = 0;
@@ -246,9 +246,9 @@ PkgDb::getDescription( row_id descriptionId )
 /* -------------------------------------------------------------------------- */
 
   bool
-PkgDb::hasPackage( const AttrPath & path )
+PkgDb::hasPackage( const flox::AttrPath & path )
 {
-  AttrPath parent;
+  flox::AttrPath parent;
   for ( size_t i = 0; i < ( path.size() - 1 ); ++i )
     {
       parent.emplace_back( path[i] );
@@ -270,7 +270,7 @@ PkgDb::hasPackage( const AttrPath & path )
 /* -------------------------------------------------------------------------- */
 
   row_id
-PkgDb::getAttrSetId( const AttrPath & path )
+PkgDb::getAttrSetId( const flox::AttrPath & path )
 {
   /* Lookup the `AttrName.id' ( if one exists ) */
   row_id id = 0;
@@ -302,7 +302,7 @@ PkgDb::getAttrSetId( const AttrPath & path )
 
 /* -------------------------------------------------------------------------- */
 
-  AttrPath
+  flox::AttrPath
 PkgDb::getAttrSetPath( row_id id )
 {
   if ( id == 0 ) { return {}; }
@@ -323,9 +323,9 @@ PkgDb::getAttrSetPath( row_id id )
       id = ( * i ).get<long long>( 0 );
       path.push_front( ( * i ).get<std::string>( 1 ) );
     }
-  return AttrPath { std::make_move_iterator( std::begin( path ) )
-                  , std::make_move_iterator( std::end( path ) )
-                  };
+  return flox::AttrPath { std::make_move_iterator( std::begin( path ) )
+                        , std::make_move_iterator( std::end( path ) )
+                        };
 }
 
 
@@ -371,7 +371,7 @@ PkgDb::addOrGetAttrSetId( const std::string & attrName, row_id parent )
 /* -------------------------------------------------------------------------- */
 
   row_id
-PkgDb::addOrGetAttrSetId( const AttrPath & path )
+PkgDb::addOrGetAttrSetId( const flox::AttrPath & path )
 {
   row_id id = 0;
   for ( const auto & p : path ) { id = addOrGetAttrSetId( p, id ); }
@@ -431,7 +431,7 @@ PkgDb::addOrGetDescriptionId( const std::string & description )
   row_id
 PkgDb::addPackage( row_id           parentId
                  , std::string_view attrName
-                 , Cursor           cursor
+                 , flox::Cursor     cursor
                  , bool             replace
                  , bool             checkDrv
                  )
@@ -546,6 +546,93 @@ PkgDb::addPackage( row_id           parentId
       );
     }
   return this->db.last_insert_rowid();
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
+scrape(       flox::pkgdb::PkgDb & db
+      ,       nix::SymbolTable   & syms
+      , const flox::AttrPath     & prefix
+      ,       flox::Cursor         cursor
+      ,       Todos              & todo
+      )
+{
+
+  bool tryRecur = prefix[0] != "packages";
+
+  nix::Activity act(
+    * nix::logger
+  , nix::lvlInfo
+  , nix::actUnknown
+  , nix::fmt( "evaluating package set '%s'"
+            , nix::concatStringsSep( ".", prefix )
+            )
+  );
+
+  /* Lookup/create the `pathId' for for this attr-path in our DB.
+   * This must be done before starting a transaction in the database
+   * because it may need to read/write multiple times. */
+  flox::pkgdb::row_id parentId = db.addOrGetAttrSetId( prefix );
+
+  /* Start a transaction */
+  sqlite3pp::transaction txn( db.db );
+
+  /* Scrape loop over attrs */
+  for ( nix::Symbol & aname : cursor->getAttrs() )
+    {
+      const std::string pathS =
+        nix::concatStringsSep( ".", prefix ) + "." + syms[aname];
+
+      if ( syms[aname] == "recurseForDerivations" ) { continue; }
+
+      nix::Activity act(
+        * nix::logger
+      , nix::lvlTalkative
+      , nix::actUnknown
+      , nix::fmt( "\tevaluating attribute '%s'", pathS )
+      );
+
+      try
+        {
+          flox::Cursor child = cursor->getAttr( aname );
+          if ( child->isDerivation() )
+            {
+              db.addPackage( parentId, syms[aname], child );
+              continue;
+            }
+          if ( ! tryRecur ) { continue; }
+          if ( auto m = child->maybeGetAttr( "recurseForDerivations" );
+                    ( m != nullptr ) && m->getBool()
+                  )
+            {
+              flox::AttrPath path = prefix;
+              path.emplace_back( syms[aname] );
+              nix::logger->log( nix::lvlTalkative
+                              , nix::fmt( "\tpushing target '%s'", pathS )
+                              );
+              todo.push( std::make_pair( std::move( path ), child ) );
+            }
+        }
+      catch( const nix::EvalError & e )
+        {
+          /* Ignore errors in `legacyPackages' and `catalog' */
+          if ( tryRecur )
+            {
+              /* Only print eval errors in "debug" mode. */
+              nix::ignoreException( nix::lvlDebug );
+            }
+          else
+            {
+              txn.rollback();  /* Revert transaction changes */
+              throw e;
+            }
+        }
+    }
+
+  txn.commit();  /* Commit transaction changes */
+
 }
 
 

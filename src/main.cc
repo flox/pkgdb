@@ -12,8 +12,6 @@
 #include <list>
 #include <filesystem>
 #include <assert.h>
-#include <queue>
-#include <functional>
 
 #include <nix/shared.hh>
 #include <nix/eval.hh>
@@ -27,113 +25,6 @@
 #include "flox/util.hh"
 #include "flox/flox-flake.hh"
 #include "pkgdb.hh"
-
-
-/* -------------------------------------------------------------------------- */
-
-using MaybeCursor = std::shared_ptr<nix::eval_cache::AttrCursor>;
-using Cursor      = nix::ref<nix::eval_cache::AttrCursor>;
-using AttrPath    = std::vector<std::string>;
-using Target      = std::pair<AttrPath,Cursor>;
-using Todos       = std::queue<Target,std::list<Target>>;
-
-
-/* -------------------------------------------------------------------------- */
-
-/**
- * Scrape package definitions from an attribute set, adding any attributes
- * marked with `recurseForDerivatsions = true` to @a todo list.
- * @param db     Database to write to.
- * @param syms   Symbol table from @a cursor evaluator.
- * @param prefix Attribute path to scrape.
- * @param cursor `nix` evaluator cursor associated with @a prefix
- * @param todo Queue to add `recurseForDerivations = true` cursors to so they
- *             may be scraped by later invocations.
- */
-  void
-scrape(       flox::pkgdb::PkgDb & db
-      ,       nix::SymbolTable   & syms
-      , const AttrPath           & prefix
-      ,       Cursor               cursor
-      ,       Todos              & todo
-      )
-{
-
-  bool tryRecur = prefix[0] != "packages";
-
-  nix::Activity act(
-    * nix::logger
-  , nix::lvlInfo
-  , nix::actUnknown
-  , nix::fmt( "evaluating package set '%s'"
-            , nix::concatStringsSep( ".", prefix )
-            )
-  );
-
-  /* Lookup/create the `pathId' for for this attr-path in our DB.
-   * This must be done before starting a transaction in the database
-   * because it may need to read/write multiple times. */
-  flox::pkgdb::row_id parentId = db.addOrGetAttrSetId( prefix );
-
-  /* Start a transaction */
-  sqlite3pp::transaction txn( db.db );
-
-  /* Scrape loop over attrs */
-  for ( nix::Symbol & aname : cursor->getAttrs() )
-    {
-      const std::string pathS =
-        nix::concatStringsSep( ".", prefix ) + "." + syms[aname];
-
-      if ( syms[aname] == "recurseForDerivations" ) { continue; }
-
-      nix::Activity act(
-        * nix::logger
-      , nix::lvlTalkative
-      , nix::actUnknown
-      , nix::fmt( "\tevaluating attribute '%s'", pathS )
-      );
-
-      try
-        {
-          Cursor child = cursor->getAttr( aname );
-          if ( child->isDerivation() )
-            {
-              db.addPackage( parentId, syms[aname], child );
-              continue;
-            }
-          if ( ! tryRecur ) { continue; }
-          if ( auto m = child->maybeGetAttr( "recurseForDerivations" );
-                    ( m != nullptr ) && m->getBool()
-                  )
-            {
-              AttrPath path = prefix;
-              path.emplace_back( syms[aname] );
-              nix::logger->log( nix::lvlTalkative
-                              , nix::fmt( "\tpushing target '%s'", pathS )
-                              );
-              todo.push( std::make_pair( std::move( path ), child ) );
-            }
-        }
-      catch( const nix::EvalError & e )
-        {
-          /* Ignore errors in `legacyPackages' and `catalog' */
-          if ( tryRecur )
-            {
-              /* Only print eval errors in "debug" mode. */
-              nix::ignoreException( nix::lvlDebug );
-            }
-          else
-            {
-              txn.rollback();  /* Revert transaction changes */
-              throw e;
-            }
-        }
-    }
-
-  txn.commit();  /* Commit transaction changes */
-
-}
-
 
 
 /* -------------------------------------------------------------------------- */
@@ -153,7 +44,7 @@ main( int argc, char * argv[], char ** envp )
    *   , lvlWarn        ( --quiet --quiet )
    *   , lvlNotice      ( --quiet )
    *   , lvlInfo        ( **Default** )
-   *   , lvlTalkative   ( -v  )
+   *   , lvlTalkative   ( -v )
    *   , lvlChatty      ( -vv   | --debug --quiet )
    *   , lvlDebug       ( -vvv  | --debug )
    *   , lvlVomit       ( -vvvv | --debug -v )
@@ -326,7 +217,8 @@ main( int argc, char * argv[], char ** envp )
    * If no system is given use the current system.
    * If we're searching a catalog and no stability is given, use "stable". */
 
-  AttrPath attrPath = cmdScrape.get<std::vector<std::string>>( "attr-path" );
+  flox::AttrPath attrPath =
+    cmdScrape.get<std::vector<std::string>>( "attr-path" );
   if ( attrPath.size() < 2 )
     {
       attrPath.push_back( nix::settings.thisSystem.get() );
@@ -350,12 +242,14 @@ main( int argc, char * argv[], char ** envp )
           symbolPath.emplace_back( flake.state->symbols.create( a ) );
         }
 
-      Todos todo;
-      if ( MaybeCursor root = flake.maybeOpenCursor( symbolPath );
+      flox::pkgdb::Todos todo;
+      if ( flox::MaybeCursor root = flake.maybeOpenCursor( symbolPath );
            root != nullptr
          )
         {
-          todo.push( std::make_pair( std::move( attrPath ), (Cursor) root ) );
+          todo.push(
+            std::make_pair( std::move( attrPath ), (flox::Cursor) root )
+          );
         }
 
       while ( ! todo.empty() )

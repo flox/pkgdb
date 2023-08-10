@@ -16,6 +16,8 @@
 #include <nix/eval-inline.hh>
 #include <nix/flake/flake.hh>
 
+#include "flox/types.hh"
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -47,17 +49,6 @@ static const nix::flake::LockFlags defaultLockFlags = {
  * to avoid synchronization slowdowns with its databases.
  */
 class FloxFlake : public std::enable_shared_from_this<FloxFlake> {
-
-  public:
-    /**
-     * A `std::shared_ptr<nix::eval_cache::AttrCursor>` which may be `nullptr`.
-     */
-    using MaybeCursor = std::shared_ptr<nix::eval_cache::AttrCursor>;
-    /**
-     * A non-`nullptr` `std::shared_ptr<nix::eval_cache::AttrCursor>`.
-     */
-    using Cursor = nix::ref<nix::eval_cache::AttrCursor>;
-
 
   private:
     /**
