@@ -478,31 +478,21 @@ PkgDb::addPackage( row_id           parentId
       cmd.bind( ":semver" );  /* binds NULL */
     }
 
-  std::optional<std::string> mOutputsStr          = std::nullopt;
-  std::optional<std::string> mOutputsToInstallStr = std::nullopt;
   {
-    nlohmann::json j = pkg.getOutputsS();
-    mOutputsStr      = j.dump();
-    cmd.bind( ":outputs", mOutputsStr.value(), sqlite3pp::copy );
+    nlohmann::json j = pkg.getOutputs();
+    cmd.bind( ":outputs", j.dump(), sqlite3pp::copy );
   }
   {
-    nlohmann::json j     = pkg.getOutputsToInstallS();
-    mOutputsToInstallStr = j.dump();
-    cmd.bind( ":outputsToInstall"
-            , mOutputsToInstallStr.value()
-            , sqlite3pp::copy
-            );
+    nlohmann::json j = pkg.getOutputsToInstall();
+    cmd.bind( ":outputsToInstall", j.dump(), sqlite3pp::copy );
   }
 
-  std::optional<std::string> mLicense = std::nullopt;
 
-  /* `getOutputsToInstall' returns `std::string_views' - this avoids copies. */
   if ( pkg._hasMetaAttr )
     {
       if ( auto m = pkg.getLicense(); m.has_value() )
         {
-          mLicense = std::string( m.value() );
-          cmd.bind( ":license", mLicense.value(), sqlite3pp::copy );
+          cmd.bind( ":license", m.value(), sqlite3pp::copy );
         }
       else
         {
