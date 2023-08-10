@@ -104,7 +104,7 @@ FlakePackage::init( bool checkDrv )
 /* -------------------------------------------------------------------------- */
 
   std::vector<std::string>
-FlakePackage::getOutputsToInstallS() const
+FlakePackage::getOutputsToInstall() const
 {
   if ( this->_hasMetaAttr )
     {
@@ -113,7 +113,7 @@ FlakePackage::getOutputsToInstallS() const
       if ( m != nullptr ) { return m->getListOfStrings(); }
     }
   std::vector<std::string> rsl;
-  for ( std::string o : this->getOutputsS() )
+  for ( std::string o : this->getOutputs() )
     {
       rsl.push_back( o );
       if ( o == "out" ) { break; }
