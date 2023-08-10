@@ -7,11 +7,7 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include <iostream>
-
 #include <limits>
-#include <codecvt>
-#include <locale>
 
 #include "pkgdb.hh"
 #include "flox/flake-package.hh"
