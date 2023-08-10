@@ -28,7 +28,7 @@ setup_file() {
 
 # ---------------------------------------------------------------------------- #
 
-@test "nixpkgs-flox fishPlugins.foreign-env description" {
+@test "fishPlugins.foreign-env description" {
   run $PKGDB scrape --database "$DBPATH" "$NIXPKGS_FLOX_REF"           \
                     catalog "$NIX_SYSTEM" stable fishPlugins foreign-env;
   run sqlite3 "$DBPATH"                                               \
@@ -44,7 +44,7 @@ setup_file() {
 # ---------------------------------------------------------------------------- #
 
 # This test should be updated when the Packages schema is changed.
-@test "nixpkgs-flox fishPlugins.foreign-env check all fields" {
+@test "fishPlugins.foreign-env check all fields" {
   run $PKGDB scrape --database "$DBPATH" "$NIXPKGS_FLOX_REF"           \
                     catalog "$NIX_SYSTEM" stable fishPlugins;
   assert_success;
@@ -74,7 +74,7 @@ setup_file() {
 
 # ---------------------------------------------------------------------------- #
 
-@test "nixpkgs-flox fishPlugins.foreign-env pname" {
+@test "fishPlugins.foreign-env pname" {
   skip FIXME;
   run $PKGDB scrape --database "$DBPATH" "$NIXPKGS_FLOX_REF"           \
                     catalog "$NIX_SYSTEM" stable fishPlugins;
