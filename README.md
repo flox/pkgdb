@@ -60,7 +60,7 @@ less in a single run and avoid scraping info the caller might not need for their
 A given client application that did want to scrape a flake completely would run something along the lines of:
 ```shell
 $ lockedRef="github:NixOS/nixpkgs/e8039594435c68eb4f780f3e9bf3972a7399c4b1";
-$ dbPath= lockedRef=;
+$ dbPath=;
 $ for subtree in packages legacyPackages catalog; do
     for system in x86_64-linux x86_64-darwin aarch64-darwin aarch64-linux; do
       if [[ "$subtree" = 'catalog' ]]; then
