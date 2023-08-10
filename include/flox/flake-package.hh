@@ -58,6 +58,7 @@ class FlakePackage : public Package {
     std::optional<std::string> _semver;
     std::string                _system;
     subtree_type               _subtree;
+    std::optional<std::string> _license;
 
     void init( bool checkDrv = true );
 
@@ -170,12 +171,8 @@ class FlakePackage : public Package {
       std::optional<std::string_view>
     getLicense() const override
     {
-      if ( ! this->_hasMetaAttr ) { return std::nullopt; }
-      MaybeCursor l =
-        this->_cursor->getAttr( "meta" )->maybeGetAttr( "license" );
-      if ( l == nullptr ) { return std::nullopt; }
-      try { return l->getAttr( "spdxId" )->getString(); }
-      catch( ... ) { return std::nullopt; }
+      if ( this->_license.has_value() ) { return this->_license; }
+      else                              { return std::nullopt;   }
     }
 
       std::vector<std::string>

@@ -453,11 +453,12 @@ PkgDb::addPackage( row_id           parentId
    * we can avoid looking up the parent path by passing a phony one to the
    * `FlakePackage' constructor here. */
   FlakePackage pkg( cursor, { "packages", "x86_64-linux", "phony" }, checkDrv );
+  std::string  attrNameS( attrName );
 
   cmd.bind( ":parentId", (long long) parentId );
-  cmd.bind( ":attrName", std::string( attrName ), sqlite3pp::copy   );
-  cmd.bind( ":name",     pkg._fullName,           sqlite3pp::nocopy );
-  cmd.bind( ":pname",    pkg._pname,              sqlite3pp::nocopy );
+  cmd.bind( ":attrName", attrNameS,     sqlite3pp::copy   );
+  cmd.bind( ":name",     pkg._fullName, sqlite3pp::nocopy );
+  cmd.bind( ":pname",    pkg._pname,    sqlite3pp::nocopy );
 
   if ( pkg._version.empty() )
     {
@@ -465,7 +466,7 @@ PkgDb::addPackage( row_id           parentId
     }
   else
     {
-      cmd.bind( ":version",  pkg._version, sqlite3pp::nocopy );
+      cmd.bind( ":version", pkg._version, sqlite3pp::nocopy );
     }
 
   if ( pkg._semver.has_value() )
@@ -477,22 +478,31 @@ PkgDb::addPackage( row_id           parentId
       cmd.bind( ":semver" );  /* binds NULL */
     }
 
+  std::optional<std::string> mOutputsStr          = std::nullopt;
+  std::optional<std::string> mOutputsToInstallStr = std::nullopt;
   {
     nlohmann::json j = pkg.getOutputsS();
-    cmd.bind( ":outputs", j.dump(), sqlite3pp::copy );
+    mOutputsStr      = j.dump();
+    cmd.bind( ":outputs", mOutputsStr.value(), sqlite3pp::copy );
   }
   {
-    nlohmann::json j = pkg.getOutputsToInstallS();
-    cmd.bind( ":outputsToInstall", j.dump(), sqlite3pp::copy );
+    nlohmann::json j     = pkg.getOutputsToInstallS();
+    mOutputsToInstallStr = j.dump();
+    cmd.bind( ":outputsToInstall"
+            , mOutputsToInstallStr.value()
+            , sqlite3pp::copy
+            );
   }
 
+  std::optional<std::string> mLicense = std::nullopt;
 
   /* `getOutputsToInstall' returns `std::string_views' - this avoids copies. */
   if ( pkg._hasMetaAttr )
     {
       if ( auto m = pkg.getLicense(); m.has_value() )
         {
-          cmd.bind( ":license", std::string( m.value() ), sqlite3pp::copy );
+          mLicense = std::string( m.value() );
+          cmd.bind( ":license", mLicense.value(), sqlite3pp::copy );
         }
       else
         {
