@@ -117,6 +117,7 @@ PkgDb::writeInput()
   void
 PkgDb::initTables()
 {
+  this->execute( "PRAGMA encoding='UTF-8'" );
   if ( sql_rc rc = this->execute( sql_versions ); isSQLError( rc ) )
     {
       throw PkgDbException(
