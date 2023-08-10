@@ -40,7 +40,7 @@ load setup_suite.bash;
 # ---------------------------------------------------------------------------- #
 
 setup_file() {
-  export DBPATH="$BATS_FILE_TMPDIR/test-cli.sqlite";
+  export DBPATH="$BATS_FILE_TMPDIR/test-nixpkgs-flox.sqlite";
   mkdir -p "$BATS_FILE_TMPDIR";
   # We don't parallelize these to avoid DB sync headaches and to recycle the
   # cache between tests.
@@ -78,7 +78,7 @@ setup_file() {
                       catalog "$SYSTEM" stable fishPlugins;
     assert_success;
   done
-  
+
   VERSION='unstable-2020-02-09'
   # SEMVER foreign-env has a non-semantic version, so check if NULL below
   PNAME='foreign-env'
