@@ -61,6 +61,14 @@ FlakePackage::init( bool checkDrv )
 
   MaybeCursor c = this->_cursor->maybeGetAttr( "meta" );
   this->_hasMetaAttr = c != nullptr;
+  if ( c != nullptr )
+    {
+      if ( c = c->maybeGetAttr( "license" ); c != nullptr )
+        {
+          try { this->_license = c->getAttr( "spdxId" )->getString(); }
+          catch( ... ) {}
+        }
+    }
 
   c = this->_cursor->maybeGetAttr( "pname" );
   if ( c != nullptr )
