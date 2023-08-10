@@ -84,10 +84,9 @@ class FlakePackage : public Package {
     }
 
 
-    FlakePackage(       Cursor                     cursor
-                , const std::vector<nix::Symbol> & path
-                ,       nix::SymbolTable         * symtab
-                ,       bool                       checkDrv = true
+    FlakePackage( Cursor             cursor
+                , nix::SymbolTable * symtab
+                , bool               checkDrv = true
                 )
       : _cursor( cursor )
       , _fullName( cursor->getAttr( "name" )->getString() )
@@ -103,14 +102,6 @@ class FlakePackage : public Package {
         }
       this->init( checkDrv );
     }
-
-
-    FlakePackage( Cursor             cursor
-                , nix::SymbolTable * symtab
-                , bool               checkDrv = true
-                )
-      : FlakePackage( cursor, cursor->getAttrPath(), symtab, checkDrv )
-    {}
 
 
 /* -------------------------------------------------------------------------- */

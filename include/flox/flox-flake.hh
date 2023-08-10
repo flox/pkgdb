@@ -32,8 +32,17 @@ namespace flox {
  *   filesystem; this will only occur if there is no existing lockfile.
  */
 static const nix::flake::LockFlags defaultLockFlags = {
-  .updateLockFile = false
-, .writeLockFile  = false
+  .recreateLockFile      = false         /* default */
+, .updateLockFile        = false
+, .writeLockFile         = false
+, .useRegistries         = std::nullopt  /* default */
+, .applyNixConfig        = false         /* default */
+, .allowUnlocked         = true          /* default */
+, .commitLockFile        = false         /* default */
+, .referenceLockFilePath = std::nullopt  /* default */
+, .outputLockFilePath    = std::nullopt  /* default */
+, .inputOverrides        = {}            /* default */
+, .inputUpdates          = {}            /* default */
 };
 
 
@@ -59,8 +68,8 @@ class FloxFlake : public std::enable_shared_from_this<FloxFlake> {
     std::shared_ptr<nix::eval_cache::EvalCache> _cache;
 
   public:
-    const nix::flake::LockedFlake  lockedFlake;
           nix::ref<nix::EvalState> state;
+    const nix::flake::LockedFlake  lockedFlake;
 
     FloxFlake(       nix::ref<nix::EvalState>   state
              , const nix::FlakeRef            & ref
