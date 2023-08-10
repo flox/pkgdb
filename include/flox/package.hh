@@ -25,22 +25,13 @@
 #include <nix/names.hh>
 
 #include "flox/exceptions.hh"
+#include "flox/types.hh"
 #include "semver.hh"
 
 
 /* -------------------------------------------------------------------------- */
 
 namespace flox {
-
-/* -------------------------------------------------------------------------- */
-
-enum subtree_type {
-  ST_NONE     = 0
-, ST_LEGACY   = 1
-, ST_PACKAGES = 2
-, ST_CATALOG  = 3
-};
-
 
 /* -------------------------------------------------------------------------- */
 

@@ -42,9 +42,6 @@ namespace flox {
 class FlakePackage : public Package {
 
   public:
-    using Cursor      = nix::ref<nix::eval_cache::AttrCursor>;
-    using MaybeCursor = std::shared_ptr<nix::eval_cache::AttrCursor>;
-
     friend class pkgdb::PkgDb;
 
   private:
@@ -117,9 +114,9 @@ class FlakePackage : public Package {
 
 /* -------------------------------------------------------------------------- */
 
-    std::vector<std::string>      getOutputsToInstallS() const;
-    std::optional<bool>           isBroken()             const override;
-    std::optional<bool>           isUnfree()             const override;
+    std::vector<std::string> getOutputsToInstallS() const;
+    std::optional<bool>      isBroken()             const override;
+    std::optional<bool>      isUnfree()             const override;
 
 
       std::vector<std::string_view>
