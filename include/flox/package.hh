@@ -42,21 +42,62 @@ namespace flox {
  */
 class Package {
   public:
-    virtual std::vector<std::string_view>    getPathStrs()         const = 0;
-    virtual std::string_view                 getFullName()         const = 0;
-    virtual std::string_view                 getPname()            const = 0;
-    virtual std::optional<std::string_view>  getVersion()          const = 0;
-    virtual std::optional<std::string_view>  getLicense()          const = 0;
-    virtual std::vector<std::string_view>    getOutputs()          const = 0;
-    virtual std::vector<std::string_view>    getOutputsToInstall() const = 0;
-    virtual std::optional<bool>              isBroken()            const = 0;
-    virtual std::optional<bool>              isUnfree()            const = 0;
-    virtual std::optional<std::string>       getDescription()      const = 0;
+    /** @return attribute path where package is defined */
+    virtual AttrPath getPathStrs() const = 0;
 
+    /** @return the derivation `name` field. */
+    virtual std::string getFullName() const = 0;
+
+    /**
+     * @return iff the field `pname` is defined then `pname`, otherwise the
+     *         `name` field stripped of is _version_ part as recognized by
+     *         `nix::DrvName` parsing rules.
+     */
+    virtual std::string getPname() const = 0;
+
+    /**
+     * @return iff the field `version` is defined then `version`, otherwise the
+     *         `name` field stripped of is _pname_ part as recognized by
+     *         `nix::DrvName` parsing rules.
+     *         If `version` is undefined and `name` contains no version suffix,
+     *         then `std::nullopt`.
+     */
+    virtual std::optional<std::string> getVersion() const = 0;
+
+    /** @return The `meta.license.spdxId` field if defined,
+     *          otherwise `std::nullopt` */
+    virtual std::optional<std::string> getLicense() const = 0;
+
+    /** @return The derivation `outputs` list. */
+    virtual std::vector<std::string> getOutputs() const = 0;
+
+    /**
+     * @return The `meta.outputsToInstall` field if defined, otherwise the
+     *         derivation `outputs` members to the left of and
+     *         including `out`.
+     */
+    virtual std::vector<std::string> getOutputsToInstall() const = 0;
+
+    /** @return The `meta.broken` field if defined, otherwise `std::nullopt`. */
+    virtual std::optional<bool> isBroken() const = 0;
+
+    /** @return The `meta.unfree` field if defined, otherwise `std::nullopt`. */
+    virtual std::optional<bool> isUnfree() const = 0;
+
+    /**
+     * @return The `meta.description` field if defined,
+     * otherwise `std::nullopt`.
+     */
+    virtual std::optional<std::string> getDescription() const = 0;
+
+    /**
+     * @return The flake `outputs` subtree the package resides in, being one of
+     *         `legacyPackages`, `packages`, or `catalog`.
+     */
       virtual subtree_type
     getSubtreeType() const
     {
-      std::vector<std::string_view> pathS = this->getPathStrs();
+      std::vector<std::string> pathS = this->getPathStrs();
       if ( pathS[0] == "legacyPackages" ) { return ST_LEGACY;   }
       if ( pathS[0] == "packages" )       { return ST_PACKAGES; }
       if ( pathS[0] == "catalog" )        { return ST_CATALOG;  }
@@ -66,7 +107,12 @@ class Package {
       throw FloxException( msg );
     }
 
-      virtual std::optional<std::string_view>
+    /**
+     * @return For non-catalog packages `std::nullopt`, otherwise the catalog
+     *         stability the package resides in, being one of `stable`,
+     *         `staging`, or `unstable`.
+     */
+      virtual std::optional<std::string>
     getStability() const
     {
       if ( this->getSubtreeType() != ST_CATALOG ) { return std::nullopt; }
@@ -88,10 +134,10 @@ class Package {
      *         For `catalog` packages this is the second to last member of
      *         @a this package's attribute path, for other flake subtrees.
      */
-      virtual std::string_view
+      virtual std::string
     getPkgAttrName() const
     {
-      std::vector<std::string_view> pathS = this->getPathStrs();
+      std::vector<std::string> pathS = this->getPathStrs();
       if ( this->getSubtreeType() == ST_CATALOG )
         {
           return pathS[pathS.size() - 2];
@@ -104,10 +150,10 @@ class Package {
      *         versioning, otherwise a normalized semantic version number
      *         coerces from @a this package's `version` information.
      */
-      virtual std::optional<std::string_view>
+      virtual std::optional<std::string>
     getSemver() const
     {
-      std::optional<std::string_view> version = this->getVersion();
+      std::optional<std::string> version = this->getVersion();
       if ( ! version.has_value() ) { return std::nullopt; }
       return versions::coerceSemver( version.value() );
     }
@@ -122,8 +168,8 @@ class Package {
       virtual std::string
     toURIString( const nix::FlakeRef & ref ) const
     {
-      std::string uri                     = ref.to_string() + "#";
-      std::vector<std::string_view> pathS = this->getPathStrs();
+      std::string uri                = ref.to_string() + "#";
+      std::vector<std::string> pathS = this->getPathStrs();
       for ( size_t i = 0; i < pathS.size(); ++i )
         {
           uri += '"';
@@ -143,12 +189,12 @@ class Package {
       virtual nlohmann::json
     getInfo( bool withDescription = false ) const
     {
-      std::string_view system = this->getPathStrs()[1];
+      std::string system = this->getPathStrs()[1];
       nlohmann::json j = { { system, {
         { "name",  this->getFullName() }
       , { "pname", this->getPname() }
       } } };
-      std::optional<std::string_view> os = this->getVersion();
+      std::optional<std::string> os = this->getVersion();
 
       if ( os.has_value() ) { j[system].emplace( "version", os.value() ); }
       else { j[system].emplace( "version", nlohmann::json() ); }
