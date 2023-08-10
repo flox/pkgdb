@@ -66,13 +66,13 @@ $ for subtree in packages legacyPackages catalog; do
       if [[ "$subtree" = 'catalog' ]]; then
         for stability in unstable staging stable; do
           if [[ -z "$dbPath" ]]; then  # get the DB name
-            dbPath="$( pkgdb "$lockedRef" "$subtree" "$system" "$stability"; )";
+            dbPath="$( pkgdb scrape "$lockedRef" "$subtree" "$system" "$stability"; )";
           else
-            pkgdb "$lockedRef" "$subtree" "$system" "$stability";
+            pkgdb scrape "$lockedRef" "$subtree" "$system" "$stability";
           fi
         done
       else
-        pkgdb "$lockedRef" "$subtree" "$system";
+        pkgdb scrape "$lockedRef" "$subtree" "$system";
       fi
     done
   done
