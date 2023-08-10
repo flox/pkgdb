@@ -25,7 +25,7 @@ test_semverSat1()
 /* -------------------------------------------------------------------------- */
 
   int
-main( int argc, char * argv[], char ** envp )
+main()
 {
   int ec = EXIT_SUCCESS;
 # define RUN_TEST( ... )  _RUN_TEST( ec, __VA_ARGS__ )

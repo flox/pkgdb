@@ -66,10 +66,12 @@ TESTS          = $(test_SRCS:.cc=)
 
 # ---------------------------------------------------------------------------- #
 
-CXXFLAGS     ?= $(EXTRA_CFLAGS) $(EXTRA_CXXFLAGS)
-CXXFLAGS     += '-I$(MAKEFILE_DIR)/include'
-LDFLAGS      ?= $(EXTRA_LDFLAGS)
-lib_CXXFLAGS ?= -shared -fPIC
+# You can disable these optional gripes with `make EXTRA_CXXFLAGS='' ...;'
+EXTRA_CXXFLAGS ?= -Wall -Wextra -Wpedantic
+CXXFLAGS       ?= $(EXTRA_CFLAGS) $(EXTRA_CXXFLAGS)
+CXXFLAGS       += '-I$(MAKEFILE_DIR)/include'
+LDFLAGS        ?= $(EXTRA_LDFLAGS)
+lib_CXXFLAGS   ?= -shared -fPIC
 ifeq (Linux,$(OS))
 lib_LDFLAGS  ?= -shared -fPIC -Wl,--no-undefined
 else
