@@ -166,10 +166,17 @@ runSemver( const std::list<std::string> & args )
     nix::getEnv( "SEMVER" ).value_or( SEMVER_PATH_STR );
   static const std::map<std::string, std::string> env = nix::getEnv();
   return nix::runProgram( nix::RunOptions {
-    .program     = semverProg
-  , .searchPath  = true
-  , .args        = args
-  , .environment = env
+    .program             = semverProg
+  , .searchPath          = true
+  , .args                = args
+  , .uid                 = std::nullopt
+  , .gid                 = std::nullopt
+  , .chdir               = std::nullopt
+  , .environment         = env
+  , .input               = std::nullopt
+  , .standardIn          = nullptr
+  , .standardOut         = nullptr
+  , .mergeStderrToStdout = false
   } );
 }
 

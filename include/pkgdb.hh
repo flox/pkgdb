@@ -11,7 +11,9 @@
 
 #include <string>
 #include <vector>
+#include <queue>
 #include <filesystem>
+#include <functional>
 
 #include <nlohmann/json.hpp>
 #include <nix/flake/flake.hh>
@@ -19,6 +21,7 @@
 #include <sqlite3pp.hh>
 
 #include "flox/exceptions.hh"
+#include "flox/types.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -37,12 +40,14 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
+/** A unique hash associated with a locked flake. */
 using Fingerprint = nix::flake::Fingerprint;
 using SQLiteDb    = sqlite3pp::database;
-using AttrPath    = std::vector<std::string>;
-using Cursor      = nix::ref<nix::eval_cache::AttrCursor>;
-using row_id      = uint64_t;
+using row_id      = uint64_t;  /**< A _row_ index in a SQLite3 table. */
 using sql_rc      = int;       /**< `SQLITE_*` result code. */
+
+using Target = std::pair<flox::AttrPath, flox::Cursor>;
+using Todos  = std::queue<Target, std::list<Target>>;
 
 
 /* -------------------------------------------------------------------------- */
@@ -84,7 +89,7 @@ class PkgDb {
     const std::string dbPath;       /**< Absolute path to database.       */
 
     /** Locked _flake reference_ for database's flake. */
-    struct {
+    struct LockedFlakeRef {
       std::string    string;  /**< Locked URI string.  */
       nlohmann::json attrs;   /**< Exploded form of URI as an attr-set. */
     } lockedRef;
@@ -119,7 +124,7 @@ class PkgDb {
      * @param dbPath Absolute path to database file.
      */
     PkgDb( std::string_view dbPath )
-      : dbPath( dbPath ), db( dbPath ), fingerprint( nix::htSHA256 )
+      : db( dbPath ), fingerprint( nix::htSHA256 ), dbPath( dbPath )
     {
       if ( ! std::filesystem::exists( dbPath ) )
         {
@@ -137,7 +142,7 @@ class PkgDb {
     PkgDb( const Fingerprint      & fingerprint
          ,       std::string_view   dbPath
          )
-      : fingerprint( fingerprint ), dbPath( dbPath ), db( dbPath )
+      : db( dbPath ), fingerprint( fingerprint ), dbPath( dbPath )
     {
       this->initTables();
       this->loadLockedFlake();
@@ -159,8 +164,8 @@ class PkgDb {
     PkgDb( const nix::flake::LockedFlake & flake
          ,       std::string_view          dbPath
          )
-      : fingerprint( flake.getFingerprint() )
-      , db( dbPath )
+      : db( dbPath )
+      , fingerprint( flake.getFingerprint() )
       , dbPath( dbPath )
       , lockedRef( {
           flake.flake.lockedRef.to_string()
@@ -228,7 +233,7 @@ class PkgDb {
      * @return `true` iff the database has one or more rows in the `Packages`
      *         table with `path` as the _parent_.
      */
-    bool hasPackageSet( const AttrPath & path );
+    bool hasPackageSet( const flox::AttrPath & path );
 
     /**
      * Get the `AttrSet.id` for a given path.
@@ -236,7 +241,7 @@ class PkgDb {
      *             `legacyPackages.aarch64-darwin.python3Packages`.
      * @return A unique `row_id` ( unsigned 64bit int ) associated with @a path.
      */
-    row_id getAttrSetId( const AttrPath & path );
+    row_id getAttrSetId( const flox::AttrPath & path );
 
     /**
      * Get the attribute path for a given `AttrSet.id`.
@@ -244,7 +249,7 @@ class PkgDb {
      * @return An attribute path prefix such as `packages.x86_64-linux` or
      *         `legacyPackages.aarch64-darwin.python3Packages`.
      */
-    AttrPath getAttrSetPath( row_id id );
+    flox::AttrPath getAttrSetPath( row_id id );
 
 
     /**
@@ -254,7 +259,7 @@ class PkgDb {
      * @return `true` iff the database has a rows in the `Packages`
      *         table with `path` as the _absolute path_.
      */
-    bool hasPackage( const AttrPath & path );
+    bool hasPackage( const flox::AttrPath & path );
 
 
     /**
@@ -291,7 +296,7 @@ class PkgDb {
      *             `legacyPackages.aarch64-darwin.python3Packages`.
      * @return A unique `row_id` ( unsigned 64bit int ) associated with @a path.
      */
-    row_id addOrGetAttrSetId( const AttrPath & path );
+    row_id addOrGetAttrSetId( const flox::AttrPath & path );
 
     /**
      * Get the `Descriptions.id` for a given string if it exists, or insert a
@@ -316,7 +321,7 @@ class PkgDb {
      */
     row_id addPackage( row_id           parentId
                      , std::string_view attrName
-                     , Cursor           cursor
+                     , flox::Cursor     cursor
                      , bool             replace  = false
                      , bool             checkDrv = true
                      );
@@ -325,6 +330,29 @@ class PkgDb {
 /* -------------------------------------------------------------------------- */
 
 };  /* End class `PkgDb' */
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Scrape package definitions from an attribute set, adding any attributes
+ * marked with `recurseForDerivatsions = true` to @a todo list.
+ * @param db     Database to write to.
+ * @param syms   Symbol table from @a cursor evaluator.
+ * @param prefix Attribute path to scrape.
+ * @param cursor `nix` evaluator cursor associated with @a prefix
+ * @param todo Queue to add `recurseForDerivations = true` cursors to so they
+ *             may be scraped by later invocations.
+ */
+  void
+scrape(       flox::pkgdb::PkgDb & db
+      ,       nix::SymbolTable   & syms
+      , const flox::AttrPath     & prefix
+      ,       flox::Cursor         cursor
+      ,       Todos              & todo
+      );
+
+
 
 
 /* -------------------------------------------------------------------------- */
