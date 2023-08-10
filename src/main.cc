@@ -29,119 +29,9 @@
 
 /* -------------------------------------------------------------------------- */
 
-  int
-main( int argc, char * argv[] )
+  static int
+scrapeImplementation( argparse::ArgumentParser & cmdScrape, nix::Verbosity & verbosity )
 {
-
-  /* Define arg parsers. */
-
-  argparse::ArgumentParser prog( "pkgdb", FLOX_PKGDB_VERSION );
-  prog.add_description( "CRUD operations for package metadata" );
-
-  /* Nix verbosity levels for reference:
-   *   typedef enum {
-   *     lvlError = 0   ( --quiet --quiet --quiet )
-   *   , lvlWarn        ( --quiet --quiet )
-   *   , lvlNotice      ( --quiet )
-   *   , lvlInfo        ( **Default** )
-   *   , lvlTalkative   ( -v )
-   *   , lvlChatty      ( -vv   | --debug --quiet )
-   *   , lvlDebug       ( -vvv  | --debug )
-   *   , lvlVomit       ( -vvvv | --debug -v )
-   *   } Verbosity;
-   */
-  nix::Verbosity verbosity = nix::lvlInfo;  /* Nix's default as well. */
-
-  /* Add `-v+,--verbose' and `-q+,--quiet' to a parser. */
-  auto addVerbosity = [&]( argparse::ArgumentParser & parser )
-  {
-    parser.add_argument( "-q", "--quiet" )
-      .help(
-        "Decreate the logging verbosity level. May be used up to 3 times."
-      ).action(
-        [&]( const auto & )
-        {
-          verbosity =
-            ( verbosity <= nix::lvlError ) ? nix::lvlError
-                                           : (nix::Verbosity) ( verbosity - 1 );
-        }
-      ).default_value( false ).implicit_value( true )
-      .append()
-    ;
-    parser.add_argument( "-v", "--verbose" )
-      .help( "Increase the logging verbosity level. May be up to 4 times." )
-      .action(
-        [&]( const auto & )
-        {
-          verbosity =
-            ( nix::lvlVomit <= verbosity ) ? nix::lvlVomit
-                                           : (nix::Verbosity) ( verbosity + 1 );
-        }
-      ).default_value( false ).implicit_value( true )
-      .append()
-    ;
-  };
-
-  addVerbosity( prog );
-
-  argparse::ArgumentParser cmdScrape( "scrape" );
-  cmdScrape.add_description( "Scrape a flake and emit a SQLite3 DB" );
-
-  addVerbosity( cmdScrape );
-
-  cmdScrape.add_argument( "-d", "--database" )
-    .help( "Use database at PATH" )
-    .default_value( "" )
-    .metavar( "PATH" )
-    .nargs( 1 )
-  ;
-
-  cmdScrape.add_argument( "-f", "--force" )
-    .help( "Force re-evaluation of prefix" )
-    .default_value( false )
-    .implicit_value( true )
-    .nargs( 0 )
-  ;
-
-  cmdScrape.add_argument( "flake-ref" )
-    .help( "A flake-reference URI string ( preferably locked )" )
-    .required()
-    .metavar( "FLAKE-REF" )
-  ;
-
-  cmdScrape.add_argument( "attr-path" )
-    .help( "Attribute path to scrape" )
-    .metavar( "ATTR" )
-    .remaining()
-    .default_value( std::vector<std::string> {
-      "packages"
-    , nix::settings.thisSystem.get()
-    } )
-  ;
-
-  prog.add_subparser( cmdScrape );
-
-
-/* -------------------------------------------------------------------------- */
-
-  /* Parse Args */
-
-  try
-    {
-      prog.parse_args( argc, argv );
-    }
-  catch( const std::runtime_error & err )
-    {
-      std::cerr << err.what() << std::endl;
-      std::cerr << prog;
-      return EXIT_FAILURE;
-    }
-
-  // TODO: remove when you have more commands.
-  assert( prog.is_subcommand_used( "scrape" ) );
-
-
-/* -------------------------------------------------------------------------- */
 
   /* Initialize `nix' */
 
@@ -267,6 +157,153 @@ main( int argc, char * argv[] )
   std::cout << dbPathStr << std::endl;
 
   return EXIT_SUCCESS;  /* GG, GG */
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  int
+main( int argc, char * argv[] )
+{
+
+  /* Define arg parsers. */
+
+  argparse::ArgumentParser prog( "pkgdb", FLOX_PKGDB_VERSION );
+  prog.add_description( "CRUD operations for package metadata" );
+
+  /* Nix verbosity levels for reference:
+   *   typedef enum {
+   *     lvlError = 0   ( --quiet --quiet --quiet )
+   *   , lvlWarn        ( --quiet --quiet )
+   *   , lvlNotice      ( --quiet )
+   *   , lvlInfo        ( **Default** )
+   *   , lvlTalkative   ( -v )
+   *   , lvlChatty      ( -vv   | --debug --quiet )
+   *   , lvlDebug       ( -vvv  | --debug )
+   *   , lvlVomit       ( -vvvv | --debug -v )
+   *   } Verbosity;
+   */
+  nix::Verbosity verbosity = nix::lvlInfo;  /* Nix's default as well. */
+
+  /* Add `-v+,--verbose' and `-q+,--quiet' to a parser. */
+  auto addVerbosity = [&]( argparse::ArgumentParser & parser )
+  {
+    parser.add_argument( "-q", "--quiet" )
+      .help(
+        "Decreate the logging verbosity level. May be used up to 3 times."
+      ).action(
+        [&]( const auto & )
+        {
+          verbosity =
+            ( verbosity <= nix::lvlError ) ? nix::lvlError
+                                           : (nix::Verbosity) ( verbosity - 1 );
+        }
+      ).default_value( false ).implicit_value( true )
+      .append()
+    ;
+    parser.add_argument( "-v", "--verbose" )
+      .help( "Increase the logging verbosity level. May be up to 4 times." )
+      .action(
+        [&]( const auto & )
+        {
+          verbosity =
+            ( nix::lvlVomit <= verbosity ) ? nix::lvlVomit
+                                           : (nix::Verbosity) ( verbosity + 1 );
+        }
+      ).default_value( false ).implicit_value( true )
+      .append()
+    ;
+  };
+
+  auto addTarget = [&]( argparse::ArgumentParser & parser)
+  {
+    parser.add_argument( "target" )
+      .help( "The source (database or flake ref) to query package attributes from" )
+      .required()
+      .metavar( "DB-OR-FLAKE-REF" );
+  };
+
+  addVerbosity( prog );
+
+  argparse::ArgumentParser cmdScrape( "scrape" );
+  cmdScrape.add_description( "Scrape a flake and emit a SQLite3 DB" );
+
+  addVerbosity( cmdScrape );
+
+  cmdScrape.add_argument( "-d", "--database" )
+    .help( "Use database at PATH" )
+    .default_value( "" )
+    .metavar( "PATH" )
+    .nargs( 1 )
+  ;
+
+  cmdScrape.add_argument( "-f", "--force" )
+    .help( "Force re-evaluation of prefix" )
+    .default_value( false )
+    .implicit_value( true )
+    .nargs( 0 )
+  ;
+
+  cmdScrape.add_argument( "flake-ref" )
+    .help( "A flake-reference URI string ( preferably locked )" )
+    .required()
+    .metavar( "FLAKE-REF" )
+  ;
+
+  cmdScrape.add_argument( "attr-path" )
+    .help( "Attribute path to scrape" )
+    .metavar( "ATTR" )
+    .remaining()
+    .default_value( std::vector<std::string> {
+      "packages"
+    , nix::settings.thisSystem.get()
+    } )
+  ;
+
+  prog.add_subparser( cmdScrape );
+
+  argparse::ArgumentParser cmdGet( "get" );
+  cmdGet.add_description( "Query package attributes" );
+
+  addVerbosity( cmdGet );
+
+  argparse::ArgumentParser cmdGetPath( "path", "p" );
+  cmdGetPath.add_description( "Print the attribute path associated with an AttrSets.id or Packages.id" );
+  addTarget( cmdGetPath );
+  cmdGetPath.add_argument( "id" )
+    .help( "The AttrSets.id or Packages.id to look up" )
+    .required()
+    .metavar( "ID" );
+  cmdGetPath.add_argument( "-p", "--pkg" )
+    .help( "Indicate that the id refers to a Packages.id rather than an AttrSets.id" )
+    .default_value( false )
+    .implicit_value( true )
+    .nargs( 0 );
+  cmdGet.add_subparser( cmdGetPath );
+
+
+  prog.add_subparser( cmdGet );
+  
+
+/* -------------------------------------------------------------------------- */
+
+  /* Parse Args */
+
+  try
+    {
+      prog.parse_args( argc, argv );
+    }
+  catch( const std::runtime_error & err )
+    {
+      std::cerr << err.what() << std::endl;
+      std::cerr << prog;
+      return EXIT_FAILURE;
+    }
+
+  if ( prog.is_subcommand_used( "scrape" ) )
+    {
+      return scrapeImplementation( cmdScrape, verbosity );
+    }
 
 }
 
