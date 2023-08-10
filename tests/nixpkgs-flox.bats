@@ -49,12 +49,12 @@ setup_file() {
                     catalog "$NIX_SYSTEM" stable fishPlugins;
   assert_success;
   VERSION='unstable-2020-02-09'
-  # foreign-env has a non-semantic version, so check if NULL below
+  # SEMVER foreign-env has a non-semantic version, so check if NULL below
   NAME='fishplugin-foreign-env-unstable-2020-02-09'
-  # catalogs entries don't currently set license, so check if NULL below
+  # LICENSE catalogs entries don't currently set license, so check if NULL below
   OUTPUTS='["out"]'
   OUTPUTS_TO_INSTALL='["out"]'
-  # catalogs entries don't currently set broken, so check if NULL below
+  # BROKEN catalogs entries don't currently set broken, so check if NULL below
   UNFREE='0'
   run sqlite3 "$DBPATH" \
     "SELECT
