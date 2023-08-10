@@ -89,7 +89,7 @@ class PkgDb {
     const std::string dbPath;       /**< Absolute path to database.       */
 
     /** Locked _flake reference_ for database's flake. */
-    struct {
+    struct LockedFlakeRef {
       std::string    string;  /**< Locked URI string.  */
       nlohmann::json attrs;   /**< Exploded form of URI as an attr-set. */
     } lockedRef;
@@ -124,7 +124,7 @@ class PkgDb {
      * @param dbPath Absolute path to database file.
      */
     PkgDb( std::string_view dbPath )
-      : dbPath( dbPath ), db( dbPath ), fingerprint( nix::htSHA256 )
+      : db( dbPath ), fingerprint( nix::htSHA256 ), dbPath( dbPath )
     {
       if ( ! std::filesystem::exists( dbPath ) )
         {
@@ -142,7 +142,7 @@ class PkgDb {
     PkgDb( const Fingerprint      & fingerprint
          ,       std::string_view   dbPath
          )
-      : fingerprint( fingerprint ), dbPath( dbPath ), db( dbPath )
+      : db( dbPath ), fingerprint( fingerprint ), dbPath( dbPath )
     {
       this->initTables();
       this->loadLockedFlake();
@@ -164,8 +164,8 @@ class PkgDb {
     PkgDb( const nix::flake::LockedFlake & flake
          ,       std::string_view          dbPath
          )
-      : fingerprint( flake.getFingerprint() )
-      , db( dbPath )
+      : db( dbPath )
+      , fingerprint( flake.getFingerprint() )
       , dbPath( dbPath )
       , lockedRef( {
           flake.flake.lockedRef.to_string()

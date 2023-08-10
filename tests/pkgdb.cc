@@ -62,7 +62,7 @@ test_addOrGetAttrSetId0( flox::pkgdb::PkgDb & db )
 {
   /* Make sure `AttrSets` is empty. */
   row_id startId = getRowCount( db, "AttrSets" );
-  EXPECT_EQ( startId, 0 );
+  EXPECT_EQ( startId, (row_id) 0 );
 
   /* Add two `AttrSets` */
   row_id id = db.addOrGetAttrSetId( "legacyPackages" );
@@ -85,7 +85,7 @@ test_addOrGetAttrSetId1( flox::pkgdb::PkgDb & db )
   try
     {
       /* Ensure we throw an error for undefined `AttrSet.id' parents. */
-      row_id id = db.addOrGetAttrSetId( "phony", startId + 99999999 );
+      db.addOrGetAttrSetId( "phony", startId + 99999999 );
       return false;
     }
   catch( const flox::pkgdb::PkgDbException & e ) { /* Expected */ }
@@ -258,7 +258,7 @@ test_descriptions0( flox::pkgdb::PkgDb & db )
 /* ========================================================================== */
 
   int
-main( int argc, char * argv[], char ** envp )
+main( int argc, char * argv[] )
 {
   int ec = EXIT_SUCCESS;
 # define RUN_TEST( ... )  _RUN_TEST( ec, __VA_ARGS__ )
