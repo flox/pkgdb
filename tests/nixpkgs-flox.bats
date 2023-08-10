@@ -31,40 +31,44 @@ setup_file() {
 @test "nixpkgs-flox fishPlugins.foreign-env description" {
   run $PKGDB scrape --database "$DBPATH" "$NIXPKGS_FLOX_REF"           \
                     catalog "$NIX_SYSTEM" stable fishPlugins foreign-env;
-  local _dID;
-  _dID="$(
-    sqlite3 "$DBPATH"                                       \
-    "SELECT descriptionId FROM Packages  \
-     WHERE attrName = 'unstable-2020-02-09'";
-  )";
   run sqlite3 "$DBPATH"                                               \
-    "SELECT description FROM Descriptions WHERE id = $_dID";
+    "SELECT description FROM Descriptions WHERE id = (
+      SELECT descriptionId FROM Packages
+      WHERE attrName = 'unstable-2020-02-09'
+    )";
+
   assert_output 'A foreign environment interface for Fish shell';
 }
 
 
 # ---------------------------------------------------------------------------- #
 
-@test "nixpkgs-flox fishPlugins.foreign-env version" {
+# This test should be updated when the Packages schema is changed.
+@test "nixpkgs-flox fishPlugins.foreign-env check all fields" {
   run $PKGDB scrape --database "$DBPATH" "$NIXPKGS_FLOX_REF"           \
                     catalog "$NIX_SYSTEM" stable fishPlugins;
   assert_success;
-  run sqlite3 "$DBPATH" "SELECT version FROM Packages      \
+  VERSION='unstable-2020-02-09'
+  # foreign-env has a non-semantic version, so check if NULL below
+  NAME='fishplugin-foreign-env-unstable-2020-02-09'
+  # catalogs entries don't currently set license, so check if NULL below
+  OUTPUTS='["out"]'
+  OUTPUTS_TO_INSTALL='["out"]'
+  # catalogs entries don't currently set broken, so check if NULL below
+  UNFREE='0'
+  run sqlite3 "$DBPATH" \
+    "SELECT
+      IIF(version = '$VERSION', '', 'version incorrect'),
+      IIF(semver is NULL, '', 'semver incorrect'),
+      IIF(name = '$NAME', '', 'name incorrect'),
+      IIF(license is NULL, '', 'license incorrect'),
+      IIF(outputs = '$OUTPUTS', '', 'outputs incorrect'),
+      IIF(outputsToInstall = '$OUTPUTS_TO_INSTALL', '', 'outputsToInstall incorrect'),
+      IIF(broken is NULL, '', 'broken incorrect'),
+      IIF(unfree = '$UNFREE', '', 'unfree incorrect')
+    FROM Packages
     WHERE attrName = 'unstable-2020-02-09'";
-  assert_output 'unstable-2020-02-09';
-}
-
-
-# ---------------------------------------------------------------------------- #
-
-# foreign-env has a non-semantic version.
-@test "nixpkgs-flox fishPlugins.foreign-env semver" {
-  run $PKGDB scrape --database "$DBPATH" "$NIXPKGS_FLOX_REF"           \
-                    catalog "$NIX_SYSTEM" stable fishPlugins;
-  assert_success;
-  run sqlite3 "$DBPATH" "SELECT semver FROM Packages      \
-    WHERE attrName = 'unstable-2020-02-09'";
-  refute_output --regexp '.';
+  assert_output '|||||||';
 }
 
 
@@ -78,80 +82,6 @@ setup_file() {
   run sqlite3 "$DBPATH" "SELECT pname FROM Packages      \
     WHERE attrName = 'unstable-2020-02-09'";
   assert_output 'foreign-env';
-}
-
-
-# ---------------------------------------------------------------------------- #
-
-@test "nixpkgs-flox fishPlugins.foreign-env name" {
-  run $PKGDB scrape --database "$DBPATH" "$NIXPKGS_FLOX_REF"           \
-                    catalog "$NIX_SYSTEM" stable fishPlugins;
-  assert_success;
-  run sqlite3 "$DBPATH" "SELECT name FROM Packages      \
-    WHERE attrName = 'unstable-2020-02-09'";
-  assert_output 'fishplugin-foreign-env-unstable-2020-02-09';
-}
-
-
-# ---------------------------------------------------------------------------- #
-
-# catalogs entries don't currently set license
-@test "nixpkgs-flox fishPlugins.foreign-env license" {
-  run $PKGDB scrape --database "$DBPATH" "$NIXPKGS_FLOX_REF"           \
-                    catalog "$NIX_SYSTEM" stable fishPlugins;
-  assert_success;
-  run sqlite3 "$DBPATH" "SELECT license FROM Packages      \
-    WHERE attrName = 'unstable-2020-02-09'";
-  refute_output --regexp '.';
-}
-
-
-# ---------------------------------------------------------------------------- #
-
-@test "nixpkgs-flox fishPlugins.foreign-env outputs" {
-  run $PKGDB scrape --database "$DBPATH" "$NIXPKGS_FLOX_REF"           \
-                    catalog "$NIX_SYSTEM" stable fishPlugins;
-  assert_success;
-  run sqlite3 "$DBPATH" "SELECT outputs FROM Packages      \
-    WHERE attrName = 'unstable-2020-02-09'";
-  assert_output '["out"]';
-}
-
-
-# ---------------------------------------------------------------------------- #
-
-@test "nixpkgs-flox fishPlugins.foreign-env outputsToInstall" {
-  run $PKGDB scrape --database "$DBPATH" "$NIXPKGS_FLOX_REF"           \
-                    catalog "$NIX_SYSTEM" stable fishPlugins;
-  assert_success;
-  run sqlite3 "$DBPATH" "SELECT outputsToInstall FROM Packages      \
-    WHERE attrName = 'unstable-2020-02-09'";
-  assert_output '["out"]';
-}
-
-
-# ---------------------------------------------------------------------------- #
-
-# catalogs entries don't currently set broken
-@test "nixpkgs-flox fishPlugins.foreign-env broken" {
-  run $PKGDB scrape --database "$DBPATH" "$NIXPKGS_FLOX_REF"           \
-                    catalog "$NIX_SYSTEM" stable fishPlugins;
-  assert_success;
-  run sqlite3 "$DBPATH" "SELECT broken FROM Packages      \
-    WHERE attrName = 'unstable-2020-02-09'";
-  refute_output --regexp '.';
-}
-
-
-# ---------------------------------------------------------------------------- #
-
-@test "nixpkgs-flox fishPlugins.foreign-env unfree" {
-  run $PKGDB scrape --database "$DBPATH" "$NIXPKGS_FLOX_REF"           \
-                    catalog "$NIX_SYSTEM" stable fishPlugins;
-  assert_success;
-  run sqlite3 "$DBPATH" "SELECT unfree FROM Packages      \
-    WHERE attrName = 'unstable-2020-02-09'";
-  assert_output '0';
 }
 
 
