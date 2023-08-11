@@ -116,7 +116,8 @@ misc_vars_setup() {
   NIXPKGS_REF="github:NixOS/nixpkgs/e8039594435c68eb4f780f3e9bf3972a7399c4b1";
   FLOCOPKGS_REF="github:aakropotkin/flocoPackages"
   FLOCOPKGS_REF="$FLOCOPKGS_REF/2afd962bbd6745d4d101c2924de34c5326042928";
-  export NIXPKGS_REF FLOCOPKGS_REF;
+  NIXPKGS_FLOX_REF="github:flox/nixpkgs-flox/feb593b6844a96dd4e17497edaabac009be05709";
+  export NIXPKGS_REF FLOCOPKGS_REF NIXPKGS_FLOX_REF;
 
   export __PD_RAN_MISC_VARS_SETUP=:;
 }
