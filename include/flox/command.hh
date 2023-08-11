@@ -47,6 +47,7 @@ struct VerboseParser : public argparse::ArgumentParser {
 
 /** Virtual class for _mixins_ which extend a command's state blob */
 struct CommandStateMixin {
+  /** Hook run after parsing arguments and before running commands. */
   virtual void postProcessArgs() {};
 };  /* End struct `CommandStateMixin' */
 
