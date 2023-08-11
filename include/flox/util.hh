@@ -156,6 +156,16 @@ struct NixState {
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Detect if a path is a SQLite3 database file.
+ * @param dbPath Absolute path.
+ * @return `true` iff @a path is a SQLite3 database file.
+ */
+bool isSQLiteDb( const std::string & dbPath );
+
+
+/* -------------------------------------------------------------------------- */
+
 }    /* End namespace `flox' */
 
 
