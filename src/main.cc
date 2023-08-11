@@ -38,40 +38,6 @@ main( int argc, char * argv[] )
 
   /* Define arg parsers. */
 
-  #if 0
-  argparse::ArgumentParser cmdGet( "get" );
-  cmdGet.add_description( "Query package attributes" );
-
-  addVerbosity( cmdGet );
-
-  argparse::ArgumentParser cmdGetPath( "path", "p" );
-  cmdGetPath.add_description(
-    "Print the attribute path associated with an AttrSets.id or Packages.id"
-  );
-  addTarget( cmdGetPath );
-  cmdGetPath.add_argument( "id" )
-    .help( "The AttrSets.id or Packages.id to look up" )
-    .required()
-    .metavar( "ID" )
-  ;
-  cmdGetPath.add_argument( "-p", "--pkg" )
-    .help(
-      "Indicate that the id refers to a Packages.id rather than an AttrSets.id"
-    )
-    .default_value( false )
-    .implicit_value( true )
-    .nargs( 0 )
-  ;
-  cmdGet.add_subparser( cmdGetPath );
-
-
-  prog.add_subparser( cmdGet );
-
-  #endif
-
-
-/* -------------------------------------------------------------------------- */
-
   flox::command::VerboseParser prog( "pkgdb", FLOX_PKGDB_VERSION );
   prog.add_description( "CRUD operations for package metadata" );
 
@@ -81,8 +47,6 @@ main( int argc, char * argv[] )
   flox::command::GetCommand cmdGet;
   prog.add_subparser( cmdGet.parser );
 
-
-/* -------------------------------------------------------------------------- */
 
   /* Parse Args */
 
@@ -96,6 +60,9 @@ main( int argc, char * argv[] )
       std::cerr << prog << std::endl;
       return EXIT_FAILURE;
     }
+
+
+  /* Run subcommand */
 
   try
     {
