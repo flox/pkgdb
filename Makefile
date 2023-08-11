@@ -61,7 +61,8 @@ bin_SRCS       = src/main.cc
 lib_SRCS       = $(filter-out $(bin_SRCS),$(SRCS))
 test_SRCS      = $(wildcard tests/*.cc)
 BINS           = pkgdb
-TESTS          = $(filter-out tests/is_sqlite3,$(test_SRCS:.cc=))
+TEST_UTILS     = tests/is_sqlite3 tests/id2attrpath
+TESTS          = $(filter-out $(TEST_UTILS),$(test_SRCS:.cc=))
 
 
 # ---------------------------------------------------------------------------- #
@@ -210,9 +211,9 @@ bin/pkgdb: src/main.o lib/$(LIBFLOXPKGDB)
 
 # ---------------------------------------------------------------------------- #
 
-$(TESTS) tests/is_sqlite3: CXXFLAGS += $(bin_CXXFLAGS)
-$(TESTS) tests/is_sqlite3: LDFLAGS  += $(bin_LDFLAGS)
-$(TESTS) tests/is_sqlite3: tests/%: tests/%.cc lib/$(LIBFLOXPKGDB)
+$(TESTS) $(TEST_UTILS): CXXFLAGS += $(bin_CXXFLAGS)
+$(TESTS) $(TEST_UTILS): LDFLAGS  += $(bin_LDFLAGS)
+$(TESTS) $(TEST_UTILS): tests/%: tests/%.cc lib/$(LIBFLOXPKGDB)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) "$<" -o "$@"
 
 
@@ -260,17 +261,20 @@ cc-check: $(TESTS:.cc=)
 	done;                       \
 	exit "$$_ec"
 
-bats-check: bin tests/is_sqlite3
+bats-check: bin $(TEST_UTILS)
 	PKGDB="$(MAKEFILE_DIR)/bin/pkgdb"                        \
+	ID2ATTRPATH="$(MAKEFILE_DIR)/tests/id2attrpath"          \
 	IS_SQLITE3="$(MAKEFILE_DIR)/tests/is_sqlite3"            \
 	  bats --print-output-on-failure --verbose-run --timing  \
 	       "$(MAKEFILE_DIR)/tests"
+
 
 
 # ---------------------------------------------------------------------------- #
 
 all: bin lib tests ignores
 most: bin lib ignores
+test-utils: $(TEST_UTILS)
 
 
 # ---------------------------------------------------------------------------- #
