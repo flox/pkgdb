@@ -11,6 +11,8 @@
   inputs.nixpkgs.url                      = "github:NixOS/nixpkgs";
   inputs.floco.url                        = "github:aakropotkin/floco";
   inputs.floco.inputs.nixpkgs.follows     = "/nixpkgs";
+  inputs.argparse.url                     = "github:aakropotkin/argparse";
+  inputs.argparse.inputs.nixpkgs.follows  = "/nixpkgs";
   inputs.sqlite3pp.url                    = "github:aakropotkin/sqlite3pp";
   inputs.sqlite3pp.inputs.nixpkgs.follows = "/nixpkgs";
   inputs.sql-builder                      = {
@@ -21,7 +23,7 @@
 
 # ---------------------------------------------------------------------------- #
 
-  outputs = { nixpkgs, floco, sql-builder, sqlite3pp, ... }: let
+  outputs = { nixpkgs, floco, argparse, sql-builder, sqlite3pp, ... }: let
 
 # ---------------------------------------------------------------------------- #
 
@@ -36,8 +38,11 @@
 
 # ---------------------------------------------------------------------------- #
 
-    overlays.deps = nixpkgs.lib.composeExtensions floco.overlays.default
-                                                  sqlite3pp.overlays.default;
+    overlays.deps = nixpkgs.lib.composeManyExtensions [
+      floco.overlays.default
+      sqlite3pp.overlays.default
+      argparse.overlays.default
+    ];
     overlays.flox-pkgdb = final: prev: {
       flox-pkgdb = final.callPackage ./pkg-fun.nix {};
       sql-builder  = final.runCommandNoCC "sql-builder" {

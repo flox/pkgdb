@@ -321,7 +321,7 @@ src/pkgdb.o: $(SQL_HH_FILES)
 
 ignores: tests/.gitignore
 tests/.gitignore: FORCE
-	printf '%s\n' $(patsubst tests/%,%,$(TESTS)) > $@
+	printf '%s\n' $(patsubst tests/%,%,$(test_SRCS:.cc=)) > $@
 
 
 # ---------------------------------------------------------------------------- #
