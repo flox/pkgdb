@@ -13,8 +13,8 @@ The current responsibility of the `pkgdb` tool extends only as far as scraping a
 ### Compilation
 
 ```bash
-$ nix develop
-$ make
+$ nix develop;
+$ make -j8;  # set `-j<# Jobs>' as desired
 ```
 
 ### Usage
@@ -22,7 +22,7 @@ $ make
 Build the database with the `scrape` subcommand:
 
 ```bash
-$ pkgdb scrape github:NixOS/nixpkgs
+$ pkgdb scrape github:NixOS/nixpkgs;
 fetching flake 'github:NixOS/nixpkgs'...
 /Users/me/.cache/flox/pkgdb-v0/93a89abd052c90a33e8787a7740f2459cdb496980848011ae708b0de1bbfac82.sqlite
 ```
@@ -38,7 +38,7 @@ If the database for a given flake already exists and is asked to reprocess an ex
 Once generated, the database can be opened and queried using `sqlite3`.
 
 ```bash
-$ sqlite3 flakedb.sqlite 'SELECT name, version FROM Packages LIMIT 10'
+$ sqlite3 flakedb.sqlite '.mode json' 'SELECT name, version FROM Packages LIMIT 10';
 [{"name":"AMB-plugins-0.8.1","version":"0.8.1"},
 {"name":"ArchiSteamFarm-5.4.7.3","version":"5.4.7.3"},
 {"name":"AusweisApp2-1.26.7","version":"1.26.7"},
