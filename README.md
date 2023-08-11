@@ -102,7 +102,15 @@ The two entities are AttrSets (branches) and Packages (leaves). Packages and Att
 
 Descriptions are de-duplicated (for instance between two packages for separate architectures) by a Descriptions table.
 
-`DbVersions` and `LockedFlake` tables store metadata about the version of `pkgdb` that generated the database and the flakes which have been scraped, respectively.
+`DbVersions` and `LockedFlake` tables store metadata about the version of `pkgdb` that generated the database and the flake which was scraped.
+
+#### Details
+
+If they are defined explicitly, `pname` and `version` will be read from the corresponding attributes. Otherwise, they will be parsed from the `name`. If `version` can be converted to a semver, it will be.
+
+Note that the `attrName` for a package is the actual name in the tree. Therefore, for catalogs the `attrName` will be the package version, not the name.
+
+If `outputsToInstall` is not defined, it will be the set of `outputs` up to and including `"out"`.
 
 ```mermaid
 erDiagram
@@ -143,4 +151,3 @@ erDiagram
     json attrs
   }
 ```
-
