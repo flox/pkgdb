@@ -89,6 +89,11 @@ isSQLiteDb( const std::string & dbPath )
           std::fclose( fp );
           throw flox::FloxException( "Failed to read file " + dbPath );
         }
+      else
+        {
+          std::fclose( fp );
+          return false;
+        }
     }
   else
     {

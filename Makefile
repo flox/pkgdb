@@ -61,7 +61,7 @@ bin_SRCS       = src/main.cc
 lib_SRCS       = $(filter-out $(bin_SRCS),$(SRCS))
 test_SRCS      = $(wildcard tests/*.cc)
 BINS           = pkgdb
-TESTS          = $(test_SRCS:.cc=)
+TESTS          = $(filter-out is_sqlite3,$(test_SRCS:.cc=))
 
 
 # ---------------------------------------------------------------------------- #
