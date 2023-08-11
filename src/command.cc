@@ -81,15 +81,14 @@ VerboseParser::VerboseParser( std::string name, std::string version )
 /* -------------------------------------------------------------------------- */
 
   void
-FloxFlakeMixin::parseFloxFlake( const std::string & arg )
+FloxFlakeMixin::parseFloxFlake( const std::string & flakeRef )
 {
   nix::FlakeRef ref =
-    ( arg.find( '{' ) == arg.npos ) ? nix::parseFlakeRef( arg )
-                                    : nix::FlakeRef::fromAttrs(
-                                        nix::fetchers::jsonToAttrs(
-                                          nlohmann::json::parse( arg )
-                                        )
-                                      );
+    ( flakeRef.find( '{' ) == flakeRef.npos )
+    ? nix::parseFlakeRef( flakeRef )
+    : nix::FlakeRef::fromAttrs(
+        nix::fetchers::jsonToAttrs( nlohmann::json::parse( flakeRef ) )
+      );
   {
     nix::Activity act(
       * nix::logger

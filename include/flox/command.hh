@@ -44,11 +44,29 @@ struct VerboseParser : public argparse::ArgumentParser {
 
 /* -------------------------------------------------------------------------- */
 
-struct FloxFlakeMixin : virtual public flox::NixState {
+/** Virtual class for _mixins_ which extend a command's state blob */
+struct CommandStateMixin {
+  virtual void postProcessArgs() {};
+};  /* End struct `CommandStateMixin' */
+
+
+/* -------------------------------------------------------------------------- */
+
+/** Extend a command's state blob with a @a flox::FloxFlake. */
+struct FloxFlakeMixin
+  :         public CommandStateMixin
+  , virtual public flox::NixState
+{
 
   std::unique_ptr<flox::FloxFlake> flake;
 
-  void                 parseFloxFlake( const std::string & arg );
+  /**
+   * Populate the command state's @a flake with the a flake reference.
+   * @param flakeRef A URI string or JSON representation of a flake reference.
+   */
+  void parseFloxFlake( const std::string & flakeRef );
+
+  /** Extend an argument parser to accept a `flake-ref` argument. */
   argparse::Argument & addFlakeRefArg( argparse::ArgumentParser & parser );
 };  /* End struct `FloxFlakeMixin' */
 
@@ -56,10 +74,11 @@ struct FloxFlakeMixin : virtual public flox::NixState {
 /* -------------------------------------------------------------------------- */
 
 /** Adds a package database path to a state blob. */
-struct DbPathMixin : virtual public flox::NixState {
+struct DbPathMixin : public CommandStateMixin, virtual public flox::NixState {
 
   std::optional<std::filesystem::path> dbPath;
 
+  /** Extend an argument parser to accept a `-d,--database PATH` argument. */
     argparse::Argument &
   addDatabasePathOption( argparse::ArgumentParser & parser );
 
@@ -75,7 +94,12 @@ struct PkgDbMixin : virtual public DbPathMixin, virtual public FloxFlakeMixin {
 
   std::unique_ptr<flox::pkgdb::PkgDb> db;
 
+  /**
+   * Open a @a flox::pkgdb::PkgDb connection using the command state's
+   * @a dbPath or @a flake value.
+   */
   void openPkgDb();
+  inline void postProcessArgs() override { this->openPkgDb(); }
 
   /**
    * Add `target` argument to any parser to read either a `flake-ref` or
@@ -88,68 +112,55 @@ struct PkgDbMixin : virtual public DbPathMixin, virtual public FloxFlakeMixin {
 
 /* -------------------------------------------------------------------------- */
 
-struct AttrPathMixin {
+/** Extend a command state blob with an attribute path to "target". */
+struct AttrPathMixin : public CommandStateMixin {
 
   flox::AttrPath attrPath;
 
-  /* Sets the attribute path to be scraped.
+  /**
+   * Sets the attribute path to be scraped.
    * If no system is given use the current system.
    * If we're searching a catalog and no stability is given, use "stable".
    */
   argparse::Argument & addAttrPathArgs( argparse::ArgumentParser & parser );
 
-  void postProcessArgs();
+  void postProcessArgs() override;
 
 };  /* End struct `AttrPathMixin' */
 
 
 /* -------------------------------------------------------------------------- */
 
-/** Adds optional `-f,--force` flag with associated variable to a state blob. */
-struct ForceMixin {
-
-  bool force = false;
-
-    argparse::Argument &
-  addForceFlag( argparse::ArgumentParser & parser )
-  {
-    return parser.add_argument( "-f", "--force" )
-                 .help( "Force the operation" )
-                 .nargs( 0 )
-                 .action( [&]( const auto & ) { this->force = true; } );
-  }
-
-};  /* End struct `ForceMixin' */
-
-
-/* -------------------------------------------------------------------------- */
-
-struct ScrapeCommand
-  : public PkgDbMixin
-  , public AttrPathMixin
-  , public ForceMixin
-{
+struct ScrapeCommand : public PkgDbMixin, public AttrPathMixin {
   VerboseParser parser;
+  bool force = false;    /**< Whether to force re-evaluation. */
 
   ScrapeCommand() : flox::NixState(), parser( "scrape" )
   {
     this->parser.add_description( "Scrape a flake and emit a SQLite3 DB" );
+    this->parser.add_argument( "-f", "--force" )
+                .help( "Force re-evaluation of flake" )
+                .nargs( 0 )
+                .action( [&]( const auto & ) { this->force = true; } );
     this->addDatabasePathOption( this->parser );
-    this->addForceFlag( this->parser );
     this->addFlakeRefArg( this->parser );
     this->addAttrPathArgs( this->parser );
   }
 
     void
-  postProcessArgs()
+  postProcessArgs() override
   {
     static bool didPost = false;
     if ( didPost ) { return; }
     this->AttrPathMixin::postProcessArgs();
-    this->openPkgDb();
+    this->PkgDbMixin::postProcessArgs();
     didPost = true;
   }
 
+  /**
+   * Execute the `scrape` routine.
+   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+   */
   int run();
 
 };  /* End struct `ScrapeCommand' */
@@ -189,6 +200,10 @@ struct GetCommand : public PkgDbMixin
     this->parser.add_subparser( this->pPath );
   }
 
+  /**
+   * Execute the `get` routine.
+   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+   */
     int
   run()
   {
