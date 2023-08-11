@@ -24,67 +24,10 @@
 #include <argparse/argparse.hpp>
 #include <nlohmann/json.hpp>
 
+#include "flox/command.hh"
 #include "flox/util.hh"
 #include "flox/flox-flake.hh"
 #include "pkgdb.hh"
-
-
-/* -------------------------------------------------------------------------- */
-
-struct VerboseParser;
-
-
-/* -------------------------------------------------------------------------- */
-
-struct PkgDbEnv : public flox::NixState {
-  public:
-
-    argparse::ArgumentParser pPkgDb;
-    argparse::ArgumentParser pScrape;
-
-    struct GetParsers : argparse::ArgumentParser {
-      argparse::ArgumentParser path;
-      argparse::ArgumentParser lockedFlake;
-      argparse::ArgumentParser attrId;
-      argparse::ArgumentParser pkgId;
-    } pGet;
-
-    std::string subcommand;
-
-    std::optional<flox::FloxFlake>      flake;
-    std::string                         dbPath;
-    std::unique_ptr<flox::pkgdb::PkgDb> db;
-    std::optional<flox::AttrPath>       attrPath;
-
-
-  private:
-
-
-
-    PkgDbEnv( int argc, char * argv[] )
-      : flox::NixState()
-      , pPkgDb( "pkgdb", FLOX_PKGDB_VERSION )
-      , pScrape( "scrape" )
-    {
-      this->pPkgDb.add_description( "CRUD operations for package metadata" );
-      PkgDbEnv::addVerbosity( this->pPkgDb );
-
-      this->pScrape.add_description( "Scrape a flake and emit a SQLite3 DB" );
-      PkgDbEnv::addVerbosity( this->pScrape );
-
-      this->pScrape.add_argument( "-f", "--force" )
-        .help( "Force re-evaluation of prefix" )
-        .default_value( false )
-        .implicit_value( true )
-        .nargs( 0 )
-        .action( [&]( const bool & v ) { this->force = v; } )
-      ;
-
-      /* Add the scrape subcommand. */
-      this->pPkgDb.add_subparser( this->pScrape );
-
-    }
-};
 
 
 /* -------------------------------------------------------------------------- */
@@ -124,6 +67,16 @@ main( int argc, char * argv[] )
 
   prog.add_subparser( cmdGet );
 
+  #endif
+
+
+/* -------------------------------------------------------------------------- */
+
+  flox::command::VerboseParser prog( "pkgdb", FLOX_PKGDB_VERSION );
+  prog.add_description( "CRUD operations for package metadata" );
+
+  flox::command::ScrapeCommand cmdScrape;
+  prog.add_subparser( cmdScrape.parser );
 
 
 /* -------------------------------------------------------------------------- */
@@ -137,15 +90,21 @@ main( int argc, char * argv[] )
   catch( const std::runtime_error & err )
     {
       std::cerr << err.what() << std::endl;
-      std::cerr << prog;
+      std::cerr << prog << std::endl;
       return EXIT_FAILURE;
     }
 
-  if ( prog.is_subcommand_used( "scrape" ) )
+  try
     {
-      return scrapeImplementation( cmdScrape, verbosity );
+      if ( prog.is_subcommand_used( "scrape" ) )
+        {
+          return cmdScrape.run();
+        }
     }
-  #endif
+  catch( const std::exception & e )
+    {
+      std::cerr << "ERROR: " << e.what() << std::endl;
+    }
 
   return EXIT_FAILURE;
 
