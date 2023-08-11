@@ -114,7 +114,7 @@ struct ForceMixin {
   addForceFlag( argparse::ArgumentParser & parser )
   {
     return parser.add_argument( "-f", "--force" )
-                 .help( "Force re-evaluation of prefix" )
+                 .help( "Force the operation" )
                  .nargs( 0 )
                  .action( [&]( const auto & ) { this->force = true; } );
   }
