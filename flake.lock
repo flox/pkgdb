@@ -1,5 +1,25 @@
 {
   "nodes": {
+    "argparse": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1691774076,
+        "narHash": "sha256-J4Cdw5xc1sKfSqT1NfxY58ETj6fAV9aFbFummJqNKss=",
+        "owner": "aakropotkin",
+        "repo": "argparse",
+        "rev": "e3223ebfd8ab893ea041fc1d5ad72533f58b7279",
+        "type": "github"
+      },
+      "original": {
+        "owner": "aakropotkin",
+        "repo": "argparse",
+        "type": "github"
+      }
+    },
     "floco": {
       "inputs": {
         "nixpkgs": [
@@ -37,6 +57,7 @@
     },
     "root": {
       "inputs": {
+        "argparse": "argparse",
         "floco": "floco",
         "nixpkgs": "nixpkgs",
         "sql-builder": "sql-builder",
