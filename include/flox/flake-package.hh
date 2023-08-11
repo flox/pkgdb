@@ -156,7 +156,7 @@ class FlakePackage : public Package {
     }
 
       std::vector<std::string>
-    getOutputs() const
+    getOutputs() const override
     {
       MaybeCursor o = this->_cursor->maybeGetAttr( "outputs" );
       if ( o == nullptr ) { return { "out" };             }
