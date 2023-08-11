@@ -61,7 +61,7 @@ bin_SRCS       = src/main.cc
 lib_SRCS       = $(filter-out $(bin_SRCS),$(SRCS))
 test_SRCS      = $(wildcard tests/*.cc)
 BINS           = pkgdb
-TESTS          = $(filter-out is_sqlite3,$(test_SRCS:.cc=))
+TESTS          = $(filter-out tests/is_sqlite3,$(test_SRCS:.cc=))
 
 
 # ---------------------------------------------------------------------------- #
@@ -210,9 +210,9 @@ bin/pkgdb: src/main.o lib/$(LIBFLOXPKGDB)
 
 # ---------------------------------------------------------------------------- #
 
-$(TESTS): CXXFLAGS += $(bin_CXXFLAGS)
-$(TESTS): LDFLAGS  += $(bin_LDFLAGS)
-$(TESTS): tests/%: tests/%.cc lib/$(LIBFLOXPKGDB)
+$(TESTS) tests/is_sqlite3: CXXFLAGS += $(bin_CXXFLAGS)
+$(TESTS) tests/is_sqlite3: LDFLAGS  += $(bin_LDFLAGS)
+$(TESTS) tests/is_sqlite3: tests/%: tests/%.cc lib/$(LIBFLOXPKGDB)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) "$<" -o "$@"
 
 
@@ -260,8 +260,9 @@ cc-check: $(TESTS:.cc=)
 	done;                       \
 	exit "$$_ec"
 
-bats-check: bin
+bats-check: bin tests/is_sqlite3
 	PKGDB="$(MAKEFILE_DIR)/bin/pkgdb"                        \
+	IS_SQLITE3="$(MAKEFILE_DIR)/tests/is_sqlite3"            \
 	  bats --print-output-on-failure --verbose-run --timing  \
 	       "$(MAKEFILE_DIR)/tests"
 
@@ -320,7 +321,7 @@ src/pkgdb.o: $(SQL_HH_FILES)
 
 ignores: tests/.gitignore
 tests/.gitignore: FORCE
-	printf '%s\n' $(patsubst tests/%,%,$(TESTS)) > $@
+	printf '%s\n' $(patsubst tests/%,%,$(test_SRCS:.cc=)) > $@
 
 
 # ---------------------------------------------------------------------------- #

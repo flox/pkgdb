@@ -7,6 +7,7 @@
 { nixpkgs         ? builtins.getFlake "nixpkgs"
 , floco           ? builtins.getFlake "github:aakropotkin/floco"
 , sqlite3pp-flake ? builtins.getFlake "github:aakropotkin/sqlite3pp"
+, argparse-flake  ? builtins.getFlake "github:aakropotkin/argparse"
 , sql-builder-src ? builtins.fetchTree {
                     type = "github"; owner = "six-ddc"; repo = "sql-builder";
                   }
@@ -18,7 +19,7 @@
 , nlohmann_json ? pkgsFor.nlohmann_json
 , nix           ? pkgsFor.nix
 , boost         ? pkgsFor.boost
-, argparse      ? pkgsFor.argparse
+, argparse      ? argparse-flake.packages.${system}.argparse
 , semver        ? floco.packages.${system}.semver
 , sqlite3pp     ? sqlite3pp-flake.packages.${system}.sqlite3pp
 , sql-builder   ? pkgsFor.runCommandNoCC "sql-builder" {
