@@ -288,7 +288,7 @@ PkgDb::getAttrSetId( const flox::AttrPath & path )
       if ( i == qryId.end() )
         {
           throw PkgDbException(
-            nix::fmt( "No such PackageSet '%s'."
+            nix::fmt( "No such AttrSet '%s'."
                     , nix::concatStringsSep( ".", path )
                     )
           );

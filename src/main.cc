@@ -78,6 +78,9 @@ main( int argc, char * argv[] )
   flox::command::ScrapeCommand cmdScrape;
   prog.add_subparser( cmdScrape.parser );
 
+  flox::command::GetCommand cmdGet;
+  prog.add_subparser( cmdGet.parser );
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -100,10 +103,14 @@ main( int argc, char * argv[] )
         {
           return cmdScrape.run();
         }
+      if ( prog.is_subcommand_used( "get" ) )
+        {
+          return cmdGet.run();
+        }
     }
-  catch( const std::exception & e )
+  catch( const std::exception & err )
     {
-      std::cerr << "ERROR: " << e.what() << std::endl;
+      std::cerr << "ERROR: " << err.what() << std::endl;
     }
 
   return EXIT_FAILURE;

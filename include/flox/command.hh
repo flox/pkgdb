@@ -152,7 +152,71 @@ struct ScrapeCommand
 
   int run();
 
-};  /* End struct `ScrapeEnv' */
+};  /* End struct `ScrapeCommand' */
+
+
+/* -------------------------------------------------------------------------- */
+
+struct GetCommand : public PkgDbMixin
+{
+  VerboseParser       parser;
+  VerboseParser       pPath;
+  bool                isPkg = false;
+  flox::pkgdb::row_id id    = 0;
+
+  GetCommand()
+    : flox::NixState()
+    , parser( "get" )
+    , pPath( "path" )
+  {
+    this->parser.add_description( "Get metadata from Package DB" );
+    this->pPath.add_description(
+      "Lookup an (AttrSets|Packages).id attribute path"
+    );
+    this->pPath.add_argument( "-p", "--pkg" )
+               .help( "Lookup `Packages.id'" )
+               .nargs( 0 )
+               .action( [&]( const auto & ) { this->isPkg = true; } );
+    this->addTargetArg( this->pPath );
+    this->pPath.add_argument( "id" )
+               .help( "Row `id' to lookup" )
+               .nargs( 1 )
+               .action( [&]( const std::string & i )
+                        {
+                          this->id = std::stoull( i );
+                        }
+                      );
+    this->parser.add_subparser( this->pPath );
+  }
+
+    int
+  run()
+  {
+    if ( this->parser.is_subcommand_used( "path" ) )
+      {
+        if ( this->isPkg )
+          {
+            throw flox::FloxException( "TODO: --pkg" );
+            return EXIT_FAILURE;
+          }
+        else
+          {
+            std::cout << nlohmann::json( this->db->getAttrSetPath( id ) ).dump()
+                      << std::endl;
+          }
+      }
+    else
+      {
+        std::cerr << this->parser << std::endl;
+        throw flox::FloxException(
+                "You must provide a valid 'get' subcommand"
+              );
+        return EXIT_FAILURE;
+      }
+    return EXIT_SUCCESS;
+  }
+
+};  /* End struct `GetCommand' */
 
 
 /* -------------------------------------------------------------------------- */
