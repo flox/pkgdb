@@ -7,25 +7,19 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include <iostream>
-#include <stdlib.h>
-#include <list>
 #include <filesystem>
-#include <assert.h>
 #include <optional>
 #include <memory>
 
 #include <nix/shared.hh>
 #include <nix/eval.hh>
 #include <nix/eval-cache.hh>
-#include <nix/store-api.hh>
 #include <nix/flake/flake.hh>
 
 #include <argparse/argparse.hpp>
 #include <nlohmann/json.hpp>
 
 #include "flox/types.hh"
-#include "flox/util.hh"
 #include "flox/flox-flake.hh"
 #include "pkgdb.hh"
 
