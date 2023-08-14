@@ -143,6 +143,7 @@ PkgDbMixin::openPkgDb()
     {
       this->dbPath =
         flox::pkgdb::genPkgDbName( this->flake->lockedFlake );
+      std::filesystem::create_directories( this->dbPath.value().parent_path() );
       this->db = std::make_unique<flox::pkgdb::PkgDb>(
         this->flake->lockedFlake
       , (std::string) this->dbPath.value()
@@ -150,6 +151,7 @@ PkgDbMixin::openPkgDb()
     }
   else if ( this->dbPath.has_value() )
     {
+      std::filesystem::create_directories( this->dbPath.value().parent_path() );
       this->db = std::make_unique<flox::pkgdb::PkgDb>(
         (std::string) this->dbPath.value()
       );
