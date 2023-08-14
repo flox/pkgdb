@@ -251,6 +251,22 @@ class PkgDb {
      */
     flox::AttrPath getAttrSetPath( row_id id );
 
+    /**
+     * Get the `Packages.id` for a given path.
+     * @param path An attribute path prefix such as
+     *             `packages.x86_64-linux.hello` or
+     *             `legacyPackages.aarch64-darwin.python3Packages.pip`.
+     * @return A unique `row_id` ( unsigned 64bit int ) associated with @a path.
+     */
+    row_id getPackageId( const flox::AttrPath & path );
+
+    /**
+     * Get the attribute path for a given `Packages.id`.
+     * @param id A unique `row_id` ( unsigned 64bit int ).
+     * @return An attribute path such as `packages.x86_64-linux.hello` or
+     *         `legacyPackages.aarch64-darwin.python3Packages.pip`.
+     */
+    flox::AttrPath getPackagePath( row_id id );
 
     /**
      * Check to see if database has a package at the attribute path @a path.

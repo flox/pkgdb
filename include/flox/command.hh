@@ -149,29 +149,12 @@ struct AttrPathMixin : public CommandStateMixin {
 
 struct ScrapeCommand : public PkgDbMixin, public AttrPathMixin {
   VerboseParser parser;
-  bool force = false;    /**< Whether to force re-evaluation. */
+  bool          force  = false;    /**< Whether to force re-evaluation. */
 
-  ScrapeCommand() : flox::NixState(), parser( "scrape" )
-  {
-    this->parser.add_description( "Scrape a flake and emit a SQLite3 DB" );
-    this->parser.add_argument( "-f", "--force" )
-                .help( "Force re-evaluation of flake" )
-                .nargs( 0 )
-                .action( [&]( const auto & ) { this->force = true; } );
-    this->addDatabasePathOption( this->parser );
-    this->addFlakeRefArg( this->parser );
-    this->addAttrPathArgs( this->parser );
-  }
+  ScrapeCommand();
 
-    void
-  postProcessArgs() override
-  {
-    static bool didPost = false;
-    if ( didPost ) { return; }
-    this->AttrPathMixin::postProcessArgs();
-    this->PkgDbMixin::postProcessArgs();
-    didPost = true;
-  }
+  /** Invoke "child" `preProcessArgs` for `PkgDbMixin` and `AttrPathMixin`. */
+  void postProcessArgs() override;
 
   /**
    * Execute the `scrape` routine.
@@ -184,68 +167,63 @@ struct ScrapeCommand : public PkgDbMixin, public AttrPathMixin {
 
 /* -------------------------------------------------------------------------- */
 
-struct GetCommand : public PkgDbMixin
+/**
+ * Minimal set of DB queries, largely focused on looking up info that is
+ * non-trivial to query with a "plain" SQLite statement.
+ * This subcommand has additional subcommands:
+ * - `pkgdb get id [--pkg] DB-PATH ATTR-PATH...`
+ *   + Lookup `(AttrSet|Packages).id` for `ATTR-PATH`.
+ * - `pkgdb get path [--pkg] DB-PATH ID`
+ *   + Lookup `AttrPath` for `(AttrSet|Packages).id`.
+ * - `pkgdb get flake DB-PATH`
+ *   + Dump the `LockedFlake` table including fingerprint, locked-ref, etc.
+ * - `pkgdb get db FLAKE-REF`
+ *   + Print the absolute path to the associated flake's db.
+ */
+struct GetCommand : public PkgDbMixin, public AttrPathMixin
 {
-  VerboseParser       parser;
-  VerboseParser       pPath;
-  bool                isPkg = false;
-  flox::pkgdb::row_id id    = 0;
+  VerboseParser       parser;  /**< `get`       parser */
+  VerboseParser       pId;     /**< `get id`    parser  */
+  VerboseParser       pPath;   /**< `get path`  parser */
+  VerboseParser       pFlake;  /**< `get flake` parser */
+  VerboseParser       pDb;     /**< `get db`    parser */
+  bool                isPkg  = false;
+  flox::pkgdb::row_id id     = 0;
 
-  GetCommand()
-    : flox::NixState()
-    , parser( "get" )
-    , pPath( "path" )
-  {
-    this->parser.add_description( "Get metadata from Package DB" );
-    this->pPath.add_description(
-      "Lookup an (AttrSets|Packages).id attribute path"
-    );
-    this->pPath.add_argument( "-p", "--pkg" )
-               .help( "Lookup `Packages.id'" )
-               .nargs( 0 )
-               .action( [&]( const auto & ) { this->isPkg = true; } );
-    this->addTargetArg( this->pPath );
-    this->pPath.add_argument( "id" )
-               .help( "Row `id' to lookup" )
-               .nargs( 1 )
-               .action( [&]( const std::string & i )
-                        {
-                          this->id = std::stoull( i );
-                        }
-                      );
-    this->parser.add_subparser( this->pPath );
-  }
+  GetCommand();
+
+  /** Prevent "child" `preProcessArgs` routines from running */
+  void postProcessArgs() override {}
+
+  /**
+   * Execute the `get id` routine.
+   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+   */
+  int runId();
+
+  /**
+   * Execute the `get path` routine.
+   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+   */
+  int runPath();
+
+  /**
+   * Execute the `get flake` routine.
+   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+   */
+  int runFlake();
+
+  /**
+   * Execute the `get db` routine.
+   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+   */
+  int runDb();
 
   /**
    * Execute the `get` routine.
    * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
    */
-    int
-  run()
-  {
-    if ( this->parser.is_subcommand_used( "path" ) )
-      {
-        if ( this->isPkg )
-          {
-            throw flox::FloxException( "TODO: --pkg" );
-            return EXIT_FAILURE;
-          }
-        else
-          {
-            std::cout << nlohmann::json( this->db->getAttrSetPath( id ) ).dump()
-                      << std::endl;
-          }
-      }
-    else
-      {
-        std::cerr << this->parser << std::endl;
-        throw flox::FloxException(
-                "You must provide a valid 'get' subcommand"
-              );
-        return EXIT_FAILURE;
-      }
-    return EXIT_SUCCESS;
-  }
+  int run();
 
 };  /* End struct `GetCommand' */
 
