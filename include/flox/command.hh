@@ -128,6 +128,12 @@ struct AttrPathMixin : public CommandStateMixin {
    */
   argparse::Argument & addAttrPathArgs( argparse::ArgumentParser & parser );
 
+  /**
+   * Sets fallback `attrPath` to a package set.
+   * If `attrPath` is empty use, `packages.<SYTEM>`.
+   * If `attrPath` is one element then add "current system" as `<SYSTEM>`.
+   * If `attrPath` is a catalog with no stability use `stable`.
+   */
   void postProcessArgs() override;
 
 };  /* End struct `AttrPathMixin' */
@@ -135,6 +141,7 @@ struct AttrPathMixin : public CommandStateMixin {
 
 /* -------------------------------------------------------------------------- */
 
+/** Scrape a flake prefix producing a SQLite3 database with package metadata. */
 struct ScrapeCommand : public PkgDbMixin, public AttrPathMixin {
   VerboseParser parser;
   bool          force  = false;    /**< Whether to force re-evaluation. */
