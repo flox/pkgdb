@@ -182,7 +182,8 @@ require_shared() {
   require_shared;
   run $PKGDB get path --pkg "$DBPATH" 1;
   assert_success;
-  assert_output '["legacyPackages","x86_64-linux","akkoma-emoji","blobs_gg"]';
+  assert_output                                                            \
+    "[\"legacyPackages\",\"$NIX_SYSTEM\",\"akkoma-emoji\",\"blobs_gg\"]";
 }
 
 
