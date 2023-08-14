@@ -14,7 +14,7 @@ load setup_suite.bash;
 # ---------------------------------------------------------------------------- #
 
 setup_file() {
-  export DBPATH="$BATS_FILE_TMPDIR/test-cli.sqlite";
+  export DBPATH="$BATS_FILE_TMPDIR/test.sqlite";
   mkdir -p "$BATS_FILE_TMPDIR";
   # We don't parallelize these to avoid DB sync headaches and to recycle the
   # cache between tests.
