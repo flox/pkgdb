@@ -110,7 +110,7 @@ GetCommand::runFlake()
 {
   nlohmann::json j = {
     { "string",      this->db->lockedRef.string                            }
-  , { "attrs",        this->db->lockedRef.attrs                            }
+  , { "attrs",       this->db->lockedRef.attrs                            }
   , { "fingerprint", this->db->fingerprint.to_string( nix::Base16, false ) }
   };
   std::cout << j.dump() << std::endl;
