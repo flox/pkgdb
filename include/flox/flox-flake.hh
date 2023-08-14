@@ -17,6 +17,7 @@
 #include <nix/flake/flake.hh>
 
 #include "flox/types.hh"
+#include "flox/util.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -80,6 +81,10 @@ class FloxFlake : public std::enable_shared_from_this<FloxFlake> {
         , ref
         , defaultLockFlags
         ) )
+    {}
+
+    FloxFlake( nix::ref<nix::EvalState> state, std::string_view ref )
+      : FloxFlake( state, flox::parseFlakeRef( ref ) )
     {}
 
     /**

@@ -38,20 +38,8 @@ namespace flox {
 /* -------------------------------------------------------------------------- */
 
 VerboseParser::VerboseParser( std::string name, std::string version )
-  : argparse::ArgumentParser( name, version )
+  : argparse::ArgumentParser( name, version, argparse::default_arguments::help )
 {
-    /* Nix verbosity levels for reference:
-     *   typedef enum {
-     *     lvlError = 0   ( --quiet --quiet --quiet )
-     *   , lvlWarn        ( --quiet --quiet )
-     *   , lvlNotice      ( --quiet )
-     *   , lvlInfo        ( **Default** )
-     *   , lvlTalkative   ( -v )
-     *   , lvlChatty      ( -vv   | --debug --quiet )
-     *   , lvlDebug       ( -vvv  | --debug )
-     *   , lvlVomit       ( -vvvv | --debug -v )
-     *   } Verbosity;
-     */
     this->add_argument( "-q", "--quiet" )
       .help(
         "Decreate the logging verbosity level. May be used up to 3 times."
@@ -64,6 +52,7 @@ VerboseParser::VerboseParser( std::string name, std::string version )
         }
       ).default_value( false ).implicit_value( true )
       .append();
+
     this->add_argument( "-v", "--verbose" )
       .help( "Increase the logging verbosity level. May be up to 4 times." )
       .action(
@@ -83,12 +72,7 @@ VerboseParser::VerboseParser( std::string name, std::string version )
   void
 FloxFlakeMixin::parseFloxFlake( const std::string & flakeRef )
 {
-  nix::FlakeRef ref =
-    ( flakeRef.find( '{' ) == flakeRef.npos )
-    ? nix::parseFlakeRef( flakeRef )
-    : nix::FlakeRef::fromAttrs(
-        nix::fetchers::jsonToAttrs( nlohmann::json::parse( flakeRef ) )
-      );
+  nix::FlakeRef ref = flox::parseFlakeRef( flakeRef );
   {
     nix::Activity act(
       * nix::logger

@@ -37,7 +37,21 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
-/** Add verbosity flags to any parser and modify the global verbosity. */
+/**
+ * @brief Add verbosity flags to any parser and modify the global verbosity.
+ *
+ * Nix verbosity levels for reference ( we have no `--debug` flag ):
+ *   typedef enum {
+ *     lvlError = 0   ( --quiet --quiet --quiet )
+ *   , lvlWarn        ( --quiet --quiet )
+ *   , lvlNotice      ( --quiet )
+ *   , lvlInfo        ( **Default** )
+ *   , lvlTalkative   ( -v )
+ *   , lvlChatty      ( -vv   | --debug --quiet )
+ *   , lvlDebug       ( -vvv  | --debug )
+ *   , lvlVomit       ( -vvvv | --debug -v )
+ *   } Verbosity;
+ */
 struct VerboseParser : public argparse::ArgumentParser {
   explicit VerboseParser( std::string name, std::string version = "0.1.0" );
 };  /* End struct `VerboseParser' */
