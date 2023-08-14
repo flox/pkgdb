@@ -2,16 +2,18 @@
 # -*- mode: bats; -*-
 # ============================================================================ #
 #
-# Tests for NIXPKGS_FLOX_REF#catalog.{x86_64-linux,aarch64-darwin}.stable.fishPlugins
-# All assertions are made about fishPlugins.foreign-env.unstable-2020-02-09
+# Tests for
+# `NIXPKGS_FLOX_REF#catalog.{x86_64-linux,aarch64-darwin}.stable.fishPlugins'
+# All assertions are made about `fishPlugins.foreign-env.unstable-2020-02-09'.
 #
-# I couldn't find an attrSet in the catalog for all of x86_64-linux,
-# aarch64-darwin, and x86_64-darwin, so hardcode system in these tests instead.
+# I couldn't find an attrSet in the catalog for all of `x86_64-linux',
+# `aarch64-darwin', and `x86_64-darwin', so hardcode system in these
+# tests instead.
 #
 # I unsuccessfully attempted to find such an attrSet by loading the stable
 # stability of all 3 systems into a database and then running the following
-# query. It may or may not be accurate but it only came back with stable so I
-# gave up.
+# query.
+# It may or may not be accurate but it only came back with stable so I gave up.
 # SELECT grandparentName, count(*) as numberOfSystems
 # FROM (
 #   -- look for grandparent since in the catalog each package name is an attrSet
@@ -30,17 +32,19 @@
 # -- positives
 # GROUP BY grandparentName
 # HAVING numberOfSystems >= 3
+#
+#
 # ---------------------------------------------------------------------------- #
 
 load setup_suite.bash;
 
-# bats file_tags=cli
+# bats file_tags=cli,scrape,catalog
 
 
 # ---------------------------------------------------------------------------- #
 
 setup_file() {
-  export DBPATH="$BATS_FILE_TMPDIR/test-nixpkgs-flox.sqlite";
+  export DBPATH="$BATS_FILE_TMPDIR/test.sqlite";
   mkdir -p "$BATS_FILE_TMPDIR";
   # We don't parallelize these to avoid DB sync headaches and to recycle the
   # cache between tests.
@@ -55,11 +59,11 @@ setup_file() {
 
 @test "fishPlugins.foreign-env description" {
   for SYSTEM in 'x86_64-linux' 'aarch64-darwin'; do
-    run $PKGDB scrape --database "$DBPATH" "$NIXPKGS_FLOX_REF"           \
+    run $PKGDB scrape --database "$DBPATH" "$NIXPKGS_FLOX_REF"  \
                       catalog "$SYSTEM" stable fishPlugins;
     assert_success;
   done
-  run sqlite3 "$DBPATH"                                               \
+  run sqlite3 "$DBPATH"                                 \
     "SELECT description FROM Descriptions WHERE id = (
       SELECT descriptionId FROM Packages
       WHERE attrName = 'unstable-2020-02-09'
@@ -74,7 +78,7 @@ setup_file() {
 # This test should be updated when the Packages schema is changed.
 @test "fishPlugins.foreign-env check all fields" {
   for SYSTEM in 'x86_64-linux' 'aarch64-darwin'; do
-    run $PKGDB scrape --database "$DBPATH" "$NIXPKGS_FLOX_REF"           \
+    run $PKGDB scrape --database "$DBPATH" "$NIXPKGS_FLOX_REF"  \
                       catalog "$SYSTEM" stable fishPlugins;
     assert_success;
   done
@@ -97,7 +101,8 @@ setup_file() {
       IIF(name = '$NAME', '', 'name incorrect'),
       IIF(license is NULL, '', 'license incorrect'),
       IIF(outputs = '$OUTPUTS', '', 'outputs incorrect'),
-      IIF(outputsToInstall = '$OUTPUTS_TO_INSTALL', '', 'outputsToInstall incorrect'),
+      IIF(outputsToInstall = '$OUTPUTS_TO_INSTALL', '',
+          'outputsToInstall incorrect'),
       IIF(broken is NULL, '', 'broken incorrect'),
       IIF(unfree = '$UNFREE', '', 'unfree incorrect')
     FROM Packages

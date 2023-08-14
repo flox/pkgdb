@@ -2,19 +2,23 @@
 # -*- mode: bats; -*-
 # ============================================================================ #
 #
-# `pkgdb' CLI tests.
+# `pkgdb scrape' tests focused on a local flake with intentionally
+# "evil" metadata.
+#
+# This largely aims to test edge case detection.
+#
 #
 # ---------------------------------------------------------------------------- #
 
 load setup_suite.bash;
 
-# bats file_tags=cli
+# bats file_tags=cli,scrape,flake,local,legacy
 
 
 # ---------------------------------------------------------------------------- #
 
 setup_file() {
-  export DBPATH="$BATS_FILE_TMPDIR/test-cli.sqlite";
+  export DBPATH="$BATS_FILE_TMPDIR/test.sqlite";
   mkdir -p "$BATS_FILE_TMPDIR";
   # We don't parallelize these to avoid DB sync headaches and to recycle the
   # cache between tests.
@@ -28,7 +32,8 @@ setup_file() {
 # ---------------------------------------------------------------------------- #
 
 @test "ugly packages are scraped" {
-  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE" packages "$NIX_SYSTEM";
+  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE"  \
+                    packages "$NIX_SYSTEM";
   assert_success;
   run sqlite3 "$DBPATH" "SELECT COUNT(*) from Packages";
   assert_output '6'; # pkgs0-pkgs4 + default
@@ -38,9 +43,10 @@ setup_file() {
 # ---------------------------------------------------------------------------- #
 
 @test "pkg0 has no 'version' attr" {
-  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE" packages "$NIX_SYSTEM";
+  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE"  \
+                    packages "$NIX_SYSTEM";
   assert_success;
-  run sqlite3 "$DBPATH" "SELECT version FROM Packages      \
+  run sqlite3 "$DBPATH" "SELECT version FROM Packages  \
     WHERE attrName = 'pkg0' LIMIT 1";
   refute_output --regexp '.';
 }
@@ -48,9 +54,10 @@ setup_file() {
 # ---------------------------------------------------------------------------- #
 
 @test "pkg0 has no 'description' attr" {
-  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE" packages "$NIX_SYSTEM";
+  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE"  \
+                    packages "$NIX_SYSTEM";
   assert_success;
-  run sqlite3 "$DBPATH" "SELECT descriptionId FROM Packages      \
+  run sqlite3 "$DBPATH" "SELECT descriptionId FROM Packages  \
     WHERE attrName = 'pkg0' LIMIT 1";
   refute_output --regexp '.';
 }
@@ -59,9 +66,10 @@ setup_file() {
 # ---------------------------------------------------------------------------- #
 
 @test "pkg1 'name' is constructed" {
-  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE" packages "$NIX_SYSTEM";
+  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE"  \
+                    packages "$NIX_SYSTEM";
   assert_success;
-  run sqlite3 "$DBPATH" "SELECT name FROM Packages      \
+  run sqlite3 "$DBPATH" "SELECT name FROM Packages  \
     WHERE attrName = 'pkg1' LIMIT 1";
   assert_output 'pkg-1';
 }
@@ -70,9 +78,10 @@ setup_file() {
 # ---------------------------------------------------------------------------- #
 
 @test "pkg1 'version' translated to 'semver'" {
-  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE" packages "$NIX_SYSTEM";
+  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE"  \
+                    packages "$NIX_SYSTEM";
   assert_success;
-  run sqlite3 "$DBPATH" "SELECT semver FROM Packages      \
+  run sqlite3 "$DBPATH" "SELECT semver FROM Packages  \
     WHERE attrName = 'pkg1' LIMIT 1";
   assert_output '1.0.0';
 }
@@ -81,7 +90,8 @@ setup_file() {
 # ---------------------------------------------------------------------------- #
 
 @test "pkg2 'pname' extracted" {
-  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE" "$NIX_SYSTEM";
+  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE"  \
+                    packages "$NIX_SYSTEM";
   assert_success;
   run sqlite3 "$DBPATH" "SELECT pname FROM Packages      \
     WHERE attrName = 'pkg2' LIMIT 1";
@@ -92,9 +102,10 @@ setup_file() {
 # ---------------------------------------------------------------------------- #
 
 @test "pkg2 'version' extracted" {
-  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE" "$NIX_SYSTEM";
+  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE"  \
+                    packages "$NIX_SYSTEM";
   assert_success;
-  run sqlite3 "$DBPATH" "SELECT version FROM Packages      \
+  run sqlite3 "$DBPATH" "SELECT version FROM Packages  \
     WHERE attrName = 'pkg2' LIMIT 1";
   assert_output '2';
 }
@@ -103,9 +114,10 @@ setup_file() {
 # ---------------------------------------------------------------------------- #
 
 @test "pkg2 'version' translated to 'semver'" {
-  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE" "$NIX_SYSTEM";
+  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE"  \
+                    packages "$NIX_SYSTEM";
   assert_success;
-  run sqlite3 "$DBPATH" "SELECT semver FROM Packages      \
+  run sqlite3 "$DBPATH" "SELECT semver FROM Packages  \
     WHERE attrName = 'pkg2' LIMIT 1";
   assert_output '2.0.0';
 }
@@ -114,9 +126,10 @@ setup_file() {
 # ---------------------------------------------------------------------------- #
 
 @test "pkg2 'license' ignored" {
-  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE" "$NIX_SYSTEM";
+  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE"  \
+                    packages "$NIX_SYSTEM";
   assert_success;
-  run sqlite3 "$DBPATH" "SELECT license FROM Packages      \
+  run sqlite3 "$DBPATH" "SELECT license FROM Packages  \
     WHERE attrName = 'pkg2' LIMIT 1";
   refute_output --regexp '.';
 }
@@ -125,9 +138,10 @@ setup_file() {
 # ---------------------------------------------------------------------------- #
 
 @test "pkg2 'unfree' set with bad license" {
-  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE" "$NIX_SYSTEM";
+  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE"  \
+                    packages "$NIX_SYSTEM";
   assert_success;
-  run sqlite3 "$DBPATH" "SELECT unfree FROM Packages      \
+  run sqlite3 "$DBPATH" "SELECT unfree FROM Packages  \
     WHERE attrName = 'pkg2' LIMIT 1";
   assert_output '0';
 }
@@ -136,9 +150,10 @@ setup_file() {
 # ---------------------------------------------------------------------------- #
 
 @test "pkg3 'name' constructed" {
-  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE" "$NIX_SYSTEM";
+  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE"  \
+                    packages "$NIX_SYSTEM";
   assert_success;
-  run sqlite3 "$DBPATH" "SELECT name FROM Packages      \
+  run sqlite3 "$DBPATH" "SELECT name FROM Packages  \
     WHERE name = 'pkg-2023-08-09' LIMIT 1";
   assert_output 'pkg-2023-08-09';
 }
@@ -147,9 +162,10 @@ setup_file() {
 # ---------------------------------------------------------------------------- #
 
 @test "pkg3 has no 'semver' attr" {
-  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE" "$NIX_SYSTEM";
+  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE"  \
+                    packages "$NIX_SYSTEM";
   assert_success;
-  run sqlite3 "$DBPATH" "SELECT semver FROM Packages      \
+  run sqlite3 "$DBPATH" "SELECT semver FROM Packages  \
     WHERE attrName = 'pkg3' LIMIT 1";
   refute_output --regexp '.';
 }
@@ -158,9 +174,10 @@ setup_file() {
 # ---------------------------------------------------------------------------- #
 
 @test "pkg4 'name' == 'pname'" {
-  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE" "$NIX_SYSTEM";
+  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE"  \
+                    packages "$NIX_SYSTEM";
   assert_success;
-  run sqlite3 "$DBPATH" "SELECT pname FROM Packages      \
+  run sqlite3 "$DBPATH" "SELECT pname FROM Packages  \
     WHERE attrName = 'pkg4' LIMIT 1";
   assert_output 'pkg';
 }
@@ -169,9 +186,10 @@ setup_file() {
 # ---------------------------------------------------------------------------- #
 
 @test "pkg4 has no 'broken' attr" {
-  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE" "$NIX_SYSTEM";
+  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE"  \
+                    packages "$NIX_SYSTEM";
   assert_success;
-  run sqlite3 "$DBPATH" "SELECT broken FROM Packages      \
+  run sqlite3 "$DBPATH" "SELECT broken FROM Packages  \
     WHERE attrName = 'pkg4' LIMIT 1";
   refute_output --regexp '.';
 }
@@ -180,9 +198,10 @@ setup_file() {
 # ---------------------------------------------------------------------------- #
 
 @test "pkg4 has no 'unfree' attr" {
-  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE" "$NIX_SYSTEM";
+  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE"  \
+                    packages "$NIX_SYSTEM";
   assert_success;
-  run sqlite3 "$DBPATH" "SELECT unfree FROM Packages      \
+  run sqlite3 "$DBPATH" "SELECT unfree FROM Packages  \
     WHERE attrName = 'pkg4' LIMIT 1";
   refute_output --regexp '.';
 }
@@ -191,9 +210,10 @@ setup_file() {
 # ---------------------------------------------------------------------------- #
 
 @test "pkg4 has no 'license' attr" {
-  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE" "$NIX_SYSTEM";
+  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE"  \
+                    packages "$NIX_SYSTEM";
   assert_success;
-  run sqlite3 "$DBPATH" "SELECT license FROM Packages      \
+  run sqlite3 "$DBPATH" "SELECT license FROM Packages  \
     WHERE attrName = 'pkg4' LIMIT 1";
   refute_output --regexp '.';
 }
@@ -202,9 +222,10 @@ setup_file() {
 # ---------------------------------------------------------------------------- #
 
 @test "pkg4 has no 'version' attr" {
-  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE" "$NIX_SYSTEM";
+  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE"  \
+                    packages "$NIX_SYSTEM";
   assert_success;
-  run sqlite3 "$DBPATH" "SELECT version FROM Packages      \
+  run sqlite3 "$DBPATH" "SELECT version FROM Packages  \
     WHERE attrName = 'pkg4' LIMIT 1";
   refute_output --regexp '.';
 }
@@ -213,9 +234,10 @@ setup_file() {
 # ---------------------------------------------------------------------------- #
 
 @test "pkg4 has no 'semver' attr" {
-  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE" "$NIX_SYSTEM";
+  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE"  \
+                    packages "$NIX_SYSTEM";
   assert_success;
-  run sqlite3 "$DBPATH" "SELECT semver FROM Packages      \
+  run sqlite3 "$DBPATH" "SELECT semver FROM Packages  \
     WHERE attrName = 'pkg4' LIMIT 1";
   refute_output --regexp '.';
 }
@@ -224,9 +246,10 @@ setup_file() {
 # ---------------------------------------------------------------------------- #
 
 @test "pkg4 has no 'descriptionId'" {
-  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE" "$NIX_SYSTEM";
+  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE"  \
+                    packages "$NIX_SYSTEM";
   assert_success;
-  run sqlite3 "$DBPATH" "SELECT descriptionId FROM Packages      \
+  run sqlite3 "$DBPATH" "SELECT descriptionId FROM Packages  \
     WHERE attrName = 'pkg4' LIMIT 1";
   refute_output --regexp '.';
 }
@@ -235,9 +258,10 @@ setup_file() {
 # ---------------------------------------------------------------------------- #
 
 @test "default package has no 'version' attr" {
-  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE" packages "$NIX_SYSTEM";
+  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE"  \
+                    packages "$NIX_SYSTEM";
   assert_success;
-  run sqlite3 "$DBPATH" "SELECT version FROM Packages      \
+  run sqlite3 "$DBPATH" "SELECT version FROM Packages  \
     WHERE attrName = 'default' LIMIT 1";
   refute_output --regexp '.';
 }
@@ -246,9 +270,10 @@ setup_file() {
 # ---------------------------------------------------------------------------- #
 
 @test "default package has no 'description' attr" {
-  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE" packages "$NIX_SYSTEM";
+  run $PKGDB scrape --database "$DBPATH" "$TEST_HARNESS_FLAKE"  \
+                    packages "$NIX_SYSTEM";
   assert_success;
-  run sqlite3 "$DBPATH" "SELECT descriptionId FROM Packages      \
+  run sqlite3 "$DBPATH" "SELECT descriptionId FROM Packages  \
     WHERE attrName = 'default' LIMIT 1";
   refute_output --regexp '.';
 }
