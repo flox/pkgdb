@@ -123,7 +123,15 @@ GetCommand::runFlake()
   int
 GetCommand::runDb()
 {
-  std::cout << ( (std::string) this->dbPath.value() ) << std::endl;
+  if ( this->dbPath.has_value() )
+    {
+      std::cout << ( (std::string) this->dbPath.value() ) << std::endl;
+    }
+  else
+    {
+      std::string dbPath( pkgdb::genPkgDbName( this->flake->lockedFlake ) );
+      std::cout << dbPath << std::endl;
+    }
   return EXIT_SUCCESS;
 }
 
