@@ -16,6 +16,9 @@
 #include <nix/logging.hh>
 #include <nix/store-api.hh>
 #include <nix/eval-cache.hh>
+#include <nix/flake/flakeref.hh>
+
+#include <nlohmann/json.hpp>
 
 
 /* -------------------------------------------------------------------------- */
@@ -64,22 +67,6 @@ static const std::vector<std::string> defaultSubtrees = {
 static const std::vector<std::string> defaultCatalogStabilities = {
   "stable", "staging", "unstable"
 };
-
-
-/* -------------------------------------------------------------------------- */
-
-/**
- * Predicate which checks to see if a string is a `flake' "subtree" name.
- * @return true iff `attrName` is one of "legacyPackages", "packages",
- *         or "catalog".
- */
-  static inline bool
-isPkgsSubtree( std::string_view attrName )
-{
-  return ( attrName == "legacyPackages" ) ||
-         ( attrName == "packages" )       ||
-         ( attrName == "catalog"  );
-}
 
 
 /* -------------------------------------------------------------------------- */
@@ -162,6 +149,24 @@ struct NixState {
  * @return `true` iff @a path is a SQLite3 database file.
  */
 bool isSQLiteDb( const std::string & dbPath );
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Parse a flake reference from either a JSON attrset or URI string.
+ * @param flakeRef JSON or URI string representing a `nix` flake reference.
+ * @return Parsed flake reference object.
+ */
+  inline static nix::FlakeRef
+parseFlakeRef( std::string_view flakeRef )
+{
+  return ( flakeRef.find( '{' ) == flakeRef.npos )
+         ? nix::parseFlakeRef( std::string( flakeRef ) )
+         : nix::FlakeRef::fromAttrs(
+             nix::fetchers::jsonToAttrs( nlohmann::json::parse( flakeRef ) )
+           );
+}
 
 
 /* -------------------------------------------------------------------------- */

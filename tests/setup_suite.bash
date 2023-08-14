@@ -113,11 +113,16 @@ misc_vars_setup() {
   if [[ -n "${__PD_RAN_MISC_VARS_SETUP:-}" ]]; then return 0; fi
 
   export _PKGDB_TEST_SUITE_MODE=:;
+
   NIXPKGS_REF="github:NixOS/nixpkgs/e8039594435c68eb4f780f3e9bf3972a7399c4b1";
-  FLOCOPKGS_REF="github:aakropotkin/flocoPackages"
-  FLOCOPKGS_REF="$FLOCOPKGS_REF/2afd962bbd6745d4d101c2924de34c5326042928";
-  NIXPKGS_FLOX_REF="github:flox/nixpkgs-flox/feb593b6844a96dd4e17497edaabac009be05709";
-  export NIXPKGS_REF FLOCOPKGS_REF NIXPKGS_FLOX_REF;
+
+  NIXPKGS_FLOX_REF="github:flox/nixpkgs-flox/feb5"
+  NIXPKGS_FLOX_REF="${NIXPKGS_FLOX_REF}93b6844a96dd4e17497edaabac009be05709";
+
+  NIXPKGS_FINGERPRINT="5fde12e3424840cc2752dae09751b09b03f5a33"
+  NIXPKGS_FINGERPRINT="${NIXPKGS_FINGERPRINT}c3ec4de672fc89d236720bdc7";
+
+  export NIXPKGS_REF NIXPKGS_FLOX_REF NIXPKGS_FINGERPRINT;
 
   export __PD_RAN_MISC_VARS_SETUP=:;
 }
@@ -132,7 +137,7 @@ env_setup() {
   {
     print_var NIX_SYSTEM;
     print_var NIXPKGS_REF;
-    print_var FLOCOPKGS_REF;
+    print_var NIXPKGS_FLOX_REF;
   } >&3;
 }
 

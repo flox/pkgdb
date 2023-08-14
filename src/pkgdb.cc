@@ -288,7 +288,7 @@ PkgDb::getAttrSetId( const flox::AttrPath & path )
       if ( i == qryId.end() )
         {
           throw PkgDbException(
-            nix::fmt( "No such PackageSet '%s'."
+            nix::fmt( "No such AttrSet '%s'."
                     , nix::concatStringsSep( ".", path )
                     )
           );
@@ -326,6 +326,59 @@ PkgDb::getAttrSetPath( row_id id )
   return flox::AttrPath { std::make_move_iterator( std::begin( path ) )
                         , std::make_move_iterator( std::end( path ) )
                         };
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  row_id
+PkgDb::getPackageId( const flox::AttrPath & path )
+{
+  /* Lookup the `AttrName.id' of parent ( if one exists ) */
+  flox::AttrPath parentPath = path;
+  parentPath.pop_back();
+
+  row_id parent = this->getAttrSetId( parentPath );
+
+  sqlite3pp::query qry(
+    this->db
+  , "SELECT id FROM Packages WHERE "
+    "( parentId = :parentId ) AND ( attrName = :attrName )"
+  );
+  qry.bind( ":parentId", (long long) parent );
+  qry.bind( ":attrName", path.back(), sqlite3pp::copy );
+  auto i = qry.begin();
+  /* Handle no such path. */
+  if ( i == qry.end() )
+    {
+      throw PkgDbException(
+        nix::fmt( "No such package %s.", nix::concatStringsSep( ".", path ) )
+      );
+    }
+  return ( * i ).get<long long>( 0 );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  flox::AttrPath
+PkgDb::getPackagePath( row_id id )
+{
+  if ( id == 0 ) { return {}; }
+  sqlite3pp::query qry(
+    this->db
+  , "SELECT parentId, attrName FROM Packages WHERE ( id = :id )"
+  );
+  qry.bind( ":id", (long long) id );
+  auto i = qry.begin();
+  /* Handle no such path. */
+  if ( i == qry.end() )
+    {
+      throw PkgDbException( nix::fmt( "No such `Packages.id' %llu.", id ) );
+    }
+  flox::AttrPath path = this->getAttrSetPath( ( * i ).get<long long>( 0 ) );
+  path.emplace_back( ( * i ).get<std::string>( 1 ) );
+  return path;
 }
 
 

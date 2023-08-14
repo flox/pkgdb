@@ -17,6 +17,7 @@
 #include <nix/flake/flake.hh>
 
 #include "flox/types.hh"
+#include "flox/util.hh"
 
 
 /* -------------------------------------------------------------------------- */

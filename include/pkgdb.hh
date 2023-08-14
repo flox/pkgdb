@@ -22,6 +22,7 @@
 
 #include "flox/exceptions.hh"
 #include "flox/types.hh"
+#include "flox/command.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -86,7 +87,8 @@ class PkgDb {
 
           SQLiteDb    db;           /**< SQLite3 database handle.         */
           Fingerprint fingerprint;  /**< Unique hash of associated flake. */
-    const std::string dbPath;       /**< Absolute path to database.       */
+
+    const std::filesystem::path dbPath;  /**< Absolute path to database. */
 
     /** Locked _flake reference_ for database's flake. */
     struct LockedFlakeRef {
@@ -126,7 +128,7 @@ class PkgDb {
     PkgDb( std::string_view dbPath )
       : db( dbPath ), fingerprint( nix::htSHA256 ), dbPath( dbPath )
     {
-      if ( ! std::filesystem::exists( dbPath ) )
+      if ( ! std::filesystem::exists( this->dbPath ) )
         {
           throw PkgDbException( nix::fmt( "No such database '%s'.", dbPath ) );
         }
@@ -251,6 +253,22 @@ class PkgDb {
      */
     flox::AttrPath getAttrSetPath( row_id id );
 
+    /**
+     * Get the `Packages.id` for a given path.
+     * @param path An attribute path prefix such as
+     *             `packages.x86_64-linux.hello` or
+     *             `legacyPackages.aarch64-darwin.python3Packages.pip`.
+     * @return A unique `row_id` ( unsigned 64bit int ) associated with @a path.
+     */
+    row_id getPackageId( const flox::AttrPath & path );
+
+    /**
+     * Get the attribute path for a given `Packages.id`.
+     * @param id A unique `row_id` ( unsigned 64bit int ).
+     * @return An attribute path such as `packages.x86_64-linux.hello` or
+     *         `legacyPackages.aarch64-darwin.python3Packages.pip`.
+     */
+    flox::AttrPath getPackagePath( row_id id );
 
     /**
      * Check to see if database has a package at the attribute path @a path.
@@ -353,6 +371,96 @@ scrape(       flox::pkgdb::PkgDb & db
       );
 
 
+
+
+/* -------------------------------------------------------------------------- */
+
+/** Scrape a flake prefix producing a SQLite3 database with package metadata. */
+struct ScrapeCommand
+  : public command::PkgDbMixin
+  , public command::AttrPathMixin
+{
+  command::VerboseParser parser;
+
+  bool force = false;  /**< Whether to force re-evaluation. */
+
+  ScrapeCommand();
+
+  /** Invoke "child" `preProcessArgs` for `PkgDbMixin` and `AttrPathMixin`. */
+  void postProcessArgs() override;
+
+  /**
+   * Execute the `scrape` routine.
+   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+   */
+  int run();
+
+};  /* End struct `ScrapeCommand' */
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Minimal set of DB queries, largely focused on looking up info that is
+ * non-trivial to query with a "plain" SQLite statement.
+ * This subcommand has additional subcommands:
+ * - `pkgdb get id [--pkg] DB-PATH ATTR-PATH...`
+ *   + Lookup `(AttrSet|Packages).id` for `ATTR-PATH`.
+ * - `pkgdb get path [--pkg] DB-PATH ID`
+ *   + Lookup `AttrPath` for `(AttrSet|Packages).id`.
+ * - `pkgdb get flake DB-PATH`
+ *   + Dump the `LockedFlake` table including fingerprint, locked-ref, etc.
+ * - `pkgdb get db FLAKE-REF`
+ *   + Print the absolute path to the associated flake's db.
+ */
+struct GetCommand
+  : public command::PkgDbMixin
+  , public command::AttrPathMixin
+{
+  command::VerboseParser parser;  /**< `get`       parser */
+  command::VerboseParser pId;     /**< `get id`    parser  */
+  command::VerboseParser pPath;   /**< `get path`  parser */
+  command::VerboseParser pFlake;  /**< `get flake` parser */
+  command::VerboseParser pDb;     /**< `get db`    parser */
+  bool                   isPkg  = false;
+  flox::pkgdb::row_id    id     = 0;
+
+  GetCommand();
+
+  /** Prevent "child" `preProcessArgs` routines from running */
+  void postProcessArgs() override {}
+
+  /**
+   * Execute the `get id` routine.
+   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+   */
+  int runId();
+
+  /**
+   * Execute the `get path` routine.
+   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+   */
+  int runPath();
+
+  /**
+   * Execute the `get flake` routine.
+   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+   */
+  int runFlake();
+
+  /**
+   * Execute the `get db` routine.
+   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+   */
+  int runDb();
+
+  /**
+   * Execute the `get` routine.
+   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+   */
+  int run();
+
+};  /* End struct `GetCommand' */
 
 
 /* -------------------------------------------------------------------------- */
