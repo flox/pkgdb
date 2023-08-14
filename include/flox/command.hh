@@ -11,13 +11,7 @@
 #include <optional>
 #include <memory>
 
-#include <nix/shared.hh>
-#include <nix/eval.hh>
-#include <nix/eval-cache.hh>
-#include <nix/flake/flake.hh>
-
 #include <argparse/argparse.hpp>
-#include <nlohmann/json.hpp>
 
 #include "flox/types.hh"
 #include "flox/flox-flake.hh"
