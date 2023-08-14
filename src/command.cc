@@ -43,7 +43,7 @@ VerboseParser::VerboseParser( std::string name, std::string version )
       .append();
 
     this->add_argument( "-v", "--verbose" )
-      .help( "Increase the logging verbosity level. May be up to 4 times." )
+      .help( "Increase the logging verbosity level. May be used up to 4 times." )
       .action(
         [&]( const auto & )
         {
