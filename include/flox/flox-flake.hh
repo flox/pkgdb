@@ -83,10 +83,6 @@ class FloxFlake : public std::enable_shared_from_this<FloxFlake> {
         ) )
     {}
 
-    FloxFlake( nix::ref<nix::EvalState> state, std::string_view ref )
-      : FloxFlake( state, flox::parseFlakeRef( ref ) )
-    {}
-
     /**
      * Open a `nix` evaluator ( with an eval cache when possible ) with the
      * evaluated `flake` and its outputs in global scope.
