@@ -19,7 +19,7 @@
 
 int main(int argc, char *argv[])
 {
-  if (argc < 2)
+  if (argc != 2)
     {
       std::cout << "usage: id2attrpath SOURCE ID" << std::endl;
       return EXIT_FAILURE;
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
           return EXIT_FAILURE;
         }
       
-      for (unsigned long i = 0; i < attrPath.size() - 1; i++)
+      for (size_t i = 0; i < attrPath.size() - 1; i++)
         {
           std::cout << attrPath[i] << " ";
         }
