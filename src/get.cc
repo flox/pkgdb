@@ -11,12 +11,12 @@
 
 #include <nlohmann/json.hpp>
 
-#include "flox/command.hh"
+#include "pkgdb.hh"
 
 /* -------------------------------------------------------------------------- */
 
 namespace flox {
-  namespace command {
+  namespace pkgdb {
 
 /* -------------------------------------------------------------------------- */
 

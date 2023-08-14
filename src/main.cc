@@ -9,24 +9,8 @@
 
 #include <iostream>
 #include <stdlib.h>
-#include <list>
-#include <filesystem>
-#include <assert.h>
-#include <optional>
-#include <memory>
-
-#include <nix/shared.hh>
-#include <nix/eval.hh>
-#include <nix/eval-cache.hh>
-#include <nix/store-api.hh>
-#include <nix/flake/flake.hh>
-
-#include <argparse/argparse.hpp>
-#include <nlohmann/json.hpp>
 
 #include "flox/command.hh"
-#include "flox/util.hh"
-#include "flox/flox-flake.hh"
 #include "pkgdb.hh"
 
 
@@ -41,10 +25,10 @@ main( int argc, char * argv[] )
   flox::command::VerboseParser prog( "pkgdb", FLOX_PKGDB_VERSION );
   prog.add_description( "CRUD operations for package metadata" );
 
-  flox::command::ScrapeCommand cmdScrape;
+  flox::pkgdb::ScrapeCommand cmdScrape;
   prog.add_subparser( cmdScrape.parser );
 
-  flox::command::GetCommand cmdGet;
+  flox::pkgdb::GetCommand cmdGet;
   prog.add_subparser( cmdGet.parser );
 
 

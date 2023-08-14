@@ -7,6 +7,8 @@
  *
  * -------------------------------------------------------------------------- */
 
+#pragma once
+
 #include <filesystem>
 #include <optional>
 #include <memory>
@@ -15,11 +17,13 @@
 
 #include "flox/types.hh"
 #include "flox/flox-flake.hh"
-#include "pkgdb.hh"
 
 /* -------------------------------------------------------------------------- */
 
 namespace flox {
+
+  namespace pkgdb { class PkgDb; };
+
   /** Executable command helpers, argument parsers, etc. */
   namespace command {
 
@@ -137,90 +141,6 @@ struct AttrPathMixin : public CommandStateMixin {
   void postProcessArgs() override;
 
 };  /* End struct `AttrPathMixin' */
-
-
-/* -------------------------------------------------------------------------- */
-
-/** Scrape a flake prefix producing a SQLite3 database with package metadata. */
-struct ScrapeCommand : public PkgDbMixin, public AttrPathMixin {
-  VerboseParser parser;
-  bool          force  = false;    /**< Whether to force re-evaluation. */
-
-  ScrapeCommand();
-
-  /** Invoke "child" `preProcessArgs` for `PkgDbMixin` and `AttrPathMixin`. */
-  void postProcessArgs() override;
-
-  /**
-   * Execute the `scrape` routine.
-   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
-   */
-  int run();
-
-};  /* End struct `ScrapeCommand' */
-
-
-/* -------------------------------------------------------------------------- */
-
-/**
- * Minimal set of DB queries, largely focused on looking up info that is
- * non-trivial to query with a "plain" SQLite statement.
- * This subcommand has additional subcommands:
- * - `pkgdb get id [--pkg] DB-PATH ATTR-PATH...`
- *   + Lookup `(AttrSet|Packages).id` for `ATTR-PATH`.
- * - `pkgdb get path [--pkg] DB-PATH ID`
- *   + Lookup `AttrPath` for `(AttrSet|Packages).id`.
- * - `pkgdb get flake DB-PATH`
- *   + Dump the `LockedFlake` table including fingerprint, locked-ref, etc.
- * - `pkgdb get db FLAKE-REF`
- *   + Print the absolute path to the associated flake's db.
- */
-struct GetCommand : public PkgDbMixin, public AttrPathMixin
-{
-  VerboseParser       parser;  /**< `get`       parser */
-  VerboseParser       pId;     /**< `get id`    parser  */
-  VerboseParser       pPath;   /**< `get path`  parser */
-  VerboseParser       pFlake;  /**< `get flake` parser */
-  VerboseParser       pDb;     /**< `get db`    parser */
-  bool                isPkg  = false;
-  flox::pkgdb::row_id id     = 0;
-
-  GetCommand();
-
-  /** Prevent "child" `preProcessArgs` routines from running */
-  void postProcessArgs() override {}
-
-  /**
-   * Execute the `get id` routine.
-   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
-   */
-  int runId();
-
-  /**
-   * Execute the `get path` routine.
-   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
-   */
-  int runPath();
-
-  /**
-   * Execute the `get flake` routine.
-   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
-   */
-  int runFlake();
-
-  /**
-   * Execute the `get db` routine.
-   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
-   */
-  int runDb();
-
-  /**
-   * Execute the `get` routine.
-   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
-   */
-  int run();
-
-};  /* End struct `GetCommand' */
 
 
 /* -------------------------------------------------------------------------- */

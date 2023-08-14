@@ -9,13 +9,12 @@
 
 #include <iostream>
 
-#include "flox/command.hh"
 #include "pkgdb.hh"
 
 /* -------------------------------------------------------------------------- */
 
 namespace flox {
-  namespace command {
+  namespace pkgdb {
 
 /* -------------------------------------------------------------------------- */
 
