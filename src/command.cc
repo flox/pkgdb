@@ -113,7 +113,6 @@ DbPathMixin::addDatabasePathOption( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "-d", "--database" )
                .help( "Use database at PATH" )
-               .default_value( "" )
                .metavar( "PATH" )
                .nargs( 1 )
                .action( [&]( const std::string & dbPath )
