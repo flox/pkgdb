@@ -214,6 +214,55 @@ require_shared() {
 
 
 # ---------------------------------------------------------------------------- #
+
+# bats test_tags=get:flake
+
+@test "pkgdb get flake" {
+  require_shared;
+  run sh -c "$PKGDB get flake '$DBPATH'|jq -r '.string';";
+  assert_success;
+  assert_output "$NIXPKGS_REF";
+  run sh -c "$PKGDB get flake '$DBPATH'|jq -r '.attrs.rev';";
+  assert_success;
+  assert_output "${NIXPKGS_REF##*/}";
+  run sh -c "$PKGDB get flake '$DBPATH'|jq -r '.fingerprint';";
+  assert_success;
+  assert_output "$NIXPKGS_FINGERPRINT";
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# bats test_tags=get:db
+
+# When given a path to a db we should parrot the input we were given.
+# This one is kind of nonsensical but it is a side effect of argument processing
+# that's worth preserving.
+#
+# Later changes should feel free to break this test and change it, but when
+# doing so be sure to thoroughly perform integration testing with users
+# of `pkgdb`, since they may rely on this seemingly useless behavior.
+@test "pkgdb get db <DB-PATH>" {
+  require_shared;
+  run $PKGDB get db "$DBPATH";
+  assert_success;
+  assert_output "$DBPATH";
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# bats test_tags=get:db
+
+@test "pkgdb get db <FLAKE-REF>" {
+  require_shared;
+  run $PKGDB get db "$NIXPKGS_REF";
+  assert_success;
+  assert_output --partial "/$NIXPKGS_FINGERPRINT.sqlite";
+}
+
+
+# ---------------------------------------------------------------------------- #
 #
 #
 #
