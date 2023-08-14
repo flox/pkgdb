@@ -87,7 +87,8 @@ class PkgDb {
 
           SQLiteDb    db;           /**< SQLite3 database handle.         */
           Fingerprint fingerprint;  /**< Unique hash of associated flake. */
-    const std::string dbPath;       /**< Absolute path to database.       */
+
+    const std::filesystem::path dbPath;  /**< Absolute path to database. */
 
     /** Locked _flake reference_ for database's flake. */
     struct LockedFlakeRef {
@@ -127,7 +128,7 @@ class PkgDb {
     PkgDb( std::string_view dbPath )
       : db( dbPath ), fingerprint( nix::htSHA256 ), dbPath( dbPath )
     {
-      if ( ! std::filesystem::exists( dbPath ) )
+      if ( ! std::filesystem::exists( this->dbPath ) )
         {
           throw PkgDbException( nix::fmt( "No such database '%s'.", dbPath ) );
         }
