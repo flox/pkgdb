@@ -31,7 +31,7 @@ VerboseParser::VerboseParser( std::string name, std::string version )
 {
     this->add_argument( "-q", "--quiet" )
       .help(
-        "Decreate the logging verbosity level. May be used up to 3 times."
+        "Decrease the logging verbosity level. May be used up to 3 times."
       ).action(
         [&]( const auto & )
         {
