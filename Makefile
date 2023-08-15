@@ -222,7 +222,7 @@ $(TESTS) tests/is_sqlite3: tests/%: tests/%.cc lib/$(LIBFLOXPKGDB)
 install: install-dirs install-bin install-lib install-include
 
 install-dirs: FORCE
-	$(MKDIR_P) $(BINDIR) $(LIBDIR) $(INCLUDEDIR)/flox
+	$(MKDIR_P) $(BINDIR) $(LIBDIR) $(INCLUDEDIR)/flox $(LIBDIR)/pkgconfig
 
 $(INCLUDEDIR)/%: include/% | install-dirs
 	$(CP) -- "$<" "$@"
@@ -315,6 +315,32 @@ $(SQL_HH_FILES): %.hh: %.sql src/sql/Makefile
 sql-headers: $(SQL_HH_FILES)
 
 src/pkgdb.o: $(SQL_HH_FILES)
+
+
+# ---------------------------------------------------------------------------- #
+
+# Generate `pkg-config' file.
+#
+# The `PC_CFLAGS' and `PC_LIBS' variables carry flags that are not covered by
+# `nlohmann_json`, `argparse`, `sqlite3pp`, `sqlite`, and `nix{main,cmd,expr}`
+# `Requires' handling.
+# This basically amounts to handling `boost', `libnixfetchers', forcing
+# the inclusion of `nix' `config.h' header, and some additional CPP vars.
+
+PC_CFLAGS =  $(filter -std=%,$(CXXFLAGS))
+PC_CFLAGS += -I$(nix_INCDIR) -include $(nix_INCDIR)/nix/config.h
+PC_CFLAGS += $(boost_CFLAGS)
+PC_CFLAGS += '-DFLOX_PKGDB_VERSION=\\\\\"$(VERSION)\\\\\"'
+PC_CFLAGS += -DSEMVER_PATH='$(SEMVER_PATH)'
+PC_LIBS   =  $(shell $(PKG_CONFIG) --libs-only-L nix-main) -lnixfetchers
+lib/pkgconfig/flox-pkgdb.pc: lib/pkgconfig/flox-pkgdb.pc.in version
+	$(SED) -e 's,@PREFIX@,$(PREFIX),g'     \
+	       -e 's,@VERSION@,$(VERSION),g'   \
+	       -e 's,@CFLAGS@,$(PC_CFLAGS),g'  \
+	       -e 's,@LIBS@,$(PC_LIBS),g'      \
+	       $< > $@
+
+install-lib: $(LIBDIR)/pkgconfig/flox-pkgdb.pc
 
 
 # ---------------------------------------------------------------------------- #

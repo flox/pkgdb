@@ -36,11 +36,10 @@
       notResult = ( builtins.match "result(-*)?" bname ) == null;
     in notIgnored && notResult;
   };
-  nativeBuildInputs = [pkg-config];
-  buildInputs       = [
-    sqlite.dev nlohmann_json nix.dev boost argparse sqlite3pp
-  ];
-  propagatedBuildInputs = [semver];
+  outputs               = ["out" "dev"];
+  nativeBuildInputs     = [pkg-config];
+  buildInputs           = [sqlite.dev nlohmann_json argparse sqlite3pp];
+  propagatedBuildInputs = [semver nix.dev boost];
   nix_INCDIR            = nix.dev.outPath + "/include";
   boost_CFLAGS          = "-I" + boost.outPath + "/include";
   libExt                = stdenv.hostPlatform.extensions.sharedLibrary;
@@ -52,6 +51,10 @@
       makeFlagsArray+=( '-j4' );
     fi
     runHook postConfigure;
+  '';
+  postInstall = ''
+    mkdir -p "$dev" "$out/libexec";
+    mv "$out/lib" "$out/include" "$dev/";
   '';
   # Checks require internet
   doCheck        = false;

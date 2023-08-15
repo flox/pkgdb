@@ -33,3 +33,5 @@
 .ccls-cache
 .ccls
 *.db
+result
+result-*
