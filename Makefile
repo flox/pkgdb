@@ -75,7 +75,7 @@ TESTS          = $(filter-out tests/is_sqlite3,$(test_SRCS:.cc=))
 EXTRA_CXXFLAGS ?= -Wall -Wextra -Wpedantic
 CXXFLAGS       ?= $(EXTRA_CFLAGS) $(EXTRA_CXXFLAGS)
 CXXFLAGS       += '-I$(MAKEFILE_DIR)/include'
-CXXFLAGS       += -DFLOX_PKGDB_VERSION=$(VERSION)
+CXXFLAGS       += '-DFLOX_PKGDB_VERSION="$(VERSION)"'
 LDFLAGS        ?= $(EXTRA_LDFLAGS)
 lib_CXXFLAGS   ?= -shared -fPIC
 ifeq (Linux,$(OS))
@@ -100,6 +100,10 @@ nljson_CFLAGS := $(nljson_CFLAGS)
 argparse_CFLAGS ?= $(shell $(PKG_CONFIG) --cflags argparse)
 argparse_CFLAGS := $(argparse_CFLAGS)
 
+boost_CFLAGS    ?=                                                             \
+  -I$(shell $(NIX) build --no-link --print-out-paths 'nixpkgs#boost')/include
+boost_CFLAGS := $(boost_CFLAGS)
+
 sqlite3_CFLAGS  ?= $(shell $(PKG_CONFIG) --cflags sqlite3)
 sqlite3_CFLAGS  := $(sqlite3_CFLAGS)
 sqlite3_LDFLAGS ?= $(shell $(PKG_CONFIG) --libs sqlite3)
@@ -111,8 +115,9 @@ sqlite3pp_CFLAGS := $(sqlite3pp_CFLAGS)
 nix_INCDIR  ?= $(shell $(PKG_CONFIG) --variable=includedir nix-cmd)
 nix_INCDIR  := $(nix_INCDIR)
 ifndef nix_CFLAGS
-nix_CFLAGS  =  $(shell $(PKG_CONFIG) --cflags nix-main nix-cmd nix-expr)
-nix_CFLAGS  += -isystem $(nix_INCDIR) -include $(nix_INCDIR)/nix/config.h
+nix_CFLAGS =  $(boost_CFLAGS)
+nix_CFLAGS += $(shell $(PKG_CONFIG) --cflags nix-main nix-cmd nix-expr)
+nix_CFLAGS += -isystem $(nix_INCDIR) -include $(nix_INCDIR)/nix/config.h
 endif
 nix_CFLAGS := $(nix_CFLAGS)
 
@@ -316,6 +321,7 @@ src/pkgdb.o: $(SQL_HH_FILES)
 
 ignores: tests/.gitignore
 tests/.gitignore: FORCE
+	$(MKDIR_P) $(@D)
 	printf '%s\n' $(patsubst tests/%,%,$(test_SRCS:.cc=)) > $@
 
 

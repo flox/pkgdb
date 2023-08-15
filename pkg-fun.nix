@@ -9,6 +9,7 @@
 , pkg-config
 , nlohmann_json
 , nix
+, boost
 , argparse
 , semver
 , sqlite3pp
@@ -24,6 +25,7 @@
         ".ccls" ".ccls-cache"
         ".git" ".gitignore"
         "out" "bin"
+        "tests"  # Tests require internet so there's no point in including them
       ];
       ext = let
         m = builtins.match ".*\\.([^.]+)" name;
@@ -32,14 +34,15 @@
       notIgnored  = ( ! ( builtins.elem bname ignores ) ) &&
                     ( ! ( builtins.elem ext ignoredExts ) );
       notResult = ( builtins.match "result(-*)?" bname ) == null;
-      testsKeep = builtins.elem ext ["cc" "bats" "bash"];
-    in notIgnored && notResult &&
-       ( ( ( dirOf name ) == "tests" ) -> testsKeep );
+    in notIgnored && notResult;
   };
-  nativeBuildInputs     = [pkg-config];
-  buildInputs           = [sqlite.dev nlohmann_json nix.dev argparse sqlite3pp];
+  nativeBuildInputs = [pkg-config];
+  buildInputs       = [
+    sqlite.dev nlohmann_json nix.dev boost argparse sqlite3pp
+  ];
   propagatedBuildInputs = [semver];
   nix_INCDIR            = nix.dev.outPath + "/include";
+  boost_CFLAGS          = "-I" + boost.outPath + "/include";
   libExt                = stdenv.hostPlatform.extensions.sharedLibrary;
   SEMVER_PATH           = semver.outPath + "/bin/semver";
   configurePhase        = ''
