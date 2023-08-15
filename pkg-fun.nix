@@ -53,7 +53,7 @@
     runHook postConfigure;
   '';
   postInstall = ''
-    mkdir -p "$dev" "$out/libexec";
+    mkdir -p "$dev";
     mv "$out/lib" "$out/include" "$dev/";
   '';
   # Checks require internet
