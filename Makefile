@@ -94,19 +94,10 @@ nljson_CFLAGS := $(nljson_CFLAGS)
 argparse_CFLAGS ?= $(shell $(PKG_CONFIG) --cflags argparse)
 argparse_CFLAGS := $(argparse_CFLAGS)
 
-boost_CFLAGS    ?=                                                             \
-  -I$(shell $(NIX) build --no-link --print-out-paths 'nixpkgs#boost')/include
-boost_CFLAGS := $(boost_CFLAGS)
-
 sqlite3_CFLAGS  ?= $(shell $(PKG_CONFIG) --cflags sqlite3)
 sqlite3_CFLAGS  := $(sqlite3_CFLAGS)
 sqlite3_LDFLAGS ?= $(shell $(PKG_CONFIG) --libs sqlite3)
 sqlite3_LDLAGS  := $(sqlite3_LDLAGS)
-
-sql_builder_CFLAGS ?=                                      \
-  -I$(shell $(NIX) build --no-link --print-out-paths       \
-                   '$(MAKEFILE_DIR)#sql-builder')/include
-sql_builder_CFLAGS := $(sql_builder_CFLAGS)
 
 sqlite3pp_CFLAGS ?= $(shell $(PKG_CONFIG) --cflags sqlite3pp)
 sqlite3pp_CFLAGS := $(sqlite3pp_CFLAGS)
@@ -114,10 +105,8 @@ sqlite3pp_CFLAGS := $(sqlite3pp_CFLAGS)
 nix_INCDIR  ?= $(shell $(PKG_CONFIG) --variable=includedir nix-cmd)
 nix_INCDIR  := $(nix_INCDIR)
 ifndef nix_CFLAGS
-nix_CFLAGS  =  $(boost_CFLAGS)
-nix_CFLAGS  += $(shell $(PKG_CONFIG) --cflags nix-main nix-cmd nix-expr)
-nix_CFLAGS  += -isystem $(shell $(PKG_CONFIG) --variable=includedir nix-cmd)
-nix_CFLAGS  += -include $(nix_INCDIR)/nix/config.h
+nix_CFLAGS  =  $(shell $(PKG_CONFIG) --cflags nix-main nix-cmd nix-expr)
+nix_CFLAGS  += -isystem $(nix_INCDIR) -include $(nix_INCDIR)/nix/config.h
 endif
 nix_CFLAGS := $(nix_CFLAGS)
 
@@ -128,17 +117,17 @@ nix_LDFLAGS += -lnixfetchers
 endif
 nix_LDFLAGS := $(nix_LDFLAGS)
 
-ifndef floxresolve_LDFLAGS
-floxresolve_LDFLAGS =  '-L$(MAKEFILE_DIR)/lib' -lflox-pkgdb
+ifndef flox_pkgdb_LDFLAGS
+flox_pkgdb_LDFLAGS =  '-L$(MAKEFILE_DIR)/lib' -lflox-pkgdb
 ifeq (Linux,$(OS))
-floxresolve_LDFLAGS += -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
+flox_pkgdb_LDFLAGS += -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
 endif
 endif
 
 
 # ---------------------------------------------------------------------------- #
 
-lib_CXXFLAGS += $(sqlite3_CFLAGS) $(sql_builder_CFLAGS) $(sqlite3pp_CFLAGS)
+lib_CXXFLAGS += $(sqlite3_CFLAGS) $(sqlite3pp_CFLAGS)
 bin_CXXFLAGS += $(argparse_CFLAGS)
 CXXFLAGS     += $(nix_CFLAGS) $(nljson_CFLAGS)
 
@@ -150,7 +139,7 @@ ifeq (Linux,$(OS))
 lib_LDFLAGS += -Wl,--no-as-needed
 endif
 
-bin_LDFLAGS += $(nix_LDFLAGS) $(floxresolve_LDFLAGS) $(sqlite3_LDFLAGS)
+bin_LDFLAGS += $(nix_LDFLAGS) $(flox_pkgdb_LDFLAGS) $(sqlite3_LDFLAGS)
 
 
 # ---------------------------------------------------------------------------- #

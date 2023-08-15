@@ -15,15 +15,11 @@
   inputs.argparse.inputs.nixpkgs.follows  = "/nixpkgs";
   inputs.sqlite3pp.url                    = "github:aakropotkin/sqlite3pp";
   inputs.sqlite3pp.inputs.nixpkgs.follows = "/nixpkgs";
-  inputs.sql-builder                      = {
-    url   = "github:six-ddc/sql-builder";
-    flake = false;
-  };
 
 
 # ---------------------------------------------------------------------------- #
 
-  outputs = { nixpkgs, floco, argparse, sql-builder, sqlite3pp, ... }: let
+  outputs = { nixpkgs, floco, argparse, sqlite3pp, ... }: let
 
 # ---------------------------------------------------------------------------- #
 
@@ -45,12 +41,6 @@
     ];
     overlays.flox-pkgdb = final: prev: {
       flox-pkgdb = final.callPackage ./pkg-fun.nix {};
-      sql-builder  = final.runCommandNoCC "sql-builder" {
-        src = sql-builder;
-      } ''
-        mkdir -p "$out/include/sql-builder";
-        cp "$src/sql.h" "$out/include/sql-builder/sql.hh";
-      '';
     };
     overlays.default = nixpkgs.lib.composeExtensions overlays.deps
                                                      overlays.flox-pkgdb;
@@ -62,7 +52,7 @@
       pkgsFor = ( builtins.getAttr system nixpkgs.legacyPackages ).extend
                   overlays.default;
     in {
-      inherit (pkgsFor) flox-pkgdb sql-builder;
+      inherit (pkgsFor) flox-pkgdb;
       default = pkgsFor.flox-pkgdb;
     } );
 
@@ -98,13 +88,7 @@
           # For debugging
           pkgsFor.valgrind
         ];
-        inherit (pkgsFor.flox-pkgdb)
-          nix_INCDIR
-          boost_CFLAGS
-          libExt
-          SEMVER_PATH
-          sql_builder_CFLAGS
-        ;
+        inherit (pkgsFor.flox-pkgdb) nix_INCDIR libExt SEMVER_PATH;
         shellHook = ''
           shopt -s autocd;
 
@@ -113,6 +97,19 @@
           alias gc='git commit -am';
           alias gl='git pull';
           alias gp='git push';
+
+          {
+            echo "";
+            echo "Build with \`make' ( or \`make -j8' to go fast )";
+            echo "";
+            echo "Run with \`./bin/pkgdb --help'";
+            echo "";
+            echo "Test with \`make check'";
+            echo "";
+            echo "Read docs with: \`make docs && firefox ./docs/index.hml'";
+            echo "";
+            echo "See more tips in \`CONTRIBUTING.md'";
+          } >&2;
         '';
       };
     in {
