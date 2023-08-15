@@ -12,46 +12,38 @@
 , boost
 , argparse
 , semver
-, sql-builder
 , sqlite3pp
 }: stdenv.mkDerivation {
   pname   = "flox-pkgdb";
-  version = "0.1.0";
+  version = builtins.replaceStrings ["\n"] [""] ( builtins.readFile ./version );
   src     = builtins.path {
     path = ./.;
     filter = name: type: let
       bname   = baseNameOf name;
       ignores = [
-        "default.nix"
-        "pkg-fun.nix"
-        "flake.nix"
-        "flake.lock"
-        ".ccls"
-        ".ccls-cache"
-        ".git"
-        ".gitignore"
-        "out"
-        "bin"
-        "lib"
+        "default.nix" "pkg-fun.nix" "flake.nix" "flake.lock"
+        ".ccls" ".ccls-cache"
+        ".git" ".gitignore"
+        "out" "bin"
+        "tests"  # Tests require internet so there's no point in including them
       ];
-      notIgnored = ! ( builtins.elem bname ignores );
-      notObject  = ( builtins.match ".*\\.o" name ) == null;
-      notResult  = ( builtins.match "result(-*)?" bname ) == null;
-      isSrc      = ( builtins.match ".*\\.cc" name ) != null;
-    in notIgnored && notObject && notResult && (
-      ( ( dirOf name ) == "tests" ) -> isSrc
-    );
+      ext = let
+        m = builtins.match ".*\\.([^.]+)" name;
+      in if m == null then "" else builtins.head m;
+      ignoredExts = ["o" "so" "dylib"];
+      notIgnored  = ( ! ( builtins.elem bname ignores ) ) &&
+                    ( ! ( builtins.elem ext ignoredExts ) );
+      notResult = ( builtins.match "result(-*)?" bname ) == null;
+    in notIgnored && notResult;
   };
-  nativeBuildInputs = [pkg-config];
-  buildInputs       = [
-    sqlite.dev nlohmann_json nix.dev boost argparse sqlite3pp
-  ];
-  propagatedBuildInputs = [semver];
+  outputs               = ["out" "dev"];
+  nativeBuildInputs     = [pkg-config];
+  buildInputs           = [sqlite.dev nlohmann_json argparse sqlite3pp];
+  propagatedBuildInputs = [semver nix.dev boost];
   nix_INCDIR            = nix.dev.outPath + "/include";
   boost_CFLAGS          = "-I" + boost.outPath + "/include";
   libExt                = stdenv.hostPlatform.extensions.sharedLibrary;
   SEMVER_PATH           = semver.outPath + "/bin/semver";
-  sql_builder_CFLAGS    = "-I" + sql-builder.outPath + "/include";
   configurePhase        = ''
     runHook preConfigure;
     export PREFIX="$out";
@@ -59,6 +51,10 @@
       makeFlagsArray+=( '-j4' );
     fi
     runHook postConfigure;
+  '';
+  postInstall = ''
+    mkdir -p "$dev";
+    mv "$out/lib" "$out/include" "$dev/";
   '';
   # Checks require internet
   doCheck        = false;

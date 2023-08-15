@@ -44,6 +44,11 @@ endif  # ifndef libExt
 
 # ---------------------------------------------------------------------------- #
 
+VERSION := $(file < $(MAKEFILE_DIR)/version)
+
+
+# ---------------------------------------------------------------------------- #
+
 PREFIX     ?= $(MAKEFILE_DIR)/out
 BINDIR     ?= $(PREFIX)/bin
 LIBDIR     ?= $(PREFIX)/lib
@@ -70,6 +75,7 @@ TESTS          = $(filter-out tests/is_sqlite3,$(test_SRCS:.cc=))
 EXTRA_CXXFLAGS ?= -Wall -Wextra -Wpedantic
 CXXFLAGS       ?= $(EXTRA_CFLAGS) $(EXTRA_CXXFLAGS)
 CXXFLAGS       += '-I$(MAKEFILE_DIR)/include'
+CXXFLAGS       += '-DFLOX_PKGDB_VERSION="$(VERSION)"'
 LDFLAGS        ?= $(EXTRA_LDFLAGS)
 lib_CXXFLAGS   ?= -shared -fPIC
 ifeq (Linux,$(OS))
@@ -103,21 +109,15 @@ sqlite3_CFLAGS  := $(sqlite3_CFLAGS)
 sqlite3_LDFLAGS ?= $(shell $(PKG_CONFIG) --libs sqlite3)
 sqlite3_LDLAGS  := $(sqlite3_LDLAGS)
 
-sql_builder_CFLAGS ?=                                      \
-  -I$(shell $(NIX) build --no-link --print-out-paths       \
-                   '$(MAKEFILE_DIR)#sql-builder')/include
-sql_builder_CFLAGS := $(sql_builder_CFLAGS)
-
 sqlite3pp_CFLAGS ?= $(shell $(PKG_CONFIG) --cflags sqlite3pp)
 sqlite3pp_CFLAGS := $(sqlite3pp_CFLAGS)
 
 nix_INCDIR  ?= $(shell $(PKG_CONFIG) --variable=includedir nix-cmd)
 nix_INCDIR  := $(nix_INCDIR)
 ifndef nix_CFLAGS
-nix_CFLAGS  =  $(boost_CFLAGS)
-nix_CFLAGS  += $(shell $(PKG_CONFIG) --cflags nix-main nix-cmd nix-expr)
-nix_CFLAGS  += -isystem $(shell $(PKG_CONFIG) --variable=includedir nix-cmd)
-nix_CFLAGS  += -include $(nix_INCDIR)/nix/config.h
+nix_CFLAGS =  $(boost_CFLAGS)
+nix_CFLAGS += $(shell $(PKG_CONFIG) --cflags nix-main nix-cmd nix-expr)
+nix_CFLAGS += -isystem $(nix_INCDIR) -include $(nix_INCDIR)/nix/config.h
 endif
 nix_CFLAGS := $(nix_CFLAGS)
 
@@ -128,17 +128,17 @@ nix_LDFLAGS += -lnixfetchers
 endif
 nix_LDFLAGS := $(nix_LDFLAGS)
 
-ifndef floxresolve_LDFLAGS
-floxresolve_LDFLAGS =  '-L$(MAKEFILE_DIR)/lib' -lflox-pkgdb
+ifndef flox_pkgdb_LDFLAGS
+flox_pkgdb_LDFLAGS =  '-L$(MAKEFILE_DIR)/lib' -lflox-pkgdb
 ifeq (Linux,$(OS))
-floxresolve_LDFLAGS += -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
+flox_pkgdb_LDFLAGS += -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
 endif
 endif
 
 
 # ---------------------------------------------------------------------------- #
 
-lib_CXXFLAGS += $(sqlite3_CFLAGS) $(sql_builder_CFLAGS) $(sqlite3pp_CFLAGS)
+lib_CXXFLAGS += $(sqlite3_CFLAGS) $(sqlite3pp_CFLAGS)
 bin_CXXFLAGS += $(argparse_CFLAGS)
 CXXFLAGS     += $(nix_CFLAGS) $(nljson_CFLAGS)
 
@@ -150,7 +150,7 @@ ifeq (Linux,$(OS))
 lib_LDFLAGS += -Wl,--no-as-needed
 endif
 
-bin_LDFLAGS += $(nix_LDFLAGS) $(floxresolve_LDFLAGS) $(sqlite3_LDFLAGS)
+bin_LDFLAGS += $(nix_LDFLAGS) $(flox_pkgdb_LDFLAGS) $(sqlite3_LDFLAGS)
 
 
 # ---------------------------------------------------------------------------- #
@@ -222,7 +222,7 @@ $(TESTS) tests/is_sqlite3: tests/%: tests/%.cc lib/$(LIBFLOXPKGDB)
 install: install-dirs install-bin install-lib install-include
 
 install-dirs: FORCE
-	$(MKDIR_P) $(BINDIR) $(LIBDIR) $(INCLUDEDIR)/flox
+	$(MKDIR_P) $(BINDIR) $(LIBDIR) $(INCLUDEDIR)/flox $(LIBDIR)/pkgconfig
 
 $(INCLUDEDIR)/%: include/% | install-dirs
 	$(CP) -- "$<" "$@"
@@ -319,8 +319,35 @@ src/pkgdb.o: $(SQL_HH_FILES)
 
 # ---------------------------------------------------------------------------- #
 
+# Generate `pkg-config' file.
+#
+# The `PC_CFLAGS' and `PC_LIBS' variables carry flags that are not covered by
+# `nlohmann_json`, `argparse`, `sqlite3pp`, `sqlite`, and `nix{main,cmd,expr}`
+# `Requires' handling.
+# This amounts to handling `boost', `libnixfetchers', forcing
+# the inclusion of the `nix' `config.h' header, and some additional CPP vars.
+
+PC_CFLAGS =  $(filter -std=%,$(CXXFLAGS))
+PC_CFLAGS += -I$(nix_INCDIR) -include $(nix_INCDIR)/nix/config.h
+PC_CFLAGS += $(boost_CFLAGS)
+PC_CFLAGS += '-DFLOX_PKGDB_VERSION=\\\\\"$(VERSION)\\\\\"'
+PC_CFLAGS += -DSEMVER_PATH='$(SEMVER_PATH)'
+PC_LIBS   =  $(shell $(PKG_CONFIG) --libs-only-L nix-main) -lnixfetchers
+lib/pkgconfig/flox-pkgdb.pc: lib/pkgconfig/flox-pkgdb.pc.in version
+	$(SED) -e 's,@PREFIX@,$(PREFIX),g'     \
+	       -e 's,@VERSION@,$(VERSION),g'   \
+	       -e 's,@CFLAGS@,$(PC_CFLAGS),g'  \
+	       -e 's,@LIBS@,$(PC_LIBS),g'      \
+	       $< > $@
+
+install-lib: $(LIBDIR)/pkgconfig/flox-pkgdb.pc
+
+
+# ---------------------------------------------------------------------------- #
+
 ignores: tests/.gitignore
 tests/.gitignore: FORCE
+	$(MKDIR_P) $(@D)
 	printf '%s\n' $(patsubst tests/%,%,$(test_SRCS:.cc=)) > $@
 
 
