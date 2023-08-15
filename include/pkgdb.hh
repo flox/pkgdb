@@ -27,8 +27,10 @@
 
 /* -------------------------------------------------------------------------- */
 
-// TODO: Create a `config.h' for these
-#define FLOX_PKGDB_VERSION         "0.1.0"
+/* This is passed in by `make' and is set by `<pkgdb>/version' */
+#ifndef FLOX_PKGDB_VERSION
+#  define FLOX_PKGDB_VERSION  "NO.VERSION"
+#endif
 #define FLOX_PKGDB_SCHEMA_VERSION  "0.1.0"
 
 

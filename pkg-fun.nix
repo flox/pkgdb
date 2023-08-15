@@ -20,31 +20,24 @@
     filter = name: type: let
       bname   = baseNameOf name;
       ignores = [
-        "default.nix"
-        "pkg-fun.nix"
-        "flake.nix"
-        "flake.lock"
-        ".ccls"
-        ".ccls-cache"
-        ".git"
-        ".gitignore"
-        "out"
-        "bin"
+        "default.nix" "pkg-fun.nix" "flake.nix" "flake.lock"
+        ".ccls" ".ccls-cache"
+        ".git" ".gitignore"
+        "out" "bin"
       ];
-      notIgnored   = ! ( builtins.elem bname ignores );
-      notResult    = ( builtins.match "result(-*)?" bname ) == null;
-      notObject    = ( builtins.match ".*\\.o" name ) == null;
-      notSharedLib = ( builtins.match ".*\\.so" name ) == null;
-      notDyLib     = ( builtins.match ".*\\.dylib" name ) == null;
-      isSrc        = ( builtins.match ".*\\.cc" name ) != null;
-      isBats       = ( builtins.match ".*\\.bats" name ) != null;
-      isBash       = ( builtins.match ".*\\.bash" name ) != null;
-    in notIgnored && notObject && notSharedLib && notDyLib && notResult && (
-      ( ( dirOf name ) == "tests" ) -> ( isSrc || isBats || isBash )
-    );
+      ext = let
+        m = builtins.match ( builtins.match ".*\\.([^.]+)" name );
+      in if m == null then "" else builtins.head m;
+      ignoredExts = ["o" "so" "dylib"];
+      notIgnored  = ( ! ( builtins.elem bname ignores ) ) &&
+                    ( ! ( builtins.elem ext ignoredExts ) );
+      notResult = ( builtins.match "result(-*)?" bname ) == null;
+      testsKeep = builtins.elem ext ["cc" "bats" "bash"];
+    in notIgnored && notResult &&
+       ( ( ( dirOf name ) == "tests" ) -> testsKeep );
   };
-  nativeBuildInputs = [pkg-config];
-  buildInputs       = [sqlite.dev nlohmann_json nix.dev argparse sqlite3pp];
+  nativeBuildInputs     = [pkg-config];
+  buildInputs           = [sqlite.dev nlohmann_json nix.dev argparse sqlite3pp];
   propagatedBuildInputs = [semver];
   nix_INCDIR            = nix.dev.outPath + "/include";
   libExt                = stdenv.hostPlatform.extensions.sharedLibrary;

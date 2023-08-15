@@ -44,6 +44,11 @@ endif  # ifndef libExt
 
 # ---------------------------------------------------------------------------- #
 
+VERSION := $(file < $(MAKEFILE_DIR)/version)
+
+
+# ---------------------------------------------------------------------------- #
+
 PREFIX     ?= $(MAKEFILE_DIR)/out
 BINDIR     ?= $(PREFIX)/bin
 LIBDIR     ?= $(PREFIX)/lib
@@ -70,6 +75,7 @@ TESTS          = $(filter-out tests/is_sqlite3,$(test_SRCS:.cc=))
 EXTRA_CXXFLAGS ?= -Wall -Wextra -Wpedantic
 CXXFLAGS       ?= $(EXTRA_CFLAGS) $(EXTRA_CXXFLAGS)
 CXXFLAGS       += '-I$(MAKEFILE_DIR)/include'
+CXXFLAGS       += -DFLOX_PKGDB_VERSION=$(VERSION)
 LDFLAGS        ?= $(EXTRA_LDFLAGS)
 lib_CXXFLAGS   ?= -shared -fPIC
 ifeq (Linux,$(OS))
