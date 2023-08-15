@@ -88,7 +88,9 @@
           # For debugging
           pkgsFor.valgrind
         ];
-        inherit (pkgsFor.flox-pkgdb) nix_INCDIR libExt SEMVER_PATH;
+        inherit (pkgsFor.flox-pkgdb)
+          nix_INCDIR boost_CFLAGS libExt SEMVER_PATH
+        ;
         shellHook = ''
           shopt -s autocd;
 
