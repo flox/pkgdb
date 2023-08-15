@@ -324,8 +324,8 @@ src/pkgdb.o: $(SQL_HH_FILES)
 # The `PC_CFLAGS' and `PC_LIBS' variables carry flags that are not covered by
 # `nlohmann_json`, `argparse`, `sqlite3pp`, `sqlite`, and `nix{main,cmd,expr}`
 # `Requires' handling.
-# This basically amounts to handling `boost', `libnixfetchers', forcing
-# the inclusion of `nix' `config.h' header, and some additional CPP vars.
+# This amounts to handling `boost', `libnixfetchers', forcing
+# the inclusion of the `nix' `config.h' header, and some additional CPP vars.
 
 PC_CFLAGS =  $(filter -std=%,$(CXXFLAGS))
 PC_CFLAGS += -I$(nix_INCDIR) -include $(nix_INCDIR)/nix/config.h
