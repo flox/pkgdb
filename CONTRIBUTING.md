@@ -91,7 +91,10 @@ Updates to `pkgdb` version numbers are controlled by the text file
 This file is used to populate the CPP variable `FLOX_PKGDB_VERSION`, the `nix`
 derivation's version number, and the `pkg-config` manifest file's version.
 
-Publishing releases on GitHub is recommended.
+Publishing releases on GitHub using their WebUI is recommended AFTER you've
+followed the process for creating/updating release tags described below.
+
+#### Creating Release Tags
 
 Tagging release commits as `v<MAJOR>.<MINOR>.<PATCH>` is required, including
 aliases for `latest`, `v<MAJOR>`, and `v<MAJOR>.<MINOR>`.
@@ -100,4 +103,44 @@ public interfaces and minimum usable `v<MAJOR>.<MINOR>` version
 ( to have access to certain features ).
 This allows automated `update`/`upgrade` utilities to be used at scale.
 
-TODO: show how to create tags
+
+For example lets say that we are releasing a new minor version which moves us
+from `v4.1.3` to `v4.2.0`, we would perform the following:
+```shell
+# Make sure we're up to date, and on `main'.
+$ git fetch;
+$ git checkout main;
+
+$ OLD_VERSION="$( < ./version; )";
+# Modify old version, you can do this manually or using `semver'
+# ( available in the `nix develop' shell ).
+$ nix develop -c semver -i minor "$OLD_VERSION" > version;
+
+$ NEW_VERSION="$( < ./version; )";
+$ echo "$NEW_VERSION";
+4.2.0
+
+# Make a release commit
+$ git add ./version;
+$ git commit -m "release v$NEW_VERSION";
+
+# Tag `HEAD' with the full `v<MAJOR>.<MINOR>.<PATCH>'
+$ git tag -a "v$NEW_VERSION" -m "release v$NEW_VERSION";
+
+# Push the release commit
+$ git push;
+
+# Update alias tags
+
+# Point `v<MAJOR>.<MINOR>' to new release.
+$ git tag -f "v${NEW_VERSION%.*}" "v$NEW_VERSION";
+
+# Point `v<MAJOR>' to `v<MAJOR>.<MINOR>'.
+$ git tag -f "v${NEW_VERSION%%.*}" "v${NEW_VERSION%.*}";
+
+# Point `latest' to `v<MAJOR>'.
+$ git tag -f 'latest' "v${NEW_VERSION%%.*}";
+
+# Push the tags!
+$ git push origin --tags --force;
+```

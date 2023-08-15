@@ -26,7 +26,7 @@
         "out" "bin"
       ];
       ext = let
-        m = builtins.match ( builtins.match ".*\\.([^.]+)" name );
+        m = builtins.match ".*\\.([^.]+)" name;
       in if m == null then "" else builtins.head m;
       ignoredExts = ["o" "so" "dylib"];
       notIgnored  = ( ! ( builtins.elem bname ignores ) ) &&
