@@ -604,7 +604,6 @@ scrape(       flox::pkgdb::PkgDb & db
       , const flox::AttrPath     & prefix
       ,       flox::Cursor         cursor
       ,       Todos              & todo
-      ,       bool                 transact
       )
 {
 
@@ -619,18 +618,8 @@ scrape(       flox::pkgdb::PkgDb & db
             )
   );
 
-  /* Lookup/create the `pathId' for for this attr-path in our DB.
-   * This must be done before starting a transaction in the database
-   * because it may need to read/write multiple times. */
+  /* Lookup/create the `pathId' for for this attr-path in our DB. */
   flox::pkgdb::row_id parentId = db.addOrGetAttrSetId( prefix );
-
-  std::unique_ptr<sqlite3pp::transaction> txn;
-
-  if ( transact )
-    {
-      /* Start a transaction */
-      txn = std::make_unique<sqlite3pp::transaction>( db.db );
-    }
 
   /* Scrape loop over attrs */
   for ( nix::Symbol & aname : cursor->getAttrs() )
@@ -678,18 +667,9 @@ scrape(       flox::pkgdb::PkgDb & db
             }
           else
             {
-              if ( transact )
-                {
-                  txn->rollback();  /* Revert transaction changes */
-                }
               throw e;
             }
         }
-    }
-
-  if ( transact )
-    {
-      txn->commit();  /* Commit transaction changes */
     }
 }
 

@@ -362,7 +362,6 @@ class PkgDb {
  * @param cursor `nix` evaluator cursor associated with @a prefix
  * @param todo Queue to add `recurseForDerivations = true` cursors to so they
  *             may be scraped by later invocations.
- * @param transact Whether to start/stop transactions.
  */
   void
 scrape(       flox::pkgdb::PkgDb & db
@@ -370,7 +369,6 @@ scrape(       flox::pkgdb::PkgDb & db
       , const flox::AttrPath     & prefix
       ,       flox::Cursor         cursor
       ,       Todos              & todo
-      ,       bool                 transact = false
       );
 
 
