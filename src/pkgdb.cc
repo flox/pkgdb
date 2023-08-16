@@ -8,6 +8,7 @@
  * -------------------------------------------------------------------------- */
 
 #include <limits>
+#include <memory>
 
 #include "pkgdb.hh"
 #include "flox/flake-package.hh"
@@ -190,7 +191,7 @@ PkgDb::getDbVersion()
 /* -------------------------------------------------------------------------- */
 
   bool
-PkgDb::hasPackageSet( const flox::AttrPath & path )
+PkgDb::hasAttrSet( const flox::AttrPath & path )
 {
   /* Lookup the `AttrName.id' ( if one exists ) */
   row_id id = 0;
@@ -207,14 +208,7 @@ PkgDb::hasPackageSet( const flox::AttrPath & path )
       if ( i == qryId.end() ) { return false; }  /* No such path. */
       id = ( * i ).get<long long>( 0 );
     }
-
-  /* Make sure there are actually packages in the set. */
-  sqlite3pp::query qryPkgs(
-    this->db
-  , "SELECT COUNT( id ) FROM Packages WHERE parentId = :parentId"
-  );
-  qryPkgs.bind( ":parentId", (long long) id );
-  return 0 < ( * qryPkgs.begin() ).get<int>( 0 );
+  return true;
 }
 
 
@@ -610,6 +604,7 @@ scrape(       flox::pkgdb::PkgDb & db
       , const flox::AttrPath     & prefix
       ,       flox::Cursor         cursor
       ,       Todos              & todo
+      ,       bool                 transact
       )
 {
 
@@ -629,8 +624,13 @@ scrape(       flox::pkgdb::PkgDb & db
    * because it may need to read/write multiple times. */
   flox::pkgdb::row_id parentId = db.addOrGetAttrSetId( prefix );
 
-  /* Start a transaction */
-  sqlite3pp::transaction txn( db.db );
+  std::unique_ptr<sqlite3pp::transaction> txn;
+
+  if ( transact )
+    {
+      /* Start a transaction */
+      txn = std::make_unique<sqlite3pp::transaction>( db.db );
+    }
 
   /* Scrape loop over attrs */
   for ( nix::Symbol & aname : cursor->getAttrs() )
@@ -678,14 +678,19 @@ scrape(       flox::pkgdb::PkgDb & db
             }
           else
             {
-              txn.rollback();  /* Revert transaction changes */
+              if ( transact )
+                {
+                  txn->rollback();  /* Revert transaction changes */
+                }
               throw e;
             }
         }
     }
 
-  txn.commit();  /* Commit transaction changes */
-
+  if ( transact )
+    {
+      txn->commit();  /* Commit transaction changes */
+    }
 }
 
 

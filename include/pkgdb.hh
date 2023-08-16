@@ -234,10 +234,9 @@ class PkgDb {
      * prefix @a path.
      * @param path An attribute path prefix such as `packages.x86_64-linux` or
      *             `legacyPackages.aarch64-darwin.python3Packages`.
-     * @return `true` iff the database has one or more rows in the `Packages`
-     *         table with `path` as the _parent_.
+     * @return `true` iff the database has an `AttrSet` at @a path.
      */
-    bool hasPackageSet( const flox::AttrPath & path );
+    bool hasAttrSet( const flox::AttrPath & path );
 
     /**
      * Get the `AttrSet.id` for a given path.
@@ -357,12 +356,13 @@ class PkgDb {
 /**
  * Scrape package definitions from an attribute set, adding any attributes
  * marked with `recurseForDerivatsions = true` to @a todo list.
- * @param db     Database to write to.
- * @param syms   Symbol table from @a cursor evaluator.
+ * @param db Database to write to.
+ * @param syms Symbol table from @a cursor evaluator.
  * @param prefix Attribute path to scrape.
  * @param cursor `nix` evaluator cursor associated with @a prefix
  * @param todo Queue to add `recurseForDerivations = true` cursors to so they
  *             may be scraped by later invocations.
+ * @param transact Whether to start/stop transactions.
  */
   void
 scrape(       flox::pkgdb::PkgDb & db
@@ -370,6 +370,7 @@ scrape(       flox::pkgdb::PkgDb & db
       , const flox::AttrPath     & prefix
       ,       flox::Cursor         cursor
       ,       Todos              & todo
+      ,       bool                 transact = false
       );
 
 
