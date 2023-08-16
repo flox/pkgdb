@@ -57,7 +57,7 @@ ScrapeCommand::run()
   /* If we haven't processed this prefix before or `--force' was given, open
    * the eval cache and start scraping. */
 
-  if ( this->force || ( ! this->db->hasPackageSet( this->attrPath ) ) )
+  if ( this->force || ( ! this->db->hasAttrSet( this->attrPath ) ) )
     {
       std::vector<nix::Symbol> symbolPath;
       for ( const auto & a : this->attrPath )
@@ -76,18 +76,30 @@ ScrapeCommand::run()
           );
         }
 
-      while ( ! todo.empty() )
+      /* Start a transaction */
+      sqlite3pp::transaction txn( this->db->db );
+      try
         {
-          auto & [prefix, cursor] = todo.front();
-          flox::pkgdb::scrape(
-            * this->db
-          , this->state->symbols
-          , prefix
-          , cursor
-          , todo
-          );
-          todo.pop();
+          while ( ! todo.empty() )
+            {
+              auto & [prefix, cursor] = todo.front();
+              flox::pkgdb::scrape(
+                * this->db
+              , this->state->symbols
+              , prefix
+              , cursor
+              , todo
+              );
+              todo.pop();
+            }
         }
+      catch( const nix::EvalError & e )
+        {
+          txn.rollback();
+          throw e;
+        }
+      txn.commit();
+
     }
 
   /* Print path to database. */

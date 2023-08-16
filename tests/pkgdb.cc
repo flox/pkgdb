@@ -112,12 +112,11 @@ test_getDbVersion0( flox::pkgdb::PkgDb & db )
 /* -------------------------------------------------------------------------- */
 
 /**
- * Ensure `PkgDb::hasPackageSet` checks that `Packages` exist in an `AttrSet`
- * such that attribute sets with no packages are not identified as
- * "Package Sets".
+ * Ensure `PkgDb::hasAttrSet` works regardless of whether `Packages` exist in
+ * an `AttrSet`.
  */
   bool
-test_hasPackageSet0( flox::pkgdb::PkgDb & db )
+test_hasAttrSet0( flox::pkgdb::PkgDb & db )
 {
   /* Make sure the attr-set exists, and clear it. */
   row_id id = db.addOrGetAttrSetId( "x86_64-linux"
@@ -129,9 +128,9 @@ test_hasPackageSet0( flox::pkgdb::PkgDb & db )
   cmd.bind( ":id", (long long int) id );
   cmd.execute();
 
-  EXPECT( ! db.hasPackageSet(
-              std::vector<std::string> { "legacyPackages", "x86_64-linux" }
-            )
+  EXPECT( db.hasAttrSet(
+            std::vector<std::string> { "legacyPackages", "x86_64-linux" }
+          )
         );
   return true;
 }
@@ -140,11 +139,11 @@ test_hasPackageSet0( flox::pkgdb::PkgDb & db )
 /* -------------------------------------------------------------------------- */
 
 /**
- * Ensure `PkgDb::hasPackageSet` checks that `Packages` exist in an `AttrSet`
+ * Ensure `PkgDb::hasAttrSet` works when `Packages` exist in an `AttrSet`
  * such that attribute sets with packages are identified as "Package Sets".
  */
   bool
-test_hasPackageSet1( flox::pkgdb::PkgDb & db )
+test_hasAttrSet1( flox::pkgdb::PkgDb & db )
 {
   /* Make sure the attr-set exists. */
   row_id id = db.addOrGetAttrSetId( "x86_64-linux"
@@ -161,7 +160,7 @@ test_hasPackageSet1( flox::pkgdb::PkgDb & db )
   cmd.bind( ":id", (long long int) id );
   cmd.execute();
 
-  EXPECT( db.hasPackageSet(
+  EXPECT( db.hasAttrSet(
             std::vector<std::string> { "legacyPackages", "x86_64-linux" }
           )
         );
@@ -307,8 +306,8 @@ main( int argc, char * argv[] )
 
     RUN_TEST( getDbVersion0, db );
 
-    RUN_TEST( hasPackageSet0, db );
-    RUN_TEST( hasPackageSet1, db );
+    RUN_TEST( hasAttrSet0, db );
+    RUN_TEST( hasAttrSet1, db );
 
     RUN_TEST( getAttrSetId0, db );
 

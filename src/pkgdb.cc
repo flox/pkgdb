@@ -8,6 +8,7 @@
  * -------------------------------------------------------------------------- */
 
 #include <limits>
+#include <memory>
 
 #include "pkgdb.hh"
 #include "flox/flake-package.hh"
@@ -190,7 +191,7 @@ PkgDb::getDbVersion()
 /* -------------------------------------------------------------------------- */
 
   bool
-PkgDb::hasPackageSet( const flox::AttrPath & path )
+PkgDb::hasAttrSet( const flox::AttrPath & path )
 {
   /* Lookup the `AttrName.id' ( if one exists ) */
   row_id id = 0;
@@ -207,14 +208,7 @@ PkgDb::hasPackageSet( const flox::AttrPath & path )
       if ( i == qryId.end() ) { return false; }  /* No such path. */
       id = ( * i ).get<long long>( 0 );
     }
-
-  /* Make sure there are actually packages in the set. */
-  sqlite3pp::query qryPkgs(
-    this->db
-  , "SELECT COUNT( id ) FROM Packages WHERE parentId = :parentId"
-  );
-  qryPkgs.bind( ":parentId", (long long) id );
-  return 0 < ( * qryPkgs.begin() ).get<int>( 0 );
+  return true;
 }
 
 
@@ -624,13 +618,8 @@ scrape(       flox::pkgdb::PkgDb & db
             )
   );
 
-  /* Lookup/create the `pathId' for for this attr-path in our DB.
-   * This must be done before starting a transaction in the database
-   * because it may need to read/write multiple times. */
+  /* Lookup/create the `pathId' for for this attr-path in our DB. */
   flox::pkgdb::row_id parentId = db.addOrGetAttrSetId( prefix );
-
-  /* Start a transaction */
-  sqlite3pp::transaction txn( db.db );
 
   /* Scrape loop over attrs */
   for ( nix::Symbol & aname : cursor->getAttrs() )
@@ -678,14 +667,10 @@ scrape(       flox::pkgdb::PkgDb & db
             }
           else
             {
-              txn.rollback();  /* Revert transaction changes */
               throw e;
             }
         }
     }
-
-  txn.commit();  /* Commit transaction changes */
-
 }
 
 
