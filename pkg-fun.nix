@@ -36,7 +36,6 @@
       notResult = ( builtins.match "result(-*)?" bname ) == null;
     in notIgnored && notResult;
   };
-  outputs               = ["out" "dev"];
   nativeBuildInputs     = [pkg-config];
   buildInputs           = [sqlite.dev nlohmann_json argparse sqlite3pp];
   propagatedBuildInputs = [semver nix.dev boost];
@@ -51,11 +50,6 @@
       makeFlagsArray+=( '-j4' );
     fi
     runHook postConfigure;
-  '';
-  postInstall = ''
-    mkdir -p "$dev";
-    mv "$out/include" "$dev/";
-    ln -s "$out/lib" "$dev/lib";
   '';
   # Checks require internet
   doCheck        = false;
