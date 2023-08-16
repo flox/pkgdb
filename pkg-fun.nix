@@ -54,7 +54,8 @@
   '';
   postInstall = ''
     mkdir -p "$dev";
-    mv "$out/lib" "$out/include" "$dev/";
+    mv "$out/include" "$dev/";
+    ln -s "$out/lib" "$dev/lib";
   '';
   # Checks require internet
   doCheck        = false;
