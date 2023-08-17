@@ -207,7 +207,7 @@ bin/pkgdb: CXXFLAGS += $(bin_CXXFLAGS)
 bin/pkgdb: LDFLAGS  += $(bin_LDFLAGS)
 bin/pkgdb: $(bin_SRCS:.cc=.o) lib/$(LIBFLOXPKGDB)
 	$(MKDIR_P) $(@D)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) $^ -o "$@"
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(filter %.o,$^) -o "$@"
 
 
 # ---------------------------------------------------------------------------- #
