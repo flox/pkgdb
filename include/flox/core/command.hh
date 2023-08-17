@@ -1,6 +1,6 @@
 /* ========================================================================== *
  *
- * @file flox/command.hh
+ * @file flox/core/command.hh
  *
  * @brief Executable command helpers, argument parsers, etc.
  *
@@ -16,13 +16,12 @@
 #include <argparse/argparse.hpp>
 
 #include "flox/core/types.hh"
+#include "flox/core/util.hh"
 #include "flox/flox-flake.hh"
 
 /* -------------------------------------------------------------------------- */
 
 namespace flox {
-
-  namespace pkgdb { class PkgDb; };
 
   /** Executable command helpers, argument parsers, etc. */
   namespace command {
@@ -77,45 +76,6 @@ struct FloxFlakeMixin
   /** Extend an argument parser to accept a `flake-ref` argument. */
   argparse::Argument & addFlakeRefArg( argparse::ArgumentParser & parser );
 };  /* End struct `FloxFlakeMixin' */
-
-
-/* -------------------------------------------------------------------------- */
-
-/** Adds a package database path to a state blob. */
-struct DbPathMixin : public CommandStateMixin, virtual public flox::NixState {
-
-  std::optional<std::filesystem::path> dbPath;
-
-  /** Extend an argument parser to accept a `-d,--database PATH` argument. */
-    argparse::Argument &
-  addDatabasePathOption( argparse::ArgumentParser & parser );
-
-};  /* End struct `DbPathMixin' */
-
-
-/* -------------------------------------------------------------------------- */
-
-/**
- * Adds a package database and optionally an associated flake to a state blob.
- */
-struct PkgDbMixin : virtual public DbPathMixin, virtual public FloxFlakeMixin {
-
-  std::unique_ptr<flox::pkgdb::PkgDb> db;
-
-  /**
-   * Open a @a flox::pkgdb::PkgDb connection using the command state's
-   * @a dbPath or @a flake value.
-   */
-  void openPkgDb();
-  inline void postProcessArgs() override { this->openPkgDb(); }
-
-  /**
-   * Add `target` argument to any parser to read either a `flake-ref` or
-   * path to an existing database.
-   */
-  argparse::Argument & addTargetArg( argparse::ArgumentParser & parser );
-
-};  /* End struct `PkgDbMixin' */
 
 
 /* -------------------------------------------------------------------------- */

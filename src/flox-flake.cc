@@ -8,6 +8,9 @@
  *
  * -------------------------------------------------------------------------- */
 
+/* Provides inline definitions of `allocValue', and `forceAttrs'. */
+#include <nix/eval-inline.hh>
+
 #include "flox/flox-flake.hh"
 
 /* -------------------------------------------------------------------------- */

@@ -13,11 +13,9 @@
 #include <vector>
 #include <memory>
 #include <nix/eval.hh>
-#include <nix/eval-inline.hh>
 #include <nix/flake/flake.hh>
 
 #include "flox/core/types.hh"
-#include "flox/core/util.hh"
 
 
 /* -------------------------------------------------------------------------- */

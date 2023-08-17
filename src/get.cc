@@ -11,7 +11,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include "flox/pkgdb.hh"
+#include "flox/pkgdb/command.hh"
 
 /* -------------------------------------------------------------------------- */
 

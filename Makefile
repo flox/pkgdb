@@ -59,16 +59,16 @@ INCLUDEDIR ?= $(PREFIX)/include
 
 LIBFLOXPKGDB = libflox-pkgdb$(libExt)
 
-LIBS           = $(LIBFLOXPKGDB)
+LIBS           =  $(LIBFLOXPKGDB)
 COMMON_HEADERS =  $(wildcard include/*.hh) $(wildcard include/flox/*.hh)
 COMMON_HEADERS += $(wildcard include/flox/core/*.hh)
-SRCS           = $(wildcard src/*.cc)
-bin_SRCS       = src/main.cc
-lib_SRCS       = $(filter-out $(bin_SRCS),$(SRCS))
-test_SRCS      = $(wildcard tests/*.cc)
-BINS           = pkgdb
-TEST_UTILS     = tests/is_sqlite3
-TESTS          = $(filter-out $(TEST_UTILS),$(test_SRCS:.cc=))
+SRCS           =  $(wildcard src/*.cc) $(wildcard src/pkgdb/*.cc)
+bin_SRCS       =  $(addprefix src/,main.cc scrape.cc get.cc pkgdb/command.cc)
+lib_SRCS       =  $(filter-out $(bin_SRCS),$(SRCS))
+test_SRCS      =  $(wildcard tests/*.cc)
+BINS           =  pkgdb
+TEST_UTILS     =  tests/is_sqlite3
+TESTS          =  $(filter-out $(TEST_UTILS),$(test_SRCS:.cc=))
 
 
 # ---------------------------------------------------------------------------- #
@@ -205,9 +205,9 @@ lib/$(LIBFLOXPKGDB): $(lib_SRCS:.cc=.o)
 
 bin/pkgdb: CXXFLAGS += $(bin_CXXFLAGS)
 bin/pkgdb: LDFLAGS  += $(bin_LDFLAGS)
-bin/pkgdb: src/main.o lib/$(LIBFLOXPKGDB)
+bin/pkgdb: $(bin_SRCS:.cc=.o) lib/$(LIBFLOXPKGDB)
 	$(MKDIR_P) $(@D)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) "$<" -o "$@"
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) $^ -o "$@"
 
 
 # ---------------------------------------------------------------------------- #
@@ -224,7 +224,8 @@ $(TESTS) $(TEST_UTILS): tests/%: tests/%.cc lib/$(LIBFLOXPKGDB)
 install: install-dirs install-bin install-lib install-include
 
 install-dirs: FORCE
-	$(MKDIR_P) $(BINDIR) $(LIBDIR) $(INCLUDEDIR)/flox $(LIBDIR)/pkgconfig
+	$(MKDIR_P) $(BINDIR) $(LIBDIR) $(LIBDIR)/pkgconfig
+	$(MKDIR_P) $(INCLUDEDIR)/flox $(INCLUDEDIR)/flox/core $(INCLUDEDIR)/flox/pkgdb
 
 $(INCLUDEDIR)/%: include/% | install-dirs
 	$(CP) -- "$<" "$@"
