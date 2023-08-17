@@ -14,8 +14,6 @@
 #include <vector>
 #include <optional>
 #include <functional>
-#include <unordered_map>
-#include <unordered_set>
 
 #include <nlohmann/json.hpp>
 
@@ -24,8 +22,8 @@
 #include <nix/eval-cache.hh>
 #include <nix/names.hh>
 
-#include "flox/exceptions.hh"
-#include "flox/types.hh"
+#include "flox/core/exceptions.hh"
+#include "flox/core/types.hh"
 #include "semver.hh"
 
 
@@ -69,14 +67,14 @@ class Package {
     virtual std::optional<std::string> getLicense() const = 0;
 
     /** @return The derivation `outputs` list. */
-    virtual std::vector<std::string> getOutputs() const = 0;
+    virtual AttrPath getOutputs() const = 0;
 
     /**
      * @return The `meta.outputsToInstall` field if defined, otherwise the
      *         derivation `outputs` members to the left of and
      *         including `out`.
      */
-    virtual std::vector<std::string> getOutputsToInstall() const = 0;
+    virtual AttrPath getOutputsToInstall() const = 0;
 
     /** @return The `meta.broken` field if defined, otherwise `std::nullopt`. */
     virtual std::optional<bool> isBroken() const = 0;
@@ -97,14 +95,14 @@ class Package {
       virtual subtree_type
     getSubtreeType() const
     {
-      std::vector<std::string> pathS = this->getPathStrs();
-      if ( pathS[0] == "legacyPackages" ) { return ST_LEGACY;   }
-      if ( pathS[0] == "packages" )       { return ST_PACKAGES; }
-      if ( pathS[0] == "catalog" )        { return ST_CATALOG;  }
-      std::string msg( "Package::getSubtreeType(): Unrecognized subtree '" );
-      msg += pathS[0];
-      msg += "'.";
-      throw FloxException( msg );
+      AttrPath pathS = this->getPathStrs();
+      if ( pathS.front() == "legacyPackages" ) { return ST_LEGACY;   }
+      if ( pathS.front() == "packages" )       { return ST_PACKAGES; }
+      if ( pathS.front() == "catalog" )        { return ST_CATALOG;  }
+      throw FloxException(
+        std::string( __func__ ) + ": Unrecognized subtree '" +
+        pathS.front() + "'."
+      );
     }
 
     /**
@@ -116,7 +114,7 @@ class Package {
     getStability() const
     {
       if ( this->getSubtreeType() != ST_CATALOG ) { return std::nullopt; }
-      return this->getPathStrs()[2];
+      return this->getPathStrs().at( 2 );
     }
 
     /**
@@ -137,12 +135,12 @@ class Package {
       virtual std::string
     getPkgAttrName() const
     {
-      std::vector<std::string> pathS = this->getPathStrs();
+      AttrPath pathS = this->getPathStrs();
       if ( this->getSubtreeType() == ST_CATALOG )
         {
-          return pathS[pathS.size() - 2];
+          return pathS.at( pathS.size() - 2 );
         }
-      return pathS[pathS.size() - 1];
+      return pathS.at( pathS.size() - 1 );
     }
 
     /**
@@ -169,11 +167,11 @@ class Package {
     toURIString( const nix::FlakeRef & ref ) const
     {
       std::string uri                = ref.to_string() + "#";
-      std::vector<std::string> pathS = this->getPathStrs();
+      AttrPath pathS = this->getPathStrs();
       for ( size_t i = 0; i < pathS.size(); ++i )
         {
           uri += '"';
-          uri += pathS[i];
+          uri += pathS.at( i );
           uri += '"';
           if ( ( i + 1 ) < pathS.size() ) uri += ".";
         }
@@ -189,8 +187,8 @@ class Package {
       virtual nlohmann::json
     getInfo( bool withDescription = false ) const
     {
-      std::string system = this->getPathStrs()[1];
-      nlohmann::json j = { { system, {
+      std::string    system = this->getPathStrs().at( 1 );
+      nlohmann::json j      = { { system, {
         { "name",  this->getFullName() }
       , { "pname", this->getPname() }
       } } };

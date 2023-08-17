@@ -1,6 +1,6 @@
 /* ========================================================================== *
  *
- * @file flox/exceptions.hh
+ * @file flox/core/exceptions.hh
  *
  * @brief Definitions of various `std::exception` children used for throwing
  *        throwing errors with nice messages and typed discrimination.

@@ -16,8 +16,8 @@
 #include <nix/store-api.hh>
 #include <nix/flake/flake.hh>
 
-#include "flox/util.hh"
-#include "flox/exceptions.hh"
+#include "flox/core/util.hh"
+#include "flox/core/exceptions.hh"
 
 
 /* -------------------------------------------------------------------------- */

@@ -28,8 +28,8 @@
 #include <sqlite3pp.hh>
 
 #include "flox/flox-flake.hh"
-#include "flox/util.hh"
-#include "pkgdb.hh"
+#include "flox/core/util.hh"
+#include "flox/pkgdb.hh"
 #include "test.hh"
 
 
