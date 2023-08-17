@@ -10,7 +10,7 @@
 #include <limits>
 #include <memory>
 
-#include "pkgdb.hh"
+#include "flox/pkgdb.hh"
 #include "flox/flake-package.hh"
 
 #include "sql/versions.hh"

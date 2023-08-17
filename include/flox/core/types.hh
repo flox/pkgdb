@@ -1,6 +1,6 @@
 /* ========================================================================== *
  *
- * @file flox/types.hh
+ * @file flox/core/types.hh
  *
  * @brief Miscellaneous typedefs and aliases
  *

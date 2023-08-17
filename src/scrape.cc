@@ -9,7 +9,7 @@
 
 #include <iostream>
 
-#include "pkgdb.hh"
+#include "flox/pkgdb/command.hh"
 
 /* -------------------------------------------------------------------------- */
 
@@ -59,15 +59,9 @@ ScrapeCommand::run()
 
   if ( this->force || ( ! this->db->hasAttrSet( this->attrPath ) ) )
     {
-      std::vector<nix::Symbol> symbolPath;
-      for ( const auto & a : this->attrPath )
-        {
-          symbolPath.emplace_back( this->state->symbols.create( a ) );
-        }
-
       flox::pkgdb::Todos todo;
       if ( flox::MaybeCursor root =
-             this->flake->maybeOpenCursor( symbolPath );
+             this->flake->maybeOpenCursor( this->attrPath );
            root != nullptr
          )
         {

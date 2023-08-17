@@ -13,11 +13,9 @@
 #include <vector>
 #include <memory>
 #include <nix/eval.hh>
-#include <nix/eval-inline.hh>
 #include <nix/flake/flake.hh>
 
-#include "flox/types.hh"
-#include "flox/util.hh"
+#include "flox/core/types.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -74,52 +72,14 @@ class FloxFlake : public std::enable_shared_from_this<FloxFlake> {
 
     FloxFlake(       nix::ref<nix::EvalState>   state
              , const nix::FlakeRef            & ref
-             )
-      : state( state )
-      , lockedFlake( nix::flake::lockFlake(
-          * state
-        , ref
-        , defaultLockFlags
-        ) )
-    {}
+             );
 
     /**
      * Open a `nix` evaluator ( with an eval cache when possible ) with the
      * evaluated `flake` and its outputs in global scope.
      * @return A `nix` evaluator, potentially with caching.
      */
-      nix::ref<nix::eval_cache::EvalCache>
-    openEvalCache()
-    {
-      if ( this->_cache == nullptr )
-        {
-          auto fingerprint = this->lockedFlake.getFingerprint();
-          this->_cache = std::make_shared<nix::eval_cache::EvalCache>(
-            ( nix::evalSettings.useEvalCache && nix::evalSettings.pureEval )
-            ? std::optional { std::cref( fingerprint ) }
-            : std::nullopt
-          , * this->state
-          , [&]()
-            {
-              nix::Value * vFlake = this->state->allocValue();
-              nix::flake::callFlake(
-                * this->state
-              , this->lockedFlake
-              , * vFlake
-              );
-              this->state->forceAttrs(
-                * vFlake, nix::noPos, "while parsing cached flake data"
-              );
-              nix::Attr * aOutputs = vFlake->attrs->get(
-                this->state->symbols.create( "outputs" )
-              );
-              assert( aOutputs != nullptr );
-              return aOutputs->value;
-            }
-          );
-        }
-      return (nix::ref<nix::eval_cache::EvalCache>) this->_cache;
-    }
+    nix::ref<nix::eval_cache::EvalCache> openEvalCache();
 
     /**
      * Try to open a `nix` evaluator cursor at a given path.
@@ -128,17 +88,7 @@ class FloxFlake : public std::enable_shared_from_this<FloxFlake> {
      * @return `nullptr` iff there is no such path, otherwise a
      *         @a nix::eval_cache::AttrCursor at @a path.
      */
-      MaybeCursor
-    maybeOpenCursor( const std::vector<nix::Symbol> & path )
-    {
-      MaybeCursor cur = this->openEvalCache()->getRoot();
-      for ( const nix::Symbol & p : path )
-        {
-          cur = cur->maybeGetAttr( p );
-          if ( cur == nullptr ) { break; }
-        }
-      return cur;
-    }
+    MaybeCursor maybeOpenCursor( const AttrPath & path );
 
     /**
      * Open a `nix` evaluator cursor at a given path.
@@ -146,13 +96,7 @@ class FloxFlake : public std::enable_shared_from_this<FloxFlake> {
      * @param path The attribute path to open.
      * @return A @a nix::eval_cache::AttrCursor at @a path.
      */
-      Cursor
-    openCursor( const std::vector<nix::Symbol> & path )
-    {
-      Cursor cur = this->openEvalCache()->getRoot();
-      for ( const nix::Symbol & p : path ) { cur = cur->getAttr( p ); }
-      return cur;
-    }
+    Cursor openCursor( const AttrPath & path );
 
 };  /* End class `FloxFlake' */
 

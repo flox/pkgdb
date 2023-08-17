@@ -1,6 +1,6 @@
 /* ========================================================================== *
  *
- * @file flox/util.hh
+ * @file flox/core/util.hh
  *
  * @brief Miscellaneous helper functions.
  *
