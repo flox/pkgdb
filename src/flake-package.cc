@@ -4,7 +4,7 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include "flox/exceptions.hh"
+#include "flox/core/exceptions.hh"
 #include "flox/flake-package.hh"
 #include "semver.hh"
 

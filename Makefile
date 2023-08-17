@@ -60,13 +60,15 @@ INCLUDEDIR ?= $(PREFIX)/include
 LIBFLOXPKGDB = libflox-pkgdb$(libExt)
 
 LIBS           = $(LIBFLOXPKGDB)
-COMMON_HEADERS = $(wildcard include/*.hh) $(wildcard include/flox/*.hh)
+COMMON_HEADERS =  $(wildcard include/*.hh) $(wildcard include/flox/*.hh)
+COMMON_HEADERS += $(wildcard include/flox/core/*.hh)
 SRCS           = $(wildcard src/*.cc)
 bin_SRCS       = src/main.cc
 lib_SRCS       = $(filter-out $(bin_SRCS),$(SRCS))
 test_SRCS      = $(wildcard tests/*.cc)
 BINS           = pkgdb
-TESTS          = $(filter-out tests/is_sqlite3,$(test_SRCS:.cc=))
+TEST_UTILS     = tests/is_sqlite3
+TESTS          = $(filter-out $(TEST_UTILS),$(test_SRCS:.cc=))
 
 
 # ---------------------------------------------------------------------------- #
@@ -168,7 +170,7 @@ CXXFLAGS += -DSEMVER_PATH='$(SEMVER_PATH)'
 bin:     lib $(addprefix bin/,$(BINS))
 lib:     $(addprefix lib/,$(LIBS))
 include: $(COMMON_HEADERS)
-tests:   $(TESTS)
+tests:   $(TESTS) $(TEST_UTILS)
 
 
 # ---------------------------------------------------------------------------- #
@@ -179,7 +181,7 @@ clean: FORCE
 	-$(RM) src/*.o tests/*.o
 	-$(RM) result
 	-$(RM) -r $(PREFIX)
-	-$(RM) $(TESTS)
+	-$(RM) $(TESTS) $(TEST_UTILS)
 	-$(RM) gmon.out *.log
 	-$(MAKE) -C src/sql clean
 	-$(RM) $(addprefix docs/,*.png *.html *.svg *.css *.js)
@@ -210,9 +212,9 @@ bin/pkgdb: src/main.o lib/$(LIBFLOXPKGDB)
 
 # ---------------------------------------------------------------------------- #
 
-$(TESTS) tests/is_sqlite3: CXXFLAGS += $(bin_CXXFLAGS)
-$(TESTS) tests/is_sqlite3: LDFLAGS  += $(bin_LDFLAGS)
-$(TESTS) tests/is_sqlite3: tests/%: tests/%.cc lib/$(LIBFLOXPKGDB)
+$(TESTS) $(TEST_UTILS): CXXFLAGS += $(bin_CXXFLAGS)
+$(TESTS) $(TEST_UTILS): LDFLAGS  += $(bin_LDFLAGS)
+$(TESTS) $(TEST_UTILS): tests/%: tests/%.cc lib/$(LIBFLOXPKGDB)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) "$<" -o "$@"
 
 
@@ -260,7 +262,7 @@ cc-check: $(TESTS:.cc=)
 	done;                       \
 	exit "$$_ec"
 
-bats-check: bin tests/is_sqlite3
+bats-check: bin $(TEST_UTILS)
 	PKGDB="$(MAKEFILE_DIR)/bin/pkgdb"                        \
 	IS_SQLITE3="$(MAKEFILE_DIR)/tests/is_sqlite3"            \
 	  bats --print-output-on-failure --verbose-run --timing  \

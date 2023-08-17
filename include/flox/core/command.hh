@@ -15,7 +15,7 @@
 
 #include <argparse/argparse.hpp>
 
-#include "flox/types.hh"
+#include "flox/core/types.hh"
 #include "flox/flox-flake.hh"
 
 /* -------------------------------------------------------------------------- */

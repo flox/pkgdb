@@ -15,9 +15,9 @@
 #include <nix/store-api.hh>
 #include <nix/flake/flake.hh>
 
-#include "flox/command.hh"
-#include "flox/util.hh"
-#include "pkgdb.hh"
+#include "flox/core/command.hh"
+#include "flox/core/util.hh"
+#include "flox/pkgdb.hh"
 
 /* -------------------------------------------------------------------------- */
 

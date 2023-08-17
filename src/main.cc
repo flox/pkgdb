@@ -10,8 +10,8 @@
 #include <iostream>
 #include <stdlib.h>
 
-#include "flox/command.hh"
-#include "pkgdb.hh"
+#include "flox/core/command.hh"
+#include "flox/pkgdb.hh"
 
 
 /* -------------------------------------------------------------------------- */

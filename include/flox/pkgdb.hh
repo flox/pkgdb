@@ -20,9 +20,9 @@
 #include <nix/eval-cache.hh>
 #include <sqlite3pp.hh>
 
-#include "flox/exceptions.hh"
-#include "flox/types.hh"
-#include "flox/command.hh"
+#include "flox/core/exceptions.hh"
+#include "flox/core/types.hh"
+#include "flox/core/command.hh"
 
 
 /* -------------------------------------------------------------------------- */

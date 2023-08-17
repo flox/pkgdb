@@ -10,7 +10,7 @@
 #include <iostream>
 #include <cstdlib>
 
-#include "flox/util.hh"
+#include "flox/core/util.hh"
 
 
 /* -------------------------------------------------------------------------- */
