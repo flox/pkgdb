@@ -114,6 +114,17 @@ PkgDb::initTables()
       );
     }
 
+  if ( sql_rc rc = this->execute_all( sql_view_packages ); isSQLError( rc ) )
+    {
+      throw PkgDbException(
+        this->dbPath
+      , nix::fmt( "Failed to initialize Packages views:(%d) %s"
+                , rc
+                , this->db.error_msg()
+                )
+      );
+    }
+
   static const char * stmtVersions =
     "INSERT OR IGNORE INTO DbVersions ( name, version ) VALUES"
     "  ( 'pkgdb',        '" FLOX_PKGDB_VERSION        "' )"

@@ -99,7 +99,19 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_Packages
 /* -------------------------------------------------------------------------- */
 
 static const char * sql_view_packages = R"SQL(
-
+CREATE VIEW IF NOT EXISTS v_PackagesSearch (
+  Packages.id
+, Packages.parentId
+, Packages.attrName
+, Packages.name
+, Packages.pname
+, Packages.version
+, Packages.semver
+, Packages.license
+, Packages.broken
+, Packages.unfree
+, Descriptions.description
+) FROM Packages JOIN Descriptions ON Packages.descriptionId = Descriptions.id
 )SQL";
 
 
