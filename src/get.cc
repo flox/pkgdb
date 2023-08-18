@@ -129,7 +129,9 @@ GetCommand::runDb()
     }
   else
     {
-      std::string dbPath( pkgdb::genPkgDbName( this->flake->lockedFlake ) );
+      std::string dbPath(
+        pkgdb::genPkgDbName( this->flake->lockedFlake.getFingerprint() )
+      );
       std::cout << dbPath << std::endl;
     }
   return EXIT_SUCCESS;

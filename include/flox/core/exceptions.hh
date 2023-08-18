@@ -26,7 +26,7 @@ class FloxException : public std::exception {
     std::string msg;
   public:
     FloxException( std::string_view msg ) : msg( msg ) {}
-    const char * what() const noexcept { return this->msg.c_str(); }
+    const char * what() const noexcept override { return this->msg.c_str(); }
 };
 
 

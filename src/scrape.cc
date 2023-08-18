@@ -77,9 +77,8 @@ ScrapeCommand::run()
           while ( ! todo.empty() )
             {
               auto & [prefix, cursor] = todo.front();
-              flox::pkgdb::scrape(
-                * this->db
-              , this->state->symbols
+              this->db->scrape(
+                this->state->symbols
               , prefix
               , cursor
               , todo

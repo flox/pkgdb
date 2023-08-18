@@ -183,7 +183,6 @@ clean: FORCE
 	-$(RM) -r $(PREFIX)
 	-$(RM) $(TESTS) $(TEST_UTILS)
 	-$(RM) gmon.out *.log
-	-$(MAKE) -C src/sql clean
 	-$(RM) $(addprefix docs/,*.png *.html *.svg *.css *.js)
 	-$(RM) -r docs/search
 
@@ -202,6 +201,8 @@ lib/$(LIBFLOXPKGDB): $(lib_SRCS:.cc=.o)
 
 
 # ---------------------------------------------------------------------------- #
+
+src/pkgdb/write.o: src/pkgdb/schemas.hh
 
 bin/pkgdb: CXXFLAGS += $(bin_CXXFLAGS)
 bin/pkgdb: LDFLAGS  += $(bin_LDFLAGS)
@@ -302,22 +303,6 @@ docs: docs/index.html
 
 docs/index.html: FORCE
 	$(DOXYGEN) ./Doxyfile
-
-
-# ---------------------------------------------------------------------------- #
-
-# Generates SQL -> C++ schema headers
-
-SQL_FILES    := $(wildcard src/sql/*.sql)
-SQL_HH_FILES := $(SQL_FILES:.sql=.hh)
-
-$(SQL_HH_FILES): %.hh: %.sql src/sql/Makefile
-	$(MAKE) -C src/sql $(@F)
-
-.PHONY: sql-headers
-sql-headers: $(SQL_HH_FILES)
-
-src/pkgdb.o: $(SQL_HH_FILES)
 
 
 # ---------------------------------------------------------------------------- #
