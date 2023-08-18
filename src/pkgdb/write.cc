@@ -114,11 +114,11 @@ PkgDb::initTables()
       );
     }
 
-  if ( sql_rc rc = this->execute_all( sql_view_packages ); isSQLError( rc ) )
+  if ( sql_rc rc = this->execute_all( sql_views ); isSQLError( rc ) )
     {
       throw PkgDbException(
         this->dbPath
-      , nix::fmt( "Failed to initialize Packages views:(%d) %s"
+      , nix::fmt( "Failed to initialize views:(%d) %s"
                 , rc
                 , this->db.error_msg()
                 )

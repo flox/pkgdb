@@ -98,11 +98,20 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_Packages
 
 /* -------------------------------------------------------------------------- */
 
-static const char * sql_view_packages = R"SQL(
-CREATE VIEW IF NOT EXISTS v_PackagesSearch (
+static const char * sql_views = R"SQL(
+CREATE VIEW IF NOT EXISTS v_AttrPaths AS
+  WITH Tree ( id, parent, attrName, path ) AS (
+    SELECT id, parent, attrName, ( '["' || attrName || '"]' ) AS path
+    FROM AttrSets WHERE ( parent = 0 )
+    UNION ALL SELECT O.id, O.parent
+                   , O.attrName
+                   , json_insert( Parent.path, '$[#]', O.attrName ) AS path
+    FROM AttrSets O INNER JOIN Tree as Parent ON ( Parent.id = O.parent )
+  ) SELECT id, parent, attrName, path FROM Tree;
+
+CREATE VIEW IF NOT EXISTS v_PackagesSearch AS SELECT
   Packages.id
-, Packages.parentId
-, Packages.attrName
+, json_insert( v_AttrPaths.path, '$[#]', Packages.attrName ) AS path
 , Packages.name
 , Packages.pname
 , Packages.version
@@ -111,7 +120,9 @@ CREATE VIEW IF NOT EXISTS v_PackagesSearch (
 , Packages.broken
 , Packages.unfree
 , Descriptions.description
-) FROM Packages JOIN Descriptions ON Packages.descriptionId = Descriptions.id
+FROM Packages
+JOIN Descriptions ON ( Packages.descriptionId = Descriptions.id )
+JOIN v_AttrPaths ON ( Packages.parentId = v_AttrPaths.id )
 )SQL";
 
 
