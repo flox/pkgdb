@@ -13,8 +13,6 @@
 #include <optional>
 
 #include <nix/shared.hh>
-#include <sql-builder/sql.hh>
-#include <sqlite3pp.hh>
 
 #include "flox/core/types.hh"
 #include "flox/core/util.hh"
@@ -25,10 +23,6 @@
 namespace flox {
 
   namespace pkgdb {
-
-/* -------------------------------------------------------------------------- */
-
-using PkgQuery = sql::SelectModel;
 
 /* -------------------------------------------------------------------------- */
 
@@ -57,7 +51,7 @@ struct PkgQueryArgs {
 };  /* End struct `PkgQueryArgs' */
 
 
-PkgQuery buildPkgQuery( PkgQueryArgs && params );
+std::string buildPkgQuery( PkgQueryArgs && params );
 
 
 /* -------------------------------------------------------------------------- */
