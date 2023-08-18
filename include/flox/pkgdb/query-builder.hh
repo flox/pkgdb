@@ -11,6 +11,7 @@
 
 #include <string>
 #include <optional>
+#include <vector>
 
 #include <nix/shared.hh>
 
@@ -34,20 +35,32 @@ struct PkgQueryArgs {
   std::optional<std::string>    stability;
   std::optional<std::string>    system;
 
-  std::optional<std::string>            name;
-  std::optional<std::string>            pname;
-  std::optional<std::string>            version;
-  std::optional<std::string>            semver;
-  std::optional<std::list<std::string>> licenses;
+  std::optional<std::string>              name;
+  std::optional<std::string>              pname;
+  std::optional<std::string>              version;
+  std::optional<std::string>              semver;
+  std::optional<std::vector<std::string>> licenses;
 
   bool allowBroken       = false;
   bool allowUnfree       = true;
   bool preferPreReleases = false;
 
-  std::optional<std::list<subtree_type>> subtrees;
+  std::optional<std::vector<subtree_type>> subtrees;
 
-  std::list<std::string>  systems     = { nix::settings.thisSystem.get() };
-  std::list<std::string>  stabilities = flox::defaultCatalogStabilities;
+  std::vector<std::string>  systems     = { nix::settings.thisSystem.get() };
+  std::vector<std::string>  stabilities = flox::defaultCatalogStabilities;
+
+  /**
+   * Sanity check parameters.
+   * Make sure `systems` are valid systems.
+   * Make sure `stability` is a valid stability.
+   * Make sure `pathPrefix` is consistent with `subtree`, `systems`,
+   * and `stability`.
+   * Make sure `name` is not set when `pname`, `version`, or `semver` are set.
+   * Make sure `version` is not set when `semver` is set.
+   * @return `true` iff the above conditions are met.
+   */
+  bool validate();
 };  /* End struct `PkgQueryArgs' */
 
 
