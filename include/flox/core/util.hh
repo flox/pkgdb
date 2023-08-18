@@ -59,12 +59,12 @@ static const std::list<std::string> defaultSystems = {
 };
 
 /** `flake' subtrees to resolve/search in. */
-static const std::vector<std::string> defaultSubtrees = {
+static const std::list<std::string> defaultSubtrees = {
   "catalog", "packages", "legacyPackages"
 };
 
 /** Catalog stabilities to resolve/search in. */
-static const std::vector<std::string> defaultCatalogStabilities = {
+static const std::list<std::string> defaultCatalogStabilities = {
   "stable", "staging", "unstable"
 };
 
