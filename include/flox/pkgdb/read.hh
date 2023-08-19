@@ -238,6 +238,14 @@ class PkgDbReadOnly {
      */
     std::string getDescription( row_id descriptionId );
 
+    /**
+     * Enumerate all `AttrSets.id`s which are descendants ( recursively ) of
+     * the `AttrSets.id` @a root.
+     * @param root The `AttrSets.id` to target.
+     * @return All `AttrSets.id`s which are descendants of @a root.
+     */
+    std::vector<row_id> getDescendantAttrSets( row_id root );
+
 
 /* -------------------------------------------------------------------------- */
 

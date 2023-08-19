@@ -7,8 +7,6 @@
  *
  * -------------------------------------------------------------------------- */
 
-#pragma once
-
 #include <sql-builder/sql.hh>
 
 #include "flox/pkgdb/query-builder.hh"
@@ -64,6 +62,8 @@ buildPkgQuery( PkgQueryArgs && params )
   // TODO: stabilities
   // TODO: semver and pre-releases
   // TODO: bind
+
+  return q.str();
 }
 
 

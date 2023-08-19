@@ -13,6 +13,7 @@
 , argparse
 , semver
 , sqlite3pp
+, sql-builder
 }: stdenv.mkDerivation {
   pname   = "flox-pkgdb";
   version = builtins.replaceStrings ["\n"] [""] ( builtins.readFile ./version );
@@ -36,14 +37,17 @@
       notResult = ( builtins.match "result(-*)?" bname ) == null;
     in notIgnored && notResult;
   };
-  nativeBuildInputs     = [pkg-config];
-  buildInputs           = [sqlite.dev nlohmann_json argparse sqlite3pp];
   propagatedBuildInputs = [semver nix.dev boost];
-  nix_INCDIR            = nix.dev.outPath + "/include";
-  boost_CFLAGS          = "-I" + boost.outPath + "/include";
-  libExt                = stdenv.hostPlatform.extensions.sharedLibrary;
-  SEMVER_PATH           = semver.outPath + "/bin/semver";
-  configurePhase        = ''
+  nativeBuildInputs     = [pkg-config];
+  buildInputs           = [
+    sqlite.dev nlohmann_json argparse sqlite3pp sql-builder
+  ];
+  nix_INCDIR         = nix.dev.outPath + "/include";
+  boost_CFLAGS       = "-I" + boost.outPath + "/include";
+  sql_builder_CFLAGS = "-I" + sql-builder.outPath + "/include";
+  libExt             = stdenv.hostPlatform.extensions.sharedLibrary;
+  SEMVER_PATH        = semver.outPath + "/bin/semver";
+  configurePhase     = ''
     runHook preConfigure;
     export PREFIX="$out";
     if [[ "''${enableParallelBuilding:-1}" = 1 ]]; then

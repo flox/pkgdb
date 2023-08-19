@@ -143,22 +143,7 @@ CREATE VIEW IF NOT EXISTS v_PackagesSearch AS SELECT
 , Descriptions.description
 FROM Packages
 JOIN Descriptions ON ( Packages.descriptionId = Descriptions.id )
-JOIN v_AttrPaths ON ( Packages.parentId = v_AttrPaths.id );
-)SQL";
-
-/* -------------------------------------------------------------------------- */
-
-/**
- * Lookup all descendant `AttrSets` ( recursively ) for
- * `AttrSets.id` `:root`.
- */
-static const char * sql_q_descendants = R"SQL(
-WITH RECURSIVE Tree AS (
-  SELECT id, parent, 0 as depth FROM AttrSets WHERE ( id = :root )
-  UNION ALL SELECT O.id, O.parent, ( Parent.depth + 1 ) AS depth
-  FROM AttrSets O JOIN Tree AS Parent ON ( Parent.id = O.parent )
-) SELECT G.id, G.parent, G.depth FROM Tree AS G
-JOIN AttrSets AS Parent ON ( G.parent = Parent.id ) ORDER BY depth
+JOIN v_AttrPaths ON ( Packages.parentId = v_AttrPaths.id )
 )SQL";
 
 

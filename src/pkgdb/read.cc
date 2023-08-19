@@ -293,6 +293,34 @@ PkgDbReadOnly::getPackagePath( row_id id )
 
 /* -------------------------------------------------------------------------- */
 
+
+  std::vector<row_id>
+PkgDbReadOnly::getDescendantAttrSets( row_id root )
+{
+  sqlite3pp::query qry(
+    this->db
+  , R"SQL(
+      WITH RECURSIVE Tree AS (
+        SELECT id, parent, 0 as depth FROM AttrSets WHERE ( id = :root )
+        UNION ALL SELECT O.id, O.parent, ( Parent.depth + 1 ) AS depth
+        FROM AttrSets O JOIN Tree AS Parent ON ( Parent.id = O.parent )
+      ) SELECT C.id FROM Tree AS C
+      JOIN AttrSets AS Parent ON ( C.parent = Parent.id )
+      WHERE ( C.id != :root ) ORDER BY C.depth, C.parent
+    )SQL"
+  );
+  qry.bind( ":root", (long long) root );
+  std::vector<row_id> descendants;
+  for ( auto row : qry )
+    {
+      descendants.push_back( row.get<long long>( 0 ) );
+    }
+  return descendants;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
   }  /* End Namespace `flox::pkgdb' */
 }  /* End Namespace `flox' */
 
