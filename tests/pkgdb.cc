@@ -279,7 +279,7 @@ test_descendants0( flox::pkgdb::PkgDb & db )
 
   std::vector<row_id> descendants = db.getDescendantAttrSets( linux );
   /* Clear the DB */
-  db.execute_all( "DELETE FROM Packages; DELETE FROM AttrSets" );
+  db.execute( "DELETE FROM AttrSets" );
 
   EXPECT( descendants ==
           ( std::vector<row_id> { python, node, foo, quux, bar, baz, karl } )
