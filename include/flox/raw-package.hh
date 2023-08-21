@@ -14,19 +14,12 @@
 /* -------------------------------------------------------------------------- */
 
 namespace flox {
-  namespace resolve {
-
-/* -------------------------------------------------------------------------- */
-
-class DrvDb;
-
 
 /* -------------------------------------------------------------------------- */
 
 /**
  * The simplest `Package' implementation comprised of raw values.
- * This form largely exists for testing purposes, but it also serves as the
- * basis for `CachedPackage' ( read from SQL databases ).
+ * This form largely exists for testing purposes.
  */
 class RawPackage : public Package {
 
@@ -41,16 +34,12 @@ class RawPackage : public Package {
     std::vector<std::string>    _outputsToInstall;
     std::optional<bool>         _broken;
     std::optional<bool>         _unfree;
-    bool                        _hasMetaAttr;
-    bool                        _hasPnameAttr;
-    bool                        _hasVersionAttr;
+    std::optional<std::string>  _description;
 
 
 /* -------------------------------------------------------------------------- */
 
   public:
-    friend class RawPackageSet;
-
     RawPackage( const nlohmann::json &  drvInfo );
     RawPackage(       nlohmann::json && drvInfo );
     RawPackage(
@@ -64,9 +53,7 @@ class RawPackage : public Package {
     , const std::vector<std::string>   & outputsToInstall = { "out" }
     ,       std::optional<bool>          broken           = std::nullopt
     ,       std::optional<bool>          unfree           = std::nullopt
-    ,       bool                         hasMetaAttr      = false
-    ,       bool                         hasPnameAttr     = false
-    ,       bool                         hasVersionAttr   = false
+    ,       std::optional<std::string>   description      = std::nullopt
     ) : _pathS( pathS )
       , _fullname( fullname )
       , _pname( pname )
@@ -77,9 +64,7 @@ class RawPackage : public Package {
       , _outputsToInstall( outputsToInstall )
       , _broken( broken )
       , _unfree( unfree )
-      , _hasMetaAttr( hasMetaAttr )
-      , _hasPnameAttr( hasPnameAttr )
-      , _hasVersionAttr( hasVersionAttr )
+      , _description( description )
     {
     }
 
@@ -131,20 +116,10 @@ class RawPackage : public Package {
     {
       return this->_unfree;
     }
-      bool
-    hasMetaAttr() const override
+      std::optional<std::string>
+    getDescription() const override
     {
-      return this->_hasMetaAttr;
-    }
-      bool
-    hasPnameAttr() const override
-    {
-      return this->_hasPnameAttr;
-    }
-      bool
-    hasVersionAttr() const override
-    {
-      return this->_hasVersionAttr;
+      return this->_description;
     }
       std::vector<std::string>
     getOutputsToInstall() const override
@@ -160,7 +135,6 @@ class RawPackage : public Package {
 
 /* -------------------------------------------------------------------------- */
 
-  }  /* End Namespace `flox::resolve' */
 }  /* End Namespace `flox' */
 
 

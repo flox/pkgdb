@@ -5,106 +5,106 @@
  * -------------------------------------------------------------------------- */
 
 #include "flox/raw-package.hh"
-#include "flox/drv-cache.hh"
 
 
 /* -------------------------------------------------------------------------- */
 
 namespace flox {
-  namespace resolve {
 
 /* -------------------------------------------------------------------------- */
 
 RawPackage::RawPackage( const nlohmann::json & drvInfo )
-  : _pathS()
+  : _pathS( drvInfo.contains("pathS")
+            ? drvInfo["pathS"].get<std::vector<std::string>>()
+            : std::vector<std::string>{}
+          )
   , _fullname( drvInfo.at( "name" ) )
   , _pname( drvInfo.at( "pname" ) )
-  , _version( drvInfo.at( "version" ).is_null()
-              ? std::nullopt
-              : std::make_optional( drvInfo.at( "version" ).get<std::string>() )
+  , _version( drvInfo.contains( "version" )
+              ? std::make_optional( drvInfo.at( "version" ).get<std::string>() )
+              : std::nullopt
             )
-  , _semver( drvInfo.at( "semver" ).is_null()
-              ? std::nullopt
-              : std::make_optional( drvInfo.at( "semver" ).get<std::string>() )
+  , _semver( drvInfo.contains( "semver" )
+              ? std::make_optional( drvInfo.at( "semver" ).get<std::string>() )
+              : std::nullopt
             )
-  , _license( drvInfo.at( "license" ).is_null()
-              ? std::nullopt
-              : std::make_optional( drvInfo.at( "license" ).get<std::string>() )
+  , _license( drvInfo.contains( "license" )
+              ? std::make_optional( drvInfo.at( "license" ).get<std::string>() )
+              : std::nullopt
             )
-  , _outputs( drvInfo.at( "outputs" ) )
-  , _outputsToInstall( drvInfo.at( "outputsToInstall" ) )
-  , _broken( drvInfo.at( "broken" ).is_null()
-              ? std::nullopt
-              : std::make_optional( drvInfo.at( "broken" ).get<bool>() )
+  , _outputs( drvInfo.contains( "outputs" )
+              ? drvInfo["outputs"].get<std::vector<std::string>>()
+              : std::vector<std::string>{}
             )
-  , _unfree( drvInfo.at( "unfree" ).is_null()
-              ? std::nullopt
-              : std::make_optional( drvInfo.at( "unfree" ).get<bool>() )
+  , _outputsToInstall( drvInfo.contains("outputsToInstall")
+                       ? drvInfo["outputsToInstall"].get<std::vector<std::string>>()
+                       : std::vector<std::string>{}
+                     )
+  , _broken( drvInfo.contains( "broken" )
+              ? std::make_optional( drvInfo.at( "broken" ).get<bool>() )
+              : std::nullopt
             )
-  , _hasMetaAttr( drvInfo.at( "hasMetaAttr" ).get<bool>() )
-  , _hasPnameAttr( drvInfo.at( "hasPnameAttr" ).get<bool>() )
-  , _hasVersionAttr( drvInfo.at( "hasVersionAttr" ).get<bool>() )
-{
-  this->_pathS.push_back( drvInfo["subtree"] );
-  this->_pathS.push_back( drvInfo["system"] );
-  for ( auto & p : drvInfo["path"] ) { this->_pathS.push_back( p ); }
-}
+  , _unfree( drvInfo.contains( "unfree" )
+              ? std::make_optional( drvInfo.at( "unfree" ).get<bool>() )
+              : std::nullopt
+            )
+  , _description( drvInfo.contains( "description" )
+              ? std::make_optional( drvInfo["description"].get<std::string>() )
+              : std::nullopt
+            )
+{}
 
 
 /* -------------------------------------------------------------------------- */
 
 RawPackage::RawPackage( nlohmann::json && drvInfo )
-  : _pathS()
+  : _pathS( drvInfo.contains("pathS")
+            ? drvInfo["pathS"].get<std::vector<std::string>>()
+            : std::vector<std::string>{}
+          )
   , _fullname( std::move( drvInfo.at( "name" ) ) )
   , _pname( std::move( drvInfo.at( "pname" ) ) )
-  , _version( drvInfo.at( "version" ).is_null()
-              ? std::nullopt
-              : std::make_optional(
-                  std::move( drvInfo.at( "version" ).get<std::string>() )
-                )
+  , _version( drvInfo.contains( "version" )
+              ? std::make_optional( drvInfo.at( "version" ).get<std::string>() )
+              : std::nullopt
             )
-  , _semver( drvInfo.at( "semver" ).is_null()
-              ? std::nullopt
-              : std::make_optional(
-                  std::move( drvInfo.at( "semver" ).get<std::string>() )
-                )
+  , _semver( drvInfo.contains( "semver" )
+              ? std::make_optional( drvInfo.at( "semver" ).get<std::string>() )
+              : std::nullopt
             )
-  , _license( drvInfo.at( "license" ).is_null()
-              ? std::nullopt
-              : std::make_optional(
-                  std::move( drvInfo.at( "license" ).get<std::string>() )
-                )
+  , _license( drvInfo.contains( "license" )
+              ? std::make_optional( drvInfo.at( "license" ).get<std::string>() )
+              : std::nullopt
             )
-  , _outputs( std::move( drvInfo.at( "outputs" ) ) )
-  , _outputsToInstall( std::move( drvInfo.at( "outputsToInstall" ) ) )
-  , _broken( drvInfo.at( "broken" ).is_null()
-              ? std::nullopt
-              : std::make_optional(
+  , _outputs( drvInfo.contains( "outputs" )
+              ? drvInfo["outputs"].get<std::vector<std::string>>()
+              : std::vector<std::string>{}
+            )
+  , _outputsToInstall( drvInfo.contains("outputsToInstall")
+                       ? drvInfo["outputsToInstall"].get<std::vector<std::string>>()
+                       : std::vector<std::string>{}
+                     )
+  , _broken( drvInfo.contains( "broken" )
+              ? std::make_optional(
                   std::move( drvInfo.at( "broken" ).get<bool>() )
                 )
+              : std::nullopt
             )
-  , _unfree( drvInfo.at( "unfree" ).is_null()
-              ? std::nullopt
-              : std::make_optional(
+  , _unfree( drvInfo.contains( "unfree" )
+              ? std::make_optional(
                   std::move( drvInfo.at( "unfree" ).get<bool>() )
                 )
+              : std::nullopt
             )
-  , _hasMetaAttr( std::move( drvInfo.at( "hasMetaAttr" ).get<bool>() ) )
-  , _hasPnameAttr( std::move( drvInfo.at( "hasPnameAttr" ).get<bool>() ) )
-  , _hasVersionAttr( std::move( drvInfo.at( "hasVersionAttr" ).get<bool>() ) )
-{
-  this->_pathS.push_back( std::move( drvInfo["subtree"] ) );
-  this->_pathS.push_back( std::move( drvInfo["system"] ) );
-  for ( auto & p : drvInfo["path"] )
-    {
-      this->_pathS.push_back( std::move( p ) );
-    }
-}
+  , _description( drvInfo.contains( "description" )
+              ? std::make_optional( drvInfo["description"].get<std::string>() )
+              : std::nullopt
+            )
+{}
 
 
 /* -------------------------------------------------------------------------- */
 
-  }  /* End Namespace `flox::resolve' */
 }  /* End Namespace `flox' */
 
 
