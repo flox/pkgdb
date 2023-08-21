@@ -29,6 +29,7 @@
 
 #include "flox/flox-flake.hh"
 #include "flox/core/util.hh"
+#include "flox/core/types.hh"
 #include "flox/pkgdb.hh"
 #include "test.hh"
 
@@ -230,7 +231,7 @@ test_hasPackage0( flox::pkgdb::PkgDb & db )
 
   EXPECT(
     db.hasPackage(
-      std::vector<std::string> { "legacyPackages", "x86_64-linux", "phony" }
+      flox::AttrPath { "legacyPackages", "x86_64-linux", "phony" }
     )
   );
   return true;
@@ -250,6 +251,40 @@ test_descriptions0( flox::pkgdb::PkgDb & db )
   EXPECT_EQ( id, db.addOrGetDescriptionId( "Hello, World!" ) );
   /* Ensure we get back our original string. */
   EXPECT_EQ( "Hello, World!", db.getDescription( id ) );
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  bool
+test_descendants0( flox::pkgdb::PkgDb & db )
+{
+  /* Clear `AttrSets' and Make a tree. */
+  db.execute_all( "DELETE FROM Packages; DELETE FROM AttrSets" );
+  row_id linux =
+    db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-linux" } );
+  row_id python = db.addOrGetAttrSetId( "python3Packages", linux );
+  row_id node   = db.addOrGetAttrSetId( "nodePackages", linux );
+  row_id foo    = db.addOrGetAttrSetId( "fooPackages", linux );
+  row_id bar    = db.addOrGetAttrSetId( "bar", foo );
+  row_id baz    = db.addOrGetAttrSetId( "baz", foo );
+  /* Ensure `ORDER BY' works as expected.
+   * `quux' should go before `bar'.
+   * `karl' should go after `baz'. */
+  row_id quux = db.addOrGetAttrSetId( "quuxPackages", linux );
+  row_id karl = db.addOrGetAttrSetId( "karl", quux );
+  /* Make sure these don't appear */
+  db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-darwin" } );
+
+  std::vector<row_id> descendants = db.getDescendantAttrSets( linux );
+  /* Clear the DB */
+  db.execute( "DELETE FROM AttrSets" );
+
+  EXPECT( descendants ==
+          ( std::vector<row_id> { python, node, foo, quux, bar, baz, karl } )
+        );
+
   return true;
 }
 
@@ -316,6 +351,8 @@ main( int argc, char * argv[] )
     RUN_TEST( hasPackage0, db );
 
     RUN_TEST( descriptions0, db );
+
+    RUN_TEST( descendants0, db );
 
   }
 

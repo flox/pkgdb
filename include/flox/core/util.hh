@@ -11,7 +11,8 @@
 
 #include <functional>  // For `std::hash'
 #include <string>      // For `std::string' and `std::string_view'
-#include <list>        // For `std::list'
+#include <vector>
+#include <list>
 
 #include <nix/logging.hh>
 #include <nix/store-api.hh>
@@ -54,7 +55,7 @@ namespace flox {
 /* -------------------------------------------------------------------------- */
 
 /** Systems to resolve/search in. */
-static const std::list<std::string> defaultSystems = {
+static const std::vector<std::string> defaultSystems = {
  "x86_64-linux", "aarch64-linux", "x86_64-darwin", "aarch64-darwin"
 };
 
