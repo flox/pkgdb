@@ -9,9 +9,14 @@
 
 #include <assert.h>
 
+#include <nlohmann/json.hpp>
 #include "flox/pkgdb/read.hh"
 #include "test.hh"
-#include "flox/flake-package.hh"
+#include "flox/raw-package.hh"
+
+/* -------------------------------------------------------------------------- */
+
+using namespace flox;
 
 /* -------------------------------------------------------------------------- */
 
@@ -23,8 +28,30 @@
   bool
 test_distanceFromMatch()
 {
-  // auto pkg = flox::FlakePackage();
-  // flox::pkgdb::distanceFromMatch(pkg, "match");
+  std::tuple<char const*, char const*, size_t> cases[] = {
+    { "match", "match", 0 },
+    { "match", "partial match", 0 },
+    { "match", "miss", 0 },
+    { "partial match", "match", 1 },
+    { "partial match", "partial match", 1 },
+    { "partial match", "miss", 2 },
+    { "miss", "match", 3 },
+    { "miss", "partial match", 3 },
+    { "miss", "miss", 4 },
+  };
+
+  RawPackage pkg;
+  for (auto [pname, description, distance] : cases) {
+      pkg = RawPackage(nlohmann::json {
+        { "name", "name" },
+        { "pname", pname },
+        { "description", description },
+      });
+      EXPECT_EQ(*pkgdb::distanceFromMatch(pkg, "match"), distance);
+  }
+
+  // Should return std::nullopt for empty match string.
+  EXPECT(pkgdb::distanceFromMatch(pkg, "") == std::nullopt);
   return true;
 }
 
