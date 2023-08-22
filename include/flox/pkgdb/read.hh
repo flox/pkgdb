@@ -23,6 +23,7 @@
 #include "flox/core/exceptions.hh"
 #include "flox/core/types.hh"
 #include "flox/core/command.hh"
+#include "flox/package.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -251,6 +252,14 @@ class PkgDbReadOnly {
 
 };  /* End class `PkgDbReadOnly' */
 
+/**
+ * Calculate a distance that can be used to order packages by how close they
+ * are to a match string.
+ * @param Package The Package to judge distance from.
+ * @param match String to look for in Package's fields.
+ * @return Distance between pkg and match.
+*/
+std::optional<size_t> distanceFromMatch( Package & pkg, std::string match );
 
 /* -------------------------------------------------------------------------- */
 

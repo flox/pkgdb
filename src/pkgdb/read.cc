@@ -321,6 +321,49 @@ PkgDbReadOnly::getDescendantAttrSets( row_id root )
 
 /* -------------------------------------------------------------------------- */
 
+  std::optional<size_t>
+distanceFromMatch( Package & pkg, std::string match )
+{
+  if ( match.empty() ) { return std::nullopt; }
+
+  std::string pname = pkg.getPname();
+  // TODO match on attrName. That's not currently possible because attrName is
+  // meaningful for flakes, but for catalogs, only the attrName of parent is
+  // meaningful (attrName is a version string).
+
+  // Don't give description any weight if pname matches exactly. It's not
+  // especially meaningful if a description mentions its own name.
+  if ( pname == match )
+    {
+      // pname matches exactly
+      return 0;
+    }
+
+  bool pnameMatches = (pname.find(match) != std::string::npos);
+  auto description = pkg.getDescription();
+  bool descriptionMatches = (description.has_value() && description->find(match) != std::string::npos);
+
+  if ( pnameMatches ) {
+    if ( descriptionMatches )
+      {
+        // pname and description match
+        return 1;
+      }
+    // only pname matches
+    return 2;
+  }
+
+  if ( descriptionMatches )
+    {
+      // only description matches
+      return 3;
+    }
+  // nothing matches
+  return 4;
+}
+
+/* -------------------------------------------------------------------------- */
+
   }  /* End Namespace `flox::pkgdb' */
 }  /* End Namespace `flox' */
 

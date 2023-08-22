@@ -47,6 +47,11 @@ buildPkgQuery( const PkgQueryArgs & params )
       q.where( column( "pname" ) == Param( ":pname" ) );
       binds.emplace( ":pname", params.pname.value() );
     }
+  
+  if ( params.match.has_value() && !params.match->empty() )
+    {
+      q.where( "( name LIKE '%:match%' ) OR ( description LIKE '%:match%' )" );
+    }
 
   if ( params.version.has_value() )
     {
