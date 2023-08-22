@@ -65,14 +65,13 @@ main( int argc, char * argv[] )
 
 /* -------------------------------------------------------------------------- */
 
-  nix::Verbosity verbosity;
   if ( ( 1 < argc ) && ( std::string_view( argv[1] ) == "-v" ) )
     {
-      verbosity = nix::lvlDebug;
+      nix::verbosity = nix::lvlDebug;
     }
   else
     {
-      verbosity = nix::lvlWarn;
+      nix::verbosity = nix::lvlWarn;
     }
 
 /* -------------------------------------------------------------------------- */
