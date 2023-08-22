@@ -157,7 +157,6 @@ buildPkgQuery( const PkgQueryArgs & params )
       throw PkgQueryArgs::PkgQueryInvalidArgException( mec.value() );
     }
 
-  // TODO: validate params
   SelectModel q;
   q.select( "id" ).from( "v_PackagesSearch" );
   std::unordered_map<std::string, std::string> binds;
@@ -187,7 +186,10 @@ buildPkgQuery( const PkgQueryArgs & params )
 
   if ( params.licenses.has_value() && ( ! params.licenses.value().empty() ) )
     {
-      q.where( column( "license" ).in( params.licenses.value() ) );
+      q.where( "(" + (
+        column( "license" ).is_not_null() and
+        column( "license" ).in( params.licenses.value() )
+      ).str() + ")" );
     }
 
   if ( ! params.allowBroken )

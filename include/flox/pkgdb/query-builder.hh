@@ -30,28 +30,45 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Collection of query parameters used to lookup packages in a database.
+ * These use a combination of SQL statements and post processing with
+ * `node-semver` to produce a list of satisfactory packages.
+ */
 struct PkgQueryArgs {
 
-  /** Match partial name/description */
+  /** Filter results by partial name/description match. */
   std::optional<std::string> match;
-  std::optional<std::string> name;
-  std::optional<std::string> pname;
-  std::optional<std::string> version;
-  std::optional<std::string> semver;
+  std::optional<std::string> name;    /**< Filter results by exact `name`. */
+  std::optional<std::string> pname;   /**< Filter results by exact `pname`. */
+  std::optional<std::string> version; /**< Filter results by exact version. */
+  std::optional<std::string> semver;  /**< Filter results by version range. */
 
+  /** Filter results to those explicitly marked with the given licenses. */
   std::optional<std::vector<std::string>> licenses;
 
-  bool allowBroken       = false;
-  bool allowUnfree       = true;
+  /** Whether to include packages which are explicitly marked `broken`. */
+  bool allowBroken = false;
+  /** Whether to include packages which are explicitly marked `unfree`. */
+  bool allowUnfree = true;
+  /** Whether pre-release versions should be ordered before releases. */
   bool preferPreReleases = false;
 
+  /**
+   * Subtrees to search.
+   * TODO: Default to first of `catalog`, `packages`, or `legacyPackages`.
+   *       Requires `db` to be read.
+   */
   std::optional<std::vector<subtree_type>> subtrees;
 
+  /** Systems to search */
   std::vector<std::string> systems = { nix::settings.thisSystem.get() };
 
+  /** Stabilities to search ( if any ) */
   std::optional<std::vector<std::string>> stabilities;
 
 
+  /** Errors concerning validity of package query parameters. */
   struct PkgQueryInvalidArgException : public flox::FloxException {
     public:
       enum error_code {
@@ -94,8 +111,21 @@ struct PkgQueryArgs {
 
 /* -------------------------------------------------------------------------- */
 
+ /* A SQL statement string with a mapping of host parameters to their
+  * respective values. */
 using SQLBinds = std::unordered_map<std::string, std::string>;
 
+/**
+ * Construct a SQL query string with a set of parameters to be bound.
+ * Binding is left to the caller to allow a single result to be reused across
+ * multiple databases.
+ *
+ * This routine does NOT perform filtering by `semver`.
+ * TODO: filter by `match`.
+ *
+ * @return A SQL statement string with a mapping of host parameters to their
+ *         respective values.
+ */
 std::pair<std::string, SQLBinds> buildPkgQuery( const PkgQueryArgs & params );
 
 
