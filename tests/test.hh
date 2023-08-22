@@ -65,6 +65,10 @@ runTest( std::string_view name, F f, Args && ... args )
  * to the resulting code on failure.
  * This pattern allows early tests to still run later ones, while preserving
  * a "global" exit status.
+ * 
+ * This emits a warning on clang until we start using clang 12
+ * "must specify at least one argument for '...' parameter of variadic macro"
+ * https://github.com/llvm/llvm-project/issues/50951
  */
 #define _RUN_TEST( _EC, _NAME, ... )                      \
   {                                                       \
