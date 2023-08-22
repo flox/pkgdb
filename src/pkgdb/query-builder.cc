@@ -268,8 +268,9 @@ buildPkgQuery( const PkgQueryArgs & params )
         }
     }
 
-  // TODO: match
-  // TODO: semver and pre-releases
+  // TODO: Match
+  // TODO: Semver and pre-releases
+  // TODO: Sort/"order by" results
 
   return std::make_pair( q.str(), binds );
 }
