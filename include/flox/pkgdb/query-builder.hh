@@ -12,6 +12,8 @@
 #include <string>
 #include <optional>
 #include <vector>
+#include <unordered_map>
+#include <functional>
 
 #include <nix/shared.hh>
 
@@ -28,17 +30,14 @@ namespace flox {
 /* -------------------------------------------------------------------------- */
 
 struct PkgQueryArgs {
-  /** Match partial name/description */
-  std::optional<std::string>    match;
-  std::optional<flox::AttrPath> pathPrefix;
-  std::optional<subtree_type>   subtree;
-  std::optional<std::string>    stability;
-  std::optional<std::string>    system;
 
-  std::optional<std::string>              name;
-  std::optional<std::string>              pname;
-  std::optional<std::string>              version;
-  std::optional<std::string>              semver;
+  /** Match partial name/description */
+  std::optional<std::string> match;
+  std::optional<std::string> name;
+  std::optional<std::string> pname;
+  std::optional<std::string> version;
+  std::optional<std::string> semver;
+
   std::optional<std::vector<std::string>> licenses;
 
   bool allowBroken       = false;
@@ -51,21 +50,25 @@ struct PkgQueryArgs {
 
   std::optional<std::vector<std::string>> stabilities;
 
-  /**
-   * Sanity check parameters.
-   * Make sure `systems` are valid systems.
-   * Make sure `stability` is a valid stability.
-   * Make sure `pathPrefix` is consistent with `subtree`, `systems`,
-   * and `stability`.
-   * Make sure `name` is not set when `pname`, `version`, or `semver` are set.
-   * Make sure `version` is not set when `semver` is set.
-   * @return `true` iff the above conditions are met.
-   */
-  bool validate();
+  // TODO
+  ///**
+  // * Sanity check parameters.
+  // * Make sure `systems` are valid systems.
+  // * Make sure `stabilities` are valid stabilities.
+  // * Make sure `name` is not set when `pname`, `version`, or `semver` are set.
+  // * Make sure `version` is not set when `semver` is set.
+  // * @return `true` iff the above conditions are met.
+  // */
+  //bool validate();
+
 };  /* End struct `PkgQueryArgs' */
 
 
-std::string buildPkgQuery( PkgQueryArgs && params );
+/* -------------------------------------------------------------------------- */
+
+using SQLBinds = std::unordered_map<std::string, std::string>;
+
+std::pair<std::string, SQLBinds> buildPkgQuery( const PkgQueryArgs & params );
 
 
 /* -------------------------------------------------------------------------- */

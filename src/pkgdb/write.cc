@@ -24,22 +24,6 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
-  static inline bool
-isSQLError( int rc )
-{
-  switch ( rc )
-  {
-    case SQLITE_OK:   return false; break;
-    case SQLITE_ROW:  return false; break;
-    case SQLITE_DONE: return false; break;
-    default:          return true;  break;
-  }
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-
   void
 PkgDb::writeInput()
 {
