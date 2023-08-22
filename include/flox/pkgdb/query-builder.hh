@@ -66,7 +66,7 @@ struct PkgQueryArgs {
       , PDQEC_CONFLICTING_SUBTREE = 7  /**< Conflicting subtree/stability */
       , PDQEC_INVALID_SYSTEM      = 8  /**< Unrecognized/unsupported system */
       , PDQEC_INVALID_STABILITY   = 9  /**< Unrecognized stability */
-      };
+      } errorCode;
     protected:
       static std::string errorMessage( const error_code & ec );
     public:
@@ -74,6 +74,7 @@ struct PkgQueryArgs {
         : flox::FloxException(
             PkgQueryInvalidArgException::errorMessage( ec )
           )
+        , errorCode( ec )
       {}
   };  /* End struct `PkgDbQueryInvalidArgException' */
 
