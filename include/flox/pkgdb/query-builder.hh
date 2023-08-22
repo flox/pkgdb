@@ -47,8 +47,9 @@ struct PkgQueryArgs {
 
   std::optional<std::vector<subtree_type>> subtrees;
 
-  std::vector<std::string>  systems     = { nix::settings.thisSystem.get() };
-  std::vector<std::string>  stabilities = flox::defaultCatalogStabilities;
+  std::vector<std::string> systems = { nix::settings.thisSystem.get() };
+
+  std::optional<std::vector<std::string>> stabilities;
 
   /**
    * Sanity check parameters.
