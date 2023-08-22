@@ -87,7 +87,7 @@ PkgQueryArgs::validate() const
     }
 
   /* Licenses */
-  if ( this->licenses.has_value() && ( ! this->licenses.value().empty() ) )
+  if ( this->licenses.has_value() )
     {
       for ( const auto & l : this->licenses.value() )
         {
