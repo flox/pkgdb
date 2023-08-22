@@ -152,7 +152,7 @@ buildPkgQuery( const PkgQueryArgs & params )
   using namespace sql;
 
   /* Validate parameters */
-  if ( auto mec = params.validate(); mec != std::nullopt )
+  if ( auto maybe_ec = params.validate(); mec != std::nullopt )
     {
       throw PkgQueryArgs::PkgQueryInvalidArgException( mec.value() );
     }
