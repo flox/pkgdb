@@ -21,6 +21,126 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
+  std::string
+PkgQueryArgs::PkgQueryInvalidArgException::errorMessage(
+  const PkgQueryArgs::PkgQueryInvalidArgException::error_code & ec
+)
+{
+  switch ( ec )
+    {
+      case PDQEC_MIX_NAME:
+        return "Queries may not mix `name' parameter with any of `pname', "
+               "`version', or `semver' parameters";
+        break;
+      case PDQEC_MIX_VERSION_SEMVER:
+        return "Queries may not mix `version' and `semver' parameters";
+        break;
+      case PDQEC_INVALID_SEMVER:
+        return "Semver Parse Error";
+        break;
+      case PDQEC_INVALID_LICENSE:
+        return "Query `license' parameter contains invalid character \"'\"";
+        break;
+      case PDQEC_INVALID_SUBTREE:
+        return "Unrecognized subtree in query arguments";
+        break;
+      case PDQEC_CONFLICTING_SUBTREE:
+        return "Query `stability' parameter may only be used in "
+               "\"catalog\" `subtree'";
+        break;
+      case PDQEC_INVALID_SYSTEM:
+        return "Unrecognized or unsupported `system' in query arguments";
+        break;
+      case PDQEC_INVALID_STABILITY:
+        return "Unrecognized `stability' in query arguments";
+        break;
+      default:
+      case PDQEC_ERROR:
+        return "Encountered and error processing query arguments";
+        break;
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  std::optional<PkgQueryArgs::PkgQueryInvalidArgException::error_code>
+PkgQueryArgs::validate() const
+{
+  using error_code = PkgQueryArgs::PkgQueryInvalidArgException::error_code;
+
+  // TODO: semver
+
+  if ( this->name.has_value() &&
+       ( this->pname.has_value()   ||
+         this->version.has_value() ||
+         this->semver.has_value()
+       )
+     )
+    {
+      return error_code::PDQEC_MIX_NAME;
+    }
+
+  if ( this->version.has_value() && this->semver.has_value() )
+    {
+      return error_code::PDQEC_MIX_VERSION_SEMVER;
+    }
+
+  /* Licenses */
+  if ( this->licenses.has_value() && ( ! this->licenses.value().empty() ) )
+    {
+      for ( const auto & l : this->licenses.value() )
+        {
+          if ( l.find( '\'' ) != l.npos )
+            {
+              return error_code::PDQEC_INVALID_LICENSE;
+            }
+        }
+    }
+
+  /* Systems */
+  for ( const auto & s : this->systems )
+    {
+      if ( std::find( flox::defaultSystems.begin()
+                    , flox::defaultSystems.end()
+                    , s
+                    )
+           == flox::defaultSystems.end()
+         )
+        {
+          return error_code::PDQEC_INVALID_SYSTEM;
+        }
+    }
+
+  /* Stabilities */
+  if ( this->stabilities.has_value() )
+    {
+      for ( const auto & s : this->stabilities.value() )
+        {
+          if ( std::find( flox::defaultCatalogStabilities.begin()
+                        , flox::defaultCatalogStabilities.end()
+                        , s
+                        )
+               == flox::defaultCatalogStabilities.end()
+             )
+            {
+              return error_code::PDQEC_INVALID_STABILITY;
+            }
+        }
+      if ( ( this->subtrees.value().size() != 1 ) ||
+           ( this->subtrees.value().front() != ST_CATALOG )
+         )
+        {
+          return error_code::PDQEC_CONFLICTING_SUBTREE;
+        }
+    }
+
+  return std::nullopt;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
   std::pair<std::string, SQLBinds>
 buildPkgQuery( const PkgQueryArgs & params )
 {
@@ -30,6 +150,12 @@ buildPkgQuery( const PkgQueryArgs & params )
    * Other than that, we use `bind`. */
 
   using namespace sql;
+
+  /* Validate parameters */
+  if ( auto mec = params.validate(); mec != std::nullopt )
+    {
+      throw PkgQueryArgs::PkgQueryInvalidArgException( mec.value() );
+    }
 
   // TODO: validate params
   SelectModel q;
@@ -61,16 +187,6 @@ buildPkgQuery( const PkgQueryArgs & params )
 
   if ( params.licenses.has_value() && ( ! params.licenses.value().empty() ) )
     {
-      for ( const auto & l : params.licenses.value() )
-        {
-          if ( l.find( '\'' ) != l.npos )
-            {
-              throw flox::pkgdb::PkgDbException(
-                ""
-              , "License '" + l + "' contains illegal character \"'\""
-              );
-            }
-        }
       q.where( column( "license" ).in( params.licenses.value() ) );
     }
 
@@ -91,18 +207,6 @@ buildPkgQuery( const PkgQueryArgs & params )
   /* Subtrees */
   if ( params.stabilities.has_value() )
     {
-      if ( params.subtrees.has_value() &&
-           ( ( params.subtrees.value().size() != 1 ) ||
-             ( params.subtrees.value().front() != ST_CATALOG )
-           )
-         )
-        {
-          throw flox::pkgdb::PkgDbException(
-            ""
-          , "Stability filters may only be used in `catalog' subtrees, "
-            "but a non-catalog subtree was indicated."
-          );
-        }
       q.where( column( "subtree" ) == "catalog" );
     }
   else if ( params.subtrees.has_value() && params.subtrees.value().size() == 1 )
@@ -114,65 +218,36 @@ buildPkgQuery( const PkgQueryArgs & params )
           case ST_PACKAGES: s = "packages";       break;
           case ST_CATALOG:  s = "catalog";        break;
           default:
-            throw flox::pkgdb::PkgDbException( "", "Invalid subtree" );
+            throw PkgQueryArgs::PkgQueryInvalidArgException();
             break;
         }
       q.where( column( "subtree" ) == s );
     }
   else if ( params.subtrees.has_value() )
     {
-      std::vector<std::string> quoted;
+      std::vector<std::string> lst;
       for ( const auto s : params.subtrees.value() )
         {
           switch ( s )
             {
-              case ST_LEGACY:
-                quoted.emplace_back( "legacyPackages" );
-                break;
-              case ST_PACKAGES: quoted.emplace_back( "packages" ); break;
-              case ST_CATALOG:  quoted.emplace_back( "catalog" );  break;
+              case ST_LEGACY:   lst.emplace_back( "legacyPackages" ); break;
+              case ST_PACKAGES: lst.emplace_back( "packages" );       break;
+              case ST_CATALOG:  lst.emplace_back( "catalog" );        break;
               default:
-                throw flox::pkgdb::PkgDbException( "", "Invalid subtree" );
+                throw PkgQueryArgs::PkgQueryInvalidArgException();
                 break;
             }
         }
-      q.where( column( "subtree" ).in( quoted ) );
+      q.where( column( "subtree" ).in( lst ) );
     }
 
   /* Systems */
   if ( params.systems.size() == 1 )
     {
-      if ( std::find( flox::defaultSystems.begin()
-                    , flox::defaultSystems.end()
-                    , params.systems.front()
-                    )
-           == flox::defaultSystems.end()
-         )
-        {
-          throw flox::pkgdb::PkgDbException(
-            ""
-          , "Invalid system '" + params.systems.front() + "'"
-          );
-        }
       q.where( column( "system" ) == params.systems.front() );
     }
   else
     {
-      for ( const auto & s : params.systems )
-        {
-          if ( std::find( flox::defaultSystems.begin()
-                        , flox::defaultSystems.end()
-                        , s
-                        )
-               == flox::defaultSystems.end()
-             )
-            {
-              throw flox::pkgdb::PkgDbException(
-                ""
-              , "Invalid system '" + s + "'"
-              );
-            }
-        }
       q.where( column( "system" ).in( params.systems ) );
     }
 
@@ -181,39 +256,12 @@ buildPkgQuery( const PkgQueryArgs & params )
     {
       if ( params.stabilities.value().size() == 1 )
         {
-          if ( std::find( flox::defaultCatalogStabilities.begin()
-                        , flox::defaultCatalogStabilities.end()
-                        , params.stabilities.value().front()
-                        )
-               == flox::defaultCatalogStabilities.end()
-             )
-            {
-              throw flox::pkgdb::PkgDbException(
-                ""
-              , "Invalid stability '" + params.stabilities.value().front() + "'"
-              );
-            }
           q.where(
             column( "stability" ) == params.stabilities.value().front()
           );
         }
       else
         {
-          for ( const auto & s : params.stabilities.value() )
-            {
-              if ( std::find( flox::defaultCatalogStabilities.begin()
-                            , flox::defaultCatalogStabilities.end()
-                            , s
-                            )
-                   == flox::defaultCatalogStabilities.end()
-                 )
-                {
-                  throw flox::pkgdb::PkgDbException(
-                    ""
-                  , "Invalid stability '" + s + "'"
-                  );
-                }
-            }
           q.where( column( "stability" ).in( params.stabilities.value() ) );
         }
     }
