@@ -20,7 +20,7 @@
 
 #include <limits>
 #include <iostream>
-#include <stdlib.h>
+#include <cstdlib>
 #include <list>
 #include <assert.h>
 #include <queue>

@@ -95,6 +95,11 @@
           ( if pkgsFor.stdenv.cc.isGNU then pkgsFor.gdb else pkgsFor.lldb )
           # For doc
           pkgsFor.doxygen
+          # For IDEs
+          pkgsFor.ccls
+          pkgsFor.bear
+          # For lints/fmt
+          pkgsFor.clang-tools
         ] ++ nixpkgs.lib.optionals pkgsFor.stdenv.isLinux [
           # For debugging
           pkgsFor.valgrind

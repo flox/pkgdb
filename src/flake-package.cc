@@ -59,36 +59,35 @@ FlakePackage::init( bool checkDrv )
 
   this->_system = this->_pathS[1];
 
-  MaybeCursor c = this->_cursor->maybeGetAttr( "meta" );
-  this->_hasMetaAttr = c != nullptr;
-  if ( c != nullptr )
+  MaybeCursor cursor = this->_cursor->maybeGetAttr( "meta" );
+  this->_hasMetaAttr = cursor != nullptr;
+  if ( cursor != nullptr )
     {
-      if ( c = c->maybeGetAttr( "license" ); c != nullptr )
+      if ( cursor = cursor->maybeGetAttr( "license" ); cursor != nullptr )
         {
-          try { this->_license = c->getAttr( "spdxId" )->getString(); }
+          try { this->_license = cursor->getAttr( "spdxId" )->getString(); }
           catch( ... ) {}
         }
     }
 
-  c = this->_cursor->maybeGetAttr( "pname" );
-  if ( c != nullptr )
+  cursor = this->_cursor->maybeGetAttr( "pname" );
+  if ( cursor != nullptr )
     {
       try
         {
-          this->_pname        = c->getString();
+          this->_pname        = cursor->getString();
           this->_hasPnameAttr = true;
         }
       catch( ... ) {}
     }
 
   /* Version and Semver */
-  c = this->_cursor->maybeGetAttr( "version" );
-  if ( c != nullptr )
+  cursor = this->_cursor->maybeGetAttr( "version" );
+  if ( cursor != nullptr )
     {
-      std::string v;
       try
         {
-          this->_version        = c->getString();
+          this->_version        = cursor->getString();
           this->_hasVersionAttr = true;
         }
       catch( ... ) {}
@@ -108,15 +107,15 @@ FlakePackage::getOutputsToInstall() const
 {
   if ( this->_hasMetaAttr )
     {
-      MaybeCursor m =
+      MaybeCursor cursor =
         this->_cursor->getAttr( "meta" )->maybeGetAttr( "outputsToInstall" );
-      if ( m != nullptr ) { return m->getListOfStrings(); }
+      if ( cursor != nullptr ) { return cursor->getListOfStrings(); }
     }
   std::vector<std::string> rsl;
-  for ( std::string o : this->getOutputs() )
+  for ( const std::string & output : this->getOutputs() )
     {
-      rsl.push_back( o );
-      if ( o == "out" ) { break; }
+      rsl.push_back( output );
+      if ( output == "out" ) { break; }
     }
   return rsl;
 }
@@ -130,10 +129,10 @@ FlakePackage::isBroken() const
   if ( ! this->_hasMetaAttr ) { return std::nullopt; }
   try
     {
-      MaybeCursor b =
+      MaybeCursor cursor =
         this->_cursor->getAttr( "meta" )->maybeGetAttr( "broken" );
-      if ( b == nullptr ) { return std::nullopt; }
-      return b->getBool();
+      if ( cursor == nullptr ) { return std::nullopt; }
+      return cursor->getBool();
     }
   catch( ... )
     {
@@ -147,10 +146,10 @@ FlakePackage::isUnfree() const
   if ( ! this->_hasMetaAttr ) { return std::nullopt; }
   try
     {
-      MaybeCursor u =
+      MaybeCursor cursor =
         this->_cursor->getAttr( "meta" )->maybeGetAttr( "unfree" );
-      if ( u == nullptr ) { return std::nullopt; }
-      return u->getBool();
+      if ( cursor == nullptr ) { return std::nullopt; }
+      return cursor->getBool();
     }
   catch( ... )
     {

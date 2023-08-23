@@ -44,7 +44,9 @@ namespace flox {
  *   } Verbosity;
  */
 struct VerboseParser : public argparse::ArgumentParser {
-  explicit VerboseParser( std::string name, std::string version = "0.1.0" );
+  explicit VerboseParser( const std::string & name
+                        , const std::string & version = "0.1.0"
+                        );
 };  /* End struct `VerboseParser' */
 
 

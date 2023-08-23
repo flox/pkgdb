@@ -7,11 +7,11 @@
  *
  * -------------------------------------------------------------------------- */
 
+#include <cstdlib>
 #include <iostream>
-#include <stdlib.h>
 
-#include "flox/pkgdb.hh"
 #include "flox/core/command.hh"
+#include "flox/pkgdb.hh"
 #include "flox/pkgdb/command.hh"
 
 
