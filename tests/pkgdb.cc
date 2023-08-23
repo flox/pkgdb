@@ -476,7 +476,7 @@ test_buildPkgQuery1( flox::pkgdb::PkgDb & db )
     {
       throw flox::pkgdb::PkgDbException(
         db.dbPath
-      , nix::fmt( "Failed to write Package 'hello':(%d) %s"
+      , nix::fmt( "Failed to write Packages:(%d) %s"
                 , rc
                 , db.db.error_msg()
                 )
@@ -589,6 +589,162 @@ test_buildPkgQuery1( flox::pkgdb::PkgDb & db )
 }
 
 
+/* -------------------------------------------------------------------------- */
+
+/* Tests `match' filtering. */
+  bool
+test_buildPkgQuery2( flox::pkgdb::PkgDb & db )
+{
+  clearTables( db );
+
+  /* Make a package */
+  row_id linux =
+    db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-linux" } );
+  row_id descGreet =
+    db.addOrGetDescriptionId( "A program with a friendly hello" );
+  row_id descFarewell =
+    db.addOrGetDescriptionId( "A program with a friendly farewell" );
+  sqlite3pp::command cmd( db.db, R"SQL(
+    INSERT INTO Packages (
+      parentId, attrName, name, pname, outputs, descriptionId
+    ) VALUES
+      ( :parentId, 'aHello', 'hello-2.12.1', 'hello', '["out"]', :descGreetId
+      )
+    , ( :parentId, 'aGoodbye', 'goodbye-2.12.1', 'goodbye'
+      , '["out"]', :descFarewellId
+      )
+    , ( :parentId, 'aHola', 'hola-2.12.1', 'hola', '["out"]', :descGreetId
+      )
+    , ( :parentId, 'aCiao', 'ciao-2.12.1', 'ciao', '["out"]', :descFarewellId
+      )
+  )SQL" );
+  cmd.bind( ":parentId",        (long long) linux        );
+  cmd.bind( ":descGreetId",     (long long) descGreet    );
+  cmd.bind( ":descFarewellId", (long long) descFarewell );
+  if ( flox::pkgdb::sql_rc rc = cmd.execute_all();
+       flox::pkgdb::isSQLError( rc )
+     )
+    {
+      throw flox::pkgdb::PkgDbException(
+        db.dbPath
+      , nix::fmt( "Failed to write Packages:(%d) %s"
+                , rc
+                , db.db.error_msg()
+                )
+      );
+    }
+  flox::pkgdb::PkgQueryArgs qargs = {
+    .match             = std::nullopt
+  , .name              = std::nullopt
+  , .pname             = std::nullopt
+  , .version           = std::nullopt
+  , .semver            = std::nullopt
+  , .licenses          = std::nullopt
+  , .allowBroken       = false
+  , .allowUnfree       = true
+  , .preferPreReleases = false
+  , .subtrees          = std::nullopt
+  , .systems           = std::vector<std::string> { "x86_64-linux" }
+  , .stabilities       = std::nullopt
+  };
+
+  /* Run `match = "hello"' query */
+  {
+    qargs.match = "hello";
+    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    qargs.match = std::nullopt;
+    sqlite3pp::query qry( db.db, query.c_str() );
+    for ( const auto & [var, val] : binds )
+      {
+        qry.bind( var.c_str(), val, sqlite3pp::copy );
+      }
+    size_t count = 0;
+    for ( const auto r : qry )
+      {
+        (void) r;
+        ++count;
+        flox::pkgdb::match_strength strength =
+          (flox::pkgdb::match_strength) r.get<int>( 2 );
+        if ( count == 1 )
+          {
+            EXPECT_EQ( strength, flox::pkgdb::MS_EXACT_PNAME );
+          }
+        else
+          {
+            EXPECT_EQ( strength, flox::pkgdb::MS_PARTIAL_DESC );
+          }
+      }
+    EXPECT_EQ( count, (size_t) 2 );
+  }
+
+  /* Run `match = "farewell"' query */
+  {
+    qargs.match = "farewell";
+    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    qargs.match = std::nullopt;
+    sqlite3pp::query qry( db.db, query.c_str() );
+    for ( const auto & [var, val] : binds )
+      {
+        qry.bind( var.c_str(), val, sqlite3pp::copy );
+      }
+    size_t count = 0;
+    for ( const auto r : qry )
+      {
+        (void) r;
+        ++count;
+        EXPECT_EQ( r.get<int>( 2 ), flox::pkgdb::MS_PARTIAL_DESC );
+      }
+    EXPECT_EQ( count, (size_t) 2 );
+  }
+
+  /* Run `match = "hel"' query */
+  {
+    qargs.match = "hel";
+    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    qargs.match = std::nullopt;
+    sqlite3pp::query qry( db.db, query.c_str() );
+    for ( const auto & [var, val] : binds )
+      {
+        qry.bind( var.c_str(), val, sqlite3pp::copy );
+      }
+    size_t count = 0;
+    for ( const auto r : qry )
+      {
+        (void) r;
+        ++count;
+        flox::pkgdb::match_strength strength =
+          (flox::pkgdb::match_strength) r.get<int>( 2 );
+        if ( count == 1 )
+          {
+            EXPECT_EQ( strength, flox::pkgdb::MS_PARTIAL_PNAME_DESC );
+          }
+        else
+          {
+            EXPECT_EQ( strength, flox::pkgdb::MS_PARTIAL_DESC );
+          }
+      }
+    EXPECT_EQ( count, (size_t) 2 );
+  }
+
+  /* Run `match = "xxxxx"' query */
+  {
+    qargs.match = "xxxxx";
+    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    qargs.match = std::nullopt;
+    sqlite3pp::query qry( db.db, query.c_str() );
+    for ( const auto & [var, val] : binds )
+      {
+        qry.bind( var.c_str(), val, sqlite3pp::copy );
+      }
+    size_t count = 0;
+    for ( const auto r : qry ) { (void) r; ++count; }
+    EXPECT_EQ( count, (size_t) 0 );
+  }
+
+  return true;
+}
+
+
 /* ========================================================================== */
 
   int
@@ -656,6 +812,7 @@ main( int argc, char * argv[] )
 
     RUN_TEST( buildPkgQuery0, db );
     RUN_TEST( buildPkgQuery1, db );
+    RUN_TEST( buildPkgQuery2, db );
 
   }
 

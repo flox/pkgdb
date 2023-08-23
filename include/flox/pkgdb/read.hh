@@ -252,14 +252,27 @@ class PkgDbReadOnly {
 
 };  /* End class `PkgDbReadOnly' */
 
+
+/* -------------------------------------------------------------------------- */
+
+enum match_strength {
+  MS_EXACT_PNAME        = 0
+, MS_PARTIAL_PNAME_DESC = 1
+, MS_PARTIAL_PNAME      = 2
+, MS_PARTIAL_DESC       = 3
+, MS_NONE               = 4  /* Ensure this is always the highest. */
+};
+
 /**
- * Calculate a distance that can be used to order packages by how close they
- * are to a match string.
- * @param Package The Package to judge distance from.
+ * Calculate a "strength" ranking that can be used to order packages by how
+ * closely they a match string.
+ * @param pkg The Package to be matched against.
  * @param match String to look for in Package's fields.
- * @return Distance between pkg and match.
+ * @return _match strength_ of @a match for @a pkg.
 */
-std::optional<size_t> distanceFromMatch( Package & pkg, std::string match );
+match_strength distanceFromMatch( const Package          & pkg
+                                ,       std::string_view   match
+                                );
 
 /* -------------------------------------------------------------------------- */
 

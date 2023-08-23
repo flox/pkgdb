@@ -293,7 +293,6 @@ PkgDbReadOnly::getPackagePath( row_id id )
 
 /* -------------------------------------------------------------------------- */
 
-
   std::vector<row_id>
 PkgDbReadOnly::getDescendantAttrSets( row_id root )
 {
@@ -321,45 +320,47 @@ PkgDbReadOnly::getDescendantAttrSets( row_id root )
 
 /* -------------------------------------------------------------------------- */
 
-  std::optional<size_t>
-distanceFromMatch( Package & pkg, std::string match )
+  match_strength
+distanceFromMatch( const Package & pkg, std::string_view match )
 {
-  if ( match.empty() ) { return std::nullopt; }
+  if ( match.empty() ) { return MS_NONE; }
 
   std::string pname = pkg.getPname();
-  // TODO match on attrName. That's not currently possible because attrName is
-  // meaningful for flakes, but for catalogs, only the attrName of parent is
-  // meaningful (attrName is a version string).
+  /* TODO match on attrName. That's not currently possible because attrName is
+   * meaningful for flakes, but for catalogs, only the attrName of parent is
+   * meaningful (attrName is a version string). */
 
-  // Don't give description any weight if pname matches exactly. It's not
-  // especially meaningful if a description mentions its own name.
+  /* Don't give description any weight if pname matches exactly.
+   * It's not especially meaningful if a description mentions its own name. */
   if ( pname == match )
     {
-      // pname matches exactly
-      return 0;
+      /* pname matches exactly */
+      return MS_EXACT_PNAME;
     }
 
-  bool pnameMatches = (pname.find(match) != std::string::npos);
-  auto description = pkg.getDescription();
-  bool descriptionMatches = (description.has_value() && description->find(match) != std::string::npos);
+  auto description        = pkg.getDescription();
+  bool descriptionMatches = description.has_value() &&
+                            ( description->find( match ) != std::string::npos );
 
-  if ( pnameMatches ) {
-    if ( descriptionMatches )
-      {
-        // pname and description match
-        return 1;
-      }
-    // only pname matches
-    return 2;
-  }
+  if ( pname.find( match ) != std::string::npos )
+    {
+      if ( descriptionMatches )
+        {
+          /* pname and description match */
+          return MS_PARTIAL_PNAME_DESC;
+        }
+      /* only pname matches */
+      return MS_PARTIAL_PNAME;
+    }
 
   if ( descriptionMatches )
     {
-      // only description matches
-      return 3;
+      /* only description matches */
+      return MS_PARTIAL_DESC;
     }
-  // nothing matches
-  return 4;
+
+  /* nothing matches */
+  return MS_NONE;
 }
 
 /* -------------------------------------------------------------------------- */

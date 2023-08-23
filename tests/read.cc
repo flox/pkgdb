@@ -29,15 +29,15 @@ using namespace flox;
 test_distanceFromMatch()
 {
   std::tuple<char const*, char const*, size_t> cases[] = {
-    { "match", "match", 0 }
-  , { "match", "partial match", 0 }
-  , { "match", "miss", 0 }
-  , { "partial match", "match", 1 }
-  , { "partial match", "partial match", 1 }
-  , { "partial match", "miss", 2 }
-  , { "miss", "match", 3 }
-  , { "miss", "partial match", 3 }
-  , { "miss", "miss", 4 }
+    { "match", "match",                 flox::pkgdb::MS_EXACT_PNAME        }
+  , { "match", "partial match",         flox::pkgdb::MS_EXACT_PNAME        }
+  , { "match", "miss",                  flox::pkgdb::MS_EXACT_PNAME        }
+  , { "partial match", "match",         flox::pkgdb::MS_PARTIAL_PNAME_DESC }
+  , { "partial match", "partial match", flox::pkgdb::MS_PARTIAL_PNAME_DESC }
+  , { "partial match", "miss",          flox::pkgdb::MS_PARTIAL_PNAME      }
+  , { "miss", "match",                  flox::pkgdb::MS_PARTIAL_DESC       }
+  , { "miss", "partial match",          flox::pkgdb::MS_PARTIAL_DESC       }
+  , { "miss", "miss",                   flox::pkgdb::MS_NONE               }
   };
 
   RawPackage pkg;
@@ -48,11 +48,11 @@ test_distanceFromMatch()
       , { "pname", pname }
       , { "description", description }
       } );
-      EXPECT_EQ( * pkgdb::distanceFromMatch( pkg, "match"), distance );
+      EXPECT_EQ( pkgdb::distanceFromMatch( pkg, "match"), distance );
     }
 
   /* Should return std::nullopt for empty match string. */
-  EXPECT( pkgdb::distanceFromMatch( pkg, "" ) == std::nullopt );
+  EXPECT( pkgdb::distanceFromMatch( pkg, "" ) == flox::pkgdb::MS_NONE );
   return true;
 }
 
