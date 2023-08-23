@@ -180,7 +180,12 @@ buildPkgQuery( const PkgQueryArgs & params )
       );
       /* XXX: These values must align with `match_strength'.
        * While we could use `bind' or `fmt' here, hard-coding them is fine -
-       * these are explicitly audited by the test suite. */
+       * these are explicitly audited by the test suite.
+       * 0 = case-sensitive exact :match with pname
+       * 1 = case-insensitive substring :match with pname
+       * 2 = case-insensitive substring :match with description.
+       * 3 = none of the above
+       */
       q.select( R"SQL(
         iif( ( ( '%' || pname || '%' ) = :match )
            , 0
