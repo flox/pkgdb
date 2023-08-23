@@ -268,7 +268,7 @@ class PkgDbReadOnly {
 /**
  * Measures a "strength" ranking that can be used to order packages by how
  * closely they a match string.
- * - 0 :: Case-sensitive exact match with `pname`
+ * - 0 :: Case-insensitive exact match with `pname`
  * - 1 :: Case-insensitive substring match with `pname` and `description`.
  * - 2 :: Case-insensitive substring match with `pname`.
  * - 3 :: Case insensitive substring match with `description`.
