@@ -470,7 +470,7 @@ test_buildPkgQuery1( flox::pkgdb::PkgDb & db )
   )SQL" );
   cmd.bind( ":parentId",      (long long) linux );
   cmd.bind( ":descriptionId", (long long) desc  );
-  if ( flox::pkgdb::sql_rc rc = cmd.execute_all();
+  if ( flox::pkgdb::sql_rc rc = cmd.execute();
        flox::pkgdb::isSQLError( rc )
      )
     {
@@ -621,9 +621,7 @@ test_buildPkgQuery2( flox::pkgdb::PkgDb & db )
   cmd.bind( ":parentId",        (long long) linux        );
   cmd.bind( ":descGreetId",     (long long) descGreet    );
   cmd.bind( ":descFarewellId",  (long long) descFarewell );
-  if ( flox::pkgdb::sql_rc rc = cmd.execute_all();
-       flox::pkgdb::isSQLError( rc )
-     )
+  if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
     {
       throw flox::pkgdb::PkgDbException(
         db.dbPath
@@ -765,18 +763,16 @@ test_getPackages0( flox::pkgdb::PkgDb & db )
       ( :parentId, 'hello0', 'hello-2.12', 'hello', '2.12', '2.12.0'
       , '["out"]', :descriptionId
       )
-      ( :parentId, 'hello1', 'hello-2.12.1', 'hello', '2.12.1', '2.12.1'
+    , ( :parentId, 'hello1', 'hello-2.12.1', 'hello', '2.12.1', '2.12.1'
       , '["out"]', :descriptionId
       )
-      ( :parentId, 'hello2', 'hello-3', 'hello', '3', '3.0.0'
+    , ( :parentId, 'hello2', 'hello-3', 'hello', '3', '3.0.0'
       , '["out"]', :descriptionId
       )
   )SQL" );
   cmd.bind( ":parentId",      (long long) linux );
   cmd.bind( ":descriptionId", (long long) desc  );
-  if ( flox::pkgdb::sql_rc rc = cmd.execute_all();
-       flox::pkgdb::isSQLError( rc )
-     )
+  if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
     {
       throw flox::pkgdb::PkgDbException(
         db.dbPath
@@ -803,46 +799,25 @@ test_getPackages0( flox::pkgdb::PkgDb & db )
 
   /* Run `semver = "^2"' query */
   {
-    qargs.semver = "^2";
-    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    qargs.semver = { "^2" };
+    size_t count = db.getPackages( qargs ).size();
     qargs.semver = std::nullopt;
-    sqlite3pp::query qry( db.db, query.c_str() );
-    for ( const auto & [var, val] : binds )
-      {
-        qry.bind( var.c_str(), val, sqlite3pp::copy );
-      }
-    size_t count = 0;
-    for ( const auto r : qry ) { (void) r; ++count; }
     EXPECT_EQ( count, (size_t) 2 );
   }
 
   /* Run `semver = "^3"' query */
   {
-    qargs.semver = "^3";
-    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    qargs.semver = { "^3" };
+    size_t count = db.getPackages( qargs ).size();
     qargs.semver = std::nullopt;
-    sqlite3pp::query qry( db.db, query.c_str() );
-    for ( const auto & [var, val] : binds )
-      {
-        qry.bind( var.c_str(), val, sqlite3pp::copy );
-      }
-    size_t count = 0;
-    for ( const auto r : qry ) { (void) r; ++count; }
     EXPECT_EQ( count, (size_t) 1 );
   }
 
   /* Run `semver = "^2.13"' query */
   {
-    qargs.semver = "^2.13";
-    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    qargs.semver = { "^2.13" };
+    size_t count = db.getPackages( qargs ).size();
     qargs.semver = std::nullopt;
-    sqlite3pp::query qry( db.db, query.c_str() );
-    for ( const auto & [var, val] : binds )
-      {
-        qry.bind( var.c_str(), val, sqlite3pp::copy );
-      }
-    size_t count = 0;
-    for ( const auto r : qry ) { (void) r; ++count; }
     EXPECT_EQ( count, (size_t) 0 );
   }
 
@@ -918,6 +893,8 @@ main( int argc, char * argv[] )
     RUN_TEST( buildPkgQuery0, db );
     RUN_TEST( buildPkgQuery1, db );
     RUN_TEST( buildPkgQuery2, db );
+
+    RUN_TEST( getPackages0, db );
 
   }
 
