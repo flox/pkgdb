@@ -161,7 +161,7 @@ bin_LDFLAGS += $(nix_LDFLAGS) $(flox_pkgdb_LDFLAGS) $(sqlite3_LDFLAGS)
 SEMVER_PATH ?=                                                        \
   $(shell $(NIX) build --no-link --print-out-paths                    \
 	                     'github:aakropotkin/floco#semver')/bin/semver
-CXXFLAGS += -DSEMVER_PATH='$(SEMVER_PATH)'
+CXXFLAGS += '-DSEMVER_PATH="$(SEMVER_PATH)"'
 
 
 # ---------------------------------------------------------------------------- #
@@ -326,7 +326,7 @@ PC_CFLAGS =  $(filter -std=%,$(CXXFLAGS))
 PC_CFLAGS += -I$(nix_INCDIR) -include $(nix_INCDIR)/nix/config.h
 PC_CFLAGS += $(boost_CFLAGS)
 PC_CFLAGS += '-DFLOX_PKGDB_VERSION=\\\\\"$(VERSION)\\\\\"'
-PC_CFLAGS += -DSEMVER_PATH='$(SEMVER_PATH)'
+PC_CFLAGS += '-DSEMVER_PATH=\\\\\"$(SEMVER_PATH)\\\\\"'
 PC_LIBS   =  $(shell $(PKG_CONFIG) --libs-only-L nix-main) -lnixfetchers
 lib/pkgconfig/flox-pkgdb.pc: lib/pkgconfig/flox-pkgdb.pc.in version
 	$(SED) -e 's,@PREFIX@,$(PREFIX),g'     \

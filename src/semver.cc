@@ -154,17 +154,14 @@ coerceSemver( std::string_view version )
 /* -------------------------------------------------------------------------- */
 
 #ifndef SEMVER_PATH
-#  define SEMVER_PATH  semver
+#  define SEMVER_PATH  "semver"
 #endif
-#define _XSTRIZE( _S )   _STRIZE( _S )
-#define _STRIZE( _S )    # _S
-#define SEMVER_PATH_STR  _XSTRIZE( SEMVER_PATH )
 
   std::pair<int, std::string>
 runSemver( const std::list<std::string> & args )
 {
   static const std::string semverProg =
-    nix::getEnv( "SEMVER" ).value_or( SEMVER_PATH_STR );
+    nix::getEnv( "SEMVER" ).value_or( SEMVER_PATH );
   static const std::map<std::string, std::string> env = nix::getEnv();
   return nix::runProgram( nix::RunOptions {
     .program             = semverProg
