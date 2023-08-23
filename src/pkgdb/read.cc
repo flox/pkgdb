@@ -343,6 +343,7 @@ PkgDbReadOnly::getPackages( const PkgQueryArgs & params )
        ( ( * params.semver ) != "^*" ) && ( ( * params.semver ) != "~*" )
      )
     {
+      /* Use a vector to preserve ordering original ordering. */
       std::vector<std::pair<row_id, std::string>> idVersions;
       std::unordered_set<std::string>             versionsUniq;
       for ( const auto & row : qry )
