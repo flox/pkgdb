@@ -19,23 +19,17 @@ namespace versions {
 /* -------------------------------------------------------------------------- */
 
 /* Matches Semantic Version strings, e.g. `4.2.0-pre' */
-static const std::regex semverRE(
-  "(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[-[:alnum:]_+.]+)?"
-, std::regex::ECMAScript
-);
+static const char * const semverREStr =
+  "(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[-[:alnum:]_+.]+)?";
 
 /* Coercively matches Semantic Version Strings, e.g. `v1.0-pre' */
-static const std::regex semverCoerceRE(
-  "(.*@)?[vV]?(0*([0-9]+)(\\.0*([0-9]+)(\\.0*([0-9]+))?)?(-[-[:alnum:]_+.]+)?)"
-, std::regex::ECMAScript
-);
+static const char * const semverCoerceREStr =
+  "(.*@)?[vV]?(0*([0-9]+)(\\.0*([0-9]+)(\\.0*([0-9]+))?)?(-[-[:alnum:]_+.]+)?)";
 
 /* Match '-' separated date strings, e.g. `2023-05-31' or `5-1-23' */
-static const std::regex dateRE(
+static const char * const dateREStr =
   "([0-9][0-9]([0-9][0-9])?-[01]?[0-9]-[0-9][0-9]?|"
-  "[0-9][0-9]?-[0-9][0-9]?-[0-9][0-9]([0-9][0-9])?)(-[-[:alnum:]_+.]+)?"
-, std::regex::ECMAScript
-);
+  "[0-9][0-9]?-[0-9][0-9]?-[0-9][0-9]([0-9][0-9])?)(-[-[:alnum:]_+.]+)?";
 
 
 /* -------------------------------------------------------------------------- */
@@ -43,14 +37,16 @@ static const std::regex dateRE(
   bool
 isSemver( const std::string & version )
 {
+  static const std::regex semverRE( semverREStr, std::regex::ECMAScript );
   return std::regex_match( version, semverRE );
 }
 
   bool
 isSemver( std::string_view version )
 {
-  std::string v( version );
-  return std::regex_match( v, semverRE );
+  std::string vsn( version );
+  static const std::regex semverRE( semverREStr, std::regex::ECMAScript );
+  return std::regex_match( vsn, semverRE );
 }
 
 
@@ -59,14 +55,16 @@ isSemver( std::string_view version )
   bool
 isDate( const std::string & version )
 {
+  static const std::regex dateRE( dateREStr, std::regex::ECMAScript );
   return std::regex_match( version, dateRE );
 }
 
   bool
 isDate( std::string_view version )
 {
-  std::string v( version );
-  return std::regex_match( v, dateRE );
+  static const std::regex dateRE( dateREStr, std::regex::ECMAScript );
+  std::string vsn( version );
+  return std::regex_match( vsn, dateRE );
 }
 
 
@@ -75,6 +73,10 @@ isDate( std::string_view version )
   bool
 isCoercibleToSemver( const std::string & version )
 {
+  static const std::regex dateRE( dateREStr, std::regex::ECMAScript );
+  static const std::regex semverCoerceRE( semverCoerceREStr
+                                        , std::regex::ECMAScript
+                                        );
   return ( ! std::regex_match( version, dateRE ) ) &&
          std::regex_match( version, semverCoerceRE );
 }
@@ -82,9 +84,13 @@ isCoercibleToSemver( const std::string & version )
   bool
 isCoercibleToSemver( std::string_view version )
 {
-  std::string v( version );
-  return ( ! std::regex_match( v, dateRE ) ) &&
-         std::regex_match( v, semverCoerceRE );
+  static const std::regex dateRE( dateREStr, std::regex::ECMAScript );
+  static const std::regex semverCoerceRE( semverCoerceREStr
+                                        , std::regex::ECMAScript
+                                        );
+  std::string vsn( version );
+  return ( ! std::regex_match( vsn, dateRE ) ) &&
+         std::regex_match( vsn, semverCoerceRE );
 }
 
 
@@ -93,16 +99,17 @@ isCoercibleToSemver( std::string_view version )
   std::optional<std::string>
 coerceSemver( std::string_view version )
 {
-  std::string v( version );
+  static const std::regex semverRE( semverREStr, std::regex::ECMAScript );
+  static const std::regex semverCoerceRE( semverCoerceREStr
+                                        , std::regex::ECMAScript
+                                        );
+  std::string vsn( version );
   /* If it's already a match for a proper semver we're done. */
-  if ( std::regex_match( v, semverRE ) )
-    {
-      return std::optional<std::string>( v );
-    }
+  if ( std::regex_match( vsn, semverRE ) ) { return { vsn }; }
 
   /* Try try matching the coercive pattern. */
   std::smatch match;
-  if ( isDate( v ) || ( ! std::regex_match( v, match, semverCoerceRE ) ) )
+  if ( isDate( vsn ) || ( ! std::regex_match( vsn, match, semverCoerceRE ) ) )
     {
       return std::nullopt;
     }
@@ -126,6 +133,11 @@ coerceSemver( std::string_view version )
    *   [7]: 0
    *   [8]: -pre
    */
+  static const size_t majorIdx  = 3;
+  static const size_t minorIdx  = 5;
+  static const size_t patchIdx  = 7;
+  static const size_t preTagIdx = 8;
+
 
   /* The `str()' function is destructive and works by adding null terminators to
    * the original string.
@@ -133,11 +145,11 @@ coerceSemver( std::string_view version )
    * some characters with null terminators.
    * To avoid this we convert each submatch to a string from right to left.
    */
-  std::string tag( match[8].str() );
-  std::string patch( match[7].str() );
-  std::string minor( match[5].str() );
+  std::string tag( match[preTagIdx].str() );
+  std::string patch( match[patchIdx].str() );
+  std::string minor( match[minorIdx].str() );
 
-  std::string rsl( match[3].str() + "." );
+  std::string rsl( match[majorIdx].str() + "." );
 
   if ( minor.empty() ) { rsl += "0."; }
   else                 { rsl += minor + "."; }
@@ -147,24 +159,21 @@ coerceSemver( std::string_view version )
 
   if ( ! tag.empty() ) { rsl += tag; }
 
-  return std::optional<std::string>( rsl );
+  return { rsl };
 }
 
 
 /* -------------------------------------------------------------------------- */
 
 #ifndef SEMVER_PATH
-#  define SEMVER_PATH  semver
+#  define SEMVER_PATH  "semver"
 #endif
-#define _XSTRIZE( _S )   _STRIZE( _S )
-#define _STRIZE( _S )    # _S
-#define SEMVER_PATH_STR  _XSTRIZE( SEMVER_PATH )
 
   std::pair<int, std::string>
 runSemver( const std::list<std::string> & args )
 {
   static const std::string semverProg =
-    nix::getEnv( "SEMVER" ).value_or( SEMVER_PATH_STR );
+    nix::getEnv( "SEMVER" ).value_or( SEMVER_PATH );
   static const std::map<std::string, std::string> env = nix::getEnv();
   return nix::runProgram( nix::RunOptions {
     .program             = semverProg
@@ -194,11 +203,11 @@ semverSat( const std::string & range, const std::list<std::string> & versions )
   auto [ec, lines] = runSemver( args );
   if ( ! nix::statusOk( ec ) ) { return {}; }
   std::list<std::string> rsl;
-  std::stringstream oss( lines );
-  std::string l;
-  while ( std::getline( oss, l, '\n' ) )
+  std::stringstream      oss( lines );
+  std::string            line;
+  while ( std::getline( oss, line, '\n' ) )
     {
-      if ( ! l.empty() ) { rsl.push_back( std::move( l ) ); }
+      if ( ! line.empty() ) { rsl.push_back( std::move( line ) ); }
     }
   return rsl;
 }
@@ -207,6 +216,7 @@ semverSat( const std::string & range, const std::list<std::string> & versions )
 /* -------------------------------------------------------------------------- */
 
 }  /* End namespace `versions' */
+
 
 /* -------------------------------------------------------------------------- *
  *

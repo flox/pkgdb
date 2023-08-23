@@ -15,9 +15,7 @@
 
 /* -------------------------------------------------------------------------- */
 
-namespace flox {
-
-  namespace pkgdb {
+namespace flox::pkgdb {
 
 /* -------------------------------------------------------------------------- */
 
@@ -160,7 +158,7 @@ buildPkgQuery( const PkgQueryArgs & params )
     }
 
   SelectModel q;
-  q.select( "id" ).from( "v_PackagesSearch" );
+  q.select( "id" ).select( "semver" ).from( "v_PackagesSearch" );
   std::unordered_map<std::string, std::string> binds;
 
   if ( params.name.has_value() )
@@ -175,15 +173,44 @@ buildPkgQuery( const PkgQueryArgs & params )
       binds.emplace( ":pname", * params.pname );
     }
   
-  if ( params.match.has_value() && !params.match->empty() )
+  if ( params.match.has_value() && ( ! params.match->empty() ) )
     {
-      q.where( "( name LIKE '%:match%' ) OR ( description LIKE '%:match%' )" );
+      q.where(
+        "( ( pname LIKE :match ) OR ( description LIKE :match ) )"
+      );
+      /* XXX: These values must align with `match_strength'.
+       * While we could use `bind' or `fmt' here, hard-coding them is fine -
+       * these are explicitly audited by the test suite.
+       * 0 = case-insensitive exact :match with pname
+       * 1 = case-insensitive substring :match with pname and description.
+       * 2 = case-insensitive substring :match with pname.
+       * 3 = case insensitive substring :match with description.
+       */
+      q.select( R"SQL(
+        iif( ( ( '%' || LOWER( pname ) || '%' ) = LOWER( :match ) )
+           , 0
+           , iif( ( pname LIKE :match )
+                , iif( ( description LIKE :match  ), 1, 2 )
+                , 3
+                )
+           ) AS matchStrength
+      )SQL" );
+      binds.emplace( ":match", "%" +  ( * params.match ) + "%" );
+      q.order_by( "matchStrength" );
+    }
+  else
+    {
+      q.select( "NULL AS matchStrength" );
     }
 
   if ( params.version.has_value() )
     {
       q.where( column( "version" ) == Param( ":version" ) );
       binds.emplace( ":version", * params.version );
+    }
+  else if ( params.semver.has_value() )
+    {
+      q.where( column( "semver" ).is_not_null() );
     }
 
   if ( params.licenses.has_value() && ( ! params.licenses->empty() ) )
@@ -249,7 +276,6 @@ buildPkgQuery( const PkgQueryArgs & params )
         }
     }
 
-  // TODO: Match
   // TODO: Semver and pre-releases
   // TODO: Sort/"order by" results
 
@@ -259,8 +285,7 @@ buildPkgQuery( const PkgQueryArgs & params )
 
 /* -------------------------------------------------------------------------- */
 
-  }  /* End Namespace `flox::pkgdb' */
-}  /* End Namespace `flox' */
+}  /* End Namespace `flox::pkgdb' */
 
 
 /* -------------------------------------------------------------------------- *

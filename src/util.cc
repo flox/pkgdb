@@ -26,8 +26,6 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
-static bool didNixInit = false;
-
 /**
  * Perform one time `nix` runtime setup.
  * You may safely call this function multiple times, after the first invocation
@@ -36,11 +34,12 @@ static bool didNixInit = false;
   void
 initNix( nix::Verbosity verbosity )
 {
+  static bool didNixInit = false;
   if ( didNixInit ) { return; }
 
   /* Assign verbosity to `nix' global setting */
   nix::verbosity = verbosity;
-  nix::setStackSize( 64 * 1024 * 1024 );
+  nix::setStackSize( ( ( (size_t) 64 ) * 1024 ) * 1024 );  // NOLINT
   nix::initNix();
   nix::initGC();
   /* Suppress benign warnings about `nix.conf'. */
@@ -67,39 +66,34 @@ isSQLiteDb( const std::string & dbPath )
   if ( std::filesystem::is_directory( path ) ) { return false; }
 
   /* Read file magic */
-  static const char expectedMagic[16] = "SQLite format 3";
+  static const char expectedMagic[16] = "SQLite format 3";  // NOLINT
 
-  char buffer[16];
-  std::memset( buffer, '\0', sizeof( buffer ) );
-  FILE * fp = fopen( dbPath.c_str(), "rb" );
+  char buffer[16];  // NOLINT
+  std::memset( & buffer[0], '\0', sizeof( buffer ) );
+  FILE * filep = fopen( dbPath.c_str(), "rb" );
 
-  std::clearerr( fp );
+  std::clearerr( filep );
 
   const size_t nread =
-    std::fread( buffer, sizeof( buffer[0] ), sizeof( buffer ), fp );
+    std::fread( & buffer[0], sizeof( buffer[0] ), sizeof( buffer ), filep );
   if ( nread != sizeof( buffer ) )
     {
-      if ( std::feof( fp ) )
+      if ( std::feof( filep ) != 0 )
         {
-          std::fclose( fp );
+          std::fclose( filep );  // NOLINT
           return false;
         }
-      else if ( std::ferror( fp ) )
+      if ( std::ferror( filep ) != 0 )
         {
-          std::fclose( fp );
+          std::fclose( filep );  // NOLINT
           throw flox::FloxException( "Failed to read file " + dbPath );
         }
-      else
-        {
-          std::fclose( fp );
-          return false;
-        }
+      std::fclose( filep );  // NOLINT
+      return false;
     }
-  else
-    {
-      std::fclose( fp );
-      return std::string_view( buffer ) == std::string_view( expectedMagic );
-    }
+  std::fclose( filep );  // NOLINT
+  return std::string_view( & buffer[0] ) ==
+         std::string_view( & expectedMagic[0] );
 }
 
 

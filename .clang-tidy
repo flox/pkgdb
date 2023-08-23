@@ -12,6 +12,8 @@ Checks: >
   ,modernize-*
   ,-modernize-use-trailing-return-type
   ,-cppcoreguidelines-pro-type-union-access
+  ,-*-avoid-c-arrays
+  ,-cppcoreguidelines-owning-memory
 
 WarningsAsErrors: ''
 HeaderFilterRegex: ''

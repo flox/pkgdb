@@ -24,6 +24,7 @@
 #include "flox/core/types.hh"
 #include "flox/core/command.hh"
 #include "flox/package.hh"
+#include "flox/pkgdb/query-builder.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -248,21 +249,46 @@ class PkgDbReadOnly {
     std::vector<row_id> getDescendantAttrSets( row_id root );
 
 
+    /**
+     * Return a list of `Packages.id`s for packages which satisfy a given
+     * set of requirements.
+     * These results may be ordered flexibly based on various query parameters.
+     * TODO: document parameters effected by ordering.
+     */
+     std::vector<row_id> getPackages( const PkgQueryArgs & params );
+
+
 /* -------------------------------------------------------------------------- */
 
 };  /* End class `PkgDbReadOnly' */
 
-/**
- * Calculate a distance that can be used to order packages by how close they
- * are to a match string.
- * @param Package The Package to judge distance from.
- * @param match String to look for in Package's fields.
- * @return Distance between pkg and match.
-*/
-std::optional<size_t> distanceFromMatch( Package & pkg, std::string match );
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Measures a "strength" ranking that can be used to order packages by how
+ * closely they a match string.
+ * - 0 :: Case-insensitive exact match with `pname`
+ * - 1 :: Case-insensitive substring match with `pname` and `description`.
+ * - 2 :: Case-insensitive substring match with `pname`.
+ * - 3 :: Case insensitive substring match with `description`.
+ * - 4 :: No match.
+ */
+enum match_strength {
+  MS_EXACT_PNAME        = 0
+, MS_PARTIAL_PNAME_DESC = 1
+, MS_PARTIAL_PNAME      = 2
+, MS_PARTIAL_DESC       = 3
+, MS_NONE               = 4  /* Ensure this is always the highest. */
+};
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Predicate to detect failing SQLite3 return codes.
+ * @param rc A SQLite3 _return code_.
+ * @return `true` iff @a rc is a SQLite3 error.
+ */
 bool isSQLError( int rc );
 
 

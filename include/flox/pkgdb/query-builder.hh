@@ -24,9 +24,7 @@
 
 /* -------------------------------------------------------------------------- */
 
-namespace flox {
-
-  namespace pkgdb {
+namespace flox::pkgdb {
 
 /* -------------------------------------------------------------------------- */
 
@@ -121,18 +119,19 @@ using SQLBinds = std::unordered_map<std::string, std::string>;
  * multiple databases.
  *
  * This routine does NOT perform filtering by `semver`.
- * TODO: filter by `match`.
  *
  * @return A SQL statement string with a mapping of host parameters to their
  *         respective values.
+ *         The resulting statement selects `id`, `semver`, and an enum field
+ *         `matchStrength` holding either `NULL` when no @a match parameter was
+ *         given, or 0-3 otherwise associated with @a match_strength values.
  */
 std::pair<std::string, SQLBinds> buildPkgQuery( const PkgQueryArgs & params );
 
 
 /* -------------------------------------------------------------------------- */
 
-  }  /* End Namespace `flox::pkgdb' */
-}  /* End Namespace `flox' */
+}  /* End Namespace `flox::pkgdb' */
 
 
 /* -------------------------------------------------------------------------- *
