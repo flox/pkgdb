@@ -24,6 +24,7 @@
 #include "flox/core/types.hh"
 #include "flox/core/command.hh"
 #include "flox/package.hh"
+#include "flox/pkgdb/query-builder.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -246,6 +247,15 @@ class PkgDbReadOnly {
      * @return All `AttrSets.id`s which are descendants of @a root.
      */
     std::vector<row_id> getDescendantAttrSets( row_id root );
+
+
+    /**
+     * Return a list of `Packages.id`s for packages which satisfy a given
+     * set of requirements.
+     * These results may be ordered flexibly based on various query parameters.
+     * TODO: document parameters effected by ordering.
+     */
+     std::vector<row_id> getPackages( const PkgQueryArgs & params );
 
 
 /* -------------------------------------------------------------------------- */

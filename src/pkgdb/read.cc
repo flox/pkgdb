@@ -9,6 +9,12 @@
 
 #include <limits>
 #include <memory>
+#include <map>
+#include <unordered_set>
+#include <vector>
+#include <list>
+#include <string>
+#include <ranges>
 
 #include "flox/pkgdb/read.hh"
 #include "flox/flake-package.hh"
@@ -315,6 +321,67 @@ PkgDbReadOnly::getDescendantAttrSets( row_id root )
       descendants.push_back( row.get<long long>( 0 ) );
     }
   return descendants;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  std::vector<row_id>
+PkgDbReadOnly::getPackages( const PkgQueryArgs & params )
+{
+  auto [query, binds] = buildPkgQuery( params );
+  sqlite3pp::query qry( this->db, query.c_str() );
+  for ( const auto & [var, val] : binds )
+    {
+      qry.bind( var.c_str(), val, sqlite3pp::copy );
+    }
+
+  /* We can handle quite a bit of filtering and ordering in SQL, but `semver`
+   * has to be handled with post-processing here. */
+  if ( params.semver.has_value() )
+    {
+      std::map<row_id, std::string>        idVersions;
+      std::unordered_set<std::string_view> versionsUniq;
+      for ( const auto & row : qry )
+        {
+          auto [elem, _] = idVersions.emplace( row.get<long long>( 0 )
+                                             , row.get<std::string>( 1 )
+                                             );
+          versionsUniq.emplace( elem->second );
+        }
+      /* Create a unique list of versions */
+      std::list<std::string> versions;
+      for ( const auto & version : versionsUniq )
+        {
+          versions.emplace_back( version );
+        }
+      /* Create a unique list of satisfactory versions  */
+      // TODO: Order by latest
+      versionsUniq.clear();
+      for ( const auto & version :
+              versions::semverSat( * params.semver, versions )
+          )
+        {
+          versionsUniq.emplace( version );
+        }
+
+      /* Filter SQL results to be those in the satisfactory list. */
+      std::vector<row_id> rsl;
+      for ( const auto & [rowId, version] : idVersions )
+        {
+          if ( versionsUniq.find( version ) != versionsUniq.end() )
+            {
+              rsl.push_back( rowId );
+            }
+        }
+      return rsl;
+    }
+  else
+    {
+      std::vector<row_id> rsl;
+      for ( const auto row : qry ) { rsl.push_back( row.get<long long>( 0 ) ); }
+      return rsl;
+    }
 }
 
 
