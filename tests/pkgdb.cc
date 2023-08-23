@@ -620,7 +620,7 @@ test_buildPkgQuery2( flox::pkgdb::PkgDb & db )
   )SQL" );
   cmd.bind( ":parentId",        (long long) linux        );
   cmd.bind( ":descGreetId",     (long long) descGreet    );
-  cmd.bind( ":descFarewellId", (long long) descFarewell );
+  cmd.bind( ":descFarewellId",  (long long) descFarewell );
   if ( flox::pkgdb::sql_rc rc = cmd.execute_all();
        flox::pkgdb::isSQLError( rc )
      )
