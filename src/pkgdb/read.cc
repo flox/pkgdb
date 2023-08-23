@@ -325,8 +325,6 @@ PkgDbReadOnly::getDescendantAttrSets( row_id root )
 
 /* -------------------------------------------------------------------------- */
 
-#include <iostream>
-
   std::vector<row_id>
 PkgDbReadOnly::getPackages( const PkgQueryArgs & params )
 {
