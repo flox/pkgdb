@@ -7,13 +7,13 @@
  *
  * -------------------------------------------------------------------------- */
 
+#include <functional>
 #include <limits>
+#include <list>
 #include <memory>
-#include <map>
+#include <string>
 #include <unordered_set>
 #include <vector>
-#include <list>
-#include <string>
 
 #include "flox/pkgdb/read.hh"
 #include "flox/flake-package.hh"
@@ -336,17 +336,23 @@ PkgDbReadOnly::getPackages( const PkgQueryArgs & params )
     }
 
   /* We can handle quite a bit of filtering and ordering in SQL, but `semver`
-   * has to be handled with post-processing here. */
-  if ( params.semver.has_value() )
+   * has to be handled with post-processing here.
+   * We skip semver filtering for a few bogus "match anything" forms.
+   */
+  if ( params.semver.has_value() &&
+       ( ! params.semver->empty() ) &&
+       ( ( * params.semver ) != "*" ) && ( ( * params.semver ) != "any" ) &&
+       ( ( * params.semver ) != "^*" )
+     )
     {
-      std::map<row_id, std::string>        idVersions;
-      std::unordered_set<std::string_view> versionsUniq;
+      std::vector<std::pair<row_id, std::string>> idVersions;
+      std::unordered_set<std::string>             versionsUniq;
       for ( const auto & row : qry )
         {
-          auto [elem, _] = idVersions.emplace( row.get<long long>( 0 )
-                                             , row.get<std::string>( 1 )
-                                             );
-          versionsUniq.emplace( elem->second );
+          const auto & [_, version] = idVersions.emplace_back(
+            std::make_pair( row.get<long long>( 0 ), row.get<std::string>( 1 ) )
+          );
+          versionsUniq.emplace( version );
         }
       std::list<std::string> versions( versionsUniq.begin(), versionsUniq.end() );
       /* Create a unique list of satisfactory versions  */
@@ -361,11 +367,11 @@ PkgDbReadOnly::getPackages( const PkgQueryArgs & params )
 
       /* Filter SQL results to be those in the satisfactory list. */
       std::vector<row_id> rsl;
-      for ( const auto & [rowId, version] : idVersions )
+      for ( const auto & elem : idVersions )
         {
-          if ( versionsUniq.find( version ) != versionsUniq.end() )
+          if ( versionsUniq.find( elem.second ) != versionsUniq.end() )
             {
-              rsl.push_back( rowId );
+              rsl.push_back( elem.first );
             }
         }
       return rsl;
