@@ -86,7 +86,7 @@ PkgQueryArgs::validate() const
       return error_code::PDQEC_MIX_VERSION_SEMVER;
     }
 
-  /* Licenses */
+  /* Check licenses don't contain the ' character */
   if ( this->licenses.has_value() )
     {
       for ( const auto & l : * this->licenses )
