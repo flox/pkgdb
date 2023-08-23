@@ -354,7 +354,9 @@ PkgDbReadOnly::getPackages( const PkgQueryArgs & params )
           );
           versionsUniq.emplace( version );
         }
-      std::list<std::string> versions( versionsUniq.begin(), versionsUniq.end() );
+      std::list<std::string> versions( versionsUniq.begin()
+                                     , versionsUniq.end()
+                                     );
       /* Create a unique list of satisfactory versions  */
       // TODO: Order by latest
       versionsUniq.clear();
