@@ -265,6 +265,15 @@ class PkgDbReadOnly {
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Measures a "strength" ranking that can be used to order packages by how
+ * closely they a match string.
+ * - 0 :: Case-sensitive exact match with `pname`
+ * - 1 :: Case-insensitive substring match with `pname` and `description`.
+ * - 2 :: Case-insensitive substring match with `pname`.
+ * - 3 :: Case insensitive substring match with `description`.
+ * - 4 :: No match.
+ */
 enum match_strength {
   MS_EXACT_PNAME        = 0
 , MS_PARTIAL_PNAME_DESC = 1
@@ -272,17 +281,6 @@ enum match_strength {
 , MS_PARTIAL_DESC       = 3
 , MS_NONE               = 4  /* Ensure this is always the highest. */
 };
-
-/**
- * Calculate a "strength" ranking that can be used to order packages by how
- * closely they a match string.
- * @param pkg The Package to be matched against.
- * @param match String to look for in Package's fields.
- * @return _match strength_ of @a match for @a pkg.
-*/
-match_strength distanceFromMatch( const Package          & pkg
-                                ,       std::string_view   match
-                                );
 
 /* -------------------------------------------------------------------------- */
 

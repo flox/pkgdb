@@ -386,51 +386,6 @@ PkgDbReadOnly::getPackages( const PkgQueryArgs & params )
 
 /* -------------------------------------------------------------------------- */
 
-  match_strength
-distanceFromMatch( const Package & pkg, std::string_view match )
-{
-  if ( match.empty() ) { return MS_NONE; }
-
-  std::string pname = pkg.getPname();
-  /* TODO match on attrName. That's not currently possible because attrName is
-   * meaningful for flakes, but for catalogs, only the attrName of parent is
-   * meaningful (attrName is a version string). */
-
-  /* Don't give description any weight if pname matches exactly.
-   * It's not especially meaningful if a description mentions its own name. */
-  if ( pname == match )
-    {
-      /* pname matches exactly */
-      return MS_EXACT_PNAME;
-    }
-
-  auto description        = pkg.getDescription();
-  bool descriptionMatches = description.has_value() &&
-                            ( description->find( match ) != std::string::npos );
-
-  if ( pname.find( match ) != std::string::npos )
-    {
-      if ( descriptionMatches )
-        {
-          /* pname and description match */
-          return MS_PARTIAL_PNAME_DESC;
-        }
-      /* only pname matches */
-      return MS_PARTIAL_PNAME;
-    }
-
-  if ( descriptionMatches )
-    {
-      /* only description matches */
-      return MS_PARTIAL_DESC;
-    }
-
-  /* nothing matches */
-  return MS_NONE;
-}
-
-/* -------------------------------------------------------------------------- */
-
   }  /* End Namespace `flox::pkgdb' */
 }  /* End Namespace `flox' */
 
