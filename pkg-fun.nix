@@ -46,7 +46,7 @@
   boost_CFLAGS       = "-I" + boost.outPath + "/include";
   sql_builder_CFLAGS = "-I" + sql-builder.outPath + "/include";
   libExt             = stdenv.hostPlatform.extensions.sharedLibrary;
-  SEMVER_PATH        = "\"" + semver.outPath + "/bin/semver\"";
+  SEMVER_PATH        = semver.outPath + "/bin/semver";
   configurePhase     = ''
     runHook preConfigure;
     export PREFIX="$out";
