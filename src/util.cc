@@ -39,8 +39,7 @@ initNix( nix::Verbosity verbosity )
 
   /* Assign verbosity to `nix' global setting */
   nix::verbosity = verbosity;
-  static const size_t stackSize = ( ( (size_t) 64 ) * 1024 ) * 1024;
-  nix::setStackSize( stackSize );
+  nix::setStackSize( ( ( (size_t) 64 ) * 1024 ) * 1024 );  // NOLINT
   nix::initNix();
   nix::initGC();
   /* Suppress benign warnings about `nix.conf'. */
