@@ -337,8 +337,7 @@ PkgDbReadOnly::getPackages( const PkgQueryArgs & params )
 
   /* We can handle quite a bit of filtering and ordering in SQL, but `semver`
    * has to be handled with post-processing here.
-   * We skip semver filtering for a few bogus "match anything" forms.
-   */
+   * We skip semver filtering for a few bogus "match anything" forms. */
   if ( params.semver.has_value() &&
        ( ! params.semver->empty() ) &&
        ( ( * params.semver ) != "*" ) && ( ( * params.semver ) != "any" ) &&
