@@ -21,7 +21,7 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
-  static inline bool
+  bool
 isSQLError( int rc )
 {
   switch ( rc )

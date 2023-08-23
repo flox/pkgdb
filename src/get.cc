@@ -15,14 +15,12 @@
 
 /* -------------------------------------------------------------------------- */
 
-namespace flox {
-  namespace pkgdb {
+namespace flox::pkgdb {
 
 /* -------------------------------------------------------------------------- */
 
 GetCommand::GetCommand()
-  : flox::NixState()
-  , parser( "get" )
+  : parser( "get" )
   , pId( "id" )
   , pPath( "path" )
   , pFlake( "flake" )
@@ -50,9 +48,9 @@ GetCommand::GetCommand()
   this->pPath.add_argument( "id" )
              .help( "Row `id' to lookup" )
              .nargs( 1 )
-             .action( [&]( const std::string & i )
+             .action( [&]( const std::string & rowId )
                       {
-                        this->id = std::stoull( i );
+                        this->id = std::stoull( rowId );
                       }
                     );
   this->parser.add_subparser( this->pPath );
@@ -108,12 +106,12 @@ GetCommand::runPath()
   int
 GetCommand::runFlake()
 {
-  nlohmann::json j = {
+  nlohmann::json flakeInfo = {
     { "string",      this->db->lockedRef.string                            }
-  , { "attrs",       this->db->lockedRef.attrs                            }
+  , { "attrs",       this->db->lockedRef.attrs                             }
   , { "fingerprint", this->db->fingerprint.to_string( nix::Base16, false ) }
   };
-  std::cout << j.dump() << std::endl;
+  std::cout << flakeInfo.dump() << std::endl;
   return EXIT_SUCCESS;
 }
 
@@ -125,7 +123,7 @@ GetCommand::runDb()
 {
   if ( this->dbPath.has_value() )
     {
-      std::cout << ( (std::string) this->dbPath.value() ) << std::endl;
+      std::cout << ( (std::string) * this->dbPath ) << std::endl;
     }
   else
     {
@@ -147,33 +145,27 @@ GetCommand::run()
     {
       return this->runId();
     }
-  else if ( this->parser.is_subcommand_used( "path" ) )
+  if ( this->parser.is_subcommand_used( "path" ) )
     {
       return this->runPath();
     }
-  else if ( this->parser.is_subcommand_used( "flake" ) )
+  if ( this->parser.is_subcommand_used( "flake" ) )
     {
       return this->runFlake();
     }
-  else if ( this->parser.is_subcommand_used( "db" ) )
+  if ( this->parser.is_subcommand_used( "db" ) )
     {
       return this->runDb();
     }
-  else
-    {
-      std::cerr << this->parser << std::endl;
-      throw flox::FloxException(
-              "You must provide a valid 'get' subcommand"
-            );
-      return EXIT_FAILURE;
-    }
+  std::cerr << this->parser << std::endl;
+  throw flox::FloxException( "You must provide a valid 'get' subcommand" );
+  return EXIT_FAILURE;
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-  }  /* End namespaces `flox::command' */
-}  /* End namespaces `flox' */
+}  /* End namespaces `flox::command' */
 
 
 /* -------------------------------------------------------------------------- *

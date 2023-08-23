@@ -27,6 +27,7 @@ TR         ?= tr
 SED        ?= sed
 TEST       ?= test
 DOXYGEN    ?= doxygen
+BEAR       ?= bear
 
 
 # ---------------------------------------------------------------------------- #
@@ -279,8 +280,9 @@ most: bin lib ignores
 
 # ---------------------------------------------------------------------------- #
 
-.PHONY: ccls
+.PHONY: ccls cdb
 ccls: .ccls
+cdb: compile_commands.json
 
 .ccls: FORCE
 	echo 'clang' > "$@";
@@ -293,6 +295,11 @@ ccls: .ccls
 	  echo $(nljson_CFLAGS) $(argparse_CFLAGS) $(sql_builder_CFLAGS);     \
 	  echo $(sqlite3pp_CFLAGS);                                           \
 	}|$(TR) ' ' '\n'|$(SED) 's/-std=/%cpp -std=/' >> "$@";
+
+
+compile_commands.json: FORCE
+	-$(MAKE) -C $(MAKEFILE_DIR) clean;
+	$(BEAR) --output "$@" -- $(MAKE) -C $(MAKEFILE_DIR) -j all;
 
 
 # ---------------------------------------------------------------------------- #

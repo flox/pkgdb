@@ -70,7 +70,7 @@ class FloxFlake : public std::enable_shared_from_this<FloxFlake> {
           nix::ref<nix::EvalState> state;
     const nix::flake::LockedFlake  lockedFlake;
 
-    FloxFlake(       nix::ref<nix::EvalState>   state
+    FloxFlake( const nix::ref<nix::EvalState> & state
              , const nix::FlakeRef            & ref
              );
 

@@ -263,6 +263,11 @@ std::optional<size_t> distanceFromMatch( Package & pkg, std::string match );
 
 /* -------------------------------------------------------------------------- */
 
+bool isSQLError( int rc );
+
+
+/* -------------------------------------------------------------------------- */
+
   }  /* End Namespace `flox::pkgdb' */
 }  /* End Namespace `flox' */
 

@@ -85,15 +85,11 @@ RawPackage::RawPackage( nlohmann::json && drvInfo )
                        : std::vector<std::string>{}
                      )
   , _broken( drvInfo.contains( "broken" )
-              ? std::make_optional(
-                  std::move( drvInfo.at( "broken" ).get<bool>() )
-                )
+              ? std::make_optional( drvInfo.at( "broken" ).get<bool>() )
               : std::nullopt
             )
   , _unfree( drvInfo.contains( "unfree" )
-              ? std::make_optional(
-                  std::move( drvInfo.at( "unfree" ).get<bool>() )
-                )
+              ? std::make_optional( drvInfo.at( "unfree" ).get<bool>() )
               : std::nullopt
             )
   , _description( drvInfo.contains( "description" )

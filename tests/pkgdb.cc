@@ -10,12 +10,17 @@
  *       test state by doing things like clearing tables in test cases where
  *       it may be relevant to an action we're about to test.
  *
+ * In general tests should clear the database's tables at the top of
+ * their function.
+ * This allows `throw` and early terminations to exit at arbitrary points
+ * without polluting later test cases.
+ *
  *
  * -------------------------------------------------------------------------- */
 
 #include <limits>
 #include <iostream>
-#include <stdlib.h>
+#include <cstdlib>
 #include <list>
 #include <assert.h>
 #include <queue>
@@ -31,6 +36,7 @@
 #include "flox/core/util.hh"
 #include "flox/core/types.hh"
 #include "flox/pkgdb.hh"
+#include "flox/pkgdb/query-builder.hh"
 #include "test.hh"
 
 
@@ -53,6 +59,18 @@ getRowCount( flox::pkgdb::PkgDb & db, const std::string table )
 
 /* -------------------------------------------------------------------------- */
 
+  static inline void
+clearTables( flox::pkgdb::PkgDb & db )
+{
+  /* Clear DB */
+  db.execute_all(
+    "DELETE FROM Packages; DELETE FROM AttrSets; DELETE FROM Descriptions"
+  );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 /**
  * Test ability to add `AttrSet` rows.
  * This test should run before all others since it essentially expects
@@ -61,6 +79,8 @@ getRowCount( flox::pkgdb::PkgDb & db, const std::string table )
   bool
 test_addOrGetAttrSetId0( flox::pkgdb::PkgDb & db )
 {
+  clearTables( db );
+
   /* Make sure `AttrSets` is empty. */
   row_id startId = getRowCount( db, "AttrSets" );
   EXPECT_EQ( startId, (row_id) 0 );
@@ -82,11 +102,12 @@ test_addOrGetAttrSetId0( flox::pkgdb::PkgDb & db )
   bool
 test_addOrGetAttrSetId1( flox::pkgdb::PkgDb & db )
 {
-  row_id startId = getRowCount( db, "AttrSets" );
+  clearTables( db );
+
   try
     {
       /* Ensure we throw an error for undefined `AttrSet.id' parents. */
-      db.addOrGetAttrSetId( "phony", startId + 99999999 );
+      db.addOrGetAttrSetId( "phony", 1 );
       return false;
     }
   catch( const flox::pkgdb::PkgDbException & e ) { /* Expected */ }
@@ -119,6 +140,8 @@ test_getDbVersion0( flox::pkgdb::PkgDb & db )
   bool
 test_hasAttrSet0( flox::pkgdb::PkgDb & db )
 {
+  clearTables( db );
+
   /* Make sure the attr-set exists, and clear it. */
   row_id id = db.addOrGetAttrSetId( "x86_64-linux"
                                   , db.addOrGetAttrSetId( "legacyPackages" )
@@ -146,6 +169,8 @@ test_hasAttrSet0( flox::pkgdb::PkgDb & db )
   bool
 test_hasAttrSet1( flox::pkgdb::PkgDb & db )
 {
+  clearTables( db );
+
   /* Make sure the attr-set exists. */
   row_id id = db.addOrGetAttrSetId( "x86_64-linux"
                                   , db.addOrGetAttrSetId( "legacyPackages" )
@@ -178,6 +203,8 @@ test_hasAttrSet1( flox::pkgdb::PkgDb & db )
   bool
 test_getAttrSetId0( flox::pkgdb::PkgDb & db )
 {
+  clearTables( db );
+
   /* Make sure the attr-set exists. */
   row_id id = db.addOrGetAttrSetId( "x86_64-linux"
                                   , db.addOrGetAttrSetId( "legacyPackages" )
@@ -199,6 +226,8 @@ test_getAttrSetId0( flox::pkgdb::PkgDb & db )
   bool
 test_getAttrSetPath0( flox::pkgdb::PkgDb & db )
 {
+  clearTables( db );
+
   /* Make sure the attr-set exists. */
   row_id id = db.addOrGetAttrSetId( "x86_64-linux"
                                   , db.addOrGetAttrSetId( "legacyPackages" )
@@ -214,6 +243,8 @@ test_getAttrSetPath0( flox::pkgdb::PkgDb & db )
   bool
 test_hasPackage0( flox::pkgdb::PkgDb & db )
 {
+  clearTables( db );
+
   /* Make sure the attr-set exists. */
   row_id id = db.addOrGetAttrSetId( "x86_64-linux"
                                   , db.addOrGetAttrSetId( "legacyPackages" )
@@ -260,8 +291,8 @@ test_descriptions0( flox::pkgdb::PkgDb & db )
   bool
 test_descendants0( flox::pkgdb::PkgDb & db )
 {
-  /* Clear `AttrSets' and Make a tree. */
-  db.execute_all( "DELETE FROM Packages; DELETE FROM AttrSets" );
+  clearTables( db );
+
   row_id linux =
     db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-linux" } );
   row_id python = db.addOrGetAttrSetId( "python3Packages", linux );
@@ -278,12 +309,281 @@ test_descendants0( flox::pkgdb::PkgDb & db )
   db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-darwin" } );
 
   std::vector<row_id> descendants = db.getDescendantAttrSets( linux );
-  /* Clear the DB */
-  db.execute( "DELETE FROM AttrSets" );
 
   EXPECT( descendants ==
           ( std::vector<row_id> { python, node, foo, quux, bar, baz, karl } )
         );
+
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+/* Tests `systems', `name', `pname', `version', and `subtree' filtering. */
+  bool
+test_buildPkgQuery0( flox::pkgdb::PkgDb & db )
+{
+  clearTables( db );
+
+  /* Make a package */
+  row_id linux =
+    db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-linux" } );
+  row_id desc =
+    db.addOrGetDescriptionId( "A program with a friendly greeting" );
+  sqlite3pp::command cmd( db.db, R"SQL(
+    INSERT INTO Packages (
+      parentId, attrName, name, pname, version, semver, outputs, descriptionId
+    ) VALUES ( :parentId, 'hello', 'hello-2.12.1', 'hello', '2.12.1', '2.12.1'
+             , '["out"]', :descriptionId
+             )
+  )SQL" );
+  cmd.bind( ":parentId",      (long long) linux );
+  cmd.bind( ":descriptionId", (long long) desc  );
+  if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
+    {
+      throw flox::pkgdb::PkgDbException(
+        db.dbPath
+      , nix::fmt( "Failed to write Package 'hello':(%d) %s"
+                , rc
+                , db.db.error_msg()
+                )
+      );
+    }
+  flox::pkgdb::PkgQueryArgs qargs = {
+    .match             = std::nullopt
+  , .name              = std::nullopt
+  , .pname             = std::nullopt
+  , .version           = std::nullopt
+  , .semver            = std::nullopt
+  , .licenses          = std::nullopt
+  , .allowBroken       = false
+  , .allowUnfree       = true
+  , .preferPreReleases = false
+  , .subtrees          = std::nullopt
+  , .systems           = std::vector<std::string> { "x86_64-linux" }
+  , .stabilities       = std::nullopt
+  };
+
+  /* Run empty query */
+  {
+    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    sqlite3pp::query qry( db.db, query.c_str() );
+    for ( const auto & [var, val] : binds )
+      {
+        qry.bind( var.c_str(), val, sqlite3pp::copy );
+      }
+    auto i = qry.begin();
+    EXPECT( ( i != qry.end() ) && ( 0 < ( * i ).get<long long>( 0 ) ) );
+  }
+
+  /* Run `pname' query */
+  {
+    qargs.pname = "hello";
+    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    qargs.pname = std::nullopt;
+    sqlite3pp::query qry( db.db, query.c_str() );
+    for ( const auto & [var, val] : binds )
+      {
+        qry.bind( var.c_str(), val, sqlite3pp::copy );
+      }
+    auto i = qry.begin();
+    EXPECT( ( i != qry.end() ) && ( 0 < ( * i ).get<long long>( 0 ) ) );
+  }
+
+  /* Run `version' query */
+  {
+    qargs.version = "2.12.1";
+    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    qargs.version = std::nullopt;
+    sqlite3pp::query qry( db.db, query.c_str() );
+    for ( const auto & [var, val] : binds )
+      {
+        qry.bind( var.c_str(), val, sqlite3pp::copy );
+      }
+    auto i = qry.begin();
+    EXPECT( ( i != qry.end() ) && ( 0 < ( * i ).get<long long>( 0 ) ) );
+  }
+
+  /* Run `name' query */
+  {
+    qargs.name = "hello-2.12.1";
+    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    qargs.name = std::nullopt;
+    sqlite3pp::query qry( db.db, query.c_str() );
+    for ( const auto & [var, val] : binds )
+      {
+        qry.bind( var.c_str(), val, sqlite3pp::copy );
+      }
+    auto i = qry.begin();
+    EXPECT( ( i != qry.end() ) && ( 0 < ( * i ).get<long long>( 0 ) ) );
+  }
+
+  /* Run `subtrees' query */
+  {
+    qargs.subtrees = std::vector<flox::subtree_type> { flox::ST_LEGACY };
+    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    qargs.subtrees = std::nullopt;
+    sqlite3pp::query qry( db.db, query.c_str() );
+    for ( const auto & [var, val] : binds )
+      {
+        qry.bind( var.c_str(), val, sqlite3pp::copy );
+      }
+    auto i = qry.begin();
+    EXPECT( ( i != qry.end() ) && ( 0 < ( * i ).get<long long>( 0 ) ) );
+  }
+
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+/* Tests `license', `allowBroken', and `allowUnfree' filtering. */
+  bool
+test_buildPkgQuery1( flox::pkgdb::PkgDb & db )
+{
+  clearTables( db );
+
+  /* Make a package */
+  row_id linux =
+    db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-linux" } );
+  row_id desc =
+    db.addOrGetDescriptionId( "A program with a friendly greeting/farewell" );
+  sqlite3pp::command cmd( db.db, R"SQL(
+    INSERT INTO Packages (
+      parentId, attrName, name, pname, version, semver, outputs, license
+    , broken, unfree, descriptionId
+    ) VALUES
+      ( :parentId, 'hello', 'hello-2.12.1', 'hello', '2.12.1', '2.12.1'
+      , '["out"]', "GPL-3.0-or-later", FALSE, FALSE, :descriptionId
+      )
+    , ( :parentId, 'goodbye', 'goodbye-2.12.1', 'goodbye', '2.12.1', '2.12.1'
+      , '["out"]', NULL, FALSE, TRUE, :descriptionId
+      )
+    , ( :parentId, 'hola', 'hola-2.12.1', 'hola', '2.12.1', '2.12.1'
+      , '["out"]', "BUSL-1.1", FALSE, FALSE, :descriptionId
+      )
+    , ( :parentId, 'ciao', 'ciao-2.12.1', 'ciao', '2.12.1', '2.12.1'
+      , '["out"]', NULL, TRUE, FALSE, :descriptionId
+      )
+  )SQL" );
+  cmd.bind( ":parentId",      (long long) linux );
+  cmd.bind( ":descriptionId", (long long) desc  );
+  if ( flox::pkgdb::sql_rc rc = cmd.execute_all();
+       flox::pkgdb::isSQLError( rc )
+     )
+    {
+      throw flox::pkgdb::PkgDbException(
+        db.dbPath
+      , nix::fmt( "Failed to write Package 'hello':(%d) %s"
+                , rc
+                , db.db.error_msg()
+                )
+      );
+    }
+  flox::pkgdb::PkgQueryArgs qargs = {
+    .match             = std::nullopt
+  , .name              = std::nullopt
+  , .pname             = std::nullopt
+  , .version           = std::nullopt
+  , .semver            = std::nullopt
+  , .licenses          = std::nullopt
+  , .allowBroken       = false
+  , .allowUnfree       = true
+  , .preferPreReleases = false
+  , .subtrees          = std::nullopt
+  , .systems           = std::vector<std::string> { "x86_64-linux" }
+  , .stabilities       = std::nullopt
+  };
+
+  /* Run `allowBroken = false' query */
+  {
+    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    sqlite3pp::query qry( db.db, query.c_str() );
+    for ( const auto & [var, val] : binds )
+      {
+        qry.bind( var.c_str(), val, sqlite3pp::copy );
+      }
+    size_t count = 0;
+    for ( const auto r : qry ) { (void) r; ++count; }
+    EXPECT_EQ( count, (size_t) 3 );
+  }
+
+  /* Run `allowBroken = true' query */
+  {
+    qargs.allowBroken = true;
+    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    qargs.allowBroken = false;
+    sqlite3pp::query qry( db.db, query.c_str() );
+    for ( const auto & [var, val] : binds )
+      {
+        qry.bind( var.c_str(), val, sqlite3pp::copy );
+      }
+    size_t count = 0;
+    for ( const auto r : qry ) { (void) r; ++count; }
+    EXPECT_EQ( count, (size_t) 4 );
+  }
+
+  /* Run `allowUnfree = true' query */
+  {
+    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    sqlite3pp::query qry( db.db, query.c_str() );
+    for ( const auto & [var, val] : binds )
+      {
+        qry.bind( var.c_str(), val, sqlite3pp::copy );
+      }
+    size_t count = 0;
+    for ( const auto r : qry ) { (void) r; ++count; }
+    EXPECT_EQ( count, (size_t) 3 );  /* still omits broken */
+  }
+
+  /* Run `allowUnfree = false' query */
+  {
+    qargs.allowUnfree = false;
+    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    qargs.allowUnfree = true;
+    sqlite3pp::query qry( db.db, query.c_str() );
+    for ( const auto & [var, val] : binds )
+      {
+        qry.bind( var.c_str(), val, sqlite3pp::copy );
+      }
+    size_t count = 0;
+    for ( const auto r : qry ) { (void) r; ++count; }
+    EXPECT_EQ( count, (size_t) 2 );  /* still omits broken as well */
+  }
+
+  /* Run `licenses = ["GPL-3.0-or-later", "BUSL-1.1", "MIT"]' query */
+  {
+    qargs.licenses = std::vector<std::string> {
+      "GPL-3.0-or-later", "BUSL-1.1", "MIT"
+    };
+    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    qargs.licenses = std::nullopt;
+    sqlite3pp::query qry( db.db, query.c_str() );
+    for ( const auto & [var, val] : binds )
+      {
+        qry.bind( var.c_str(), val, sqlite3pp::copy );
+      }
+    size_t count = 0;
+    for ( const auto r : qry ) { (void) r; ++count; }
+    EXPECT_EQ( count, (size_t) 2 );  /* omits NULL licenses */
+  }
+
+  /* Run `licenses = ["BUSL-1.1", "MIT"]' query */
+  {
+    qargs.licenses = std::vector<std::string> { "BUSL-1.1", "MIT" };
+    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    qargs.licenses = std::nullopt;
+    sqlite3pp::query qry( db.db, query.c_str() );
+    for ( const auto & [var, val] : binds )
+      {
+        qry.bind( var.c_str(), val, sqlite3pp::copy );
+      }
+    size_t count = 0;
+    for ( const auto r : qry ) { (void) r; ++count; }
+    EXPECT_EQ( count, (size_t) 1 );  /* omits NULL licenses */
+  }
 
   return true;
 }
@@ -353,6 +653,9 @@ main( int argc, char * argv[] )
     RUN_TEST( descriptions0, db );
 
     RUN_TEST( descendants0, db );
+
+    RUN_TEST( buildPkgQuery0, db );
+    RUN_TEST( buildPkgQuery1, db );
 
   }
 

@@ -29,29 +29,30 @@ using namespace flox;
 test_distanceFromMatch()
 {
   std::tuple<char const*, char const*, size_t> cases[] = {
-    { "match", "match", 0 },
-    { "match", "partial match", 0 },
-    { "match", "miss", 0 },
-    { "partial match", "match", 1 },
-    { "partial match", "partial match", 1 },
-    { "partial match", "miss", 2 },
-    { "miss", "match", 3 },
-    { "miss", "partial match", 3 },
-    { "miss", "miss", 4 },
+    { "match", "match", 0 }
+  , { "match", "partial match", 0 }
+  , { "match", "miss", 0 }
+  , { "partial match", "match", 1 }
+  , { "partial match", "partial match", 1 }
+  , { "partial match", "miss", 2 }
+  , { "miss", "match", 3 }
+  , { "miss", "partial match", 3 }
+  , { "miss", "miss", 4 }
   };
 
   RawPackage pkg;
-  for (auto [pname, description, distance] : cases) {
-      pkg = RawPackage(nlohmann::json {
-        { "name", "name" },
-        { "pname", pname },
-        { "description", description },
-      });
-      EXPECT_EQ(*pkgdb::distanceFromMatch(pkg, "match"), distance);
-  }
+  for ( auto [pname, description, distance] : cases )
+    {
+      pkg = RawPackage( nlohmann::json {
+        { "name", "name" }
+      , { "pname", pname }
+      , { "description", description }
+      } );
+      EXPECT_EQ( * pkgdb::distanceFromMatch( pkg, "match"), distance );
+    }
 
-  // Should return std::nullopt for empty match string.
-  EXPECT(pkgdb::distanceFromMatch(pkg, "") == std::nullopt);
+  /* Should return std::nullopt for empty match string. */
+  EXPECT( pkgdb::distanceFromMatch( pkg, "" ) == std::nullopt );
   return true;
 }
 
@@ -65,14 +66,13 @@ main( int argc, char * argv[] )
 
 /* -------------------------------------------------------------------------- */
 
-  nix::Verbosity verbosity;
   if ( ( 1 < argc ) && ( std::string_view( argv[1] ) == "-v" ) )
     {
-      verbosity = nix::lvlDebug;
+      nix::verbosity = nix::lvlDebug;
     }
   else
     {
-      verbosity = nix::lvlWarn;
+      nix::verbosity = nix::lvlWarn;
     }
 
 /* -------------------------------------------------------------------------- */

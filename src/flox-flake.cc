@@ -19,7 +19,7 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
-FloxFlake::FloxFlake(       nix::ref<nix::EvalState>   state
+FloxFlake::FloxFlake( const nix::ref<nix::EvalState> & state
                     , const nix::FlakeRef            & ref
                     )
   : state( state )
@@ -73,9 +73,9 @@ FloxFlake::openEvalCache()
 FloxFlake::maybeOpenCursor( const AttrPath & path )
 {
   MaybeCursor cur = this->openEvalCache()->getRoot();
-  for ( const auto & p : path )
+  for ( const auto & part : path )
     {
-      cur = cur->maybeGetAttr( p );
+      cur = cur->maybeGetAttr( part );
       if ( cur == nullptr ) { break; }
     }
   return cur;
@@ -88,7 +88,7 @@ FloxFlake::maybeOpenCursor( const AttrPath & path )
 FloxFlake::openCursor( const AttrPath & path )
 {
   Cursor cur = this->openEvalCache()->getRoot();
-  for ( const auto & p : path ) { cur = cur->getAttr( p ); }
+  for ( const auto & part : path ) { cur = cur->getAttr( part ); }
   return cur;
 }
 

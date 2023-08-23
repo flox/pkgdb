@@ -21,12 +21,13 @@
 
 /* -------------------------------------------------------------------------- */
 
-namespace flox {
-  namespace command {
+namespace flox::command {
 
 /* -------------------------------------------------------------------------- */
 
-VerboseParser::VerboseParser( std::string name, std::string version )
+VerboseParser::VerboseParser( const std::string & name
+                            , const std::string & version
+                            )
   : argparse::ArgumentParser( name, version, argparse::default_arguments::help )
 {
     this->add_argument( "-q", "--quiet" )
@@ -115,9 +116,9 @@ AttrPathMixin::addAttrPathArgs( argparse::ArgumentParser & parser )
                .help( "Attribute path to scrape" )
                .metavar( "ATTRS..." )
                .remaining()
-               .action( [&]( const std::string & p )
+               .action( [&]( const std::string & path )
                         {
-                          this->attrPath.emplace_back( p );
+                          this->attrPath.emplace_back( path );
                         }
                       );
 }
@@ -126,7 +127,7 @@ AttrPathMixin::addAttrPathArgs( argparse::ArgumentParser & parser )
   void
 AttrPathMixin::postProcessArgs()
 {
-  if ( this->attrPath.size() < 1 ) { this->attrPath.push_back( "packages" ); }
+  if ( this->attrPath.empty() ) { this->attrPath.push_back( "packages" ); }
   if ( this->attrPath.size() < 2 )
     {
       this->attrPath.push_back(
@@ -144,8 +145,7 @@ AttrPathMixin::postProcessArgs()
 
 /* -------------------------------------------------------------------------- */
 
-  }  /* End namespaces `flox::command' */
-}  /* End namespaces `flox' */
+}  /* End namespaces `flox::command' */
 
 
 /* -------------------------------------------------------------------------- *
