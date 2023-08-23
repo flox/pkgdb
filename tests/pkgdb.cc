@@ -745,6 +745,111 @@ test_buildPkgQuery2( flox::pkgdb::PkgDb & db )
 }
 
 
+/* -------------------------------------------------------------------------- */
+
+/* Tests `getPackages', particularly `semver' filtering. */
+  bool
+test_getPackages0( flox::pkgdb::PkgDb & db )
+{
+  clearTables( db );
+
+  /* Make a package */
+  row_id linux =
+    db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-linux" } );
+  row_id desc =
+    db.addOrGetDescriptionId( "A program with a friendly greeting/farewell" );
+  sqlite3pp::command cmd( db.db, R"SQL(
+    INSERT INTO Packages (
+      parentId, attrName, name, pname, version, semver, outputs, descriptionId
+    ) VALUES
+      ( :parentId, 'hello0', 'hello-2.12', 'hello', '2.12', '2.12.0'
+      , '["out"]', :descriptionId
+      )
+      ( :parentId, 'hello1', 'hello-2.12.1', 'hello', '2.12.1', '2.12.1'
+      , '["out"]', :descriptionId
+      )
+      ( :parentId, 'hello2', 'hello-3', 'hello', '3', '3.0.0'
+      , '["out"]', :descriptionId
+      )
+  )SQL" );
+  cmd.bind( ":parentId",      (long long) linux );
+  cmd.bind( ":descriptionId", (long long) desc  );
+  if ( flox::pkgdb::sql_rc rc = cmd.execute_all();
+       flox::pkgdb::isSQLError( rc )
+     )
+    {
+      throw flox::pkgdb::PkgDbException(
+        db.dbPath
+      , nix::fmt( "Failed to write Packages:(%d) %s"
+                , rc
+                , db.db.error_msg()
+                )
+      );
+    }
+  flox::pkgdb::PkgQueryArgs qargs = {
+    .match             = std::nullopt
+  , .name              = std::nullopt
+  , .pname             = std::nullopt
+  , .version           = std::nullopt
+  , .semver            = std::nullopt
+  , .licenses          = std::nullopt
+  , .allowBroken       = false
+  , .allowUnfree       = true
+  , .preferPreReleases = false
+  , .subtrees          = std::nullopt
+  , .systems           = std::vector<std::string> { "x86_64-linux" }
+  , .stabilities       = std::nullopt
+  };
+
+  /* Run `semver = "^2"' query */
+  {
+    qargs.semver = "^2";
+    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    qargs.semver = std::nullopt;
+    sqlite3pp::query qry( db.db, query.c_str() );
+    for ( const auto & [var, val] : binds )
+      {
+        qry.bind( var.c_str(), val, sqlite3pp::copy );
+      }
+    size_t count = 0;
+    for ( const auto r : qry ) { (void) r; ++count; }
+    EXPECT_EQ( count, (size_t) 2 );
+  }
+
+  /* Run `semver = "^3"' query */
+  {
+    qargs.semver = "^3";
+    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    qargs.semver = std::nullopt;
+    sqlite3pp::query qry( db.db, query.c_str() );
+    for ( const auto & [var, val] : binds )
+      {
+        qry.bind( var.c_str(), val, sqlite3pp::copy );
+      }
+    size_t count = 0;
+    for ( const auto r : qry ) { (void) r; ++count; }
+    EXPECT_EQ( count, (size_t) 1 );
+  }
+
+  /* Run `semver = "^2.13"' query */
+  {
+    qargs.semver = "^2.13";
+    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    qargs.semver = std::nullopt;
+    sqlite3pp::query qry( db.db, query.c_str() );
+    for ( const auto & [var, val] : binds )
+      {
+        qry.bind( var.c_str(), val, sqlite3pp::copy );
+      }
+    size_t count = 0;
+    for ( const auto r : qry ) { (void) r; ++count; }
+    EXPECT_EQ( count, (size_t) 0 );
+  }
+
+  return true;
+}
+
+
 /* ========================================================================== */
 
   int

@@ -14,7 +14,6 @@
 #include <vector>
 #include <list>
 #include <string>
-#include <ranges>
 
 #include "flox/pkgdb/read.hh"
 #include "flox/flake-package.hh"
