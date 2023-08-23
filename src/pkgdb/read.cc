@@ -342,7 +342,7 @@ PkgDbReadOnly::getPackages( const PkgQueryArgs & params )
   if ( params.semver.has_value() &&
        ( ! params.semver->empty() ) &&
        ( ( * params.semver ) != "*" ) && ( ( * params.semver ) != "any" ) &&
-       ( ( * params.semver ) != "^*" )
+       ( ( * params.semver ) != "^*" ) && ( ( * params.semver ) != "~*" )
      )
     {
       std::vector<std::pair<row_id, std::string>> idVersions;
