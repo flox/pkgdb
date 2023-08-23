@@ -127,8 +127,10 @@ PkgQueryArgs::validate() const
               return error_code::PDQEC_INVALID_STABILITY;
             }
         }
-      if ( ( this->subtrees.value().size() != 1 ) ||
-           ( this->subtrees.value().front() != ST_CATALOG )
+      if ( ( this->subtrees.has_value() ) &&
+           ( ( this->subtrees.value().size() != 1 ) ||
+             ( this->subtrees.value().front() != ST_CATALOG )
+           )
          )
         {
           return error_code::PDQEC_CONFLICTING_SUBTREE;
@@ -211,20 +213,6 @@ buildPkgQuery( const PkgQueryArgs & params )
     {
       q.where( column( "subtree" ) == "catalog" );
     }
-  else if ( params.subtrees.has_value() && params.subtrees.value().size() == 1 )
-    {
-      std::string s;
-      switch ( params.subtrees.value().front() )
-        {
-          case ST_LEGACY:   s = "legacyPackages"; break;
-          case ST_PACKAGES: s = "packages";       break;
-          case ST_CATALOG:  s = "catalog";        break;
-          default:
-            throw PkgQueryArgs::PkgQueryInvalidArgException();
-            break;
-        }
-      q.where( column( "subtree" ) == s );
-    }
   else if ( params.subtrees.has_value() )
     {
       std::vector<std::string> lst;
@@ -244,14 +232,7 @@ buildPkgQuery( const PkgQueryArgs & params )
     }
 
   /* Systems */
-  if ( params.systems.size() == 1 )
-    {
-      q.where( column( "system" ) == params.systems.front() );
-    }
-  else
-    {
-      q.where( column( "system" ).in( params.systems ) );
-    }
+  q.where( column( "system" ).in( params.systems ) );
 
   /* Stabilities */
   if ( params.stabilities.has_value() )
