@@ -96,7 +96,7 @@ ScrapeCommand::run()
     }
 
   /* Print path to database. */
-  std::cout << ( (std::string) this->dbPath.value() ) << std::endl;
+  std::cout << ( (std::string) * this->dbPath ) << std::endl;
   return EXIT_SUCCESS;  /* GG, GG */
 }
 

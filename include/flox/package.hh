@@ -153,7 +153,7 @@ class Package {
     {
       std::optional<std::string> version = this->getVersion();
       if ( ! version.has_value() ) { return std::nullopt; }
-      return versions::coerceSemver( version.value() );
+      return versions::coerceSemver( * version );
     }
 
     /**
@@ -194,26 +194,26 @@ class Package {
       } } };
       std::optional<std::string> os = this->getVersion();
 
-      if ( os.has_value() ) { j[system].emplace( "version", os.value() ); }
+      if ( os.has_value() ) { j[system].emplace( "version", * os ); }
       else { j[system].emplace( "version", nlohmann::json() ); }
 
       os = this->getSemver();
-      if ( os.has_value() ) { j[system].emplace( "semver", os.value() ); }
+      if ( os.has_value() ) { j[system].emplace( "semver", * os ); }
       else { j[system].emplace( "semver", nlohmann::json() ); }
 
       j[system].emplace( "outputs",          this->getOutputs() );
       j[system].emplace( "outputsToInstall", this->getOutputsToInstall() );
 
       os = this->getLicense();
-      if ( os.has_value() ) { j[system].emplace( "license", os.value() ); }
+      if ( os.has_value() ) { j[system].emplace( "license", * os ); }
       else { j[system].emplace( "license", nlohmann::json() ); }
 
       std::optional<bool> ob = this->isBroken();
-      if ( ob.has_value() ) { j[system].emplace( "broken", ob.value() ); }
+      if ( ob.has_value() ) { j[system].emplace( "broken", * ob ); }
       else { j[system].emplace( "broken", nlohmann::json() ); }
 
       ob = this->isUnfree();
-      if ( ob.has_value() ) { j[system].emplace( "unfree", ob.value() ); }
+      if ( ob.has_value() ) { j[system].emplace( "unfree", * ob ); }
       else { j[system].emplace( "unfree", nlohmann::json() ); }
 
       if ( withDescription )
@@ -221,7 +221,7 @@ class Package {
           std::optional<std::string> od = this->getDescription();
           if ( od.has_value() )
             {
-              j[system].emplace( "description", od.value() );
+              j[system].emplace( "description", * od );
             }
           else
             {

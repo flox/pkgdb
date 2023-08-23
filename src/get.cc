@@ -125,7 +125,7 @@ GetCommand::runDb()
 {
   if ( this->dbPath.has_value() )
     {
-      std::cout << ( (std::string) this->dbPath.value() ) << std::endl;
+      std::cout << ( (std::string) * this->dbPath ) << std::endl;
     }
   else
     {

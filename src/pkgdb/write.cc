@@ -271,7 +271,7 @@ PkgDb::addPackage( row_id           parentId
 
   if ( pkg._semver.has_value() )
     {
-      cmd.bind( ":semver", pkg._semver.value(), sqlite3pp::nocopy );
+      cmd.bind( ":semver", * pkg._semver, sqlite3pp::nocopy );
     }
   else
     {
@@ -292,7 +292,7 @@ PkgDb::addPackage( row_id           parentId
     {
       if ( auto m = pkg.getLicense(); m.has_value() )
         {
-          cmd.bind( ":license", m.value(), sqlite3pp::copy );
+          cmd.bind( ":license", * m, sqlite3pp::copy );
         }
       else
         {
@@ -301,7 +301,7 @@ PkgDb::addPackage( row_id           parentId
 
       if ( auto m = pkg.isBroken(); m.has_value() )
         {
-          cmd.bind( ":broken", (int) m.value() );
+          cmd.bind( ":broken", (int) * m );
         }
       else
         {
@@ -310,7 +310,7 @@ PkgDb::addPackage( row_id           parentId
 
       if ( auto m = pkg.isUnfree(); m.has_value() )
         {
-          cmd.bind( ":unfree", (int) m.value() );
+          cmd.bind( ":unfree", (int) * m );
         }
       else /* TODO: Derive value from `license'? */
         {
@@ -319,7 +319,7 @@ PkgDb::addPackage( row_id           parentId
 
       if ( auto m = pkg.getDescription(); m.has_value() )
         {
-          row_id descriptionId = this->addOrGetDescriptionId( m.value() );
+          row_id descriptionId = this->addOrGetDescriptionId( * m );
           cmd.bind( ":descriptionId", (long long) descriptionId );
         }
       else

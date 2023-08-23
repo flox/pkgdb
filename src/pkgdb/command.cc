@@ -37,7 +37,7 @@ DbPathMixin::addDatabasePathOption( argparse::ArgumentParser & parser )
                         {
                           this->dbPath = nix::absPath( dbPath );
                           std::filesystem::create_directories(
-                            this->dbPath.value().parent_path()
+                            this->dbPath->parent_path()
                           );
                         }
                       );
@@ -54,7 +54,7 @@ PkgDbMixin::openPkgDb()
     {
       this->db = std::make_unique<flox::pkgdb::PkgDb>(
         this->flake->lockedFlake
-      , (std::string) this->dbPath.value()
+      , (std::string) * this->dbPath
       );
     }
   else if ( this->flake != nullptr )
@@ -62,17 +62,17 @@ PkgDbMixin::openPkgDb()
       this->dbPath = flox::pkgdb::genPkgDbName(
         this->flake->lockedFlake.getFingerprint()
       );
-      std::filesystem::create_directories( this->dbPath.value().parent_path() );
+      std::filesystem::create_directories( this->dbPath->parent_path() );
       this->db = std::make_unique<flox::pkgdb::PkgDb>(
         this->flake->lockedFlake
-      , (std::string) this->dbPath.value()
+      , (std::string) * this->dbPath
       );
     }
   else if ( this->dbPath.has_value() )
     {
-      std::filesystem::create_directories( this->dbPath.value().parent_path() );
+      std::filesystem::create_directories( this->dbPath->parent_path() );
       this->db = std::make_unique<flox::pkgdb::PkgDb>(
-        (std::string) this->dbPath.value()
+        (std::string) * this->dbPath
       );
     }
   else

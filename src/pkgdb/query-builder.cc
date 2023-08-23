@@ -89,7 +89,7 @@ PkgQueryArgs::validate() const
   /* Licenses */
   if ( this->licenses.has_value() )
     {
-      for ( const auto & l : this->licenses.value() )
+      for ( const auto & l : * this->licenses )
         {
           if ( l.find( '\'' ) != l.npos )
             {
@@ -115,7 +115,7 @@ PkgQueryArgs::validate() const
   /* Stabilities */
   if ( this->stabilities.has_value() )
     {
-      for ( const auto & s : this->stabilities.value() )
+      for ( const auto & s : * this->stabilities )
         {
           if ( std::find( flox::defaultCatalogStabilities.begin()
                         , flox::defaultCatalogStabilities.end()
@@ -128,8 +128,8 @@ PkgQueryArgs::validate() const
             }
         }
       if ( ( this->subtrees.has_value() ) &&
-           ( ( this->subtrees.value().size() != 1 ) ||
-             ( this->subtrees.value().front() != ST_CATALOG )
+           ( ( this->subtrees->size() != 1 ) ||
+             ( this->subtrees->front() != ST_CATALOG )
            )
          )
         {
@@ -156,7 +156,7 @@ buildPkgQuery( const PkgQueryArgs & params )
   /* Validate parameters */
   if ( auto maybe_ec = params.validate(); maybe_ec != std::nullopt )
     {
-      throw PkgQueryArgs::PkgQueryInvalidArgException( maybe_ec.value() );
+      throw PkgQueryArgs::PkgQueryInvalidArgException( * maybe_ec );
     }
 
   SelectModel q;
@@ -166,13 +166,13 @@ buildPkgQuery( const PkgQueryArgs & params )
   if ( params.name.has_value() )
     {
       q.where( column( "name" ) == Param( ":name" ) );
-      binds.emplace( ":name", params.name.value() );
+      binds.emplace( ":name", * params.name );
     }
 
   if ( params.pname.has_value() )
     {
       q.where( column( "pname" ) == Param( ":pname" ) );
-      binds.emplace( ":pname", params.pname.value() );
+      binds.emplace( ":pname", * params.pname );
     }
   
   if ( params.match.has_value() && !params.match->empty() )
@@ -183,14 +183,14 @@ buildPkgQuery( const PkgQueryArgs & params )
   if ( params.version.has_value() )
     {
       q.where( column( "version" ) == Param( ":version" ) );
-      binds.emplace( ":version", params.version.value() );
+      binds.emplace( ":version", * params.version );
     }
 
-  if ( params.licenses.has_value() && ( ! params.licenses.value().empty() ) )
+  if ( params.licenses.has_value() && ( ! params.licenses->empty() ) )
     {
       q.where( "(" + (
         column( "license" ).is_not_null() and
-        column( "license" ).in( params.licenses.value() )
+        column( "license" ).in( * params.licenses )
       ).str() + ")" );
     }
 
@@ -216,7 +216,7 @@ buildPkgQuery( const PkgQueryArgs & params )
   else if ( params.subtrees.has_value() )
     {
       std::vector<std::string> lst;
-      for ( const auto s : params.subtrees.value() )
+      for ( const auto s : * params.subtrees )
         {
           switch ( s )
             {
@@ -237,15 +237,15 @@ buildPkgQuery( const PkgQueryArgs & params )
   /* Stabilities */
   if ( params.stabilities.has_value() )
     {
-      if ( params.stabilities.value().size() == 1 )
+      if ( params.stabilities->size() == 1 )
         {
           q.where(
-            column( "stability" ) == params.stabilities.value().front()
+            column( "stability" ) == params.stabilities->front()
           );
         }
       else
         {
-          q.where( column( "stability" ).in( params.stabilities.value() ) );
+          q.where( column( "stability" ).in( * params.stabilities ) );
         }
     }
 
