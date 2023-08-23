@@ -1,16 +1,17 @@
 ---
 Checks: >
-  clang-diagnostic-*,
-  clang-analyzer-*,
-  bugprone-*,
-  cert-*,
-  readability-*,
-  performance-*,
-  portability-*,
-  hicpp-*,
-  cppcoreguidelines-*,
-  modernize-*,
-  -modernize-use-trailing-return-type
+  clang-diagnostic-*
+  ,clang-analyzer-*
+  ,bugprone-*
+  ,cert-*
+  ,readability-*
+  ,performance-*
+  ,portability-*
+  ,hicpp-*
+  ,cppcoreguidelines-*
+  ,modernize-*
+  ,-modernize-use-trailing-return-type
+  ,-cppcoreguidelines-pro-type-union-access
 
 WarningsAsErrors: ''
 HeaderFilterRegex: ''

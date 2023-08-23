@@ -21,7 +21,7 @@ namespace flox {
 
 /* Scrape Subcommand */
 
-ScrapeCommand::ScrapeCommand() : flox::NixState(), parser( "scrape" )
+ScrapeCommand::ScrapeCommand() : parser( "scrape" )
 {
   this->parser.add_description( "Scrape a flake and emit a SQLite3 DB" );
   this->parser.add_argument( "-f", "--force" )
@@ -86,10 +86,10 @@ ScrapeCommand::run()
               todo.pop();
             }
         }
-      catch( const nix::EvalError & e )
+      catch( const nix::EvalError & )
         {
           txn.rollback();
-          throw e;
+          throw;
         }
       txn.commit();
 

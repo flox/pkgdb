@@ -19,9 +19,8 @@ namespace versions {
 /* -------------------------------------------------------------------------- */
 
 /* Matches Semantic Version strings, e.g. `4.2.0-pre' */
-#define _re_vp "(0|[1-9][0-9]*)"
 static const std::regex semverRE(
-  _re_vp "\\." _re_vp "\\." _re_vp "(-[-[:alnum:]_+.]+)?"
+  "(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[-[:alnum:]_+.]+)?"
 , std::regex::ECMAScript
 );
 
@@ -102,16 +101,16 @@ coerceSemver( std::string_view version )
     }
 
   /* Try try matching the coercive pattern. */
-  std::smatch sm;
-  if ( isDate( v ) || ( ! std::regex_match( v, sm, semverCoerceRE ) ) )
+  std::smatch match;
+  if ( isDate( v ) || ( ! std::regex_match( v, match, semverCoerceRE ) ) )
     {
       return std::nullopt;
     }
 
   #if defined( DEBUG ) && ( DEBUG != 0 )
-  for ( unsigned int i = 0; i < sm.size(); ++i )
+  for ( unsigned int i = 0; i < match.size(); ++i )
     {
-      std::cerr << "[" << i << "]: " << sm[i] << std::endl;
+      std::cerr << "[" << i << "]: " << match[i] << std::endl;
     }
   #endif
 
@@ -134,11 +133,11 @@ coerceSemver( std::string_view version )
    * some characters with null terminators.
    * To avoid this we convert each submatch to a string from right to left.
    */
-  std::string tag( sm[8].str() );
-  std::string patch( sm[7].str() );
-  std::string minor( sm[5].str() );
+  std::string tag( match[8].str() );
+  std::string patch( match[7].str() );
+  std::string minor( match[5].str() );
 
-  std::string rsl( sm[3].str() + "." );
+  std::string rsl( match[3].str() + "." );
 
   if ( minor.empty() ) { rsl += "0."; }
   else                 { rsl += minor + "."; }
@@ -191,13 +190,13 @@ semverSat( const std::string & range, const std::list<std::string> & versions )
   std::list<std::string> args = {
     "--include-prerelease", "--loose", "--range", range
   };
-  for ( auto & v : versions ) { args.push_back( v ); }
+  for ( const auto & version : versions ) { args.push_back( version ); }
   auto [ec, lines] = runSemver( args );
   if ( ! nix::statusOk( ec ) ) { return {}; }
   std::list<std::string> rsl;
-  std::stringstream ss( lines );
+  std::stringstream oss( lines );
   std::string l;
-  while ( std::getline( ss, l, '\n' ) )
+  while ( std::getline( oss, l, '\n' ) )
     {
       if ( ! l.empty() ) { rsl.push_back( std::move( l ) ); }
     }
