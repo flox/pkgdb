@@ -154,7 +154,7 @@ buildPkgQuery( const PkgQueryArgs & params )
   /* Validate parameters */
   if ( auto maybe_ec = params.validate(); mec != std::nullopt )
     {
-      throw PkgQueryArgs::PkgQueryInvalidArgException( mec.value() );
+      throw PkgQueryArgs::PkgQueryInvalidArgException( maybe_ec.value() );
     }
 
   SelectModel q;
