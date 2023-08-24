@@ -127,6 +127,32 @@ CREATE VIEW IF NOT EXISTS v_AttrPaths AS
     FROM AttrSets O INNER JOIN Tree as Parent ON ( Parent.id = O.parent )
   ) SELECT * FROM Tree;
 
+CREATE VIEW IF NOT EXISTS v_Semvers AS SELECT
+  semver
+, major
+, minor
+, ( iif( ( length( mPatch ) < 1 ), rest, mPatch ) ) AS patch
+, ( iif( ( length( mPatch ) < 1 ), NULL, rest ) )   AS preTag
+FROM (
+  SELECT semver
+       , major
+       , minor
+       , ( substr( rest, 0, instr( rest, '-' ) ) )  AS mPatch
+       , ( substr( rest, instr( rest, '-' ) + 1 ) ) AS rest
+  FROM (
+    SELECT semver
+         , major
+         , ( substr( rest, 0, instr( rest, '.' ) ) )  AS minor
+         , ( substr( rest, instr( rest, '.' ) + 1 ) ) AS rest
+    FROM (
+      SELECT semver
+           , ( substr( semver, 0, instr( semver, '.' ) ) )  AS major
+           , ( substr( semver, instr( semver, '.' ) + 1 ) ) AS rest
+      FROM ( SELECT DISTINCT semver FROM Packages )
+    )
+  )
+) ORDER BY major, minor, patch, preTag DESC NULLS FIRST;
+
 CREATE VIEW IF NOT EXISTS v_PackagesSearch AS SELECT
   Packages.id
 , v_AttrPaths.subtree
@@ -142,8 +168,9 @@ CREATE VIEW IF NOT EXISTS v_PackagesSearch AS SELECT
 , Packages.unfree
 , Descriptions.description
 FROM Packages
-JOIN Descriptions ON ( Packages.descriptionId = Descriptions.id )
-JOIN v_AttrPaths ON ( Packages.parentId = v_AttrPaths.id )
+JOIN Descriptions         ON ( Packages.descriptionId = Descriptions.id  )
+JOIN v_AttrPaths          ON ( Packages.parentId      = v_AttrPaths.id   )
+FULL OUTER JOIN v_SEMVERS ON ( Packages.semver        = v_Semvers.semver )
 )SQL";
 
 

@@ -194,14 +194,19 @@ buildPkgQuery( const PkgQueryArgs & params )
                 , 3
                 )
            ) AS matchStrength
-      )SQL" );
+      )SQL" ).order_by( "matchStrength ASC" );
       binds.emplace( ":match", "%" +  ( * params.match ) + "%" );
-      q.order_by( "matchStrength" );
     }
   else
     {
       q.select( "NULL AS matchStrength" );
     }
+
+  q.select( R"SQL(
+    iif( ( semver IS NOT NULL ), 0
+       , iif( ( ( SELECT version IS date( version ) ) IS NOT NULL ), 2, 3 )
+       ) AS versionType
+  )SQL" ).order_by( "versionType" );
 
   if ( params.version.has_value() )
     {
@@ -227,6 +232,9 @@ buildPkgQuery( const PkgQueryArgs & params )
         ( column( "broken" ).is_null() or ( column( "broken" ) == 0 ) ).str() +
       ")" );
     }
+  q.select( R"SQL(
+    iif( ( broken IS NULL ), 1, iif( broken, 2, 0 ) ) AS brokenRank
+  )SQL" ).order_by( "brokenRank ASC" );
 
   if ( ! params.allowUnfree )
     {
@@ -234,6 +242,9 @@ buildPkgQuery( const PkgQueryArgs & params )
         ( column( "unfree" ).is_null() or ( column( "unfree" ) == 0 ) ).str() +
       ")" );
     }
+  q.select( R"SQL(
+    iif( ( unfree IS NULL ), 1, iif( unfree, 2, 0 ) ) AS unfreeRank
+  )SQL" ).order_by( "unfreeRank ASC" );
 
   /* Subtrees */
   if ( params.stabilities.has_value() )
@@ -242,7 +253,9 @@ buildPkgQuery( const PkgQueryArgs & params )
     }
   else if ( params.subtrees.has_value() )
     {
+      size_t                   idx = 0;
       std::vector<std::string> lst;
+      std::string              rank;
       for ( const auto s : * params.subtrees )
         {
           switch ( s )
@@ -254,32 +267,66 @@ buildPkgQuery( const PkgQueryArgs & params )
                 throw PkgQueryArgs::PkgQueryInvalidArgException();
                 break;
             }
+          rank += "iif( ( subtree = '" + lst.back() + "' ), ";
+          rank += idx;
+          rank += ", ";
+          ++idx;
         }
       q.where( column( "subtree" ).in( lst ) );
+      if ( 1 < idx )
+        {
+          rank += idx;
+          for ( size_t i = 0; i < idx; ++i ) { rank += " )"; }
+          rank += " AS subtreeRank";
+          q.select( rank ).order_by( "subtreeRank ASC" );
+        }
     }
 
   /* Systems */
   q.where( column( "system" ).in( params.systems ) );
+  if ( 1 < params.systems.size() )
+    {
+      size_t      idx = 0;
+      std::string rank;
+      for ( const auto & system : params.systems )
+        {
+          rank += "iif( system = '" + system + "' ), ";
+          rank += idx;
+          rank += ", ";
+          ++idx;
+        }
+      rank += idx;
+      for ( size_t i = 0; i < idx; ++i ) { rank += " )"; }
+      rank += " AS systemsRank";
+      q.select( rank ).order_by( "systemsRank ASC" );
+    }
 
   /* Stabilities */
   if ( params.stabilities.has_value() )
     {
-      if ( params.stabilities->size() == 1 )
+      q.where( column( "stability" ).in( * params.stabilities ) );
+      if ( 1 < params.stabilities->size() )
         {
-          q.where(
-            column( "stability" ) == params.stabilities->front()
-          );
-        }
-      else
-        {
-          q.where( column( "stability" ).in( * params.stabilities ) );
+          size_t      idx = 0;
+          std::string rank;
+          for ( const auto & stability : * params.stabilities )
+            {
+              rank += "iif( stability = '" + stability + "' ), ";
+              rank += idx;
+              rank += ", ";
+              ++idx;
+            }
+          rank += idx;
+          for ( size_t i = 0; i < idx; ++i ) { rank += " )"; }
+          rank += " AS stabilitiesRank";
+          q.select( rank ).order_by( "stabilitiesRank ASC" );
         }
     }
 
-  // TODO: Semver and pre-releases
-  // TODO: Sort/"order by" results
+  /* Removes extra columns used for ordering */
+  std::string rsl = "SELECT id, semver, matchStrength FROM ( " + q.str() + " )";
 
-  return std::make_pair( q.str(), binds );
+  return std::make_pair( std::move( rsl ), binds );
 }
 
 
