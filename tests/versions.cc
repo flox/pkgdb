@@ -112,19 +112,51 @@ test_compareSemversLT0()
 
 /* -------------------------------------------------------------------------- */
 
-/* NOTE: abbreviated years are split such that 68 -> 2068, and 69 -> 1969. */
   bool
 test_compareDatesLT0()
 {
   /* Ensure equal dates with different formats are equal */
-  EXPECT( versions::compareDatesLT( "1970-10-25", "10-25-1970" ) );
-  EXPECT( versions::compareDatesLT( "10-25-1970", "1970-10-25" ) );
+  EXPECT( versions::compareDatesLT( "1917-10-25", "10-25-1917" ) );
+  EXPECT( versions::compareDatesLT( "10-25-1917", "1917-10-25" ) );
 
   /* Same format comparisons */
-  EXPECT( versions::compareDatesLT( "1970-10-25", "1970-10-26" ) );
-  EXPECT( ! versions::compareDatesLT( "1970-10-26", "1970-10-25" ) );
-  EXPECT( versions::compareDatesLT( "10-25-1970", "10-26-1970" ) );
-  EXPECT( ! versions::compareDatesLT( "10-26-1970", "10-25-1970" ) );
+  EXPECT( versions::compareDatesLT( "1917-10-25", "1917-10-26" ) );
+  EXPECT( ! versions::compareDatesLT( "1917-10-26", "1917-10-25" ) );
+  EXPECT( versions::compareDatesLT( "10-25-1917", "10-26-1917" ) );
+  EXPECT( ! versions::compareDatesLT( "10-26-1917", "10-25-1917" ) );
+
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  bool
+test_compareVersionsLT0()
+{
+  /* Ensure equal dates with different formats are equal */
+  EXPECT( versions::compareVersionsLT( "1917-10-25", "10-25-1917" ) );
+  EXPECT( versions::compareVersionsLT( "10-25-1917", "1917-10-25" ) );
+
+  /* Same format comparisons */
+  EXPECT( versions::compareVersionsLT( "1917-10-25", "1917-10-26" ) );
+  EXPECT( ! versions::compareVersionsLT( "1917-10-26", "1917-10-25" ) );
+  EXPECT( versions::compareVersionsLT( "10-25-1917", "10-26-1917" ) );
+  EXPECT( ! versions::compareVersionsLT( "10-26-1917", "10-25-1917" ) );
+
+  /* Compare same version pre-release against release */
+  EXPECT( versions::compareVersionsLT( "4.1.9-pre", "4.1.9" ) );
+  EXPECT( versions::compareVersionsLT( "4.1.9-pre", "4.1.9", true ) );
+  EXPECT( ! versions::compareVersionsLT( "4.1.9", "4.1.9-pre" ) );
+  EXPECT( ! versions::compareVersionsLT( "4.1.9", "4.1.9-pre", true ) );
+
+  /* Compare different categories */
+  EXPECT( versions::compareVersionsLT( "10-25-1917", "4.1.9-pre" ) );
+  EXPECT( ! versions::compareVersionsLT( "4.1.9-pre", "10-25-1917" ) );
+  EXPECT( versions::compareVersionsLT( "howdy", "4.1.9-pre", true ) );
+  EXPECT( ! versions::compareVersionsLT( "4.1.9-pre", "howdy", true ) );
+  EXPECT( versions::compareVersionsLT( "howdy", "10-25-1970", true ) );
+  EXPECT( ! versions::compareVersionsLT( "10-25-1970", "howdy" ) );
 
   return true;
 }
@@ -144,6 +176,7 @@ main()
   RUN_TEST( getVersionKind0 );
   RUN_TEST( compareSemversLT0 );
   RUN_TEST( compareDatesLT0 );
+  RUN_TEST( compareVersionsLT0 );
 
   return ec;
 }
