@@ -20,17 +20,15 @@ namespace datetime {
 parseDate( std::string_view timestamp )
 {
   static const char fmtYMD[] = "%Y-%m-%d";
-  static const char fmtyMD[] = "%y-%m-%d";
   static const char fmtMDY[] = "%m-%d-%Y";
-  static const char fmtMDy[] = "%m-%d-%y";
-
-  std::tm       t;
+  std::tm       t {};
   std::string   s( timestamp );
-  char        * rest = strptime( s.c_str(), fmtYMD, & t );
-  if ( rest == s.c_str() ) { rest = strptime( s.c_str(), fmtyMD, & t ); }
-  if ( rest == s.c_str() ) { rest = strptime( s.c_str(), fmtMDY, & t ); }
-  if ( rest == s.c_str() ) { rest = strptime( s.c_str(), fmtMDy, & t ); }
-  if ( rest == nullptr )   { return std::make_pair( t, "" ); }
+
+  char * rest = strptime( s.c_str()
+                        , ( timestamp.at( 4 ) == '-' ) ? fmtYMD : fmtMDY
+                        , & t
+                        );
+  if ( rest == nullptr ) { return std::make_pair( t, "" ); }
   return std::make_pair( t, std::string( rest ) );
 }
 
@@ -43,68 +41,6 @@ parseDateToEpoch( std::string_view timestamp )
   std::tm t = parseDate( timestamp ).first;
   double  s = std::mktime( & t );
   return std::floor( s );
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  bool
-dateBefore( const std::tm & before, const std::tm & time )
-{
-  std::tm b = before;
-  std::tm t = time;
-  return std::mktime( & t ) <= std::mktime( & b );
-}
-
-  bool
-dateBefore( std::string_view before, std::string_view timestamp )
-{
-  return dateBefore( parseDate( before ).first
-                   , parseDate( timestamp ).first
-                   );
-}
-
-  bool
-dateBefore( const std::tm & before, std::string_view timestamp )
-{
-  return dateBefore( before, parseDate( timestamp ).first );
-}
-
-  bool
-dateBefore( std::string_view before, const std::tm & time )
-{
-  return dateBefore( parseDate( before ).first, time );
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  char
-compareDates( const std::tm & a, const std::tm & b )
-{
-  std::tm _a = a;
-  std::tm _b = b;
-  auto    _ta = std::mktime( & _a );
-  auto    _tb = std::mktime( & _b );
-  return ( _ta < _tb ) ? -1 : ( _ta = _tb ) ? 0 : 1;
-}
-
-  char
-compareDates( std::string_view a, std::string_view b )
-{
-  return compareDates( parseDate( a ).first, parseDate( b ).first );
-}
-
-  char
-compareDates( const std::tm & a, std::string_view b )
-{
-  return compareDates( a, parseDate( b ).first );
-}
-
-  char
-compareDates( std::string_view a, const std::tm & b )
-{
-  return compareDates( parseDate( a ).first, b );
 }
 
 
@@ -141,29 +77,30 @@ Date::stamp() const
   unsigned long
 Date::epoch() const
 {
-  return std::floor( (std::time_t) this );
-}
-
-  bool
-Date::isBefore( const Date & before, bool ignoreRest ) const
-{
-  if ( ignoreRest ) { return dateBefore( before.time, this->time ); }
-  char cmp = compareDates( before.time, this->time );
-  if ( cmp == 0 ) { return before.rest <= this->rest; }
-  return cmp < 0;
+  return std::floor( (std::time_t) * this );
 }
 
   char
 Date::compare( const Date & other, bool ignoreRest ) const
 {
-  long long epc = this->epoch() - other.epoch();
-  if ( epc == 0 )
-    {
-      if ( ignoreRest ) { return 0; }
-      return ( this->rest < other.rest ) ? -1 :
-             ( other.rest < this->rest ) ?  1 : 0;
-    }
-  return ( epc < 0 ) ? -1 : 1;
+  if ( this->time.tm_year < other.time.tm_year ) { return -1; }
+  if ( other.time.tm_year < this->time.tm_year ) { return 1;  }
+
+  if ( this->time.tm_mon < other.time.tm_mon ) { return -1; }
+  if ( other.time.tm_mon < this->time.tm_mon ) { return 1;  }
+
+  if ( this->time.tm_mday < other.time.tm_mday ) { return -1; }
+  if ( other.time.tm_mday < this->time.tm_mday ) { return 1;  }
+
+  if ( ignoreRest ) { return 0; }
+  return ( this->rest < other.rest ) ? -1 :
+         ( other.rest < this->rest ) ?  1 : 0;
+}
+
+  bool
+Date::isBefore( const Date & other, bool ignoreRest ) const
+{
+  return this->compare( other, ignoreRest ) <= 0;
 }
 
 

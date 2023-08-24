@@ -80,7 +80,7 @@ bool compareSemversLT( const std::string & lhs
 /* -------------------------------------------------------------------------- */
 
 /**
- * Compare two date version strings of the format `%Y-%m-%d`.
+ * Compare two date version strings of the format `%Y-%m-%d` or `%m-%d-%Y`.
  * Any trailing characters will be used to break ties by
  * sorting lexicographically.
  *

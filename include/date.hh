@@ -39,30 +39,6 @@ unsigned long parseDateToEpoch( std::string_view timestamp );
 
 /* -------------------------------------------------------------------------- */
 
-/** @return `true` iff @a time is <= @a before. */
-bool dateBefore( const std::tm & before, const std::tm & time );
-/** @return `true` iff @a time is <= @a before. */
-bool dateBefore( std::string_view before, std::string_view timestamp );
-/** @return `true` iff @a time is <= @a before. */
-bool dateBefore( const std::tm & before, std::string_view timestamp );
-/** @return `true` iff @a time is <= @a before. */
-bool dateBefore( std::string_view before, const std::tm & time );
-
-
-/* -------------------------------------------------------------------------- */
-
-/** @return `-1` iff @a a < @a b, `0` iff @a a = @a b, `1`iff @a b < @a a. */
-char compareDates( const std::tm & a, const std::tm & b );
-/** @return `-1` iff @a a < @a b, `0` iff @a a = @a b, `1`iff @a b < @a a. */
-char compareDates( std::string_view a, std::string_view b );
-/** @return `-1` iff @a a < @a b, `0` iff @a a = @a b, `1`iff @a b < @a a. */
-char compareDates( const std::tm & a, std::string_view b );
-/** @return `-1` iff @a a < @a b, `0` iff @a a = @a b, `1`iff @a b < @a a. */
-char compareDates( std::string_view a, const std::tm & b );
-
-
-/* -------------------------------------------------------------------------- */
-
 struct Date {
 
   std::tm     time;
@@ -85,14 +61,15 @@ struct Date {
   /**
    * @param ignoreRest Whether @a rest should be used to break ties by
    *                   lexicographical comparison with `<=`.
-   * @return `true` iff @a this is <= @a before.
+   * @return `true` iff @a this is <= @a other.
    */
-  bool isBefore( const Date & before, bool ignoreRest = true ) const;
+  bool isBefore( const Date & other, bool ignoreRest = true ) const;
 
   /**
    * @param ignoreRest Whether @a rest should be used to break ties by
    *                   lexicographical comparison.
-   * @return `-1` iff @a a < @a b, `0` iff @a a = @a b, `1`iff @a b < @a a.
+   * @return `-1` iff @a this < @a other, `0` iff @a this = @a other,
+   *         `1` iff @a other < @a this.
    */
   char compare(const Date & other,  bool ignoreRest = true ) const;
 

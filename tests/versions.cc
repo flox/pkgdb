@@ -38,7 +38,7 @@ test_isSemver0()
 
 /* -------------------------------------------------------------------------- */
 
-/* Must be `%[Yy]-%m-%d` or `%m-%d-%[Yy]` and may contain trailing characters. */
+/* Must be `%Y-%m-%d` or `%m-%d-%Y` and may contain trailing characters. */
   bool
 test_isDate0()
 {
@@ -49,14 +49,6 @@ test_isDate0()
   EXPECT( versions::isDate( "10-25-1917-pre" ) );
   EXPECT( versions::isDate( "1917-10-25-pre" ) );
   EXPECT( ! versions::isDate( "1917-25-10-pre" ) );
-
-  EXPECT( versions::isDate( "10-25-17" ) );
-  EXPECT( versions::isDate( "17-10-25" ) );
-  EXPECT( ! versions::isDate( "22-31-10" ) );
-
-  EXPECT( versions::isDate( "10-25-17-pre" ) );
-  EXPECT( versions::isDate( "17-10-25-pre" ) );
-  EXPECT( ! versions::isDate( "22-31-10-pre" ) );
 
   EXPECT( ! versions::isDate( "1917-10-25xxx" ) );
 
@@ -88,7 +80,7 @@ test_getVersionKind0()
 /* -------------------------------------------------------------------------- */
 
   bool
-test_compareSemvers0()
+test_compareSemversLT0()
 {
   /* Compare same version pre-release against release */
   EXPECT( versions::compareSemversLT( "4.1.9-pre", "4.1.9" ) );
@@ -101,6 +93,38 @@ test_compareSemvers0()
   EXPECT( ! versions::compareSemversLT( "4.2.0-pre", "4.1.9", true ) );
   EXPECT( ! versions::compareSemversLT( "4.1.9", "4.2.0-pre" ) );
   EXPECT( versions::compareSemversLT( "4.1.9", "4.2.0-pre", true ) );
+
+  /* Compare next minor release to past minor relese */
+  EXPECT( ! versions::compareSemversLT( "4.2.0", "4.1.9" ) );
+  EXPECT( ! versions::compareSemversLT( "4.2.0", "4.1.9", true ) );
+  EXPECT( versions::compareSemversLT( "4.1.9", "4.2.0" ) );
+  EXPECT( versions::compareSemversLT( "4.1.9", "4.2.0", true ) );
+
+  /* Compare next minor pre-release to past minor pre-relese */
+  EXPECT( ! versions::compareSemversLT( "4.2.0-pre", "4.1.9-pre" ) );
+  EXPECT( ! versions::compareSemversLT( "4.2.0-pre", "4.1.9-pre", true ) );
+  EXPECT( versions::compareSemversLT( "4.1.9-pre", "4.2.0-pre" ) );
+  EXPECT( versions::compareSemversLT( "4.1.9-pre", "4.2.0-pre", true ) );
+
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+/* NOTE: abbreviated years are split such that 68 -> 2068, and 69 -> 1969. */
+  bool
+test_compareDatesLT0()
+{
+  /* Ensure equal dates with different formats are equal */
+  EXPECT( versions::compareDatesLT( "1970-10-25", "10-25-1970" ) );
+  EXPECT( versions::compareDatesLT( "10-25-1970", "1970-10-25" ) );
+
+  /* Same format comparisons */
+  EXPECT( versions::compareDatesLT( "1970-10-25", "1970-10-26" ) );
+  EXPECT( ! versions::compareDatesLT( "1970-10-26", "1970-10-25" ) );
+  EXPECT( versions::compareDatesLT( "10-25-1970", "10-26-1970" ) );
+  EXPECT( ! versions::compareDatesLT( "10-26-1970", "10-25-1970" ) );
 
   return true;
 }
@@ -118,7 +142,8 @@ main()
   RUN_TEST( isSemver0 );
   RUN_TEST( isDate0 );
   RUN_TEST( getVersionKind0 );
-  RUN_TEST( compareSemvers0 );
+  RUN_TEST( compareSemversLT0 );
+  RUN_TEST( compareDatesLT0 );
 
   return ec;
 }
