@@ -38,18 +38,12 @@ class VersionException : public std::exception {
 
 /** @return `true` iff @a version is a valid _semantic version_ string. */
 bool isSemver( const std::string & version );
-/** @return `true` iff @a version is a valid _semantic version_ string. */
-bool isSemver( std::string_view version );
 
 /** @return `true` iff @a version is a _datestamp-like_ version string. */
 bool isDate( const std::string & version );
-/** @return `true` iff @a version is a _datestamp-like_ version string. */
-bool isDate( std::string_view version );
 
 /** @return `true` iff @a version can be interpreted as _semantic version_. */
 bool isCoercibleToSemver( const std::string & version );
-/** @return `true` iff @a version can be interpreted as _semantic version_. */
-bool isCoercibleToSemver( std::string_view version );
 
 
 /* -------------------------------------------------------------------------- */

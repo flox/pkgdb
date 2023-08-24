@@ -25,10 +25,11 @@ namespace datetime {
  *   2022-06-29-pre
  *   %Y-%m-%d-(<CAPTURED>)
  * or
- *
- * NOTE: There is no milliseconds support if `strptime', and frankly we don't
- * care about it.
- * While that in mind just parse until the `.' and toss the rest.
+ *   06-29-2022
+ *   %m-%d-%Y
+ * or
+ *   06-29-2022-pre
+ *   %m-%d-%Y-(<CAPTURED>)
  * @return A parsed date struct, and any remaining unparsed parts of the string.
  */
 std::pair<std::tm, std::string> parseDate( std::string_view timestamp );

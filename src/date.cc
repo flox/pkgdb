@@ -20,12 +20,16 @@ namespace datetime {
 parseDate( std::string_view timestamp )
 {
   static const char fmtYMD[] = "%Y-%m-%d";
-  static const char fmtDMY[] = "%d-%m-%Y";
+  static const char fmtyMD[] = "%y-%m-%d";
+  static const char fmtMDY[] = "%m-%d-%Y";
+  static const char fmtMDy[] = "%m-%d-%y";
 
   std::tm       t;
   std::string   s( timestamp );
   char        * rest = strptime( s.c_str(), fmtYMD, & t );
-  if ( rest == s.c_str() ) { rest = strptime( s.c_str(), fmtDMY, & t ); }
+  if ( rest == s.c_str() ) { rest = strptime( s.c_str(), fmtyMD, & t ); }
+  if ( rest == s.c_str() ) { rest = strptime( s.c_str(), fmtMDY, & t ); }
+  if ( rest == s.c_str() ) { rest = strptime( s.c_str(), fmtMDy, & t ); }
   if ( rest == nullptr )   { return std::make_pair( t, "" ); }
   return std::make_pair( t, std::string( rest ) );
 }
