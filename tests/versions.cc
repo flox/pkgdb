@@ -87,6 +87,27 @@ test_getVersionKind0()
 
 /* -------------------------------------------------------------------------- */
 
+  bool
+test_compareSemvers0()
+{
+  /* Compare same version pre-release against release */
+  EXPECT( versions::compareSemversLT( "4.1.9-pre", "4.1.9" ) );
+  EXPECT( versions::compareSemversLT( "4.1.9-pre", "4.1.9", true ) );
+  EXPECT( ! versions::compareSemversLT( "4.1.9", "4.1.9-pre" ) );
+  EXPECT( ! versions::compareSemversLT( "4.1.9", "4.1.9-pre", true ) );
+
+  /* Compare next minor pre-release to past minor relese */
+  EXPECT( versions::compareSemversLT( "4.2.0-pre", "4.1.9" ) );
+  EXPECT( ! versions::compareSemversLT( "4.2.0-pre", "4.1.9", true ) );
+  EXPECT( ! versions::compareSemversLT( "4.1.9", "4.2.0-pre" ) );
+  EXPECT( versions::compareSemversLT( "4.1.9", "4.2.0-pre", true ) );
+
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
   int
 main()
 {
@@ -97,6 +118,7 @@ main()
   RUN_TEST( isSemver0 );
   RUN_TEST( isDate0 );
   RUN_TEST( getVersionKind0 );
+  RUN_TEST( compareSemvers0 );
 
   return ec;
 }

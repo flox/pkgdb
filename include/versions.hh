@@ -71,7 +71,7 @@ getVersionKind( const std::string & version )
  *                          sorted as _less than_ major releases.
  * @return `true` iff @a lhs should be sorted before @a rhs.
  */
-bool compareSemVersLT( const std::string & lhs
+bool compareSemversLT( const std::string & lhs
                      , const std::string & rhs
                      ,       bool          preferPreReleases = false
                      );
@@ -88,7 +88,7 @@ bool compareSemVersLT( const std::string & lhs
  * @param rhs A date version string.
  * @return `true` iff @a lhs should be sorted before @a rhs.
  */
-bool compareDateVersLT( const std::string & lhs, const std::string & rhs );
+bool compareDatesLT( const std::string & lhs, const std::string & rhs );
 
 
 /* -------------------------------------------------------------------------- */

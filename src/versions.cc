@@ -59,7 +59,7 @@ isDate( const std::string & version )
 /* -------------------------------------------------------------------------- */
 
   bool
-compareSemVersLT( const std::string & lhs
+compareSemversLT( const std::string & lhs
                 , const std::string & rhs
                 ,       bool          preferPreReleases
                 )
@@ -89,7 +89,7 @@ compareSemVersLT( const std::string & lhs
   if ( ! preferPreReleases )
     {
       bool isPreL = ! matchL[preTagIdx].str().empty();
-      bool isPreR = ! matchL[preTagIdx].str().empty();
+      bool isPreR = ! matchR[preTagIdx].str().empty();
       if ( isPreL != isPreR ) { return isPreL; }
     }
 
@@ -108,14 +108,18 @@ compareSemVersLT( const std::string & lhs
   valR = std::stoul( matchR[patchIdx].str() );
   if ( valL < valR ) { return true; } else if ( valR < valL ) { return false; }
 
-  return matchL[preTagIdx].str() < matchR[preTagIdx].str();
+  std::string preR = matchR[preTagIdx].str();
+  if ( preR.empty() ) { return true; }
+  std::string preL = matchL[preTagIdx].str();
+  if ( preL.empty() ) { return false; }
+  return preL <= preR;
 }
 
 
 /* -------------------------------------------------------------------------- */
 
   bool
-compareDateVersLT( const std::string & lhs, const std::string & rhs )
+compareDatesLT( const std::string & lhs, const std::string & rhs )
 {
   datetime::Date lhd( lhs );
   if ( lhs == lhd.rest )
@@ -149,9 +153,9 @@ compareVersionsLT( const std::string & lhs
 
   if ( vkl == VK_SEMVER )
     {
-      return compareSemVersLT( lhs, rhs, preferPreReleases );
+      return compareSemversLT( lhs, rhs, preferPreReleases );
     }
-  if ( vkl == VK_DATE ) { return compareDateVersLT( lhs, rhs ); }
+  if ( vkl == VK_DATE ) { return compareDatesLT( lhs, rhs ); }
   assert( vkl == VK_OTHER );
   return lhs <= rhs;
 }
