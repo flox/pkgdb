@@ -170,7 +170,7 @@ CREATE VIEW IF NOT EXISTS v_PackagesSearch AS SELECT
 FROM Packages
 JOIN Descriptions         ON ( Packages.descriptionId = Descriptions.id  )
 JOIN v_AttrPaths          ON ( Packages.parentId      = v_AttrPaths.id   )
-FULL OUTER JOIN v_SEMVERS ON ( Packages.semver        = v_Semvers.semver )
+FULL OUTER JOIN v_Semvers ON ( Packages.semver        = v_Semvers.semver )
 )SQL";
 
 
