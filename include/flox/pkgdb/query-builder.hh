@@ -70,22 +70,22 @@ struct PkgQueryArgs {
   struct PkgQueryInvalidArgException : public flox::FloxException {
     public:
       enum error_code {
-        PDQEC_ERROR = 1  /**< Generic Exception */
+        PQEC_ERROR = 1  /**< Generic Exception */
       /** Name/{pname,version,semver} are mutually exclusive */
-      , PDQEC_MIX_NAME = 2
+      , PQEC_MIX_NAME = 2
       /** Version/semver are mutually exclusive */
-      , PDQEC_MIX_VERSION_SEMVER  = 3
-      , PDQEC_INVALID_SEMVER      = 4  /**< Semver Parse Error */
-      , PDQEC_INVALID_LICENSE     = 5  /**< License has invalid character */
-      , PDQEC_INVALID_SUBTREE     = 6  /**< Unrecognized subtree */
-      , PDQEC_CONFLICTING_SUBTREE = 7  /**< Conflicting subtree/stability */
-      , PDQEC_INVALID_SYSTEM      = 8  /**< Unrecognized/unsupported system */
-      , PDQEC_INVALID_STABILITY   = 9  /**< Unrecognized stability */
+      , PQEC_MIX_VERSION_SEMVER  = 3
+      , PQEC_INVALID_SEMVER      = 4  /**< Semver Parse Error */
+      , PQEC_INVALID_LICENSE     = 5  /**< License has invalid character */
+      , PQEC_INVALID_SUBTREE     = 6  /**< Unrecognized subtree */
+      , PQEC_CONFLICTING_SUBTREE = 7  /**< Conflicting subtree/stability */
+      , PQEC_INVALID_SYSTEM      = 8  /**< Unrecognized/unsupported system */
+      , PQEC_INVALID_STABILITY   = 9  /**< Unrecognized stability */
       } errorCode;
     protected:
       static std::string errorMessage( const error_code & ec );
     public:
-      PkgQueryInvalidArgException( const error_code & ec = PDQEC_ERROR )
+      PkgQueryInvalidArgException( const error_code & ec = PQEC_ERROR )
         : flox::FloxException(
             PkgQueryInvalidArgException::errorMessage( ec )
           )

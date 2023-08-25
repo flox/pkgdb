@@ -26,34 +26,34 @@ PkgQueryArgs::PkgQueryInvalidArgException::errorMessage(
 {
   switch ( ec )
     {
-      case PDQEC_MIX_NAME:
+      case PQEC_MIX_NAME:
         return "Queries may not mix `name' parameter with any of `pname', "
                "`version', or `semver' parameters";
         break;
-      case PDQEC_MIX_VERSION_SEMVER:
+      case PQEC_MIX_VERSION_SEMVER:
         return "Queries may not mix `version' and `semver' parameters";
         break;
-      case PDQEC_INVALID_SEMVER:
+      case PQEC_INVALID_SEMVER:
         return "Semver Parse Error";
         break;
-      case PDQEC_INVALID_LICENSE:
+      case PQEC_INVALID_LICENSE:
         return "Query `license' parameter contains invalid character \"'\"";
         break;
-      case PDQEC_INVALID_SUBTREE:
+      case PQEC_INVALID_SUBTREE:
         return "Unrecognized subtree in query arguments";
         break;
-      case PDQEC_CONFLICTING_SUBTREE:
+      case PQEC_CONFLICTING_SUBTREE:
         return "Query `stability' parameter may only be used in "
                "\"catalog\" `subtree'";
         break;
-      case PDQEC_INVALID_SYSTEM:
+      case PQEC_INVALID_SYSTEM:
         return "Unrecognized or unsupported `system' in query arguments";
         break;
-      case PDQEC_INVALID_STABILITY:
+      case PQEC_INVALID_STABILITY:
         return "Unrecognized `stability' in query arguments";
         break;
       default:
-      case PDQEC_ERROR:
+      case PQEC_ERROR:
         return "Encountered and error processing query arguments";
         break;
     }
@@ -67,8 +67,6 @@ PkgQueryArgs::validate() const
 {
   using error_code = PkgQueryArgs::PkgQueryInvalidArgException::error_code;
 
-  // TODO: semver
-
   if ( this->name.has_value() &&
        ( this->pname.has_value()   ||
          this->version.has_value() ||
@@ -76,12 +74,12 @@ PkgQueryArgs::validate() const
        )
      )
     {
-      return error_code::PDQEC_MIX_NAME;
+      return error_code::PQEC_MIX_NAME;
     }
 
   if ( this->version.has_value() && this->semver.has_value() )
     {
-      return error_code::PDQEC_MIX_VERSION_SEMVER;
+      return error_code::PQEC_MIX_VERSION_SEMVER;
     }
 
   /* Check licenses don't contain the ' character */
@@ -91,7 +89,7 @@ PkgQueryArgs::validate() const
         {
           if ( l.find( '\'' ) != l.npos )
             {
-              return error_code::PDQEC_INVALID_LICENSE;
+              return error_code::PQEC_INVALID_LICENSE;
             }
         }
     }
@@ -106,7 +104,7 @@ PkgQueryArgs::validate() const
            == flox::defaultSystems.end()
          )
         {
-          return error_code::PDQEC_INVALID_SYSTEM;
+          return error_code::PQEC_INVALID_SYSTEM;
         }
     }
 
@@ -122,7 +120,7 @@ PkgQueryArgs::validate() const
                == flox::defaultCatalogStabilities.end()
              )
             {
-              return error_code::PDQEC_INVALID_STABILITY;
+              return error_code::PQEC_INVALID_STABILITY;
             }
         }
       if ( ( this->subtrees.has_value() ) &&
@@ -131,7 +129,7 @@ PkgQueryArgs::validate() const
            )
          )
         {
-          return error_code::PDQEC_CONFLICTING_SUBTREE;
+          return error_code::PQEC_CONFLICTING_SUBTREE;
         }
     }
 
