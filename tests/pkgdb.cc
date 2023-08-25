@@ -858,7 +858,22 @@ test_getPackages1( flox::pkgdb::PkgDb & db )
   flox::pkgdb::PkgQueryArgs qargs;
   qargs.systems = std::vector<std::string> {};
 
-  /* Run `semver = "^2"' query */
+  /* Test `subtrees` ordering */
+  {
+    qargs.systems  = std::vector<std::string> { "x86_64-darwin" };
+    qargs.subtrees = std::vector<flox::subtree_type> {
+      flox::ST_PACKAGES, flox::ST_LEGACY
+    };
+    EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 5, 4 } ) );
+    qargs.subtrees = std::vector<flox::subtree_type> {
+      flox::ST_LEGACY, flox::ST_PACKAGES
+    };
+    EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 4, 5 } ) );
+    qargs.subtrees = std::nullopt;
+    qargs.systems  = std::vector<std::string> {};
+  }
+
+  /* Test `systems` ordering */
   {
     qargs.subtrees = std::vector<flox::subtree_type> { flox::ST_PACKAGES };
     qargs.systems  = std::vector<std::string> {
@@ -871,6 +886,17 @@ test_getPackages1( flox::pkgdb::PkgDb & db )
     EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 5, 3 } ) );
     qargs.systems  = std::vector<std::string> {};
     qargs.subtrees = std::nullopt;
+  }
+
+  /* Test `stabilities` ordering */
+  {
+    qargs.systems     = std::vector<std::string> { "x86_64-linux" };
+    qargs.stabilities = std::vector<std::string> { "stable", "unstable" };
+    EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 1, 2 } ) );
+    qargs.stabilities = std::vector<std::string> { "unstable", "stable" };
+    EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 2, 1 } ) );
+    qargs.stabilities = std::nullopt;
+    qargs.systems     = std::vector<std::string> {};
   }
 
   return true;
