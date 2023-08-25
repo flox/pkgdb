@@ -7,6 +7,8 @@
  *
  * -------------------------------------------------------------------------- */
 
+#include <sstream>
+
 #include <sql-builder/sql.hh>
 
 #include "flox/pkgdb.hh"
@@ -159,6 +161,24 @@ buildPkgQuery( const PkgQueryArgs & params, bool allFields )
   q.select( "id" ).select( "semver" ).from( "v_PackagesSearch" );
   std::unordered_map<std::string, std::string> binds;
 
+  /* `sql-builder' only allows `order_by' to be called once, so we have to
+   * build the complete `ORDER BY' statement ourselves. */
+  bool              firstOrderBy = true;
+  std::stringstream orderBy;
+  auto addOrderBy =
+    [& firstOrderBy, & orderBy]( std::string_view order ) -> void
+    {
+      if ( firstOrderBy )
+        {
+          firstOrderBy = false;
+          orderBy << order;
+        }
+      else
+        {
+          orderBy << ", " << order;
+        }
+    };
+
   if ( params.name.has_value() )
     {
       q.where( column( "name" ) == Param( ":name" ) );
@@ -192,30 +212,21 @@ buildPkgQuery( const PkgQueryArgs & params, bool allFields )
                 , 3
                 )
            ) AS matchStrength
-      )SQL" ).order_by( "matchStrength ASC" );
+      )SQL" );
+      addOrderBy( "matchStrength ASC" );
       binds.emplace( ":match", "%" +  ( * params.match ) + "%" );
     }
   else
     {
       q.select( "NULL AS matchStrength" );
     }
-  q.order_by( "pname ASC" );
 
-  q.order_by( "versionType ASC" );
-  q.order_by( R"SQL(
-    major  DESC NULLS LAST
-  , minor  DESC NULLS LAST
-  , patch  DESC NULLS LAST
-  , preTag DESC NULLS LAST
-  )SQL" );
+  /* Handle `versionDate' sorting */
   q.select( R"SQL(
     iif( ( versionType != 2 ), NULL
        , date( v_PackagesSearch.version )
        ) AS versionDate
   )SQL" );
-  q.order_by( "versionDate DESC NULLS FIRST" );
-  /* Lexicographic as fallback */
-  q.order_by( "v_PackagesSearch.version ASC NULLS LAST" );
 
   if ( params.version.has_value() )
     {
@@ -241,7 +252,6 @@ buildPkgQuery( const PkgQueryArgs & params, bool allFields )
         ( column( "broken" ).is_null() or ( column( "broken" ) == 0 ) ).str() +
       ")" );
     }
-  q.order_by( "brokenRank ASC" );
 
   if ( ! params.allowUnfree )
     {
@@ -249,7 +259,6 @@ buildPkgQuery( const PkgQueryArgs & params, bool allFields )
         ( column( "unfree" ).is_null() or ( column( "unfree" ) == 0 ) ).str() +
       ")" );
     }
-  q.order_by( "unfreeRank ASC" );
 
   /* Subtrees */
   if ( params.stabilities.has_value() )
@@ -258,9 +267,9 @@ buildPkgQuery( const PkgQueryArgs & params, bool allFields )
     }
   else if ( params.subtrees.has_value() )
     {
-      size_t                   idx = 0;
+      size_t                   idx  = 0;
       std::vector<std::string> lst;
-      std::string              rank;
+      std::stringstream        rank;
       for ( const auto s : * params.subtrees )
         {
           switch ( s )
@@ -272,39 +281,33 @@ buildPkgQuery( const PkgQueryArgs & params, bool allFields )
                 throw PkgQueryArgs::PkgQueryInvalidArgException();
                 break;
             }
-          rank += "iif( ( subtree = '" + lst.back() + "' ), ";
-          rank += idx;
-          rank += ", ";
+          rank << "iif( ( subtree = '" << lst.back() << "' ), " << idx << ", ";
           ++idx;
         }
       q.where( column( "subtree" ).in( lst ) );
       if ( 1 < idx )
         {
-          rank += idx;
-          for ( size_t i = 0; i < idx; ++i ) { rank += " )"; }
-          rank += " AS subtreeRank";
-          q.select( rank ).order_by( "subtreeRank ASC" );
+          rank << idx;
+          for ( size_t i = 0; i < idx; ++i ) { rank << " )"; }
+          rank << " AS subtreeRank";
+          q.select( rank.str() );
+          addOrderBy( "subtreeRank ASC" );
         }
     }
 
-  /* Systems */
-  q.where( column( "system" ).in( params.systems ) );
-  if ( 1 < params.systems.size() )
-    {
-      size_t      idx = 0;
-      std::string rank;
-      for ( const auto & system : params.systems )
-        {
-          rank += "iif( system = '" + system + "' ), ";
-          rank += idx;
-          rank += ", ";
-          ++idx;
-        }
-      rank += idx;
-      for ( size_t i = 0; i < idx; ++i ) { rank += " )"; }
-      rank += " AS systemsRank";
-      q.select( rank ).order_by( "systemsRank ASC" );
-    }
+  /* Establish common ordered fields before adding additional optional
+   * ranks like `system', and `stability` */
+  addOrderBy( "pname ASC" );
+  addOrderBy( "versionType ASC" );
+  addOrderBy( "major DESC NULLS LAST" );
+  addOrderBy( "minor DESC NULLS LAST" );
+  addOrderBy( "patch DESC NULLS LAST" );
+  addOrderBy( "preTag DESC NULLS LAST" );
+  addOrderBy( "versionDate DESC NULLS FIRST" );
+  /* Lexicographic as fallback for misc. versions */
+  addOrderBy( "v_PackagesSearch.version ASC NULLS LAST" );
+  addOrderBy( "brokenRank ASC" );
+  addOrderBy( "unfreeRank ASC" );
 
   /* Stabilities */
   if ( params.stabilities.has_value() )
@@ -312,25 +315,53 @@ buildPkgQuery( const PkgQueryArgs & params, bool allFields )
       q.where( column( "stability" ).in( * params.stabilities ) );
       if ( 1 < params.stabilities->size() )
         {
-          size_t      idx = 0;
-          std::string rank;
+          size_t            idx  = 0;
+          std::stringstream rank;
           for ( const auto & stability : * params.stabilities )
             {
-              rank += "iif( stability = '" + stability + "' ), ";
-              rank += idx;
-              rank += ", ";
+              rank << "iif( ( stability = '" << stability << "' ), " << idx;
+              rank << ", ";
               ++idx;
             }
-          rank += idx;
-          for ( size_t i = 0; i < idx; ++i ) { rank += " )"; }
-          rank += " AS stabilitiesRank";
-          q.select( rank ).order_by( "stabilitiesRank ASC" );
+          rank << idx;
+          for ( size_t i = 0; i < idx; ++i ) { rank << " )"; }
+          rank << " AS stabilitiesRank";
+          q.select( rank.str() );
+          addOrderBy( "stabilitiesRank ASC" );
         }
     }
 
-  q.order_by( "name" );
+  /* Systems */
+  q.where( column( "system" ).in( params.systems ) );
+  if ( 1 < params.systems.size() )
+    {
+      size_t            idx  = 0;
+      std::stringstream rank;
+      for ( const auto & system : params.systems )
+        {
+          rank << "iif( ( system = '" << system << "' ), " << idx << ", ";
+          ++idx;
+        }
+      rank << idx;
+      for ( size_t i = 0; i < idx; ++i ) { rank << " )"; }
+      rank << " AS systemsRank";
+      q.select( rank.str() );
+      addOrderBy( "systemsRank ASC" );
+    }
 
-  if ( allFields ) { return std::make_pair( q.str(), binds ); }
+  /* Finalize `ORDER BY' part */
+  q.order_by( orderBy.str() );
+
+  if ( allFields )
+    {
+      q.select( "subtree" )
+       .select( "system" ).select( "stability" ).select( "path" )
+       .select( "name" ).select( "version" ).select( "versionType" )
+       .select( "major" ).select( "minor" ).select( "patch" ).select( "preTag" )
+       .select( "broken" ).select( "brokenRank" ).select( "unfree" )
+       .select( "unfreeRank" ).select( "description" );
+      return std::make_pair( q.str(), binds );
+    }
 
   /* Removes extra columns used for ordering */
   std::string rsl = "SELECT id, semver FROM ( " + q.str() + " )";

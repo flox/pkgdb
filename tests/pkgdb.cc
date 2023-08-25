@@ -482,20 +482,8 @@ test_buildPkgQuery1( flox::pkgdb::PkgDb & db )
                 )
       );
     }
-  flox::pkgdb::PkgQueryArgs qargs = {
-    .match             = std::nullopt
-  , .name              = std::nullopt
-  , .pname             = std::nullopt
-  , .version           = std::nullopt
-  , .semver            = std::nullopt
-  , .licenses          = std::nullopt
-  , .allowBroken       = false
-  , .allowUnfree       = true
-  , .preferPreReleases = false
-  , .subtrees          = std::nullopt
-  , .systems           = std::vector<std::string> { "x86_64-linux" }
-  , .stabilities       = std::nullopt
-  };
+  flox::pkgdb::PkgQueryArgs qargs;
+  qargs.systems = std::vector<std::string> { "x86_64-linux" };
 
   /* Run `allowBroken = false' query */
   {
@@ -631,20 +619,8 @@ test_buildPkgQuery2( flox::pkgdb::PkgDb & db )
                 )
       );
     }
-  flox::pkgdb::PkgQueryArgs qargs = {
-    .match             = std::nullopt
-  , .name              = std::nullopt
-  , .pname             = std::nullopt
-  , .version           = std::nullopt
-  , .semver            = std::nullopt
-  , .licenses          = std::nullopt
-  , .allowBroken       = false
-  , .allowUnfree       = true
-  , .preferPreReleases = false
-  , .subtrees          = std::nullopt
-  , .systems           = std::vector<std::string> { "x86_64-linux" }
-  , .stabilities       = std::nullopt
-  };
+  flox::pkgdb::PkgQueryArgs qargs;
+  qargs.systems = std::vector<std::string> { "x86_64-linux" };
 
   /* Run `match = "hello"' query */
   int matchStrengthIdx = -1;
@@ -793,20 +769,9 @@ test_getPackages0( flox::pkgdb::PkgDb & db )
                 )
       );
     }
-  flox::pkgdb::PkgQueryArgs qargs = {
-    .match             = std::nullopt
-  , .name              = std::nullopt
-  , .pname             = std::nullopt
-  , .version           = std::nullopt
-  , .semver            = std::nullopt
-  , .licenses          = std::nullopt
-  , .allowBroken       = false
-  , .allowUnfree       = true
-  , .preferPreReleases = false
-  , .subtrees          = std::nullopt
-  , .systems           = std::vector<std::string> { "x86_64-linux" }
-  , .stabilities       = std::nullopt
-  };
+
+  flox::pkgdb::PkgQueryArgs qargs;
+  qargs.systems = std::vector<std::string> { "x86_64-linux" };
 
   /* Run `semver = "^2"' query */
   {
@@ -835,6 +800,81 @@ test_getPackages0( flox::pkgdb::PkgDb & db )
   return true;
 }
 
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Tests `getPackages', particularly `stability', `subtree`, and
+ * `system` ordering. */
+  bool
+test_getPackages1( flox::pkgdb::PkgDb & db )
+{
+  clearTables( db );
+
+  /* Make a package */
+  row_id stableLinux = db.addOrGetAttrSetId(
+    flox::AttrPath { "catalog", "x86_64-linux", "stable" }
+  );
+  row_id unstableLinux = db.addOrGetAttrSetId(
+    flox::AttrPath { "catalog", "x86_64-linux", "unstable" }
+  );
+  row_id packagesLinux =
+    db.addOrGetAttrSetId( flox::AttrPath { "packages", "x86_64-linux" } );
+  row_id legacyDarwin =
+    db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-darwin" } );
+  row_id packagesDarwin =
+    db.addOrGetAttrSetId( flox::AttrPath { "packages", "x86_64-darwin" } );
+
+  row_id desc =
+    db.addOrGetDescriptionId( "A program with a friendly greeting/farewell" );
+
+  sqlite3pp::command cmd( db.db, R"SQL(
+    INSERT INTO Packages (
+      id, parentId, attrName, name, outputs, descriptionId
+    ) VALUES
+      ( 1, :stableLinuxId,    'hello', 'hello', '["out"]', :descriptionId )
+    , ( 2, :unstableLinuxId,  'hello', 'hello', '["out"]', :descriptionId )
+    , ( 3, :packagesLinuxId,  'hello', 'hello', '["out"]', :descriptionId )
+    , ( 4, :legacyDarwinId,   'hello', 'hello', '["out"]', :descriptionId )
+    , ( 5, :packagesDarwinId, 'hello', 'hello', '["out"]', :descriptionId )
+  )SQL" );
+  cmd.bind( ":descriptionId",    (long long) desc  );
+  cmd.bind( ":stableLinuxId",    (long long) stableLinux );
+  cmd.bind( ":unstableLinuxId",  (long long) unstableLinux );
+  cmd.bind( ":packagesLinuxId",  (long long) packagesLinux );
+  cmd.bind( ":legacyDarwinId",   (long long) legacyDarwin );
+  cmd.bind( ":packagesDarwinId", (long long) packagesDarwin );
+  if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
+    {
+      throw flox::pkgdb::PkgDbException(
+        db.dbPath
+      , nix::fmt( "Failed to write Packages:(%d) %s"
+                , rc
+                , db.db.error_msg()
+                )
+      );
+    }
+
+  flox::pkgdb::PkgQueryArgs qargs;
+  qargs.systems = std::vector<std::string> {};
+
+  /* Run `semver = "^2"' query */
+  {
+    qargs.subtrees = std::vector<flox::subtree_type> { flox::ST_PACKAGES };
+    qargs.systems  = std::vector<std::string> {
+      "x86_64-linux", "x86_64-darwin"
+    };
+    EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 3, 5 } ) );
+    qargs.systems = std::vector<std::string> {
+      "x86_64-darwin", "x86_64-linux"
+    };
+    EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 5, 3 } ) );
+    qargs.systems  = std::vector<std::string> {};
+    qargs.subtrees = std::nullopt;
+  }
+
+  return true;
+}
 
 /* ========================================================================== */
 
@@ -906,6 +946,7 @@ main( int argc, char * argv[] )
     RUN_TEST( buildPkgQuery2, db );
 
     RUN_TEST( getPackages0, db );
+    RUN_TEST( getPackages1, db );
 
   }
 
