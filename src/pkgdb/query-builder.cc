@@ -140,7 +140,7 @@ PkgQueryArgs::validate() const
 /* -------------------------------------------------------------------------- */
 
   std::pair<std::string, SQLBinds>
-buildPkgQuery( const PkgQueryArgs & params )
+buildPkgQuery( const PkgQueryArgs & params, bool allFields )
 {
   /* It's a pain to use `bind' with `in` lists because each element would need
    * its own variable, so instead we scan for unsafe characters and quote
@@ -330,9 +330,10 @@ buildPkgQuery( const PkgQueryArgs & params )
 
   q.order_by( "name" );
 
-  /* Removes extra columns used for ordering */
-  std::string rsl = "SELECT id, semver, matchStrength FROM ( " + q.str() + " )";
+  if ( allFields ) { return std::make_pair( q.str(), binds ); }
 
+  /* Removes extra columns used for ordering */
+  std::string rsl = "SELECT id, semver FROM ( " + q.str() + " )";
   return std::make_pair( std::move( rsl ), binds );
 }
 

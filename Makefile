@@ -179,7 +179,7 @@ tests:   $(TESTS) $(TEST_UTILS)
 clean: FORCE
 	-$(RM) $(addprefix bin/,$(BINS))
 	-$(RM) $(addprefix lib/,$(LIBS))
-	-$(RM) src/*.o tests/*.o
+	-$(RM) $(SRCS:.cc=.o) $(TEST_SRCS:.cc=.o)
 	-$(RM) result
 	-$(RM) -r $(PREFIX)
 	-$(RM) $(TESTS) $(TEST_UTILS)

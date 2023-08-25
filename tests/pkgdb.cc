@@ -647,11 +647,20 @@ test_buildPkgQuery2( flox::pkgdb::PkgDb & db )
   };
 
   /* Run `match = "hello"' query */
+  int matchStrengthIdx = -1;
   {
     qargs.match = "hello";
-    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs, true );
     qargs.match = std::nullopt;
     sqlite3pp::query qry( db.db, query.c_str() );
+    for ( int i = 0; i < qry.column_count(); ++i )
+      {
+        if ( qry.column_name( i ) == std::string_view( "matchStrength" ) )
+          {
+            matchStrengthIdx = i;
+            break;
+          }
+      }
     for ( const auto & [var, val] : binds )
       {
         qry.bind( var.c_str(), val, sqlite3pp::copy );
@@ -662,7 +671,7 @@ test_buildPkgQuery2( flox::pkgdb::PkgDb & db )
         (void) r;
         ++count;
         flox::pkgdb::match_strength strength =
-          (flox::pkgdb::match_strength) r.get<int>( 2 );
+          (flox::pkgdb::match_strength) r.get<int>( matchStrengthIdx );
         if ( count == 1 )
           {
             EXPECT_EQ( strength, flox::pkgdb::MS_EXACT_PNAME );
@@ -678,7 +687,7 @@ test_buildPkgQuery2( flox::pkgdb::PkgDb & db )
   /* Run `match = "farewell"' query */
   {
     qargs.match = "farewell";
-    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs, true );
     qargs.match = std::nullopt;
     sqlite3pp::query qry( db.db, query.c_str() );
     for ( const auto & [var, val] : binds )
@@ -690,7 +699,9 @@ test_buildPkgQuery2( flox::pkgdb::PkgDb & db )
       {
         (void) r;
         ++count;
-        EXPECT_EQ( r.get<int>( 2 ), flox::pkgdb::MS_PARTIAL_DESC );
+        EXPECT_EQ( r.get<int>( matchStrengthIdx )
+                 , flox::pkgdb::MS_PARTIAL_DESC
+                 );
       }
     EXPECT_EQ( count, (size_t) 2 );
   }
@@ -698,7 +709,7 @@ test_buildPkgQuery2( flox::pkgdb::PkgDb & db )
   /* Run `match = "hel"' query */
   {
     qargs.match = "hel";
-    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs, true );
     qargs.match = std::nullopt;
     sqlite3pp::query qry( db.db, query.c_str() );
     for ( const auto & [var, val] : binds )
@@ -711,7 +722,7 @@ test_buildPkgQuery2( flox::pkgdb::PkgDb & db )
         (void) r;
         ++count;
         flox::pkgdb::match_strength strength =
-          (flox::pkgdb::match_strength) r.get<int>( 2 );
+          (flox::pkgdb::match_strength) r.get<int>( matchStrengthIdx );
         if ( count == 1 )
           {
             EXPECT_EQ( strength, flox::pkgdb::MS_PARTIAL_PNAME_DESC );
