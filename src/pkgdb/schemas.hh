@@ -127,6 +127,7 @@ CREATE VIEW IF NOT EXISTS v_AttrPaths AS
     FROM AttrSets O INNER JOIN Tree as Parent ON ( Parent.id = O.parent )
   ) SELECT * FROM Tree;
 
+
 CREATE VIEW IF NOT EXISTS v_Semvers AS SELECT
   semver
 , major
@@ -153,6 +154,7 @@ FROM (
   )
 ) ORDER BY major, minor, patch, preTag DESC NULLS FIRST;
 
+
 CREATE VIEW IF NOT EXISTS v_PackagesSearch AS SELECT
   Packages.id
 , v_AttrPaths.subtree
@@ -162,6 +164,14 @@ CREATE VIEW IF NOT EXISTS v_PackagesSearch AS SELECT
 , Packages.name
 , Packages.pname
 , Packages.version
+, iif( ( Packages.version IS NULL ), 4
+  , iif( ( Packages.semver IS NOT NULL ), 0
+       , iif( ( ( SELECT Packages.version = date( Packages.version ) )
+                IS NOT NULL )
+            , 2, 3
+            )
+       )
+  ) AS versionType
 , Packages.semver
 , v_Semvers.major
 , v_Semvers.minor
@@ -169,7 +179,9 @@ CREATE VIEW IF NOT EXISTS v_PackagesSearch AS SELECT
 , v_Semvers.preTag
 , Packages.license
 , Packages.broken
+, iif( ( broken IS NULL ), 1, iif( broken, 2, 0 ) ) AS brokenRank
 , Packages.unfree
+, iif( ( unfree IS NULL ), 1, iif( unfree, 2, 0 ) ) AS unfreeRank
 , Descriptions.description
 FROM Packages
 LEFT OUTER JOIN Descriptions ON ( Packages.descriptionId = Descriptions.id  )

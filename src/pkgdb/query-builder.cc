@@ -202,11 +202,7 @@ buildPkgQuery( const PkgQueryArgs & params )
       q.select( "NULL AS matchStrength" );
     }
 
-  q.select( R"SQL(
-    iif( ( semver IS NOT NULL ), 0
-       , iif( ( ( SELECT version IS date( version ) ) IS NOT NULL ), 2, 3 )
-       ) AS versionType
-  )SQL" ).order_by( "versionType" );
+  q.order_by( "versionType" );
 
   if ( params.version.has_value() )
     {
@@ -232,9 +228,7 @@ buildPkgQuery( const PkgQueryArgs & params )
         ( column( "broken" ).is_null() or ( column( "broken" ) == 0 ) ).str() +
       ")" );
     }
-  q.select( R"SQL(
-    iif( ( broken IS NULL ), 1, iif( broken, 2, 0 ) ) AS brokenRank
-  )SQL" ).order_by( "brokenRank ASC" );
+  q.order_by( "brokenRank ASC" );
 
   if ( ! params.allowUnfree )
     {
@@ -242,9 +236,7 @@ buildPkgQuery( const PkgQueryArgs & params )
         ( column( "unfree" ).is_null() or ( column( "unfree" ) == 0 ) ).str() +
       ")" );
     }
-  q.select( R"SQL(
-    iif( ( unfree IS NULL ), 1, iif( unfree, 2, 0 ) ) AS unfreeRank
-  )SQL" ).order_by( "unfreeRank ASC" );
+  q.order_by( "unfreeRank ASC" );
 
   /* Subtrees */
   if ( params.stabilities.has_value() )
