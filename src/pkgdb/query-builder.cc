@@ -201,8 +201,23 @@ buildPkgQuery( const PkgQueryArgs & params )
     {
       q.select( "NULL AS matchStrength" );
     }
+  q.order_by( "pname ASC" );
 
-  q.order_by( "versionType" );
+  q.order_by( "versionType ASC" );
+  q.order_by( R"SQL(
+    major  DESC NULLS LAST
+  , minor  DESC NULLS LAST
+  , patch  DESC NULLS LAST
+  , preTag DESC NULLS LAST
+  )SQL" );
+  q.select( R"SQL(
+    iif( ( versionType != 2 ), NULL
+       , date( v_PackagesSearch.version )
+       ) AS versionDate
+  )SQL" );
+  q.order_by( "versionDate DESC NULLS FIRST" );
+  /* Lexicographic as fallback */
+  q.order_by( "v_PackagesSearch.version ASC NULLS LAST" );
 
   if ( params.version.has_value() )
     {
@@ -314,6 +329,8 @@ buildPkgQuery( const PkgQueryArgs & params )
           q.select( rank ).order_by( "stabilitiesRank ASC" );
         }
     }
+
+  q.order_by( "name" );
 
   /* Removes extra columns used for ordering */
   std::string rsl = "SELECT id, semver, matchStrength FROM ( " + q.str() + " )";
