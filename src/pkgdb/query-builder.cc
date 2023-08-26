@@ -8,6 +8,8 @@
  * -------------------------------------------------------------------------- */
 
 #include <sstream>
+#include <set>
+#include <list>
 
 #include <sql-builder/sql.hh>
 
@@ -125,14 +127,6 @@ PkgQueryArgs::validate() const
               return error_code::PQEC_INVALID_STABILITY;
             }
         }
-      if ( ( this->subtrees.has_value() ) &&
-           ( ( this->subtrees->size() != 1 ) ||
-             ( this->subtrees->front() != ST_CATALOG )
-           )
-         )
-        {
-          return error_code::PQEC_CONFLICTING_SUBTREE;
-        }
     }
 
   return std::nullopt;
@@ -165,14 +159,6 @@ PkgQuery::addWhere( std::string_view cond )
   this->wheres << "( " << cond << " )";
 }
 
-  void
-PkgQuery::addJoin( std::string_view join )
-{
-  if ( this->firstJoin ) { this->firstJoin = false;  }
-  else                   { this->joins << std::endl; }
-  this->joins << join;
-}
-
 
 /* -------------------------------------------------------------------------- */
 
@@ -182,11 +168,9 @@ PkgQuery::clearBuilt()
   this->selects.clear();
   this->orders.clear();
   this->wheres.clear();
-  this->joins.clear();
   this->firstSelect = true;
   this->firstOrder  = true;
   this->firstWhere  = true;
-  this->firstJoin   = true;
   this->binds       = {};
 }
 
@@ -326,7 +310,7 @@ PkgQuery::init()
       /* subtree IN ( ...  ) */
       std::stringstream cond;
       cond << "subtree";
-      addIn( cond, * this->subtrees );
+      addIn( cond, lst );
       this->addWhere( cond.str() );
       /* Wrap up rankings assignment. */
       if ( 1 < idx )
@@ -379,8 +363,9 @@ PkgQuery::init()
   if ( this->stabilities.has_value() )
     {
       std::stringstream cond;
-      cond << "stability";
+      cond << "( stability IS NULL ) OR ( stability ";
       addIn( cond, * this->stabilities );
+      cond << " )";
       this->addWhere( cond.str() );
       if ( 1 < this->stabilities->size() )
         {
@@ -444,7 +429,7 @@ PkgQuery::init()
 /* -------------------------------------------------------------------------- */
 
   std::string
-PkgQuery::str()
+PkgQuery::str() const
 {
   std::stringstream qry;
   qry << "SELECT ";
@@ -458,10 +443,56 @@ PkgQuery::str()
   if ( this->firstSelect ) { qry << "*"; }
   else                     { qry << this->selects.str(); }
   qry << " FROM " << this->from;
-  if ( ! this->firstJoin )  { qry << " " << this->joins.str();  }
   if ( ! this->firstWhere ) { qry << " WHERE " << this->wheres.str(); }
   if ( ! this->firstOrder ) { qry << " ORDER BY " << this->orders.str(); }
   qry << " )";
+  return qry.str();
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  std::vector<std::string>
+PkgQuery::filterSemvers( const std::vector<std::string> & versions ) const
+{
+  static const std::vector<std::string> ignores = {
+    "", "*", "any", "^*", "~*", "x", "X"
+  };
+  if ( ( ! this->semver.has_value() ) ||
+       ( std::find( ignores.begin(), ignores.end(), * this->semver )
+         != ignores.end()
+       )
+     )
+    {
+      return versions;
+    }
+  std::set<std::string>    unique( versions.begin(), versions.end() );
+  std::list<std::string>   args( unique.begin(), unique.end() );
+  std::vector<std::string> rsl;
+  for ( auto & version : versions::semverSat( * this->semver, args ) )
+    {
+      rsl.emplace_back( std::move( version ) );
+    }
+  return rsl;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+// TODO: remove after updating `getPackages' and test cases.
+  std::pair<std::string, SQLBinds>
+buildPkgQuery( const PkgQueryArgs & params, bool allFields )
+{
+  if ( allFields )
+    {
+      PkgQuery qry( params, std::vector<std::string> { "*" } );
+      return std::make_pair( qry.str(), std::move( qry.binds ) );
+    }
+  else
+    {
+      PkgQuery qry( params );
+      return std::make_pair( qry.str(), std::move( qry.binds ) );
+    }
 }
 
 

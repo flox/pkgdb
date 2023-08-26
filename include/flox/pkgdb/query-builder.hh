@@ -10,7 +10,7 @@
 #pragma once
 
 #include <string>
-#include <stringstream>
+#include <sstream>
 #include <optional>
 #include <vector>
 #include <unordered_map>
@@ -123,9 +123,6 @@ struct PkgQuery : public PkgQueryArgs {
   std::stringstream wheres;
   bool              firstWhere = true;
 
-  std::stringstream joins;
-  bool              firstJoin = true;
-
   std::unordered_map<std::string, std::string> binds;
 
   /**
@@ -139,10 +136,19 @@ struct PkgQuery : public PkgQueryArgs {
    */
   std::vector<std::string> exportedColumns = { "id", "semver" };
 
+  /**
+   * Add a new column to the _inner_ `SELECT` statement.
+   * These selections may be used internally for filtering and ordering rows,
+   * and are only _exported_ in the final result if they are also listed
+   * in @a exportedColumns.
+   * @param column A column `SELECT` statement such as `v_PackagesSearch.id`
+   *               or `0 AS foo`.
+   */
   void addSelection( std::string_view column );
+  /** Appends the `ORDER BY` block. */
   void addOrderBy( std::string_view order );
+  /** Appends the `WHERE` block with a new `AND ( <COND> )` statement. */
   void addWhere( std::string_view cond );
-  void addJoin( std::string_view join );
 
   /**
    * Clear member @a PkgQuery member variables of any state from past
@@ -169,16 +175,16 @@ struct PkgQuery : public PkgQueryArgs {
     this->init();
   }
 
-  PkgQuery( const PkgQueryArgs        & params
-          , const std::vector<string> & exportedColumns
+  PkgQuery( const PkgQueryArgs             & params
+          , const std::vector<std::string> & exportedColumns
           )
     : PkgQueryArgs( params ), exportedColumns( exportedColumns )
   {
     this->init();
   }
 
-  PkgQuery( PkgQueryArgs        && params
-          , std::vector<string> && exportedColumns
+  PkgQuery( PkgQueryArgs             && params
+          , std::vector<std::string> && exportedColumns
           )
     : PkgQueryArgs( std::move( params ) )
     , exportedColumns( std::move( exportedColumns ) )
@@ -194,6 +200,14 @@ struct PkgQuery : public PkgQueryArgs {
    * @return An unbound SQL query string.
    */
   std::string str() const;
+
+  /**
+   * Filter a list of semantic version numbers by the range indicated in the
+   * @a semvers member variable.
+   * If @a semvers is unset, return the original list _as is_.
+   */
+    std::vector<std::string>
+  filterSemvers( const std::vector<std::string> & versions ) const;
 
 };
 
