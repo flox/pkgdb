@@ -10,6 +10,7 @@
 #pragma once
 
 #include <string>
+#include <stringstream>
 #include <optional>
 #include <vector>
 #include <unordered_map>
@@ -105,6 +106,96 @@ struct PkgQueryArgs {
   std::optional<PkgQueryInvalidArgException::error_code> validate() const;
 
 };  /* End struct `PkgQueryArgs' */
+
+
+/* -------------------------------------------------------------------------- */
+
+struct PkgQuery : public PkgQueryArgs {
+
+  std::string from = "v_PackagesSearch";
+
+  std::stringstream selects;
+  bool              firstSelect = true;
+
+  std::stringstream orders;
+  bool              firstOrder = true;
+
+  std::stringstream wheres;
+  bool              firstWhere = true;
+
+  std::stringstream joins;
+  bool              firstJoin = true;
+
+  std::unordered_map<std::string, std::string> binds;
+
+  /**
+   * Final set of columns to expose after all filtering and ordering has been
+   * performed on temporary fields.
+   * The value `*` may be used to export all fields.
+   *
+   * This setting is only intended for use by unit tests, any columns other
+   * than `id` and `semver` may be changed without being reflected in normal
+   * `pkgdb` semantic version updates.
+   */
+  std::vector<std::string> exportedColumns = { "id", "semver" };
+
+  void addSelection( std::string_view column );
+  void addOrderBy( std::string_view order );
+  void addWhere( std::string_view cond );
+  void addJoin( std::string_view join );
+
+  /**
+   * Clear member @a PkgQuery member variables of any state from past
+   * initialization runs.
+   * This is called by @a init before translating @a PkgQueryArgs members.
+   */
+  void clearBuilt();
+
+  /**
+   * Translate @a PkgQueryArgs parameters to a _built_ SQL statement held in
+   * `std::stringstream` member variables.
+   * This is called by constructors, and should be called manually if any
+   * @a PkgQueryArgs members are manually edited.
+   */
+  void init();
+
+  PkgQuery( const PkgQueryArgs & params ) : PkgQueryArgs( params )
+  {
+    this->init();
+  }
+
+  PkgQuery( PkgQueryArgs && params ) : PkgQueryArgs( std::move( params ) )
+  {
+    this->init();
+  }
+
+  PkgQuery( const PkgQueryArgs        & params
+          , const std::vector<string> & exportedColumns
+          )
+    : PkgQueryArgs( params ), exportedColumns( exportedColumns )
+  {
+    this->init();
+  }
+
+  PkgQuery( PkgQueryArgs        && params
+          , std::vector<string> && exportedColumns
+          )
+    : PkgQueryArgs( std::move( params ) )
+    , exportedColumns( std::move( exportedColumns ) )
+  {
+    this->init();
+  }
+
+  /**
+   * Produce an unbound SQL statement from various member variables.
+   * This must be run after @a init.
+   * The returned string still needs to be processed to _bind_ host parameters
+   * from @a binds before being executed.
+   * @return An unbound SQL query string.
+   */
+  std::string str() const;
+
+};
 
 
 /* -------------------------------------------------------------------------- */

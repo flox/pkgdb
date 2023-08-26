@@ -141,136 +141,173 @@ PkgQueryArgs::validate() const
 
 /* -------------------------------------------------------------------------- */
 
-  std::pair<std::string, SQLBinds>
-buildPkgQuery( const PkgQueryArgs & params, bool allFields )
+  void
+PkgQuery::addSelection( std::string_view column )
 {
-  /* It's a pain to use `bind' with `in` lists because each element would need
-   * its own variable, so instead we scan for unsafe characters and quote
-   * /the good ol' fashioned way/ in those cases.
-   * Other than that, we use `bind`. */
+  if ( this->firstSelect ) { this->firstSelect = false; }
+  else                     { this->selects << ", ";     }
+  this->selects << column;
+}
 
-  using namespace sql;
+  void
+PkgQuery::addOrderBy( std::string_view order )
+{
+  if ( this->firstOrder ) { this->firstOrder = false; }
+  else                    { this->orders << ", ";     }
+  this->orders << order;
+}
+
+  void
+PkgQuery::addWhere( std::string_view cond )
+{
+  if ( this->firstWhere ) { this->firstWhere = false; }
+  else                    { this->wheres << " AND ";     }
+  this->wheres << "( " << cond << " )";
+}
+
+  void
+PkgQuery::addJoin( std::string_view join )
+{
+  if ( this->firstJoin ) { this->firstJoin = false;  }
+  else                   { this->joins << std::endl; }
+  this->joins << join;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
+PkgQuery::clearBuilt()
+{
+  this->selects.clear();
+  this->orders.clear();
+  this->wheres.clear();
+  this->joins.clear();
+  this->firstSelect = true;
+  this->firstOrder  = true;
+  this->firstWhere  = true;
+  this->firstJoin   = true;
+  this->binds       = {};
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  static void
+addIn( std::stringstream & oss, const std::vector<std::string> & elems )
+{
+  oss << " IN ( ";
+  bool first = true;
+  for ( const auto & elem : elems )
+    {
+      if ( first ) { first = false; } else { oss << ", "; }
+      oss << '\'' << elem << '\'';
+    }
+  oss << " )";
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
+PkgQuery::init()
+{
+  this->clearBuilt();
 
   /* Validate parameters */
-  if ( auto maybe_ec = params.validate(); maybe_ec != std::nullopt )
+  if ( auto maybe_ec = this->validate(); maybe_ec != std::nullopt )
     {
       throw PkgQueryArgs::PkgQueryInvalidArgException( * maybe_ec );
     }
 
-  SelectModel q;
-  q.select( "id" ).select( "semver" ).from( "v_PackagesSearch" );
-  std::unordered_map<std::string, std::string> binds;
+  this->addSelection( "*" );
 
-  /* `sql-builder' only allows `order_by' to be called once, so we have to
-   * build the complete `ORDER BY' statement ourselves. */
-  bool              firstOrderBy = true;
-  std::stringstream orderBy;
-  auto addOrderBy =
-    [& firstOrderBy, & orderBy]( std::string_view order ) -> void
+  /* Handle fuzzy matching filtering. */
+  if ( this->match.has_value() && ( ! this->match->empty() ) )
     {
-      if ( firstOrderBy )
-        {
-          firstOrderBy = false;
-          orderBy << order;
-        }
-      else
-        {
-          orderBy << ", " << order;
-        }
-    };
-
-  if ( params.name.has_value() )
-    {
-      q.where( column( "name" ) == Param( ":name" ) );
-      binds.emplace( ":name", * params.name );
-    }
-
-  if ( params.pname.has_value() )
-    {
-      q.where( column( "pname" ) == Param( ":pname" ) );
-      binds.emplace( ":pname", * params.pname );
-    }
-  
-  if ( params.match.has_value() && ( ! params.match->empty() ) )
-    {
-      q.where(
+      this->addWhere(
         "( ( pname LIKE :match ) OR ( description LIKE :match ) )"
       );
-      /* XXX: These values must align with `match_strength'.
-       * While we could use `bind' or `fmt' here, hard-coding them is fine -
-       * these are explicitly audited by the test suite.
-       * 0 = case-insensitive exact :match with pname
-       * 1 = case-insensitive substring :match with pname and description.
-       * 2 = case-insensitive substring :match with pname.
-       * 3 = case insensitive substring :match with description.
+
+      /* We _rank_ the strength of a match from 0-3 based on exact and partial
+       * matches of `pname` and `description` columns.
+       * Because we intend to use `bind` to handle quoting the user's match
+       * string, we add `%<STRING>%` before binding so that `LIKE` works, and
+       * need to manually add those characters below when testing for exact
+       * matches of the `pname` column.
+       * - 0 : Exact `pname` match.
+       * - 1 : Partial matches on both `pname` and `description`.
+       * - 2 : Partial match on `pname`.
+       * - 3 : Partial match on `description`.
+       * Our `WHERE` statement above ensures that at least one of these rankings
+       * will be true forall rows.
        */
-      q.select( R"SQL(
-        iif( ( ( '%' || LOWER( pname ) || '%' ) = LOWER( :match ) )
-           , 0
-           , iif( ( pname LIKE :match )
-                , iif( ( description LIKE :match  ), 1, 2 )
-                , 3
-                )
-           ) AS matchStrength
-      )SQL" );
-      addOrderBy( "matchStrength ASC" );
-      binds.emplace( ":match", "%" +  ( * params.match ) + "%" );
+      std::stringstream matcher;
+      matcher << "iif( ( ( '%' || LOWER( pname ) || '%' ) = LOWER( :match ) )"
+              << ", " << MS_EXACT_PNAME
+              << ", iif( ( pname LIKE :match )"
+              << ", iif( ( description LIKE :match  ), "
+              << MS_PARTIAL_PNAME_DESC << ", "
+              << MS_PARTIAL_PNAME << " ), " << MS_PARTIAL_DESC
+              << " ) ) AS matchStrength";
+      this->addSelection( matcher.str() );
+      /* Add `%` before binding so `LIKE` works. */
+      binds.emplace( ":match", "%" +  ( * this->match ) + "%" );
     }
   else
     {
-      q.select( "NULL AS matchStrength" );
+      /* Add a bogus `matchStrength` so that later `ORDER BY` works. */
+      std::stringstream matcher;
+      matcher << MS_NONE << " AS matchStrength";
+      this->addSelection( matcher.str() );
     }
 
-  /* Handle `versionDate' sorting */
-  q.select( R"SQL(
-    iif( ( versionType != 2 ), NULL
-       , date( v_PackagesSearch.version )
-       ) AS versionDate
-  )SQL" );
-
-  if ( params.version.has_value() )
+  /* Handle `pname' filtering. */
+  if ( this->pname.has_value() )
     {
-      q.where( column( "version" ) == Param( ":version" ) );
-      binds.emplace( ":version", * params.version );
-    }
-  else if ( params.semver.has_value() )
-    {
-      q.where( column( "semver" ).is_not_null() );
+      this->addWhere( "pname = :pname" );
+      this->binds.emplace( ":pname", * this->pname );
     }
 
-  if ( params.licenses.has_value() && ( ! params.licenses->empty() ) )
+  /* Handle `version' and `semver' filtering.  */
+  if ( this->version.has_value() )
     {
-      q.where( "(" + (
-        column( "license" ).is_not_null() and
-        column( "license" ).in( * params.licenses )
-      ).str() + ")" );
+      this->addWhere( "version = :version" );
+      this->binds.emplace( ":version", * this->version );
+    }
+  else if ( this->semver.has_value() )
+    {
+      this->addWhere( "semver IS NOT NULL" );
     }
 
-  if ( ! params.allowBroken )
+  /* Handle `licenses' filtering. */
+  if ( this->licenses.has_value() && ( ! this->licenses->empty() ) )
     {
-      q.where( "(" +
-        ( column( "broken" ).is_null() or ( column( "broken" ) == 0 ) ).str() +
-      ")" );
+      this->addWhere( "license IS NOT NULL" );
+      /* licenses IN ( ... ) */
+      this->addWhere( "license" );
+      addIn( this->wheres, * this->licenses );
     }
 
-  if ( ! params.allowUnfree )
+  /* Handle `broken' filtering. */
+  if ( ! this->allowBroken )
     {
-      q.where( "(" +
-        ( column( "unfree" ).is_null() or ( column( "unfree" ) == 0 ) ).str() +
-      ")" );
+      this->addWhere( "( broken IS NULL ) OR ( broken = FALSE )" );
     }
 
-  /* Subtrees */
-  if ( params.stabilities.has_value() )
+  /* Handle `unfree' filtering. */
+  if ( ! this->allowUnfree )
     {
-      q.where( column( "subtree" ) == "catalog" );
+      this->addWhere( "( unfree IS NULL ) OR ( unfree = FALSE )" );
     }
-  else if ( params.subtrees.has_value() )
+
+  /* Handle `subtrees' filtering. */
+  if ( this->subtrees.has_value() )
     {
       size_t                   idx  = 0;
       std::vector<std::string> lst;
       std::stringstream        rank;
-      for ( const auto s : * params.subtrees )
+      for ( const auto s : * this->subtrees )
         {
           switch ( s )
             {
@@ -284,60 +321,37 @@ buildPkgQuery( const PkgQueryArgs & params, bool allFields )
           rank << "iif( ( subtree = '" << lst.back() << "' ), " << idx << ", ";
           ++idx;
         }
-      q.where( column( "subtree" ).in( lst ) );
+      /* subtree IN ( ...  ) */
+      this->addWhere( "subtree" );
+      addIn( this->wheres, * this->subtrees );
+      /* Wrap up rankings assignment. */
       if ( 1 < idx )
         {
           rank << idx;
           for ( size_t i = 0; i < idx; ++i ) { rank << " )"; }
           rank << " AS subtreeRank";
-          q.select( rank.str() );
-          addOrderBy( "subtreeRank ASC" );
+          this->addSelection( rank.str() );
         }
-    }
-
-  /* Establish common ordered fields before adding additional optional
-   * ranks like `system', and `stability` */
-  addOrderBy( "pname ASC" );
-  addOrderBy( "versionType ASC" );
-  addOrderBy( "major DESC NULLS LAST" );
-  addOrderBy( "minor DESC NULLS LAST" );
-  addOrderBy( "patch DESC NULLS LAST" );
-  addOrderBy( "preTag DESC NULLS LAST" );
-  addOrderBy( "versionDate DESC NULLS FIRST" );
-  /* Lexicographic as fallback for misc. versions */
-  addOrderBy( "v_PackagesSearch.version ASC NULLS LAST" );
-  addOrderBy( "brokenRank ASC" );
-  addOrderBy( "unfreeRank ASC" );
-
-  /* Stabilities */
-  if ( params.stabilities.has_value() )
-    {
-      q.where( column( "stability" ).in( * params.stabilities ) );
-      if ( 1 < params.stabilities->size() )
+      else
         {
-          size_t            idx  = 0;
-          std::stringstream rank;
-          for ( const auto & stability : * params.stabilities )
-            {
-              rank << "iif( ( stability = '" << stability << "' ), " << idx;
-              rank << ", ";
-              ++idx;
-            }
-          rank << idx;
-          for ( size_t i = 0; i < idx; ++i ) { rank << " )"; }
-          rank << " AS stabilitiesRank";
-          q.select( rank.str() );
-          addOrderBy( "stabilitiesRank ASC" );
+          /* Add bogus rank so `ORDER BY subtreeRank' works. */
+          this->addSelection( "0 AS subtreeRank" );
         }
     }
+  else
+    {
+      /* Add bogus rank so `ORDER BY subtreeRank' works. */
+      this->addSelection( "0 AS subtreeRank" );
+    }
 
-  /* Systems */
-  q.where( column( "system" ).in( params.systems ) );
-  if ( 1 < params.systems.size() )
+  /* Handle `systems' filtering. */
+  this->addWhere( "system" );
+  addIn( this->systems );
+  if ( 1 < this->systems.size() )
     {
       size_t            idx  = 0;
       std::stringstream rank;
-      for ( const auto & system : params.systems )
+      for ( const auto & system : this->systems )
         {
           rank << "iif( ( system = '" << system << "' ), " << idx << ", ";
           ++idx;
@@ -345,27 +359,98 @@ buildPkgQuery( const PkgQueryArgs & params, bool allFields )
       rank << idx;
       for ( size_t i = 0; i < idx; ++i ) { rank << " )"; }
       rank << " AS systemsRank";
-      q.select( rank.str() );
-      addOrderBy( "systemsRank ASC" );
+      this->addSelection( rank.str() );
     }
-
-  /* Finalize `ORDER BY' part */
-  q.order_by( orderBy.str() );
-
-  if ( allFields )
+  else
     {
-      q.select( "subtree" )
-       .select( "system" ).select( "stability" ).select( "path" )
-       .select( "name" ).select( "version" ).select( "versionType" )
-       .select( "major" ).select( "minor" ).select( "patch" ).select( "preTag" )
-       .select( "broken" ).select( "brokenRank" ).select( "unfree" )
-       .select( "unfreeRank" ).select( "description" );
-      return std::make_pair( q.str(), binds );
+      /* Add a bogus rank to `ORDER BY systemsRank' works. */
+      this->addSelection( "0 AS systemsRank" );
     }
 
-  /* Removes extra columns used for ordering */
-  std::string rsl = "SELECT id, semver FROM ( " + q.str() + " )";
-  return std::make_pair( std::move( rsl ), binds );
+  /* Handle `stabilities' filtering. */
+  if ( this->stabilities.has_value() )
+    {
+      this->addWhere( "stability" );
+      addIn( this->wheres, * this->stabilities );
+      if ( 1 < this->stabilities->size() )
+        {
+          size_t            idx  = 0;
+          std::stringstream rank;
+          rank << "iif( ( stability IS NULL ), NULL, ";
+          for ( const auto & stability : * this->stabilities )
+            {
+              rank << "iif( ( stability = '" << stability << "' ), " << idx;
+              rank << ", ";
+              ++idx;
+            }
+          rank << idx;
+          for ( size_t i = 0; i < idx; ++i ) { rank << " )"; }
+          rank << " ) AS stabilitiesRank";
+          this->addSelection( rank.str() );
+        }
+      else
+        {
+          /* Add a bogus rank so `ORDER BY stabilitiesRank' works. */
+          this->addSelection( "0 AS stabilitiesRank" );
+        }
+    }
+  else
+    {
+      /* Add a bogus rank so `ORDER BY stabilitiesRank' works. */
+      this->addSelection( "0 AS stabilitiesRank" );
+    }
+
+  /* Establish ordering. */
+  this->addOrderBy( R"SQL(
+    matchStrength ASC
+  , subtreeRank ASC
+  , stabilityRank ASC NULLS LAST
+  , pname ASC
+  , major  DESC NULLS LAST
+  , minor  DESC NULLS LAST
+  , patch  DESC NULLS LAST
+  )SQL" );
+  /* Handle `preferPreReleases' */
+  if ( this->preferPreReleases )
+    {
+      this->addOrderBy( "preTag DESC NULLS LAST" );
+    }
+  else
+    {
+      this->addOrderBy( "preTag DESC NULLS FIRST" );
+    }
+  this->addOrderBy( R"SQL(
+    versionDate DESC NULLS LAST
+  -- Lexicographic as fallback for misc. versions
+  , v_PackagesSearch.version ASC NULLS LAST
+  , brokenRank ASC
+  , unfreeRank ASC
+  )SQL" );
+
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  std::string
+PkgQuery::str()
+{
+  std::stringstream qry;
+  qry << "SELECT ";
+  bool firstExport = true;
+  for ( const auto & column : this->exportedColumns )
+    {
+      if ( firstExport ) { firstExport = false; } else { qry << ", "; }
+      qry << column;
+    }
+  qry << " FROM ( SELECT ";
+  if ( this->firstSelect ) { qry << "*"; }
+  else                     { qry << this->selects.str(); }
+  qry << " FROM " << this->from;
+  if ( ! this->firstJoin )  { qry << " " << this->joins.str();  }
+  if ( ! this->firstWhere ) { qry << " " << this->wheres.str(); }
+  if ( ! this->firstOrder ) { qry << " " << this->orders.str(); }
+  qry << " )";
 }
 
 

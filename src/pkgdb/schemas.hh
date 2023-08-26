@@ -164,14 +164,14 @@ CREATE VIEW IF NOT EXISTS v_PackagesSearch AS SELECT
 , Packages.name
 , Packages.pname
 , Packages.version
-, iif( ( Packages.version IS NULL ), 4
-  , iif( ( Packages.semver IS NOT NULL ), 0
+, iif( ( Packages.version IS NULL ), NULL
+  , iif( ( Packages.semver IS NOT NULL ), NULL
        , iif( ( ( SELECT Packages.version = date( Packages.version ) )
                 IS NOT NULL )
-            , 2, 3
+            , date( Packages.version ), NULL
             )
        )
-  ) AS versionType
+  ) AS versionDate
 , Packages.semver
 , v_Semvers.major
 , v_Semvers.minor
