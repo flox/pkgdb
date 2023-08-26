@@ -226,7 +226,7 @@ PkgQuery::init()
   if ( this->match.has_value() && ( ! this->match->empty() ) )
     {
       this->addWhere(
-        "( ( pname LIKE :match ) OR ( description LIKE :match ) )"
+        "( pname LIKE :match ) OR ( description LIKE :match )"
       );
 
       /* We _rank_ the strength of a match from 0-3 based on exact and partial
@@ -285,8 +285,10 @@ PkgQuery::init()
     {
       this->addWhere( "license IS NOT NULL" );
       /* licenses IN ( ... ) */
-      this->addWhere( "license" );
-      addIn( this->wheres, * this->licenses );
+      std::stringstream cond;
+      cond << "license";
+      addIn( cond, * this->licenses );
+      this->addWhere( cond.str() );
     }
 
   /* Handle `broken' filtering. */
@@ -322,31 +324,37 @@ PkgQuery::init()
           ++idx;
         }
       /* subtree IN ( ...  ) */
-      this->addWhere( "subtree" );
-      addIn( this->wheres, * this->subtrees );
+      std::stringstream cond;
+      cond << "subtree";
+      addIn( cond, * this->subtrees );
+      this->addWhere( cond.str() );
       /* Wrap up rankings assignment. */
       if ( 1 < idx )
         {
           rank << idx;
           for ( size_t i = 0; i < idx; ++i ) { rank << " )"; }
-          rank << " AS subtreeRank";
+          rank << " AS subtreesRank";
           this->addSelection( rank.str() );
         }
       else
         {
-          /* Add bogus rank so `ORDER BY subtreeRank' works. */
-          this->addSelection( "0 AS subtreeRank" );
+          /* Add bogus rank so `ORDER BY subtreesRank' works. */
+          this->addSelection( "0 AS subtreesRank" );
         }
     }
   else
     {
-      /* Add bogus rank so `ORDER BY subtreeRank' works. */
-      this->addSelection( "0 AS subtreeRank" );
+      /* Add bogus rank so `ORDER BY subtreesRank' works. */
+      this->addSelection( "0 AS subtreesRank" );
     }
 
   /* Handle `systems' filtering. */
-  this->addWhere( "system" );
-  addIn( this->systems );
+  {
+    std::stringstream cond;
+    cond << "system";
+    addIn( cond, this->systems );
+    this->addWhere( cond.str() );
+  }
   if ( 1 < this->systems.size() )
     {
       size_t            idx  = 0;
@@ -370,8 +378,10 @@ PkgQuery::init()
   /* Handle `stabilities' filtering. */
   if ( this->stabilities.has_value() )
     {
-      this->addWhere( "stability" );
-      addIn( this->wheres, * this->stabilities );
+      std::stringstream cond;
+      cond << "stability";
+      addIn( cond, * this->stabilities );
+      this->addWhere( cond.str() );
       if ( 1 < this->stabilities->size() )
         {
           size_t            idx  = 0;
@@ -403,12 +413,13 @@ PkgQuery::init()
   /* Establish ordering. */
   this->addOrderBy( R"SQL(
     matchStrength ASC
-  , subtreeRank ASC
-  , stabilityRank ASC NULLS LAST
+  , subtreesRank ASC
+  , systemsRank ASC
+  , stabilitiesRank ASC NULLS LAST
   , pname ASC
-  , major  DESC NULLS LAST
-  , minor  DESC NULLS LAST
-  , patch  DESC NULLS LAST
+  , major DESC NULLS LAST
+  , minor DESC NULLS LAST
+  , patch DESC NULLS LAST
   )SQL" );
   /* Handle `preferPreReleases' */
   if ( this->preferPreReleases )
@@ -448,8 +459,8 @@ PkgQuery::str()
   else                     { qry << this->selects.str(); }
   qry << " FROM " << this->from;
   if ( ! this->firstJoin )  { qry << " " << this->joins.str();  }
-  if ( ! this->firstWhere ) { qry << " " << this->wheres.str(); }
-  if ( ! this->firstOrder ) { qry << " " << this->orders.str(); }
+  if ( ! this->firstWhere ) { qry << " WHERE " << this->wheres.str(); }
+  if ( ! this->firstOrder ) { qry << " ORDER BY " << this->orders.str(); }
   qry << " )";
 }
 
