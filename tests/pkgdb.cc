@@ -429,7 +429,7 @@ test_PkgQuery0( flox::pkgdb::PkgDb & db )
 
 /* Tests `license', `allowBroken', and `allowUnfree' filtering. */
   bool
-test_buildPkgQuery1( flox::pkgdb::PkgDb & db )
+test_PkgQuery1( flox::pkgdb::PkgDb & db )
 {
   clearTables( db );
 
@@ -475,9 +475,9 @@ test_buildPkgQuery1( flox::pkgdb::PkgDb & db )
 
   /* Run `allowBroken = false' query */
   {
-    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
-    sqlite3pp::query qry( db.db, query.c_str() );
-    for ( const auto & [var, val] : binds )
+    flox::pkgdb::PkgQuery query( qargs );
+    sqlite3pp::query qry( db.db, query.str().c_str() );
+    for ( const auto & [var, val] : query.binds )
       {
         qry.bind( var.c_str(), val, sqlite3pp::copy );
       }
@@ -489,10 +489,10 @@ test_buildPkgQuery1( flox::pkgdb::PkgDb & db )
   /* Run `allowBroken = true' query */
   {
     qargs.allowBroken = true;
-    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    flox::pkgdb::PkgQuery query( qargs );
     qargs.allowBroken = false;
-    sqlite3pp::query qry( db.db, query.c_str() );
-    for ( const auto & [var, val] : binds )
+    sqlite3pp::query qry( db.db, query.str().c_str() );
+    for ( const auto & [var, val] : query.binds )
       {
         qry.bind( var.c_str(), val, sqlite3pp::copy );
       }
@@ -503,9 +503,9 @@ test_buildPkgQuery1( flox::pkgdb::PkgDb & db )
 
   /* Run `allowUnfree = true' query */
   {
-    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
-    sqlite3pp::query qry( db.db, query.c_str() );
-    for ( const auto & [var, val] : binds )
+    flox::pkgdb::PkgQuery query( qargs );
+    sqlite3pp::query qry( db.db, query.str().c_str() );
+    for ( const auto & [var, val] : query.binds )
       {
         qry.bind( var.c_str(), val, sqlite3pp::copy );
       }
@@ -517,10 +517,10 @@ test_buildPkgQuery1( flox::pkgdb::PkgDb & db )
   /* Run `allowUnfree = false' query */
   {
     qargs.allowUnfree = false;
-    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    flox::pkgdb::PkgQuery query( qargs );
     qargs.allowUnfree = true;
-    sqlite3pp::query qry( db.db, query.c_str() );
-    for ( const auto & [var, val] : binds )
+    sqlite3pp::query qry( db.db, query.str().c_str() );
+    for ( const auto & [var, val] : query.binds )
       {
         qry.bind( var.c_str(), val, sqlite3pp::copy );
       }
@@ -534,10 +534,10 @@ test_buildPkgQuery1( flox::pkgdb::PkgDb & db )
     qargs.licenses = std::vector<std::string> {
       "GPL-3.0-or-later", "BUSL-1.1", "MIT"
     };
-    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    flox::pkgdb::PkgQuery query( qargs );
     qargs.licenses = std::nullopt;
-    sqlite3pp::query qry( db.db, query.c_str() );
-    for ( const auto & [var, val] : binds )
+    sqlite3pp::query qry( db.db, query.str().c_str() );
+    for ( const auto & [var, val] : query.binds )
       {
         qry.bind( var.c_str(), val, sqlite3pp::copy );
       }
@@ -549,10 +549,10 @@ test_buildPkgQuery1( flox::pkgdb::PkgDb & db )
   /* Run `licenses = ["BUSL-1.1", "MIT"]' query */
   {
     qargs.licenses = std::vector<std::string> { "BUSL-1.1", "MIT" };
-    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    flox::pkgdb::PkgQuery query( qargs );
     qargs.licenses = std::nullopt;
-    sqlite3pp::query qry( db.db, query.c_str() );
-    for ( const auto & [var, val] : binds )
+    sqlite3pp::query qry( db.db, query.str().c_str() );
+    for ( const auto & [var, val] : query.binds )
       {
         qry.bind( var.c_str(), val, sqlite3pp::copy );
       }
@@ -959,8 +959,8 @@ main( int argc, char * argv[] )
     RUN_TEST( descendants0, db );
 
     RUN_TEST( PkgQuery0, db );
+    RUN_TEST( PkgQuery1, db );
 
-    RUN_TEST( buildPkgQuery1, db );
     RUN_TEST( buildPkgQuery2, db );
 
     RUN_TEST( getPackages0, db );
