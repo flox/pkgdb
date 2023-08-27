@@ -475,58 +475,32 @@ test_PkgQuery1( flox::pkgdb::PkgDb & db )
 
   /* Run `allowBroken = false' query */
   {
-    flox::pkgdb::PkgQuery query( qargs );
-    sqlite3pp::query qry( db.db, query.str().c_str() );
-    for ( const auto & [var, val] : query.binds )
-      {
-        qry.bind( var.c_str(), val, sqlite3pp::copy );
-      }
-    size_t count = 0;
-    for ( const auto r : qry ) { (void) r; ++count; }
-    EXPECT_EQ( count, (size_t) 3 );
+    flox::pkgdb::PkgQuery qry( qargs );
+    EXPECT_EQ( qry.execute( db.db ).size(), (size_t) 3 );
   }
 
   /* Run `allowBroken = true' query */
   {
     qargs.allowBroken = true;
-    flox::pkgdb::PkgQuery query( qargs );
+    flox::pkgdb::PkgQuery qry( qargs );
     qargs.allowBroken = false;
-    sqlite3pp::query qry( db.db, query.str().c_str() );
-    for ( const auto & [var, val] : query.binds )
-      {
-        qry.bind( var.c_str(), val, sqlite3pp::copy );
-      }
-    size_t count = 0;
-    for ( const auto r : qry ) { (void) r; ++count; }
-    EXPECT_EQ( count, (size_t) 4 );
+    EXPECT_EQ( qry.execute( db.db ).size(), (size_t) 4 );
   }
 
   /* Run `allowUnfree = true' query */
   {
-    flox::pkgdb::PkgQuery query( qargs );
-    sqlite3pp::query qry( db.db, query.str().c_str() );
-    for ( const auto & [var, val] : query.binds )
-      {
-        qry.bind( var.c_str(), val, sqlite3pp::copy );
-      }
-    size_t count = 0;
-    for ( const auto r : qry ) { (void) r; ++count; }
-    EXPECT_EQ( count, (size_t) 3 );  /* still omits broken */
+    flox::pkgdb::PkgQuery qry( qargs );
+    /* still omits broken */
+    EXPECT_EQ( qry.execute( db.db ).size(), (size_t) 3 );
   }
 
   /* Run `allowUnfree = false' query */
   {
     qargs.allowUnfree = false;
-    flox::pkgdb::PkgQuery query( qargs );
+    flox::pkgdb::PkgQuery qry( qargs );
     qargs.allowUnfree = true;
-    sqlite3pp::query qry( db.db, query.str().c_str() );
-    for ( const auto & [var, val] : query.binds )
-      {
-        qry.bind( var.c_str(), val, sqlite3pp::copy );
-      }
-    size_t count = 0;
-    for ( const auto r : qry ) { (void) r; ++count; }
-    EXPECT_EQ( count, (size_t) 2 );  /* still omits broken as well */
+    /* still omits broken as well */
+    EXPECT_EQ( qry.execute( db.db ).size(), (size_t) 2 );
   }
 
   /* Run `licenses = ["GPL-3.0-or-later", "BUSL-1.1", "MIT"]' query */
@@ -534,31 +508,19 @@ test_PkgQuery1( flox::pkgdb::PkgDb & db )
     qargs.licenses = std::vector<std::string> {
       "GPL-3.0-or-later", "BUSL-1.1", "MIT"
     };
-    flox::pkgdb::PkgQuery query( qargs );
+    flox::pkgdb::PkgQuery qry( qargs );
     qargs.licenses = std::nullopt;
-    sqlite3pp::query qry( db.db, query.str().c_str() );
-    for ( const auto & [var, val] : query.binds )
-      {
-        qry.bind( var.c_str(), val, sqlite3pp::copy );
-      }
-    size_t count = 0;
-    for ( const auto r : qry ) { (void) r; ++count; }
-    EXPECT_EQ( count, (size_t) 2 );  /* omits NULL licenses */
+    /* omits NULL licenses */
+    EXPECT_EQ( qry.execute( db.db ).size(), (size_t) 2 );
   }
 
   /* Run `licenses = ["BUSL-1.1", "MIT"]' query */
   {
     qargs.licenses = std::vector<std::string> { "BUSL-1.1", "MIT" };
-    flox::pkgdb::PkgQuery query( qargs );
+    flox::pkgdb::PkgQuery qry( qargs );
     qargs.licenses = std::nullopt;
-    sqlite3pp::query qry( db.db, query.str().c_str() );
-    for ( const auto & [var, val] : query.binds )
-      {
-        qry.bind( var.c_str(), val, sqlite3pp::copy );
-      }
-    size_t count = 0;
-    for ( const auto r : qry ) { (void) r; ++count; }
-    EXPECT_EQ( count, (size_t) 1 );  /* omits NULL licenses */
+    /* omits NULL licenses */
+    EXPECT_EQ( qry.execute( db.db ).size(), (size_t) 1 );
   }
 
   return true;
@@ -569,7 +531,7 @@ test_PkgQuery1( flox::pkgdb::PkgDb & db )
 
 /* Tests `match' filtering. */
   bool
-test_buildPkgQuery2( flox::pkgdb::PkgDb & db )
+test_PkgQuery2( flox::pkgdb::PkgDb & db )
 {
   clearTables( db );
 
@@ -611,31 +573,19 @@ test_buildPkgQuery2( flox::pkgdb::PkgDb & db )
   qargs.systems = std::vector<std::string> { "x86_64-linux" };
 
   /* Run `match = "hello"' query */
-  int matchStrengthIdx = -1;
   {
     qargs.match = "hello";
-    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs, true );
+    flox::pkgdb::PkgQuery qry( qargs
+                             , std::vector<std::string> { "matchStrength" }
+                             );
     qargs.match = std::nullopt;
-    sqlite3pp::query qry( db.db, query.c_str() );
-    for ( int i = 0; i < qry.column_count(); ++i )
-      {
-        if ( qry.column_name( i ) == std::string_view( "matchStrength" ) )
-          {
-            matchStrengthIdx = i;
-            break;
-          }
-      }
-    for ( const auto & [var, val] : binds )
-      {
-        qry.bind( var.c_str(), val, sqlite3pp::copy );
-      }
     size_t count = 0;
-    for ( const auto r : qry )
+    auto   bound = qry.bind( db.db );
+    for ( const auto & row : * bound )
       {
-        (void) r;
         ++count;
         flox::pkgdb::match_strength strength =
-          (flox::pkgdb::match_strength) r.get<int>( matchStrengthIdx );
+          (flox::pkgdb::match_strength) row.get<int>( 0 );
         if ( count == 1 )
           {
             EXPECT_EQ( strength, flox::pkgdb::MS_EXACT_PNAME );
@@ -651,21 +601,16 @@ test_buildPkgQuery2( flox::pkgdb::PkgDb & db )
   /* Run `match = "farewell"' query */
   {
     qargs.match = "farewell";
-    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs, true );
+    flox::pkgdb::PkgQuery qry( qargs
+                             , std::vector<std::string> { "matchStrength" }
+                             );
     qargs.match = std::nullopt;
-    sqlite3pp::query qry( db.db, query.c_str() );
-    for ( const auto & [var, val] : binds )
-      {
-        qry.bind( var.c_str(), val, sqlite3pp::copy );
-      }
     size_t count = 0;
-    for ( const auto r : qry )
+    auto   bound = qry.bind( db.db );
+    for ( const auto & row : * bound )
       {
-        (void) r;
         ++count;
-        EXPECT_EQ( r.get<int>( matchStrengthIdx )
-                 , flox::pkgdb::MS_PARTIAL_DESC
-                 );
+        EXPECT_EQ( row.get<int>( 0 ), flox::pkgdb::MS_PARTIAL_DESC );
       }
     EXPECT_EQ( count, (size_t) 2 );
   }
@@ -673,20 +618,17 @@ test_buildPkgQuery2( flox::pkgdb::PkgDb & db )
   /* Run `match = "hel"' query */
   {
     qargs.match = "hel";
-    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs, true );
+    flox::pkgdb::PkgQuery qry( qargs
+                             , std::vector<std::string> { "matchStrength" }
+                             );
     qargs.match = std::nullopt;
-    sqlite3pp::query qry( db.db, query.c_str() );
-    for ( const auto & [var, val] : binds )
-      {
-        qry.bind( var.c_str(), val, sqlite3pp::copy );
-      }
     size_t count = 0;
-    for ( const auto r : qry )
+    auto   bound = qry.bind( db.db );
+    for ( const auto & row : * bound )
       {
-        (void) r;
         ++count;
         flox::pkgdb::match_strength strength =
-          (flox::pkgdb::match_strength) r.get<int>( matchStrengthIdx );
+          (flox::pkgdb::match_strength) row.get<int>( 0 );
         if ( count == 1 )
           {
             EXPECT_EQ( strength, flox::pkgdb::MS_PARTIAL_PNAME_DESC );
@@ -702,16 +644,9 @@ test_buildPkgQuery2( flox::pkgdb::PkgDb & db )
   /* Run `match = "xxxxx"' query */
   {
     qargs.match = "xxxxx";
-    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    flox::pkgdb::PkgQuery qry( qargs );
     qargs.match = std::nullopt;
-    sqlite3pp::query qry( db.db, query.c_str() );
-    for ( const auto & [var, val] : binds )
-      {
-        qry.bind( var.c_str(), val, sqlite3pp::copy );
-      }
-    size_t count = 0;
-    for ( const auto r : qry ) { (void) r; ++count; }
-    EXPECT_EQ( count, (size_t) 0 );
+    EXPECT_EQ( qry.execute( db.db ).size(), (size_t) 0 );
   }
 
   return true;
@@ -960,8 +895,7 @@ main( int argc, char * argv[] )
 
     RUN_TEST( PkgQuery0, db );
     RUN_TEST( PkgQuery1, db );
-
-    RUN_TEST( buildPkgQuery2, db );
+    RUN_TEST( PkgQuery2, db );
 
     RUN_TEST( getPackages0, db );
     RUN_TEST( getPackages1, db );

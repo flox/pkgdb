@@ -236,36 +236,6 @@ struct PkgQuery : public PkgQueryArgs {
 
 /* -------------------------------------------------------------------------- */
 
- /* A SQL statement string with a mapping of host parameters to their
-  * respective values. */
-using SQLBinds = std::unordered_map<std::string, std::string>;
-
-/**
- * Construct a SQL query string with a set of parameters to be bound.
- * Binding is left to the caller to allow a single result to be reused across
- * multiple databases.
- *
- * This routine does NOT perform filtering by `semver`.
- *
- * @param params A `PkgQueryArgs` set to provide filtering and
- *               ordering preferences.
- * @param allFields The resulting statement selects `id` and `semver` by
- *                  default, but when @a allFields is `true` a larger collection
- *                  of columns is returned.
- *                  This setting exists for unit testing and the columns found
- *                  here may be changed without being reflected in `pkgdb`
- *                  semantic versions - it is NOT a part of our public API!
- * @return A SQL statement string with a mapping of host parameters to their
- *         respective values.
- */
-std::pair<std::string, SQLBinds> buildPkgQuery(
-  const PkgQueryArgs & params
-,       bool           allFields = false
-);
-
-
-/* -------------------------------------------------------------------------- */
-
 }  /* End Namespace `flox::pkgdb' */
 
 

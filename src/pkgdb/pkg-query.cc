@@ -483,8 +483,9 @@ PkgQuery::filterSemvers(
   std::shared_ptr<sqlite3pp::query>
 PkgQuery::bind( sqlite3pp::database & db ) const
 {
+  std::string stmt = this->str();
   std::shared_ptr<sqlite3pp::query> qry =
-    std::make_shared<sqlite3pp::query>( db, this->str().c_str() );
+    std::make_shared<sqlite3pp::query>( db, stmt.c_str() );
   for ( const auto & [var, val] : this->binds )
     {
       qry->bind( var.c_str(), val, sqlite3pp::copy );
@@ -534,25 +535,6 @@ PkgQuery::execute( sqlite3pp::database & db ) const
         }
     }
   return rsl;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-// TODO: remove after updating `getPackages' and test cases.
-  std::pair<std::string, SQLBinds>
-buildPkgQuery( const PkgQueryArgs & params, bool allFields )
-{
-  if ( allFields )
-    {
-      PkgQuery qry( params, std::vector<std::string> { "*" } );
-      return std::make_pair( qry.str(), std::move( qry.binds ) );
-    }
-  else
-    {
-      PkgQuery qry( params );
-      return std::make_pair( qry.str(), std::move( qry.binds ) );
-    }
 }
 
 
