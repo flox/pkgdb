@@ -36,7 +36,7 @@
 #include "flox/core/util.hh"
 #include "flox/core/types.hh"
 #include "flox/pkgdb.hh"
-#include "flox/pkgdb/query-builder.hh"
+#include "flox/pkgdb/pkg-query.hh"
 #include "test.hh"
 
 

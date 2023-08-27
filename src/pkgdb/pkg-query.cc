@@ -1,6 +1,6 @@
 /* ========================================================================== *
  *
- * @file pkgdb/query-builder.cc
+ * @file pkgdb/pkg-query.cc
  *
  * @brief Interfaces for constructing complex `Packages' queries.
  *
@@ -14,7 +14,7 @@
 #include <sql-builder/sql.hh>
 
 #include "flox/pkgdb.hh"
-#include "flox/pkgdb/query-builder.hh"
+#include "flox/pkgdb/pkg-query.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -452,8 +452,10 @@ PkgQuery::str() const
 
 /* -------------------------------------------------------------------------- */
 
-  std::vector<std::string>
-PkgQuery::filterSemvers( const std::vector<std::string> & versions ) const
+  std::unordered_set<std::string>
+PkgQuery::filterSemvers(
+  const std::unordered_set<std::string> & versions
+) const
 {
   static const std::vector<std::string> ignores = {
     "", "*", "any", "^*", "~*", "x", "X"
@@ -466,12 +468,70 @@ PkgQuery::filterSemvers( const std::vector<std::string> & versions ) const
     {
       return versions;
     }
-  std::set<std::string>    unique( versions.begin(), versions.end() );
-  std::list<std::string>   args( unique.begin(), unique.end() );
-  std::vector<std::string> rsl;
+  std::list<std::string>          args( versions.begin(), versions.end() );
+  std::unordered_set<std::string> rsl;
   for ( auto & version : versions::semverSat( * this->semver, args ) )
     {
-      rsl.emplace_back( std::move( version ) );
+      rsl.emplace( std::move( version ) );
+    }
+  return rsl;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  std::shared_ptr<sqlite3pp::query>
+PkgQuery::bind( sqlite3pp::database & db ) const
+{
+  std::shared_ptr<sqlite3pp::query> qry =
+    std::make_shared<sqlite3pp::query>( db, this->str().c_str() );
+  for ( const auto & [var, val] : this->binds )
+    {
+      qry->bind( var.c_str(), val, sqlite3pp::copy );
+    }
+  return qry;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  std::vector<row_id>
+PkgQuery::execute( sqlite3pp::database & db ) const
+{
+  std::shared_ptr<sqlite3pp::query> qry = this->bind( db );
+  std::vector<row_id>               rsl;
+
+  /* If we don't need to handle `semver' this is easy. */
+  if ( ! this->semver.has_value() )
+    {
+      for ( const auto & row : * qry )
+        {
+          rsl.push_back( row.get<long long>( 0 ) );
+        }
+      return rsl;
+    }
+
+  /* We can handle quite a bit of filtering and ordering in SQL, but `semver`
+   * has to be handled with post-processing here. */
+
+  std::unordered_set<std::string> versions;
+  /* Use a vector to preserve ordering original ordering. */
+  std::vector<std::pair<row_id, std::string>> idVersions;
+  for ( const auto & row : * qry )
+    {
+      const auto & [_, version] = idVersions.emplace_back(
+        std::make_pair( row.get<long long>( 0 ), row.get<std::string>( 1 ) )
+      );
+      versions.emplace( version );
+    }
+  versions = this->filterSemvers( versions );
+  /* Filter SQL results to be those in the satisfactory list. */
+  for ( const auto & elem : idVersions )
+    {
+      if ( versions.find( elem.second ) != versions.end() )
+        {
+          rsl.push_back( elem.first );
+        }
     }
   return rsl;
 }

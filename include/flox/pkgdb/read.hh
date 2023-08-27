@@ -24,7 +24,7 @@
 #include "flox/core/types.hh"
 #include "flox/core/command.hh"
 #include "flox/package.hh"
-#include "flox/pkgdb/query-builder.hh"
+#include "flox/pkgdb/pkg-query.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -39,7 +39,6 @@ namespace flox {
 /** A unique hash associated with a locked flake. */
 using Fingerprint = nix::flake::Fingerprint;
 using SQLiteDb    = sqlite3pp::database;
-using row_id      = uint64_t;  /**< A _row_ index in a SQLite3 table. */
 using sql_rc      = int;       /**< `SQLITE_*` result code. */
 
 

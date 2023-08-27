@@ -327,62 +327,7 @@ PkgDbReadOnly::getDescendantAttrSets( row_id root )
   std::vector<row_id>
 PkgDbReadOnly::getPackages( const PkgQueryArgs & params )
 {
-  auto [query, binds] = buildPkgQuery( params );
-  sqlite3pp::query qry( this->db, query.c_str() );
-  for ( const auto & [var, val] : binds )
-    {
-      qry.bind( var.c_str(), val, sqlite3pp::copy );
-    }
-
-  /* We can handle quite a bit of filtering and ordering in SQL, but `semver`
-   * has to be handled with post-processing here.
-   * We skip semver filtering for a few bogus "match anything" forms. */
-  if ( params.semver.has_value() &&
-       ( ! params.semver->empty() ) &&
-       ( ( * params.semver ) != "*" ) && ( ( * params.semver ) != "any" ) &&
-       ( ( * params.semver ) != "^*" ) && ( ( * params.semver ) != "~*" )
-     )
-    {
-      /* Use a vector to preserve ordering original ordering. */
-      std::vector<std::pair<row_id, std::string>> idVersions;
-      std::unordered_set<std::string>             versionsUniq;
-      for ( const auto & row : qry )
-        {
-          const auto & [_, version] = idVersions.emplace_back(
-            std::make_pair( row.get<long long>( 0 ), row.get<std::string>( 1 ) )
-          );
-          versionsUniq.emplace( version );
-        }
-      std::list<std::string> versions( versionsUniq.begin()
-                                     , versionsUniq.end()
-                                     );
-      /* Create a unique list of satisfactory versions  */
-      // TODO: Order by latest
-      versionsUniq.clear();
-      for ( const auto & version :
-              versions::semverSat( * params.semver, versions )
-          )
-        {
-          versionsUniq.emplace( version );
-        }
-
-      /* Filter SQL results to be those in the satisfactory list. */
-      std::vector<row_id> rsl;
-      for ( const auto & elem : idVersions )
-        {
-          if ( versionsUniq.find( elem.second ) != versionsUniq.end() )
-            {
-              rsl.push_back( elem.first );
-            }
-        }
-      return rsl;
-    }
-  else
-    {
-      std::vector<row_id> rsl;
-      for ( const auto row : qry ) { rsl.push_back( row.get<long long>( 0 ) ); }
-      return rsl;
-    }
+  return PkgQuery( params ).execute( this->db );
 }
 
 

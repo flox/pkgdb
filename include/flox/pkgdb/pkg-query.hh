@@ -1,6 +1,6 @@
 /* ========================================================================== *
  *
- * @file flox/pkgdb/query-builder.hh
+ * @file flox/pkgdb/pkg-query.hh
  *
  * @brief Interfaces for constructing complex `Packages' queries.
  *
@@ -15,8 +15,11 @@
 #include <vector>
 #include <unordered_map>
 #include <functional>
+#include <memory>
+#include <unordered_set>
 
 #include <nix/shared.hh>
+#include <sqlite3pp.hh>
 
 #include "flox/core/exceptions.hh"
 #include "flox/core/types.hh"
@@ -26,6 +29,11 @@
 /* -------------------------------------------------------------------------- */
 
 namespace flox::pkgdb {
+
+/* -------------------------------------------------------------------------- */
+
+using row_id = uint64_t;  /**< A _row_ index in a SQLite3 table. */
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -202,12 +210,26 @@ struct PkgQuery : public PkgQueryArgs {
   std::string str() const;
 
   /**
-   * Filter a list of semantic version numbers by the range indicated in the
+   * Filter a set of semantic version numbers by the range indicated in the
    * @a semvers member variable.
-   * If @a semvers is unset, return the original list _as is_.
+   * If @a semvers is unset, return the original set _as is_.
    */
-    std::vector<std::string>
-  filterSemvers( const std::vector<std::string> & versions ) const;
+    std::unordered_set<std::string>
+  filterSemvers( const std::unordered_set<std::string> & versions ) const;
+
+  /**
+   * Create a bound SQLite query ready for execution.
+   * This does NOT perform filtering by `semver` which must be performed as a
+   * post-processing step.
+   */
+  std::shared_ptr<sqlite3pp::query> bind( sqlite3pp::database & db ) const;
+
+  /**
+   * Query a given database returning an ordered list of
+   * satisfactory `Packages.id`s.
+   * This performs `semver` filtering.
+   */
+  std::vector<row_id> execute( sqlite3pp::database & db ) const;
 
 };
 
