@@ -46,13 +46,13 @@ DbPathMixin::addDatabasePathOption( argparse::ArgumentParser & parser )
 
 /* -------------------------------------------------------------------------- */
 
-  void
-PkgDbMixin::openPkgDb()
+  template <> void
+PkgDbMixin<PkgDb>::openPkgDb()
 {
   if ( this->db != nullptr ) { return; }  /* Already loaded. */
   if ( ( this->flake != nullptr ) && this->dbPath.has_value() )
     {
-      this->db = std::make_unique<flox::pkgdb::PkgDb>(
+      this->db = std::make_unique<PkgDb>(
         this->flake->lockedFlake
       , (std::string) * this->dbPath
       );
@@ -63,7 +63,7 @@ PkgDbMixin::openPkgDb()
         this->flake->lockedFlake.getFingerprint()
       );
       std::filesystem::create_directories( this->dbPath->parent_path() );
-      this->db = std::make_unique<flox::pkgdb::PkgDb>(
+      this->db = std::make_unique<PkgDb>(
         this->flake->lockedFlake
       , (std::string) * this->dbPath
       );
@@ -71,9 +71,7 @@ PkgDbMixin::openPkgDb()
   else if ( this->dbPath.has_value() )
     {
       std::filesystem::create_directories( this->dbPath->parent_path() );
-      this->db = std::make_unique<flox::pkgdb::PkgDb>(
-        (std::string) * this->dbPath
-      );
+      this->db = std::make_unique<PkgDb>( (std::string) * this->dbPath );
     }
   else
     {
@@ -84,8 +82,49 @@ PkgDbMixin::openPkgDb()
 }
 
 
-  argparse::Argument &
-PkgDbMixin::addTargetArg( argparse::ArgumentParser & parser )
+/* -------------------------------------------------------------------------- */
+
+  template <> void
+PkgDbMixin<PkgDbReadOnly>::openPkgDb()
+{
+  if ( this->db != nullptr ) { return; }  /* Already loaded. */
+  if ( ( this->flake != nullptr ) && this->dbPath.has_value() )
+    {
+      this->db = std::make_unique<PkgDbReadOnly>(
+        this->flake->lockedFlake.getFingerprint()
+      , (std::string) * this->dbPath
+      );
+    }
+  else if ( this->flake != nullptr )
+    {
+      this->dbPath = flox::pkgdb::genPkgDbName(
+        this->flake->lockedFlake.getFingerprint()
+      );
+      std::filesystem::create_directories( this->dbPath->parent_path() );
+      this->db = std::make_unique<PkgDbReadOnly>(
+        this->flake->lockedFlake.getFingerprint()
+      , (std::string) * this->dbPath
+      );
+    }
+  else if ( this->dbPath.has_value() )
+    {
+      std::filesystem::create_directories( this->dbPath->parent_path() );
+      this->db =
+        std::make_unique<PkgDbReadOnly>( (std::string) * this->dbPath );
+    }
+  else
+    {
+      throw flox::FloxException(
+        "You must provide either a path to a database, or a flake-reference."
+      );
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  template <PkgDbType T> argparse::Argument &
+PkgDbMixin<T>::addTargetArg( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "target" )
                .help( "The source ( database path or flake-ref ) to read" )
@@ -106,6 +145,12 @@ PkgDbMixin::addTargetArg( argparse::ArgumentParser & parser )
                  }
                );
 }
+
+
+/* -------------------------------------------------------------------------- */
+
+template struct PkgDbMixin<PkgDbReadOnly>;
+template struct PkgDbMixin<PkgDb>;
 
 
 /* -------------------------------------------------------------------------- */

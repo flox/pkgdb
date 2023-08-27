@@ -18,6 +18,7 @@
 #include <memory>
 #include <unordered_set>
 
+#include <nlohmann/json.hpp>
 #include <nix/shared.hh>
 #include <sqlite3pp.hh>
 

@@ -40,15 +40,19 @@ struct DbPathMixin
 
 /* -------------------------------------------------------------------------- */
 
+  template <class T>
+concept PkgDbType = std::is_base_of<PkgDbReadOnly, T>::value;
+
 /**
  * Adds a package database and optionally an associated flake to a state blob.
  */
+  template <PkgDbType T>
 struct PkgDbMixin
   : virtual public DbPathMixin
   , virtual public command::FloxFlakeMixin
 {
 
-  std::unique_ptr<flox::pkgdb::PkgDb> db;
+  std::unique_ptr<T> db;
 
   /**
    * Open a @a flox::pkgdb::PkgDb connection using the command state's
@@ -69,7 +73,8 @@ struct PkgDbMixin
 /* -------------------------------------------------------------------------- */
 
 /** Scrape a flake prefix producing a SQLite3 database with package metadata. */
-struct ScrapeCommand : public PkgDbMixin, public command::AttrPathMixin {
+struct ScrapeCommand : public PkgDbMixin<PkgDb>, public command::AttrPathMixin
+{
   command::VerboseParser parser;
 
   bool force = false;  /**< Whether to force re-evaluation. */
@@ -103,7 +108,10 @@ struct ScrapeCommand : public PkgDbMixin, public command::AttrPathMixin {
  * - `pkgdb get db FLAKE-REF`
  *   + Print the absolute path to the associated flake's db.
  */
-struct GetCommand : public PkgDbMixin, public command::AttrPathMixin {
+struct GetCommand
+  : public PkgDbMixin<PkgDbReadOnly>
+  , public command::AttrPathMixin
+{
   command::VerboseParser parser;  /**< `get`       parser */
   command::VerboseParser pId;     /**< `get id`    parser  */
   command::VerboseParser pPath;   /**< `get path`  parser */
