@@ -19,10 +19,6 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
-class PkgDb;
-
-/* -------------------------------------------------------------------------- */
-
 /** Adds a package database path to a state blob. */
 struct DbPathMixin
   :         public command::CommandStateMixin
@@ -59,6 +55,7 @@ struct PkgDbMixin
    * @a dbPath or @a flake value.
    */
   void openPkgDb();
+
   inline void postProcessArgs() override { this->openPkgDb(); }
 
   /**
@@ -160,7 +157,7 @@ struct GetCommand
 
 /* -------------------------------------------------------------------------- */
 
-  }  /* End namespaces `flox::command' */
+  }  /* End namespaces `flox::pkgdb' */
 }  /* End namespaces `flox' */
 
 
