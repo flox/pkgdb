@@ -322,7 +322,7 @@ test_descendants0( flox::pkgdb::PkgDb & db )
 
 /* Tests `systems', `name', `pname', `version', and `subtree' filtering. */
   bool
-test_buildPkgQuery0( flox::pkgdb::PkgDb & db )
+test_PkgQuery0( flox::pkgdb::PkgDb & db )
 {
   clearTables( db );
 
@@ -350,26 +350,14 @@ test_buildPkgQuery0( flox::pkgdb::PkgDb & db )
                 )
       );
     }
-  flox::pkgdb::PkgQueryArgs qargs = {
-    .match             = std::nullopt
-  , .name              = std::nullopt
-  , .pname             = std::nullopt
-  , .version           = std::nullopt
-  , .semver            = std::nullopt
-  , .licenses          = std::nullopt
-  , .allowBroken       = false
-  , .allowUnfree       = true
-  , .preferPreReleases = false
-  , .subtrees          = std::nullopt
-  , .systems           = std::vector<std::string> { "x86_64-linux" }
-  , .stabilities       = std::nullopt
-  };
+  flox::pkgdb::PkgQueryArgs qargs;
+  qargs.systems = std::vector<std::string> { "x86_64-linux" };
 
   /* Run empty query */
   {
-    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
-    sqlite3pp::query qry( db.db, query.c_str() );
-    for ( const auto & [var, val] : binds )
+    flox::pkgdb::PkgQuery query( qargs );
+    sqlite3pp::query      qry( db.db, query.str().c_str() );
+    for ( const auto & [var, val] : query.binds )
       {
         qry.bind( var.c_str(), val, sqlite3pp::copy );
       }
@@ -380,10 +368,10 @@ test_buildPkgQuery0( flox::pkgdb::PkgDb & db )
   /* Run `pname' query */
   {
     qargs.pname = "hello";
-    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    flox::pkgdb::PkgQuery query( qargs );
     qargs.pname = std::nullopt;
-    sqlite3pp::query qry( db.db, query.c_str() );
-    for ( const auto & [var, val] : binds )
+    sqlite3pp::query qry( db.db, query.str().c_str() );
+    for ( const auto & [var, val] : query.binds )
       {
         qry.bind( var.c_str(), val, sqlite3pp::copy );
       }
@@ -394,10 +382,10 @@ test_buildPkgQuery0( flox::pkgdb::PkgDb & db )
   /* Run `version' query */
   {
     qargs.version = "2.12.1";
-    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    flox::pkgdb::PkgQuery query( qargs );
     qargs.version = std::nullopt;
-    sqlite3pp::query qry( db.db, query.c_str() );
-    for ( const auto & [var, val] : binds )
+    sqlite3pp::query qry( db.db, query.str().c_str() );
+    for ( const auto & [var, val] : query.binds )
       {
         qry.bind( var.c_str(), val, sqlite3pp::copy );
       }
@@ -408,10 +396,10 @@ test_buildPkgQuery0( flox::pkgdb::PkgDb & db )
   /* Run `name' query */
   {
     qargs.name = "hello-2.12.1";
-    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    flox::pkgdb::PkgQuery query( qargs );
     qargs.name = std::nullopt;
-    sqlite3pp::query qry( db.db, query.c_str() );
-    for ( const auto & [var, val] : binds )
+    sqlite3pp::query qry( db.db, query.str().c_str() );
+    for ( const auto & [var, val] : query.binds )
       {
         qry.bind( var.c_str(), val, sqlite3pp::copy );
       }
@@ -422,10 +410,10 @@ test_buildPkgQuery0( flox::pkgdb::PkgDb & db )
   /* Run `subtrees' query */
   {
     qargs.subtrees = std::vector<flox::subtree_type> { flox::ST_LEGACY };
-    auto [query, binds] = flox::pkgdb::buildPkgQuery( qargs );
+    flox::pkgdb::PkgQuery query( qargs );
     qargs.subtrees = std::nullopt;
-    sqlite3pp::query qry( db.db, query.c_str() );
-    for ( const auto & [var, val] : binds )
+    sqlite3pp::query qry( db.db, query.str().c_str() );
+    for ( const auto & [var, val] : query.binds )
       {
         qry.bind( var.c_str(), val, sqlite3pp::copy );
       }
@@ -970,7 +958,8 @@ main( int argc, char * argv[] )
 
     RUN_TEST( descendants0, db );
 
-    RUN_TEST( buildPkgQuery0, db );
+    RUN_TEST( PkgQuery0, db );
+
     RUN_TEST( buildPkgQuery1, db );
     RUN_TEST( buildPkgQuery2, db );
 
