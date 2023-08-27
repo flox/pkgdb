@@ -177,6 +177,16 @@ CREATE VIEW IF NOT EXISTS v_PackagesSearch AS SELECT
 , v_Semvers.minor
 , v_Semvers.patch
 , v_Semvers.preTag
+, ( iif( ( Packages.version IS NULL ), 3
+       , iif( ( Packages.semver IS NOT NULL ), 0
+         , iif( ( ( SELECT Packages.version = date( Packages.version ) )
+                  IS NOT NULL )
+              , 1
+              , 3
+              )
+         )
+       )
+  ) AS versionType
 , Packages.license
 , Packages.broken
 , iif( ( broken IS NULL ), 1, iif( broken, 2, 0 ) ) AS brokenRank

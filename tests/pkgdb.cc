@@ -803,6 +803,70 @@ test_getPackages1( flox::pkgdb::PkgDb & db )
 }
 
 
+/* -------------------------------------------------------------------------- */
+
+/** Tests `getPackages', particularly `version' ordering. */
+  bool
+test_getPackages2( flox::pkgdb::PkgDb & db )
+{
+  clearTables( db );
+
+  /* Make a package */
+  row_id linux = db.addOrGetAttrSetId(
+    flox::AttrPath { "packages", "x86_64-linux" }
+  );
+
+  sqlite3pp::command cmd( db.db, R"SQL(
+    INSERT INTO Packages (
+      id, parentId, attrName, name, pname, version, semver, outputs
+    ) VALUES
+      ( 1, :parentId, 'hello0', 'hello-2.12.0', 'hello', '2.12.0', '2.12.0'
+      , '["out"]' )
+    , ( 2, :parentId, 'hello1', 'hello-2.12.1-pre', 'hello', '2.12.1-pre'
+      , '2.12.1-pre', '["out"]' )
+    , ( 3, :parentId, 'hello2', 'hello-2.13', 'hello', '2.13', '2.13.0'
+      , '["out"]' )
+    , ( 4, :parentId, 'hello3', 'hello', 'hello', NULL, NULL, '["out"]' )
+    , ( 5, :parentId, 'hello4', 'hello-1917-10-26', 'hello', '1917-10-26', NULL
+      , '["out"]' )
+    , ( 6, :parentId, 'hello5', 'hello-1917-10-25', 'hello', '1917-10-25', NULL
+      , '["out"]' )
+    , ( 7, :parentId, 'hello6', 'hello-junk', 'hello', 'junk', NULL, '["out"]' )
+    , ( 8, :parentId, 'hello7', 'hello-trunk', 'hello', 'trunk', NULL
+      , '["out"]' )
+  )SQL" );
+  cmd.bind( ":parentId",      (long long) linux );
+  if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
+    {
+      throw flox::pkgdb::PkgDbException(
+        db.dbPath
+      , nix::fmt( "Failed to write Packages:(%d) %s"
+                , rc
+                , db.db.error_msg()
+                )
+      );
+    }
+
+  flox::pkgdb::PkgQueryArgs qargs;
+  qargs.subtrees = std::vector<flox::subtree_type> { flox::ST_PACKAGES };
+  qargs.systems  = std::vector<std::string> { "x86_64-linux" };
+
+  /* Test `preferPreReleases = false' ordering */
+  qargs.preferPreReleases = false;
+  EXPECT( db.getPackages( qargs ) ==
+          ( std::vector<row_id> { 3, 1, 2, 5, 6, 7, 8, 4 } )
+        );
+
+  qargs.preferPreReleases = true;
+  /* Test `preferPreReleases = true' ordering */
+  EXPECT( db.getPackages( qargs ) ==
+          ( std::vector<row_id> { 3, 2, 1, 5, 6, 7, 8, 4 } )
+        );
+
+  return true;
+}
+
+
 /* ========================================================================== */
 
   int
@@ -874,6 +938,7 @@ main( int argc, char * argv[] )
 
     RUN_TEST( getPackages0, db );
     RUN_TEST( getPackages1, db );
+    RUN_TEST( getPackages2, db );
 
   }
 

@@ -400,19 +400,30 @@ PkgQuery::init()
   , systemsRank ASC
   , stabilitiesRank ASC NULLS LAST
   , pname ASC
-  , major DESC NULLS LAST
-  , minor DESC NULLS LAST
-  , patch DESC NULLS LAST
   )SQL" );
-  /* Handle `preferPreReleases' */
+
+  this->addOrderBy( "versionType ASC" );
+
+  /* Handle `preferPreReleases' and semver parts. */
   if ( this->preferPreReleases )
     {
-      this->addOrderBy( "preTag DESC NULLS LAST" );
+      this->addOrderBy( R"SQL(
+        major  DESC NULLS LAST
+      , minor  DESC NULLS LAST
+      , patch  DESC NULLS LAST
+      , preTag DESC NULLS FIRST
+      )SQL" );
     }
   else
     {
-      this->addOrderBy( "preTag DESC NULLS FIRST" );
+      this->addOrderBy( R"SQL(
+        preTag DESC NULLS FIRST
+      , major  DESC NULLS LAST
+      , minor  DESC NULLS LAST
+      , patch  DESC NULLS LAST
+      )SQL" );
     }
+
   this->addOrderBy( R"SQL(
     versionDate DESC NULLS LAST
   -- Lexicographic as fallback for misc. versions
