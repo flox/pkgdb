@@ -134,6 +134,71 @@ PkgQueryArgs::validate() const
 /* -------------------------------------------------------------------------- */
 
   void
+PkgQueryArgs::clear()
+{
+  this->match             = std::nullopt;
+  this->name              = std::nullopt;
+  this->pname             = std::nullopt;
+  this->version           = std::nullopt;
+  this->semver            = std::nullopt;
+  this->licenses          = std::nullopt;
+  this->allowBroken       = false;
+  this->allowUnfree       = true;
+  this->preferPreReleases = false;
+  this->subtrees          = std::nullopt;
+  this->systems           = { nix::settings.thisSystem.get() };
+  this->stabilities       = std::nullopt;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
+from_json( const nlohmann::json & j, PkgQueryArgs & pqa )
+{
+  pqa.clear();
+  for ( const auto & [key, value] : j.items() )
+    {
+      if ( key == "match" )                  { pqa.match             = value; }
+      else if ( key == "name" )              { pqa.name              = value; }
+      else if ( key == "version" )           { pqa.version           = value; }
+      else if ( key == "semver" )            { pqa.semver            = value; }
+      else if ( key == "licenses" )          { pqa.licenses          = value; }
+      else if ( key == "allowBroken" )       { pqa.allowBroken       = value; }
+      else if ( key == "allowUnfree" )       { pqa.allowUnfree       = value; }
+      else if ( key == "preferPreReleases" ) { pqa.preferPreReleases = value; }
+      else if ( key == "systems" )           { pqa.systems           = value; }
+      else if ( key == "stabilities" )       { pqa.stabilities       = value; }
+      else if ( key == "subtrees" )
+        {
+          pqa.subtrees = std::vector<flox::subtree_type> {};
+          for ( const auto & subtree : value )
+            {
+              if ( subtree == "packages" )
+                {
+                  pqa.subtrees->emplace_back( flox::ST_PACKAGES );
+                }
+              else if ( subtree == "legacyPackages" )
+                {
+                  pqa.subtrees->emplace_back( flox::ST_LEGACY );
+                }
+              else if ( subtree == "catalog" )
+                {
+                  pqa.subtrees->emplace_back( flox::ST_CATALOG );
+                }
+              else /* Error is caught by `validate' later. */
+                {
+                  pqa.subtrees->emplace_back( flox::ST_NONE );
+                }
+            }
+        }
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
 PkgQuery::addSelection( std::string_view column )
 {
   if ( this->firstSelect ) { this->firstSelect = false; }
@@ -400,9 +465,8 @@ PkgQuery::init()
   , systemsRank ASC
   , stabilitiesRank ASC NULLS LAST
   , pname ASC
+  , versionType ASC
   )SQL" );
-
-  this->addOrderBy( "versionType ASC" );
 
   /* Handle `preferPreReleases' and semver parts. */
   if ( this->preferPreReleases )

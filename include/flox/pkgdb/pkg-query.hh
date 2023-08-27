@@ -103,6 +103,11 @@ struct PkgQueryArgs {
       {}
   };  /* End struct `PkgDbQueryInvalidArgException' */
 
+
+  /** Reset argset to its _default_ state. */
+  void clear();
+
+
   /**
    * Sanity check parameters.
    * Make sure `systems` are valid systems.
@@ -115,6 +120,9 @@ struct PkgQueryArgs {
   std::optional<PkgQueryInvalidArgException::error_code> validate() const;
 
 };  /* End struct `PkgQueryArgs' */
+
+
+void from_json( const nlohmann::json & j, PkgQueryArgs & pqa );
 
 
 /* -------------------------------------------------------------------------- */
