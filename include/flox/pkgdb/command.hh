@@ -72,6 +72,7 @@ struct PkgDbMixin
 /** Scrape a flake prefix producing a SQLite3 database with package metadata. */
 struct ScrapeCommand : public PkgDbMixin<PkgDb>, public command::AttrPathMixin
 {
+
   command::VerboseParser parser;
 
   bool force = false;  /**< Whether to force re-evaluation. */
@@ -109,6 +110,7 @@ struct GetCommand
   : public PkgDbMixin<PkgDbReadOnly>
   , public command::AttrPathMixin
 {
+
   command::VerboseParser parser;  /**< `get`       parser */
   command::VerboseParser pId;     /**< `get id`    parser  */
   command::VerboseParser pPath;   /**< `get path`  parser */
