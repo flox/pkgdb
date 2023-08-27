@@ -102,6 +102,33 @@ PkgDbReadOnly::getDbVersion()
 /* -------------------------------------------------------------------------- */
 
   bool
+PkgDbReadOnly::completedAttrSet( const flox::AttrPath & path )
+{
+  /* Lookup the `AttrName.id' ( if one exists ) */
+  row_id id = 0;
+  for ( const auto & a : path )
+    {
+      sqlite3pp::query qryId(
+        this->db
+      , "SELECT id, done FROM AttrSets "
+        "WHERE ( attrName = :attrName ) AND ( parent = :parent )"
+      );
+      qryId.bind( ":attrName", a, sqlite3pp::copy );
+      qryId.bind( ":parent", (long long) id );
+      auto i = qryId.begin();
+      if ( i == qryId.end() ) { return false; }  /* No such path. */
+      /* If a parent attrset is marked `done', then all of it's children
+       * are also considered done. */
+      if ( ( * i ).get<bool>( 1 ) ) { return true; }
+      id = ( * i ).get<long long>( 0 );
+    }
+  return false;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  bool
 PkgDbReadOnly::hasAttrSet( const flox::AttrPath & path )
 {
   /* Lookup the `AttrName.id' ( if one exists ) */

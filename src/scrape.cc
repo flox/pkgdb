@@ -54,10 +54,29 @@ ScrapeCommand::run()
 {
   this->postProcessArgs();
 
+  /* If `--force' was given, clear the `done' fields for the prefix and its
+   * descendants to force them to re-evaluate. */
+  {
+    row_id prefixId = this->db->addOrGetAttrSetId( this->attrPath );
+    sqlite3pp::command cmd( this->db->db, R"SQL(
+      UPDATE AttrSets SET done = FALSE WHERE id in (
+        WITH RECURSIVE Tree AS (
+          SELECT id, parent, 0 as depth FROM AttrSets
+          WHERE ( id = :root )
+          UNION ALL SELECT O.id, O.parent, ( Parent.depth + 1 ) AS depth
+          FROM AttrSets O
+          JOIN Tree AS Parent ON ( Parent.id = O.parent )
+        ) SELECT C.id FROM Tree AS C
+        JOIN AttrSets AS Parent ON ( C.parent = Parent.id )
+      )
+    )SQL" );
+    cmd.bind( ":root", (long long) prefixId );
+    cmd.execute();
+  }
+
   /* If we haven't processed this prefix before or `--force' was given, open
    * the eval cache and start scraping. */
-
-  if ( this->force || ( ! this->db->hasAttrSet( this->attrPath ) ) )
+  if ( ! this->db->completedAttrSet( this->attrPath ) )
     {
       flox::pkgdb::Todos todo;
       if ( flox::MaybeCursor root =
@@ -85,6 +104,25 @@ ScrapeCommand::run()
               );
               todo.pop();
             }
+
+          /* Mark the prefix and its descendants as "done" */
+          {
+            row_id prefixId = this->db->getAttrSetId( this->attrPath );
+            sqlite3pp::command cmd( this->db->db, R"SQL(
+              UPDATE AttrSets SET done = TRUE WHERE id in (
+                WITH RECURSIVE Tree AS (
+                  SELECT id, parent, 0 as depth FROM AttrSets
+                  WHERE ( id = :root )
+                  UNION ALL SELECT O.id, O.parent, ( Parent.depth + 1 ) AS depth
+                  FROM AttrSets O
+                  JOIN Tree AS Parent ON ( Parent.id = O.parent )
+                ) SELECT C.id FROM Tree AS C
+                JOIN AttrSets AS Parent ON ( C.parent = Parent.id )
+              )
+            )SQL" );
+            cmd.bind( ":root", (long long) prefixId );
+            cmd.execute();
+          }
         }
       catch( const nix::EvalError & )
         {
@@ -103,7 +141,7 @@ ScrapeCommand::run()
 
 /* -------------------------------------------------------------------------- */
 
-  }  /* End namespaces `flox::command' */
+  }  /* End namespaces `flox::pkgdb' */
 }  /* End namespaces `flox' */
 
 

@@ -359,6 +359,8 @@ PkgDb::scrape(       nix::SymbolTable & syms
              ,       Todos            & todo
              )
 {
+  /* If it has previously been scraped then bail out. */
+  if ( this->completedAttrSet( prefix ) ) { return; }
 
   bool tryRecur = prefix.front() != "packages";
 

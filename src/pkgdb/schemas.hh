@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS AttrSets (
   id        INTEGER       PRIMARY KEY
 , parent    INTEGER
 , attrName  VARCHAR( 255) NOT NULL
+, done      BOOL          NOT NULL DEFAULT FALSE
 , CONSTRAINT  UC_AttrSets UNIQUE ( id, parent )
 );
 

@@ -181,8 +181,15 @@ class PkgDbReadOnly {
     std::string getDbVersion();
 
     /**
-     * Check to see if database has packages under the attribute path
-     * prefix @a path.
+     * Get the `AttrSet.id` for a given path.
+     * @param path An attribute path prefix such as `packages.x86_64-linux` or
+     *             `legacyPackages.aarch64-darwin.python3Packages`.
+     * @return A unique `row_id` ( unsigned 64bit int ) associated with @a path.
+     */
+    row_id getAttrSetId( const flox::AttrPath & path );
+
+    /**
+     * Check to see if database has and attribute set at @a path.
      * @param path An attribute path prefix such as `packages.x86_64-linux` or
      *             `legacyPackages.aarch64-darwin.python3Packages`.
      * @return `true` iff the database has an `AttrSet` at @a path.
@@ -190,12 +197,14 @@ class PkgDbReadOnly {
     bool hasAttrSet( const flox::AttrPath & path );
 
     /**
-     * Get the `AttrSet.id` for a given path.
+     * Check to see if database has a complete list of packages under the
+     * prefix @a path.
      * @param path An attribute path prefix such as `packages.x86_64-linux` or
      *             `legacyPackages.aarch64-darwin.python3Packages`.
-     * @return A unique `row_id` ( unsigned 64bit int ) associated with @a path.
+     * @return `true` iff the database has completely scraped the `AttrSet` at
+     *          @a path.
      */
-    row_id getAttrSetId( const flox::AttrPath & path );
+    bool completedAttrSet( const flox::AttrPath & path );
 
     /**
      * Get the attribute path for a given `AttrSet.id`.
