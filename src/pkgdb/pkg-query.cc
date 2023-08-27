@@ -11,8 +11,6 @@
 #include <set>
 #include <list>
 
-#include <sql-builder/sql.hh>
-
 #include "flox/pkgdb.hh"
 #include "flox/pkgdb/pkg-query.hh"
 
