@@ -106,11 +106,17 @@ Descriptions are de-duplicated (for instance between two packages for separate a
 
 #### Details
 
-If they are defined explicitly, `pname` and `version` will be read from the corresponding attributes. Otherwise, they will be parsed from the `name`. If `version` can be converted to a semver, it will be.
+If they are defined explicitly, `pname` and `version` will be read from the
+corresponding attributes.
+Otherwise, they will be parsed from the `name`.
+If `version` can be converted to a semver, it will be.
 
-Note that the `attrName` for a package is the actual name in the tree. Therefore, for catalogs the `attrName` will be the package version, not the name.
+Note that the `attrName` for a package is the actual name in the tree.
+Therefore, for catalogs the `attrName` will be the package version, not
+the name.
 
-If `outputsToInstall` is not defined, it will be the set of `outputs` up to and including `"out"`.
+If `outputsToInstall` is not defined, it will be the set of `outputs` up to and
+including `"out"`.
 
 ```mermaid
 erDiagram

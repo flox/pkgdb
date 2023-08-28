@@ -27,21 +27,29 @@ namespace flox {
 /* -------------------------------------------------------------------------- */
 
 /** Parse a set of user's _inputs_, being flakes to search in. */
-struct InputsMixin : public command::CommandStateMixin {
+struct InputsMixin
+  :         public command::CommandStateMixin
+  , virtual public flox::NixState
+{
+
+  /** A flake and its associated package database.  */
+  struct Input {
+    flox::FloxFlake                       flake;
+    std::unique_ptr<pkgdb::PkgDbReadOnly> db;
+  };  /* End struct `InputsMixin::Input' */
 
   /**
-   * Mapping of short name aliases to flakes.
+   * Mapping of short name aliases to flakes/dbs.
    * A vector of pairs is used to preserve the user's ordering which effects
    * the order of search results.
    */
-  std::vector<std::pair<std::string, flox::FloxFlake>> inputs;
+  std::vector<std::pair<std::string, Input>> inputs;
 
   /**
-   * Mapping of short name aliases to package databases.
-   * A vector of pairs is used to preserve the user's ordering which effects
-   * the order of search results.
+   * Parse inputs from an inline JSON string, or JSON file.
+   * @a Input::a members are initialized, but no databases are opened yet.
    */
-  std::vector<std::pair<std::string, pkgdb::PkgDbReadOnly>> dbs;
+  void parseInputs( const std::string & jsonOrFile );
 
   /**
    * Open read-only database handles forall inputs.

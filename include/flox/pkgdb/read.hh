@@ -154,6 +154,8 @@ class PkgDbReadOnly {
       , fingerprint( nix::htSHA256 )
       , dbPath( dbPath )
     {
+      // FIXME: this never gets run because non-existent `dbPath' crashes
+      // in `db' constructor.
       if ( ! std::filesystem::exists( this->dbPath ) )
         {
           throw NoSuchDatabase( * this );
