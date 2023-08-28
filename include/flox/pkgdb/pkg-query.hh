@@ -182,6 +182,8 @@ struct PkgQuery : public PkgQueryArgs {
    */
   void init();
 
+  PkgQuery() { this->init(); }
+
   PkgQuery( const PkgQueryArgs & params ) : PkgQueryArgs( params )
   {
     this->init();

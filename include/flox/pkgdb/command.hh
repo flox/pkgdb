@@ -48,7 +48,7 @@ struct PkgDbMixin
   , virtual public command::FloxFlakeMixin
 {
 
-  std::unique_ptr<T> db;
+  std::shared_ptr<T> db;
 
   /**
    * Open a @a flox::pkgdb::PkgDb connection using the command state's

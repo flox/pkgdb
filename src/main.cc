@@ -13,6 +13,7 @@
 #include "flox/core/command.hh"
 #include "flox/pkgdb.hh"
 #include "flox/pkgdb/command.hh"
+#include "flox/search/command.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -31,6 +32,9 @@ main( int argc, char * argv[] )
 
   flox::pkgdb::GetCommand cmdGet;
   prog.add_subparser( cmdGet.parser );
+
+  flox::search::SearchCommand cmdSearch;
+  prog.add_subparser( cmdSearch.parser );
 
 
   /* Parse Args */
@@ -58,6 +62,10 @@ main( int argc, char * argv[] )
       if ( prog.is_subcommand_used( "get" ) )
         {
           return cmdGet.run();
+        }
+      if ( prog.is_subcommand_used( "search" ) )
+        {
+          return cmdSearch.run();
         }
     }
   catch( const std::exception & err )

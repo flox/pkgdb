@@ -63,7 +63,7 @@ InputsMixin::openDatabases()
         }
 
       /* Open a read-only copy. */
-      input.db = std::make_unique<pkgdb::PkgDbReadOnly>( (std::string) dbPath );
+      input.db = std::make_shared<pkgdb::PkgDbReadOnly>( (std::string) dbPath );
     }
 }
 
@@ -116,10 +116,15 @@ PkgQueryMixin::queryDb( pkgdb::PkgDbReadOnly & db )
 
 /* ========================================================================== */
 
-//SearchCommand::SearchCommand()
-//{
-//  // TODO
-//}
+SearchCommand::SearchCommand() : parser( "search" )
+{
+  this->parser.add_description(
+    "Search a set of flakes and emit a list satisfactory DB + "
+    "`Packages.id` pairs"
+  );
+  this->addInputsArg( this->parser );
+  this->addQueryArgs( this->parser );
+}
 
 
 /* -------------------------------------------------------------------------- */
@@ -127,6 +132,7 @@ PkgQueryMixin::queryDb( pkgdb::PkgDbReadOnly & db )
   void
 SearchCommand::scrapeIfNeeded()
 {
+  this->openDatabases();
   std::vector<subtree_type> subtrees = this->query.subtrees.value_or(
     std::vector<subtree_type> { ST_PACKAGES, ST_LEGACY, ST_CATALOG }
   );
@@ -135,14 +141,23 @@ SearchCommand::scrapeIfNeeded()
   );
 
   auto maybeScrape =
-    []( const flox::AttrPath & path, Input & input ) -> void
+    [&]( const flox::AttrPath & path, Input & input ) -> void
     {
       if ( input.db->completedAttrSet( path ) ) { return; }
-      pkgdb::ScrapeCommand cmd;
-      cmd.flake    = input.flake;
+      pkgdb::ScrapeCommand cmd {};
+      cmd.store    = (std::shared_ptr<nix::Store>)     this->getStore();
+      cmd.state    = (std::shared_ptr<nix::EvalState>) this->getState();
       cmd.dbPath   = { input.db->dbPath };
+      cmd.flake    = input.flake;
       cmd.attrPath = path;
-      if ( int rsl = cmd.run(); rsl != EXIT_SUCCESS )
+      cmd.openPkgDb();
+      /* Push `STDOUT' fd. */
+      std::ofstream    out( "/dev/null" );
+      std::streambuf * coutbuf = std::cout.rdbuf();
+      std::cout.rdbuf( out.rdbuf() );
+      int rsl = cmd.run();
+      std::cout.rdbuf( coutbuf );  /* Restore `STDOUT' */
+      if ( rsl != EXIT_SUCCESS )
         {
           throw FloxException( nix::fmt(
             "Encountered error scraping flake '%s' at prefix '%s'"
@@ -193,7 +208,11 @@ SearchCommand::scrapeIfNeeded()
   void
 SearchCommand::postProcessArgs()
 {
-  // TODO
+  static bool didPost = false;
+  if ( didPost ) { return; }
+  this->openDatabases();
+  this->scrapeIfNeeded();
+  didPost = true;
 }
 
 
@@ -202,8 +221,15 @@ SearchCommand::postProcessArgs()
   int
 SearchCommand::run()
 {
-  // TODO
-  return EXIT_FAILURE;
+  this->postProcessArgs();
+  for ( const auto & [name, input] : this->inputs )
+    {
+      for ( const auto & row : this->queryDb( * input.db ) )
+        {
+          std::cout << input.db->dbPath.string() << " " << row << std::endl;
+        }
+    }
+  return EXIT_SUCCESS;
 }
 
 

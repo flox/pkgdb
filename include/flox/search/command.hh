@@ -28,14 +28,14 @@ namespace flox {
 
 /** Parse a set of user's _inputs_, being flakes to search in. */
 struct InputsMixin
-  : public command::CommandStateMixin
-  , public flox::FloxFlakeParserMixin
+  : virtual public command::CommandStateMixin
+  ,         public flox::FloxFlakeParserMixin
 {
 
   /** A flake and its associated package database.  */
   struct Input {
     std::shared_ptr<flox::FloxFlake>      flake;
-    std::unique_ptr<pkgdb::PkgDbReadOnly> db;
+    std::shared_ptr<pkgdb::PkgDbReadOnly> db;
   };  /* End struct `InputsMixin::Input' */
 
   /**
@@ -74,7 +74,7 @@ struct InputsMixin
 // This exists for testing/development.
 
 /** Package query parser. */
-struct PkgQueryMixin : public command::CommandStateMixin {
+struct PkgQueryMixin : virtual public command::CommandStateMixin {
 
   pkgdb::PkgQuery query;
 
@@ -93,7 +93,9 @@ struct PkgQueryMixin : public command::CommandStateMixin {
 /* -------------------------------------------------------------------------- */
 
 /** Search flakes for packages satisfying a set of filters. */
-struct SearchCommand : public InputsMixin, public PkgQueryMixin
+struct SearchCommand
+  : public InputsMixin
+  , public PkgQueryMixin
 {
 
   command::VerboseParser parser;

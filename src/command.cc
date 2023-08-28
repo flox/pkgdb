@@ -70,7 +70,7 @@ FloxFlakeMixin::parseFloxFlake( const std::string & flakeRef )
     , nix::actUnknown
     , nix::fmt( "fetching flake '%s'", ref.to_string() )
     );
-    this->flake = std::make_unique<flox::FloxFlake>( this->getState(), ref );
+    this->flake = std::make_shared<flox::FloxFlake>( this->getState(), ref );
   }
 
   this->flake = this->FloxFlakeParserMixin::parseFloxFlake( flakeRef );

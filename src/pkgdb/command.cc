@@ -52,7 +52,7 @@ PkgDbMixin<PkgDb>::openPkgDb()
   if ( this->db != nullptr ) { return; }  /* Already loaded. */
   if ( ( this->flake != nullptr ) && this->dbPath.has_value() )
     {
-      this->db = std::make_unique<PkgDb>(
+      this->db = std::make_shared<PkgDb>(
         this->flake->lockedFlake
       , (std::string) * this->dbPath
       );
@@ -63,7 +63,7 @@ PkgDbMixin<PkgDb>::openPkgDb()
         this->flake->lockedFlake.getFingerprint()
       );
       std::filesystem::create_directories( this->dbPath->parent_path() );
-      this->db = std::make_unique<PkgDb>(
+      this->db = std::make_shared<PkgDb>(
         this->flake->lockedFlake
       , (std::string) * this->dbPath
       );
@@ -71,7 +71,7 @@ PkgDbMixin<PkgDb>::openPkgDb()
   else if ( this->dbPath.has_value() )
     {
       std::filesystem::create_directories( this->dbPath->parent_path() );
-      this->db = std::make_unique<PkgDb>( (std::string) * this->dbPath );
+      this->db = std::make_shared<PkgDb>( (std::string) * this->dbPath );
     }
   else
     {
@@ -90,7 +90,7 @@ PkgDbMixin<PkgDbReadOnly>::openPkgDb()
   if ( this->db != nullptr ) { return; }  /* Already loaded. */
   if ( ( this->flake != nullptr ) && this->dbPath.has_value() )
     {
-      this->db = std::make_unique<PkgDbReadOnly>(
+      this->db = std::make_shared<PkgDbReadOnly>(
         this->flake->lockedFlake.getFingerprint()
       , (std::string) * this->dbPath
       );
@@ -101,7 +101,7 @@ PkgDbMixin<PkgDbReadOnly>::openPkgDb()
         this->flake->lockedFlake.getFingerprint()
       );
       std::filesystem::create_directories( this->dbPath->parent_path() );
-      this->db = std::make_unique<PkgDbReadOnly>(
+      this->db = std::make_shared<PkgDbReadOnly>(
         this->flake->lockedFlake.getFingerprint()
       , (std::string) * this->dbPath
       );
@@ -110,7 +110,7 @@ PkgDbMixin<PkgDbReadOnly>::openPkgDb()
     {
       std::filesystem::create_directories( this->dbPath->parent_path() );
       this->db =
-        std::make_unique<PkgDbReadOnly>( (std::string) * this->dbPath );
+        std::make_shared<PkgDbReadOnly>( (std::string) * this->dbPath );
     }
   else
     {
