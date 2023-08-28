@@ -904,7 +904,7 @@ main( int argc, char * argv[] )
   , nix::actUnknown
   , nix::fmt( "fetching flake '%s'", ref.to_string() )
   );
-  flox::FloxFlake flake( (nix::ref<nix::EvalState>) nstate.state, ref );
+  flox::FloxFlake flake( nstate.getState(), ref );
   nix::logger->stopActivity( act.id );
 
 

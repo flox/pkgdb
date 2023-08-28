@@ -24,11 +24,11 @@ namespace flox {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Perform one time `nix` runtime setup.
+ * Perform one time `nix` global runtime setup.
  * You may safely call this function multiple times, after the first invocation
  * it is effectively a no-op.
  */
-void initNix( nix::Verbosity verbosity = nix::lvlInfo );
+void initNix();
 
 
 /* -------------------------------------------------------------------------- */
@@ -37,43 +37,87 @@ void initNix( nix::Verbosity verbosity = nix::lvlInfo );
  * Runtime state containing a `nix` store connection and a `nix` evaluator.
  */
 struct NixState {
+
+/* -------------------------------------------------------------------------- */
+
   public:
-    nix::ref<nix::Store>            store;
-    std::shared_ptr<nix::EvalState> state;
+
+    std::shared_ptr<nix::Store>     store;  /**< Nix store connection.   */
+    std::shared_ptr<nix::EvalState> state;  /**< Nix evaluator instance. */
+
+
+/* -------------------------------------------------------------------------- */
+
+  public:
 
     /**
      * Construct `NixState` from an existing store connection.
      * This may be useful if you wish to avoid a non-default store.
      * @param store An open `nix` store connection.
      * @param verbosity Verbosity level setting used throughout `nix` and
-     *                  `pkgdb` operations.
+     *                  `flox`/`pkgdb` operations.
      */
     NixState( nix::ref<nix::Store> store
             , nix::Verbosity       verbosity = nix::lvlInfo
             )
-      : store( store )
+      : store( (std::shared_ptr<nix::Store>) store )
     {
-      initNix( verbosity );
-      this->state = std::make_shared<nix::EvalState>( std::list<std::string> {}
-                                                    , this->store
-                                                    , this->store
-                                                    );
-      this->state->repair = nix::NoRepair;
+      nix::verbosity = verbosity;
+      initNix();
     }
 
     /**
      * Construct `NixState` using the systems default `nix` store.
      * @param verbosity Verbosity level setting used throughout `nix` and
-     *                  `pkgdb` operations.
+     *                  `flox`/`pkgdb` operations.
      */
     NixState( nix::Verbosity verbosity = nix::lvlInfo )
-      : NixState( ( [&]() {
-                      initNix( verbosity );
-                      return nix::ref<nix::Store>( nix::openStore() );
-                    } )()
-                , verbosity
-                )
-    {}
+    {
+      nix::verbosity = verbosity;
+      initNix();
+    }
+
+
+/* -------------------------------------------------------------------------- */
+
+  public:
+
+    /**
+     * Lazily open a `nix` store connection.
+     * Connection remains open for lifetime of object.
+     */
+      nix::ref<nix::Store>
+    getStore()
+    {
+      if ( this->store == nullptr )
+        {
+          this->store = nix::openStore();
+        }
+      return (nix::ref<nix::Store>) this->store;
+    }
+
+
+    /**
+     * Lazily open a `nix` evaluator.
+     * Evaluator remains open for lifetime of object.
+     */
+      nix::ref<nix::EvalState>
+    getState()
+    {
+      if ( this->state == nullptr )
+        {
+          this->state = std::make_shared<nix::EvalState>(
+            std::list<std::string> {}
+          , this->getStore()
+          , this->getStore()
+          );
+          this->state->repair = nix::NoRepair;
+        }
+      return (nix::ref<nix::EvalState>) this->state;
+    }
+
+
+/* -------------------------------------------------------------------------- */
 
 };  /* End class `NixState' */
 

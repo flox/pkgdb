@@ -28,21 +28,20 @@ namespace flox {
  * it is effectively a no-op.
  */
   void
-initNix( nix::Verbosity verbosity )
+initNix()
 {
   static bool didNixInit = false;
   if ( didNixInit ) { return; }
 
-  /* Assign verbosity to `nix' global setting */
-  nix::verbosity = verbosity;
   nix::setStackSize( ( ( (size_t) 64 ) * 1024 ) * 1024 );  // NOLINT
   nix::initNix();
   nix::initGC();
   /* Suppress benign warnings about `nix.conf'. */
+  nix::Verbosity oldVerbosity = nix::verbosity;
   nix::verbosity = nix::lvlError;
   nix::initPlugins();
   /* Restore verbosity to `nix' global setting */
-  nix::verbosity = verbosity;
+  nix::verbosity = oldVerbosity;
 
   nix::evalSettings.enableImportFromDerivation.setDefault( false );
   nix::evalSettings.pureEval.setDefault( true );
