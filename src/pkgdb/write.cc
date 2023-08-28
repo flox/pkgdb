@@ -353,6 +353,40 @@ PkgDb::addPackage( row_id           parentId
 /* -------------------------------------------------------------------------- */
 
   void
+PkgDb::setPrefixDone( const flox::AttrPath & prefix, bool done )
+{
+  row_id prefixId = this->addOrGetAttrSetId( prefix );
+  sqlite3pp::command cmd( this->db, R"SQL(
+    UPDATE AttrSets SET done = :done WHERE id in (
+      WITH RECURSIVE Tree AS (
+        SELECT id, parent, 0 as depth FROM AttrSets
+        WHERE ( id = :root )
+        UNION ALL SELECT O.id, O.parent, ( Parent.depth + 1 ) AS depth
+        FROM AttrSets O
+        JOIN Tree AS Parent ON ( Parent.id = O.parent )
+      ) SELECT C.id FROM Tree AS C
+      JOIN AttrSets AS Parent ON ( C.parent = Parent.id )
+    )
+  )SQL" );
+  cmd.bind( ":root", (long long) prefixId );
+  cmd.bind( ":done", done );
+  if ( sql_rc rc = cmd.execute(); isSQLError( rc ) )
+    {
+      throw PkgDbException(
+        this->dbPath
+      , nix::fmt( "Failed to set AttrSets.done for subtree '%s':(%d) %s"
+                , nix::concatStringsSep( ".", prefix )
+                , rc
+                , this->db.error_msg()
+                )
+      );
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
 PkgDb::scrape(       nix::SymbolTable & syms
              , const flox::AttrPath   & prefix
              ,       flox::Cursor       cursor

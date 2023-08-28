@@ -236,6 +236,20 @@ class PkgDb : public PkgDbReadOnly {
 
 
 /* -------------------------------------------------------------------------- */
+
+/* Updates */
+
+/**
+ * Update the `done` column for an attribute set and all of its
+ * children recursively.
+ * @param prefix Attribute set prefix to be updated.
+ * @param done Value to update `done` column to.
+ */
+void setPrefixDone( const flox::AttrPath & prefix, bool done );
+
+
+/* -------------------------------------------------------------------------- */
+
 /**
  * Scrape package definitions from an attribute set, adding any attributes
  * marked with `recurseForDerivatsions = true` to @a todo list.
