@@ -28,13 +28,13 @@ namespace flox {
 
 /** Parse a set of user's _inputs_, being flakes to search in. */
 struct InputsMixin
-  :         public command::CommandStateMixin
-  , virtual public flox::NixState
+  : public command::CommandStateMixin
+  , public flox::FloxFlakeParserMixin
 {
 
   /** A flake and its associated package database.  */
   struct Input {
-    flox::FloxFlake                       flake;
+    std::shared_ptr<flox::FloxFlake>      flake;
     std::unique_ptr<pkgdb::PkgDbReadOnly> db;
   };  /* End struct `InputsMixin::Input' */
 

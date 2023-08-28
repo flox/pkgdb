@@ -96,7 +96,7 @@ FloxFlake::openCursor( const AttrPath & path )
 }
 
 
-/* -------------------------------------------------------------------------- */
+/* ========================================================================== */
 
   std::shared_ptr<FloxFlake>
 FloxFlakeParserMixin::parseFloxFlake( const std::string & flakeRef )

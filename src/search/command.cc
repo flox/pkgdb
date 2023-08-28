@@ -35,13 +35,9 @@ InputsMixin::parseInputs( const std::string & jsonOrFile )
 
   for ( const auto & [name, flakeRef] :  inputsJSON.items() )
     {
-      nix::FlakeRef parsed = flox::parseFlakeRef( flakeRef.get<std::string>() );
       this->inputs.emplace_back( std::make_pair(
         name
-      , Input {
-          FloxFlake( (nix::ref<nix::EvalState>) this->state, parsed )
-        , nullptr
-        }
+      , Input { this->parseFloxFlakeJSON( flakeRef ), nullptr }
       ) );
     }
 }
@@ -55,14 +51,14 @@ InputsMixin::openDatabases()
   for ( auto & [name, input] : this->inputs )
     {
       std::filesystem::path dbPath = pkgdb::genPkgDbName(
-        input.flake.lockedFlake.getFingerprint()
+        input.flake->lockedFlake.getFingerprint()
       );
 
       /* Initialize DB if none exists. */
       if ( ! std::filesystem::exists( dbPath ) )
         {
           std::filesystem::create_directories( dbPath.parent_path() );
-          pkgdb::PkgDb( input.flake.lockedFlake, (std::string) dbPath );
+          pkgdb::PkgDb( input.flake->lockedFlake, (std::string) dbPath );
         }
 
       /* Open a read-only copy. */
