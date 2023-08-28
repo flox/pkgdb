@@ -13,6 +13,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "flox/core/util.hh"
 #include "flox/flox-flake.hh"
 #include "flox/pkgdb.hh"
 #include "flox/search/command.hh"
@@ -30,16 +31,7 @@ namespace flox {
   void
 InputsMixin::parseInputs( const std::string & jsonOrFile )
 {
-  nlohmann::json inputsJSON;
-  if ( jsonOrFile.find( '{' ) != jsonOrFile.npos )
-    {
-      inputsJSON = nlohmann::json::parse( jsonOrFile );
-    }
-  else
-    {
-      std::ifstream jfile( jsonOrFile );
-      inputsJSON = nlohmann::json::parse( jfile );
-    }
+  nlohmann::json inputsJSON = parseOrReadJSONObject( jsonOrFile );
 
   for ( const auto & [name, flakeRef] :  inputsJSON.items() )
     {

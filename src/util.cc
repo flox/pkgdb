@@ -9,12 +9,9 @@
 
 #include <cstdio>
 #include <filesystem>
+#include <fstream>
 
-#include <nix/shared.hh>
-#include <nix/eval.hh>
-#include <nix/eval-cache.hh>
-#include <nix/store-api.hh>
-#include <nix/flake/flake.hh>
+#include <nlohmann/json.hpp>
 
 #include "flox/core/util.hh"
 #include "flox/core/exceptions.hh"
@@ -23,38 +20,6 @@
 /* -------------------------------------------------------------------------- */
 
 namespace flox {
-
-/* -------------------------------------------------------------------------- */
-
-/**
- * Perform one time `nix` runtime setup.
- * You may safely call this function multiple times, after the first invocation
- * it is effectively a no-op.
- */
-  void
-initNix( nix::Verbosity verbosity )
-{
-  static bool didNixInit = false;
-  if ( didNixInit ) { return; }
-
-  /* Assign verbosity to `nix' global setting */
-  nix::verbosity = verbosity;
-  nix::setStackSize( ( ( (size_t) 64 ) * 1024 ) * 1024 );  // NOLINT
-  nix::initNix();
-  nix::initGC();
-  /* Suppress benign warnings about `nix.conf'. */
-  nix::verbosity = nix::lvlError;
-  nix::initPlugins();
-  /* Restore verbosity to `nix' global setting */
-  nix::verbosity = verbosity;
-
-  nix::evalSettings.enableImportFromDerivation.setDefault( false );
-  nix::evalSettings.pureEval.setDefault( true );
-  nix::evalSettings.useEvalCache.setDefault( true );
-
-  didNixInit = true;
-}
-
 
 /* -------------------------------------------------------------------------- */
 
@@ -94,6 +59,20 @@ isSQLiteDb( const std::string & dbPath )
   std::fclose( filep );  // NOLINT
   return std::string_view( & buffer[0] ) ==
          std::string_view( & expectedMagic[0] );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  nlohmann::json
+parseOrReadJSONObject( const std::string & jsonOrPath )
+{
+  if ( jsonOrPath.find( '{' ) != jsonOrPath.npos )
+    {
+      return nlohmann::json::parse( jsonOrPath );
+    }
+  std::ifstream jfile( jsonOrPath );
+  return nlohmann::json::parse( jsonOrPath );
 }
 
 
