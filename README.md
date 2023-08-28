@@ -136,6 +136,7 @@ erDiagram
     int id
     int parent
     text attrName
+    bool done
   }
   DbVersions {
     text name
