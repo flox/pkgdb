@@ -69,6 +69,10 @@ struct InputsMixin
 
 /* -------------------------------------------------------------------------- */
 
+// TODO: Preferences and Descriptors are completely different and you can't just
+// parse JSON for the "real" search.
+// This exists for testing/development.
+
 /** Package query parser. */
 struct PkgQueryMixin : public command::CommandStateMixin {
 
@@ -76,13 +80,6 @@ struct PkgQueryMixin : public command::CommandStateMixin {
 
   /** Add `query` argument to any parser to construct a @a pkgdb::PkgQuery. */
   argparse::Argument & addQueryArgs( argparse::ArgumentParser & parser );
-
-  /**
-   * Initializes @a pkgdb::PkgQuery statement from parsed parameters preparing
-   * it for execution on databases. */
-  void initQuery();
-
-  inline void postProcessArgs() override { this->initQuery(); }
 
   /**
    * Run query on a @a pkgdb::PkgDbReadOnly database.

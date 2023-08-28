@@ -17,6 +17,7 @@
 #include "flox/flox-flake.hh"
 #include "flox/pkgdb.hh"
 #include "flox/search/command.hh"
+#include "flox/pkgdb/command.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -106,15 +107,6 @@ PkgQueryMixin::addQueryArgs( argparse::ArgumentParser & parser )
 
 /* -------------------------------------------------------------------------- */
 
-  void
-PkgQueryMixin::initQuery()
-{
-  // TODO
-}
-
-
-/* -------------------------------------------------------------------------- */
-
   std::vector<pkgdb::row_id>
 PkgQueryMixin::queryDb( pkgdb::PkgDbReadOnly & db )
 {
@@ -135,7 +127,64 @@ PkgQueryMixin::queryDb( pkgdb::PkgDbReadOnly & db )
   void
 SearchCommand::scrapeIfNeeded()
 {
-  // TODO
+  std::vector<subtree_type> subtrees = this->query.subtrees.value_or(
+    std::vector<subtree_type> { ST_PACKAGES, ST_LEGACY, ST_CATALOG }
+  );
+  std::vector<std::string> stabilities = this->query.stabilities.value_or(
+    std::vector<std::string> { "stable" }
+  );
+
+  auto maybeScrape =
+    []( const flox::AttrPath & path, Input & input ) -> void
+    {
+      if ( input.db->completedAttrSet( path ) ) { return; }
+      pkgdb::ScrapeCommand cmd;
+      cmd.flake    = input.flake;
+      cmd.dbPath   = { input.db->dbPath };
+      cmd.attrPath = path;
+      if ( int rsl = cmd.run(); rsl != EXIT_SUCCESS )
+        {
+          throw FloxException( nix::fmt(
+            "Encountered error scraping flake '%s' at prefix '%s'"
+          , input.flake->lockedFlake.flake.lockedRef.to_string()
+          , nix::concatStringsSep( ".", path )
+          ) );
+        }
+    };
+
+  for ( const auto & subtree : subtrees )
+    {
+      flox::AttrPath prefix;
+      switch ( subtree )
+        {
+          case ST_PACKAGES: prefix = { "packages" };         break;
+          case ST_LEGACY:   prefix = { "legacyPackages" };   break;
+          case ST_CATALOG:  prefix = { "catalog" };          break;
+          default: throw FloxException( "Invalid subtree" ); break;
+        }
+      for ( const auto & system : this->query.systems )
+        {
+          prefix.emplace_back( system );
+          if ( subtree != ST_CATALOG )
+            {
+              for ( auto & [name, input] : this->inputs )
+                {
+                  maybeScrape( prefix, input );
+                }
+            }
+          else
+            {
+              for ( const auto & stability : stabilities )
+                {
+                  prefix.emplace_back( stability );
+                  for ( auto & [name, input] : this->inputs )
+                    {
+                      maybeScrape( prefix, input );
+                    }
+                }
+            }
+        }
+    }
 }
 
 
