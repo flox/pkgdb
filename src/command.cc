@@ -62,8 +62,8 @@ VerboseParser::VerboseParser( const std::string & name
   void
 FloxFlakeMixin::parseFloxFlake( const std::string & flakeRef )
 {
-  nix::FlakeRef ref = flox::parseFlakeRef( flakeRef );
   {
+    nix::FlakeRef ref = flox::parseFlakeRef( flakeRef );
     nix::Activity act(
       * nix::logger
     , nix::lvlInfo
@@ -72,6 +72,8 @@ FloxFlakeMixin::parseFloxFlake( const std::string & flakeRef )
     );
     this->flake = std::make_unique<flox::FloxFlake>( this->getState(), ref );
   }
+
+  this->flake = this->FloxFlakeParserMixin::parseFloxFlake( flakeRef );
 
   if ( ! this->flake->lockedFlake.flake.lockedRef.input.hasAllInfo()
      )

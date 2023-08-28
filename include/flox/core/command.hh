@@ -17,7 +17,9 @@
 
 #include "flox/core/types.hh"
 #include "flox/core/nix-state.hh"
+#include "flox/core/util.hh"
 #include "flox/flox-flake.hh"
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -63,11 +65,11 @@ struct CommandStateMixin {
 
 /** Extend a command's state blob with a @a flox::FloxFlake. */
 struct FloxFlakeMixin
-  :         public CommandStateMixin
-  , virtual public flox::NixState
+  : public CommandStateMixin
+  , public FloxFlakeParserMixin
 {
 
-  std::unique_ptr<flox::FloxFlake> flake;
+  std::shared_ptr<flox::FloxFlake> flake;
 
   /**
    * Populate the command state's @a flake with the a flake reference.

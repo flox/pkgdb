@@ -12,7 +12,6 @@
 #include <nix/logging.hh>
 #include <nix/store-api.hh>
 #include <nix/eval-cache.hh>
-#include <nix/flake/flakeref.hh>
 
 #include <nlohmann/json.hpp>
 

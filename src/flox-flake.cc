@@ -12,6 +12,9 @@
 #include <nix/eval-inline.hh>
 
 #include "flox/flox-flake.hh"
+#include "flox/core/util.hh"
+#include "flox/core/exceptions.hh"
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -90,6 +93,61 @@ FloxFlake::openCursor( const AttrPath & path )
   Cursor cur = this->openEvalCache()->getRoot();
   for ( const auto & part : path ) { cur = cur->getAttr( part ); }
   return cur;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  std::shared_ptr<FloxFlake>
+FloxFlakeParserMixin::parseFloxFlake( const std::string & flakeRef )
+{
+  return std::make_shared<FloxFlake>(
+    this->getState()
+  , flox::parseFlakeRef( flakeRef )
+  );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  std::shared_ptr<FloxFlake>
+FloxFlakeParserMixin::parseFloxFlakeJSON( const nlohmann::json & flakeRef )
+{
+  auto report = []( std::string_view type ) -> void
+  {
+    throw FloxException( nix::fmt(
+      "Flake references may only be parsed from JSON objects or strings, "
+      "but got JSON type '%s'."
+    , type
+    ) );
+  };
+
+  switch ( flakeRef.type() )
+    {
+      case nlohmann::json::value_t::object:
+        return std::make_shared<FloxFlake>(
+          this->getState()
+        , nix::FlakeRef::fromAttrs( nix::fetchers::jsonToAttrs( flakeRef ) )
+        );
+        break;
+      case nlohmann::json::value_t::string:
+        return std::make_shared<FloxFlake>(
+          this->getState()
+        , nix::parseFlakeRef( flakeRef.get<std::string>() )
+        );
+        break;
+      case nlohmann::json::value_t::null:    report( "null" );    break;
+      case nlohmann::json::value_t::array:   report( "array" );   break;
+      case nlohmann::json::value_t::boolean: report( "boolean" ); break;
+      case nlohmann::json::value_t::number_integer:
+      case nlohmann::json::value_t::number_unsigned:
+      case nlohmann::json::value_t::number_float:
+        report( "number" );
+        break;
+      default: report( "???" ); break;
+    }
+
+  return nullptr;  /* Unreachable */
 }
 
 
