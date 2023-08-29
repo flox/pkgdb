@@ -127,20 +127,31 @@ void from_json( const nlohmann::json & jqa, PkgQueryArgs & pqa );
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * A query used to lookup packages in a database.
+ * This uses a combination of SQL statements and post processing with
+ * `node-semver` to produce a list of satisfactory packages.
+ */
 class PkgQuery : public PkgQueryArgs {
 
   private:
-    std::string from = "v_PackagesSearch";
 
+    /** Stream used to build up the `SELECT` block. */
     std::stringstream selects;
-    bool              firstSelect = true;
+    /** Indicates if @a selects is empty so we know whether to add separator. */
+    bool firstSelect = true;
 
+    /** Stream used to build up the `ORDER BY` block. */
     std::stringstream orders;
-    bool              firstOrder = true;
+    /** Indicates if @a orders is empty so we know whether to add separator. */
+    bool firstOrder = true;
 
+    /** Stream used to build up the `WHERE` block. */
     std::stringstream wheres;
-    bool              firstWhere = true;
+    /** Indicates if @a wheres is empty so we know whether to add separator. */
+    bool firstWhere = true;
 
+    /** `( <PARAM-NAME>, <VALUE> )` pairs that need to be _bound_ by SQLite3. */
     std::unordered_map<std::string, std::string> binds;
 
     /**
@@ -153,6 +164,9 @@ class PkgQuery : public PkgQueryArgs {
      * `pkgdb` semantic version updates.
      */
     std::vector<std::string> exportedColumns = { "id", "semver" };
+
+
+    /* Member Functions */
 
     /**
      * Clear member @a PkgQuery member variables of any state from past
@@ -216,24 +230,10 @@ class PkgQuery : public PkgQueryArgs {
       this->init();
     }
 
-    PkgQuery( PkgQueryArgs && params ) : PkgQueryArgs( std::move( params ) )
-    {
-      this->init();
-    }
-
     PkgQuery( const PkgQueryArgs             & params
             , const std::vector<std::string> & exportedColumns
             )
       : PkgQueryArgs( params ), exportedColumns( exportedColumns )
-    {
-      this->init();
-    }
-
-    PkgQuery( PkgQueryArgs             && params
-            , std::vector<std::string> && exportedColumns
-            )
-      : PkgQueryArgs( std::move( params ) )
-      , exportedColumns( std::move( exportedColumns ) )
     {
       this->init();
     }
@@ -251,6 +251,7 @@ class PkgQuery : public PkgQueryArgs {
      * Create a bound SQLite query ready for execution.
      * This does NOT perform filtering by `semver` which must be performed as a
      * post-processing step.
+     * Unlike @a execute() this routine allows the caller to iterate over rows.
      */
     std::shared_ptr<sqlite3pp::query> bind( sqlite3pp::database & pdb ) const;
 

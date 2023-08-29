@@ -557,7 +557,7 @@ PkgQuery::str() const
   qry << " FROM ( SELECT ";
   if ( this->firstSelect ) { qry << "*"; }
   else                     { qry << this->selects.str(); }
-  qry << " FROM " << this->from;
+  qry << " FROM v_PackagesSearch";
   if ( ! this->firstWhere ) { qry << " WHERE " << this->wheres.str(); }
   if ( ! this->firstOrder ) { qry << " ORDER BY " << this->orders.str(); }
   qry << " )";
