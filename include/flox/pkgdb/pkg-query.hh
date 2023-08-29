@@ -183,6 +183,9 @@ class PkgQuery : public PkgQueryArgs {
       std::unordered_set<std::string>
     filterSemvers( const std::unordered_set<std::string> & versions ) const;
 
+    /** A helper of @a init() which handles `match` filtering/ranking. */
+    void initMatch();
+
     /** A helper of @a init() which handles `subtrees` filtering/ranking. */
     void initSubtrees();
 

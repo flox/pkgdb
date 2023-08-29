@@ -257,6 +257,52 @@ addIn( std::stringstream & oss, const std::vector<std::string> & elems )
 /* -------------------------------------------------------------------------- */
 
   void
+PkgQuery::initMatch()
+{
+  if ( this->match.has_value() && ( ! this->match->empty() ) )
+    {
+      this->addWhere(
+        "( pname LIKE :match ) OR ( description LIKE :match )"
+      );
+
+      /* We _rank_ the strength of a match from 0-3 based on exact and partial
+       * matches of `pname` and `description` columns.
+       * Because we intend to use `bind` to handle quoting the user's match
+       * string, we add `%<STRING>%` before binding so that `LIKE` works, and
+       * need to manually add those characters below when testing for exact
+       * matches of the `pname` column.
+       * - 0 : Exact `pname` match.
+       * - 1 : Partial matches on both `pname` and `description`.
+       * - 2 : Partial match on `pname`.
+       * - 3 : Partial match on `description`.
+       * Our `WHERE` statement above ensures that at least one of these rankings
+       * will be true forall rows.
+       */
+      std::stringstream matcher;
+      matcher << "iif( ( ( '%' || LOWER( pname ) || '%' ) = LOWER( :match ) )"
+              << ", " << MS_EXACT_PNAME
+              << ", iif( ( pname LIKE :match )"
+              << ", iif( ( description LIKE :match  ), "
+              << MS_PARTIAL_PNAME_DESC << ", "
+              << MS_PARTIAL_PNAME << " ), " << MS_PARTIAL_DESC
+              << " ) ) AS matchStrength";
+      this->addSelection( matcher.str() );
+      /* Add `%` before binding so `LIKE` works. */
+      binds.emplace( ":match", "%" +  ( * this->match ) + "%" );
+    }
+  else
+    {
+      /* Add a bogus `matchStrength` so that later `ORDER BY` works. */
+      std::stringstream matcher;
+      matcher << MS_NONE << " AS matchStrength";
+      this->addSelection( matcher.str() );
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
 PkgQuery::initSubtrees()
 {
   /* Handle `subtrees' filtering. */
@@ -444,44 +490,7 @@ PkgQuery::init()
   this->addSelection( "*" );
 
   /* Handle fuzzy matching filtering. */
-  if ( this->match.has_value() && ( ! this->match->empty() ) )
-    {
-      this->addWhere(
-        "( pname LIKE :match ) OR ( description LIKE :match )"
-      );
-
-      /* We _rank_ the strength of a match from 0-3 based on exact and partial
-       * matches of `pname` and `description` columns.
-       * Because we intend to use `bind` to handle quoting the user's match
-       * string, we add `%<STRING>%` before binding so that `LIKE` works, and
-       * need to manually add those characters below when testing for exact
-       * matches of the `pname` column.
-       * - 0 : Exact `pname` match.
-       * - 1 : Partial matches on both `pname` and `description`.
-       * - 2 : Partial match on `pname`.
-       * - 3 : Partial match on `description`.
-       * Our `WHERE` statement above ensures that at least one of these rankings
-       * will be true forall rows.
-       */
-      std::stringstream matcher;
-      matcher << "iif( ( ( '%' || LOWER( pname ) || '%' ) = LOWER( :match ) )"
-              << ", " << MS_EXACT_PNAME
-              << ", iif( ( pname LIKE :match )"
-              << ", iif( ( description LIKE :match  ), "
-              << MS_PARTIAL_PNAME_DESC << ", "
-              << MS_PARTIAL_PNAME << " ), " << MS_PARTIAL_DESC
-              << " ) ) AS matchStrength";
-      this->addSelection( matcher.str() );
-      /* Add `%` before binding so `LIKE` works. */
-      binds.emplace( ":match", "%" +  ( * this->match ) + "%" );
-    }
-  else
-    {
-      /* Add a bogus `matchStrength` so that later `ORDER BY` works. */
-      std::stringstream matcher;
-      matcher << MS_NONE << " AS matchStrength";
-      this->addSelection( matcher.str() );
-    }
+  this->initMatch();
 
   /* Handle `pname' filtering. */
   if ( this->pname.has_value() )

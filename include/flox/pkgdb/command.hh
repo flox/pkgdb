@@ -50,7 +50,7 @@ struct PkgDbMixin
 
   std::shared_ptr<T> db;
 
-  virtual ~PkgDbMixin<T>() = default;
+  virtual ~PkgDbMixin() = default;
 
   /**
    * Open a @a flox::pkgdb::PkgDb connection using the command state's
