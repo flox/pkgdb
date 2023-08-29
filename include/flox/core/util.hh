@@ -58,7 +58,7 @@ namespace flox {
 /* -------------------------------------------------------------------------- */
 
 /** Systems to resolve/search in. */
-  static const std::vector<std::string> &
+  inline static const std::vector<std::string> &
 getDefaultSystems()
 {
   static const std::vector<std::string> defaultSystems = {
@@ -69,7 +69,7 @@ getDefaultSystems()
 
 
 /** `flake' subtrees to resolve/search in. */
-  static const std::vector<std::string> &
+  inline static const std::vector<std::string> &
 getDefaultSubtrees()
 {
   static const std::vector<std::string> defaultSubtrees = {
@@ -80,7 +80,7 @@ getDefaultSubtrees()
 
 
 /** Catalog stabilities to resolve/search in. */
-  static const std::vector<std::string> &
+  inline static const std::vector<std::string> &
 getDefaultCatalogStabilities()
 {
   static const std::vector<std::string> defaultCatalogStabilities = {

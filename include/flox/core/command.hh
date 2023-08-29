@@ -55,10 +55,11 @@ struct VerboseParser : public argparse::ArgumentParser {
 /** Virtual class for _mixins_ which extend a command's state blob */
 struct CommandStateMixin {
 
-  virtual ~CommandStateMixin() = default;
+  constexpr CommandStateMixin()                             = default;
+  constexpr CommandStateMixin( const CommandStateMixin &  ) = default;
+  constexpr CommandStateMixin(       CommandStateMixin && ) = default;
 
-  CommandStateMixin( const CommandStateMixin &  ) = default;
-  CommandStateMixin(       CommandStateMixin && ) = default;
+  virtual ~CommandStateMixin() = default;
 
   CommandStateMixin & operator=( const CommandStateMixin &  ) = default;
   CommandStateMixin & operator=(       CommandStateMixin && ) = default;
