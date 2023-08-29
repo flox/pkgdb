@@ -9,17 +9,12 @@
 
 #pragma once
 
-#include "flox/pkgdb.hh"
+#include "flox/pkgdb/write.hh"
 #include "flox/core/command.hh"
 
 /* -------------------------------------------------------------------------- */
 
-namespace flox {
-  namespace pkgdb {
-
-/* -------------------------------------------------------------------------- */
-
-class PkgDb;
+namespace flox::pkgdb {
 
 /* -------------------------------------------------------------------------- */
 
@@ -40,21 +35,26 @@ struct DbPathMixin
 
 /* -------------------------------------------------------------------------- */
 
+  template <class T>
+concept PkgDbType = std::is_base_of<PkgDbReadOnly, T>::value;
+
 /**
  * Adds a package database and optionally an associated flake to a state blob.
  */
+  template <PkgDbType T>
 struct PkgDbMixin
   : virtual public DbPathMixin
   , virtual public command::FloxFlakeMixin
 {
 
-  std::unique_ptr<flox::pkgdb::PkgDb> db;
+  std::shared_ptr<T> db;
 
   /**
    * Open a @a flox::pkgdb::PkgDb connection using the command state's
    * @a dbPath or @a flake value.
    */
   void openPkgDb();
+
   inline void postProcessArgs() override { this->openPkgDb(); }
 
   /**
@@ -69,7 +69,11 @@ struct PkgDbMixin
 /* -------------------------------------------------------------------------- */
 
 /** Scrape a flake prefix producing a SQLite3 database with package metadata. */
-struct ScrapeCommand : public PkgDbMixin, public command::AttrPathMixin {
+struct ScrapeCommand
+  : public PkgDbMixin<PkgDb>
+  , public command::AttrPathMixin
+{
+
   command::VerboseParser parser;
 
   bool force = false;  /**< Whether to force re-evaluation. */
@@ -96,6 +100,8 @@ struct ScrapeCommand : public PkgDbMixin, public command::AttrPathMixin {
  * This subcommand has additional subcommands:
  * - `pkgdb get id [--pkg] DB-PATH ATTR-PATH...`
  *   + Lookup `(AttrSet|Packages).id` for `ATTR-PATH`.
+ * - `pkgdb get done DB-PATH ATTR-PATH...`
+ *   + Lookup whether `AttrPath` has been scraped.
  * - `pkgdb get path [--pkg] DB-PATH ID`
  *   + Lookup `AttrPath` for `(AttrSet|Packages).id`.
  * - `pkgdb get flake DB-PATH`
@@ -103,12 +109,17 @@ struct ScrapeCommand : public PkgDbMixin, public command::AttrPathMixin {
  * - `pkgdb get db FLAKE-REF`
  *   + Print the absolute path to the associated flake's db.
  */
-struct GetCommand : public PkgDbMixin, public command::AttrPathMixin {
-  command::VerboseParser parser;  /**< `get`       parser */
-  command::VerboseParser pId;     /**< `get id`    parser  */
-  command::VerboseParser pPath;   /**< `get path`  parser */
-  command::VerboseParser pFlake;  /**< `get flake` parser */
-  command::VerboseParser pDb;     /**< `get db`    parser */
+struct GetCommand
+  : public PkgDbMixin<PkgDbReadOnly>
+  , public command::AttrPathMixin
+{
+
+  command::VerboseParser parser;          /**< `get`       parser */
+  command::VerboseParser pId;             /**< `get id`    parser */
+  command::VerboseParser pPath;           /**< `get path`  parser */
+  command::VerboseParser pDone;           /**< `get done`  parser */
+  command::VerboseParser pFlake;          /**< `get flake` parser */
+  command::VerboseParser pDb;             /**< `get db`    parser */
   bool                   isPkg  = false;
   row_id                 id     = 0;
 
@@ -122,6 +133,12 @@ struct GetCommand : public PkgDbMixin, public command::AttrPathMixin {
    * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
    */
   int runId();
+
+  /**
+   * Execute the `get done` routine.
+   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+   */
+  int runDone();
 
   /**
    * Execute the `get path` routine.
@@ -152,8 +169,7 @@ struct GetCommand : public PkgDbMixin, public command::AttrPathMixin {
 
 /* -------------------------------------------------------------------------- */
 
-  }  /* End namespaces `flox::command' */
-}  /* End namespaces `flox' */
+}  /* End namespaces `flox::pkgdb' */
 
 
 /* -------------------------------------------------------------------------- *

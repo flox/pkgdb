@@ -28,6 +28,7 @@ SED        ?= sed
 TEST       ?= test
 DOXYGEN    ?= doxygen
 BEAR       ?= bear
+TIDY       ?= clang-tidy
 
 
 # ---------------------------------------------------------------------------- #
@@ -61,15 +62,19 @@ INCLUDEDIR ?= $(PREFIX)/include
 LIBFLOXPKGDB = libflox-pkgdb$(libExt)
 
 LIBS           =  $(LIBFLOXPKGDB)
-COMMON_HEADERS =  $(wildcard include/*.hh) $(wildcard include/flox/*.hh)
-COMMON_HEADERS += $(wildcard include/flox/core/*.hh)
-SRCS           =  $(wildcard src/*.cc) $(wildcard src/pkgdb/*.cc)
+COMMON_HEADERS =  $(wildcard include/*.hh include/**/*.hh)
+SRCS           =  $(wildcard src/*.cc) $(wildcard src/**/*.cc)
 bin_SRCS       =  $(addprefix src/,main.cc scrape.cc get.cc pkgdb/command.cc)
+bin_SRCS       += $(addprefix src/,search/command.cc)
 lib_SRCS       =  $(filter-out $(bin_SRCS),$(SRCS))
 test_SRCS      =  $(wildcard tests/*.cc)
 BINS           =  pkgdb
 TEST_UTILS     =  tests/is_sqlite3
 TESTS          =  $(filter-out $(TEST_UTILS),$(test_SRCS:.cc=))
+CLEANDIRS      =
+CLEANFILES     =  $(SRCS:.cc=.o) $(test_SRCS:.cc=.o)
+CLEANFILES     += $(addprefix bin/,$(BINS)) $(addprefix lib/,$(LIBS))
+CLEANFILES     += $(TESTS) $(TEST_UTILS)
 
 
 # ---------------------------------------------------------------------------- #
@@ -177,15 +182,10 @@ tests:   $(TESTS) $(TEST_UTILS)
 # ---------------------------------------------------------------------------- #
 
 clean: FORCE
-	-$(RM) $(addprefix bin/,$(BINS))
-	-$(RM) $(addprefix lib/,$(LIBS))
-	-$(RM) src/*.o tests/*.o
+	-$(RM) $(CLEANFILES)
+	-$(RM) -r $(CLEANDIRS)
 	-$(RM) result
-	-$(RM) -r $(PREFIX)
-	-$(RM) $(TESTS) $(TEST_UTILS)
 	-$(RM) gmon.out *.log
-	-$(RM) $(addprefix docs/,*.png *.html *.svg *.css *.js)
-	-$(RM) -r docs/search
 
 
 # ---------------------------------------------------------------------------- #
@@ -246,6 +246,38 @@ install-include:                                                    \
 
 # ---------------------------------------------------------------------------- #
 
+.PHONY: ccls cdb
+ccls: .ccls
+cdb: compile_commands.json
+
+.ccls: FORCE
+	echo 'clang' > "$@";
+	{                                                                     \
+	  if [[ -n "$(NIX_CC)" ]]; then                                       \
+	    $(CAT) "$(NIX_CC)/nix-support/libc-cflags";                       \
+	    $(CAT) "$(NIX_CC)/nix-support/libcxx-cxxflags";                   \
+	  fi;                                                                 \
+	  echo $(CXXFLAGS) $(sqlite3_CFLAGS) $(nljson_CFLAGS) $(nix_CFLAGS);  \
+	  echo $(nljson_CFLAGS) $(argparse_CFLAGS) $(sqlite3pp_CFLAGS);       \
+	}|$(TR) ' ' '\n'|$(SED) 's/-std=/%cpp -std=/' >> "$@";
+
+
+compile_commands.json: flake.nix flake.lock pkg-fun.nix
+compile_commands.json: $(lastword $(MAKEFILE_LIST))
+compile_commands.json: $(COMMON_HEADERS) $(SRCS) $(test_SRCS)
+	-$(MAKE) -C $(MAKEFILE_DIR) clean;
+	$(BEAR) --output "$@" -- $(MAKE) -C $(MAKEFILE_DIR) -j all;
+
+
+# ---------------------------------------------------------------------------- #
+
+.PHONY: lint
+lint: compile_commands.json $(COMMON_HEADERS) $(SRCS) $(test_SRCS)
+	$(TIDY) $(filter-out compile_commands.json,$^)
+
+
+# ---------------------------------------------------------------------------- #
+
 .PHONY: check cc-check bats-check
 
 check: cc-check bats-check
@@ -280,36 +312,15 @@ most: bin lib ignores
 
 # ---------------------------------------------------------------------------- #
 
-.PHONY: ccls cdb
-ccls: .ccls
-cdb: compile_commands.json
-
-.ccls: FORCE
-	echo 'clang' > "$@";
-	{                                                                     \
-	  if [[ -n "$(NIX_CC)" ]]; then                                       \
-	    $(CAT) "$(NIX_CC)/nix-support/libc-cflags";                       \
-	    $(CAT) "$(NIX_CC)/nix-support/libcxx-cxxflags";                   \
-	  fi;                                                                 \
-	  echo $(CXXFLAGS) $(sqlite3_CFLAGS) $(nljson_CFLAGS) $(nix_CFLAGS);  \
-	  echo $(nljson_CFLAGS) $(argparse_CFLAGS) $(sql_builder_CFLAGS);     \
-	  echo $(sqlite3pp_CFLAGS);                                           \
-	}|$(TR) ' ' '\n'|$(SED) 's/-std=/%cpp -std=/' >> "$@";
-
-
-compile_commands.json: FORCE
-	-$(MAKE) -C $(MAKEFILE_DIR) clean;
-	$(BEAR) --output "$@" -- $(MAKE) -C $(MAKEFILE_DIR) -j all;
-
-
-# ---------------------------------------------------------------------------- #
-
 .PHONY: docs
 
 docs: docs/index.html
 
 docs/index.html: FORCE
 	$(DOXYGEN) ./Doxyfile
+
+CLEANFILES += $(addprefix docs/,*.png *.html *.svg *.css *.js)
+CLEANDIRS  += docs/search
 
 
 # ---------------------------------------------------------------------------- #
@@ -334,6 +345,8 @@ lib/pkgconfig/flox-pkgdb.pc: lib/pkgconfig/flox-pkgdb.pc.in version
 	       -e 's,@CFLAGS@,$(PC_CFLAGS),g'  \
 	       -e 's,@LIBS@,$(PC_LIBS),g'      \
 	       $< > $@
+
+CLEANFILES += lib/pkgconfig/flox-pkgdb.pc
 
 install-lib: $(LIBDIR)/pkgconfig/flox-pkgdb.pc
 

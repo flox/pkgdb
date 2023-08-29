@@ -1,6 +1,6 @@
 /* ========================================================================== *
  *
- * @file semver.hh
+ * @file versions.hh
  *
  * @brief Interfaces used to perform version number analysis, especially
  *        _Semantic Version_ processing.
@@ -24,20 +24,27 @@ namespace versions {
 
 /* -------------------------------------------------------------------------- */
 
+/** Typed exception wrapper used for version parsing/comparison errors. */
+class VersionException : public std::exception {
+  private:
+    std::string msg;
+  public:
+    VersionException( std::string_view msg ) : msg( msg ) {}
+    const char * what() const noexcept override { return this->msg.c_str(); }
+};
+
+
+/* -------------------------------------------------------------------------- */
+
 /** @return `true` iff @a version is a valid _semantic version_ string. */
 bool isSemver( const std::string & version );
-/** @return `true` iff @a version is a valid _semantic version_ string. */
-bool isSemver( std::string_view version );
 
 /** @return `true` iff @a version is a _datestamp-like_ version string. */
 bool isDate( const std::string & version );
-/** @return `true` iff @a version is a _datestamp-like_ version string. */
-bool isDate( std::string_view version );
 
 /** @return `true` iff @a version can be interpreted as _semantic version_. */
 bool isCoercibleToSemver( const std::string & version );
-/** @return `true` iff @a version can be interpreted as _semantic version_. */
-bool isCoercibleToSemver( std::string_view version );
+
 
 /* -------------------------------------------------------------------------- */
 

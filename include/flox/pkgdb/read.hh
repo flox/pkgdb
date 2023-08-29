@@ -24,22 +24,28 @@
 #include "flox/core/types.hh"
 #include "flox/core/command.hh"
 #include "flox/package.hh"
-#include "flox/pkgdb/query-builder.hh"
+#include "flox/pkgdb/pkg-query.hh"
 
 
 /* -------------------------------------------------------------------------- */
 
-namespace flox {
+/* This is passed in by `make' and is set by `<pkgdb>/version' */
+#ifndef FLOX_PKGDB_VERSION
+#  define FLOX_PKGDB_VERSION  "NO.VERSION"
+#endif
+#define FLOX_PKGDB_SCHEMA_VERSION  "0.1.0"
 
-  /** Interfaces for caching package metadata in SQLite3 databases. */
-  namespace pkgdb {
+
+/* -------------------------------------------------------------------------- */
+
+/** Interfaces for caching package metadata in SQLite3 databases. */
+namespace flox::pkgdb {
 
 /* -------------------------------------------------------------------------- */
 
 /** A unique hash associated with a locked flake. */
 using Fingerprint = nix::flake::Fingerprint;
 using SQLiteDb    = sqlite3pp::database;
-using row_id      = uint64_t;  /**< A _row_ index in a SQLite3 table. */
 using sql_rc      = int;       /**< `SQLITE_*` result code. */
 
 
@@ -47,10 +53,8 @@ using sql_rc      = int;       /**< `SQLITE_*` result code. */
 
 struct PkgDbException : public FloxException {
   std::filesystem::path dbPath;
-  PkgDbException( const std::filesystem::path & dbPath
-                ,       std::string_view        msg
-                )
-    : FloxException( msg ), dbPath( dbPath )
+  PkgDbException( std::filesystem::path dbPath, std::string_view msg )
+    : FloxException( msg ), dbPath( std::move( dbPath ) )
   {}
 };  /* End struct `PkgDbException' */
 
@@ -75,15 +79,15 @@ class PkgDbReadOnly {
 
   public:
 
-    SQLiteDb    db;           /**< SQLite3 database handle.         */
-    Fingerprint fingerprint;  /**< Unique hash of associated flake. */
-
-    std::filesystem::path dbPath;  /**< Absolute path to database. */
+    Fingerprint           fingerprint;  /**< Unique hash of associated flake. */
+    std::filesystem::path dbPath;       /**< Absolute path to database. */
+    SQLiteDb              db;           /**< SQLite3 database handle. */
 
     /** Locked _flake reference_ for database's flake. */
     struct LockedFlakeRef {
-      std::string    string;  /**< Locked URI string.  */
-      nlohmann::json attrs;   /**< Exploded form of URI as an attr-set. */
+      std::string string;  /**< Locked URI string.  */
+      /** Exploded form of URI as an attr-set. */
+      nlohmann::json attrs = nlohmann::json::object();
     } lockedRef;
 
 
@@ -91,13 +95,13 @@ class PkgDbReadOnly {
 
   /* Errors */
 
-  public:
+  // public:
 
     struct NoSuchDatabase : PkgDbException {
-      NoSuchDatabase( const PkgDbReadOnly & db )
+      explicit NoSuchDatabase( const PkgDbReadOnly & pdb )
         : PkgDbException(
-            db.dbPath
-          , std::string( "No such database '" + db.dbPath.string() + "'." )
+            pdb.dbPath
+          , std::string( "No such database '" + pdb.dbPath.string() + "'." )
           )
       {}
     };  /* End struct `NoSuchDatabase' */
@@ -113,6 +117,15 @@ class PkgDbReadOnly {
     void loadLockedFlake();
 
 
+  private:
+
+    /**
+     * Open SQLite3 db connection at @a dbPath.
+     * Throw an error if no database exists.
+     */
+    void init();
+
+
 /* -------------------------------------------------------------------------- */
 
   /* Constructors */
@@ -124,10 +137,22 @@ class PkgDbReadOnly {
      * databases in read-only mode.
      * Does NOT attempt to create a database if one does not exist.
      */
-    PkgDbReadOnly() : db(), fingerprint( nix::htSHA256 ), dbPath() {}
+    PkgDbReadOnly() : fingerprint( nix::htSHA256 ) {}
 
 
   public:
+
+    /**
+     * Opens an existing database.
+     * Does NOT attempt to create a database if one does not exist.
+     * @param dbPath Absolute path to database file.
+     */
+    explicit PkgDbReadOnly( std::string_view dbPath )
+      : fingerprint( nix::htSHA256 )  /* Filled by `loadLockedFlake' later */
+      , dbPath( dbPath )
+    {
+      this->init();
+    }
 
     /**
      * Opens a DB directly by its fingerprint hash.
@@ -138,28 +163,10 @@ class PkgDbReadOnly {
     PkgDbReadOnly( const Fingerprint      & fingerprint
                  ,       std::string_view   dbPath
                  )
-      : db( dbPath, SQLITE_OPEN_READONLY )
-      , fingerprint( fingerprint )
+      : fingerprint( fingerprint )
       , dbPath( dbPath )
     {
-      this->loadLockedFlake();
-    }
-
-    /**
-     * Opens an existing database.
-     * Does NOT attempt to create a database if one does not exist.
-     * @param dbPath Absolute path to database file.
-     */
-    PkgDbReadOnly( std::string_view dbPath )
-      : db( dbPath, SQLITE_OPEN_READONLY )
-      , fingerprint( nix::htSHA256 )
-      , dbPath( dbPath )
-    {
-      if ( ! std::filesystem::exists( this->dbPath ) )
-        {
-          throw NoSuchDatabase( * this );
-        }
-      this->loadLockedFlake();
+      this->init();
     }
 
     /**
@@ -167,7 +174,7 @@ class PkgDbReadOnly {
      * Does NOT attempt to create a database if one does not exist.
      * @param fingerprint Unique hash associated with locked flake.
      */
-    PkgDbReadOnly( const Fingerprint & fingerprint )
+    explicit PkgDbReadOnly( const Fingerprint & fingerprint )
       : PkgDbReadOnly( fingerprint, genPkgDbName( fingerprint ) )
     {}
 
@@ -176,19 +183,10 @@ class PkgDbReadOnly {
 
   /* Queries */
 
-  public:
+  // public:
 
     /** @return The Package Database schema version. */
     std::string getDbVersion();
-
-    /**
-     * Check to see if database has packages under the attribute path
-     * prefix @a path.
-     * @param path An attribute path prefix such as `packages.x86_64-linux` or
-     *             `legacyPackages.aarch64-darwin.python3Packages`.
-     * @return `true` iff the database has an `AttrSet` at @a path.
-     */
-    bool hasAttrSet( const flox::AttrPath & path );
 
     /**
      * Get the `AttrSet.id` for a given path.
@@ -199,12 +197,30 @@ class PkgDbReadOnly {
     row_id getAttrSetId( const flox::AttrPath & path );
 
     /**
+     * Check to see if database has and attribute set at @a path.
+     * @param path An attribute path prefix such as `packages.x86_64-linux` or
+     *             `legacyPackages.aarch64-darwin.python3Packages`.
+     * @return `true` iff the database has an `AttrSet` at @a path.
+     */
+    bool hasAttrSet( const flox::AttrPath & path );
+
+    /**
+     * Check to see if database has a complete list of packages under the
+     * prefix @a path.
+     * @param path An attribute path prefix such as `packages.x86_64-linux` or
+     *             `legacyPackages.aarch64-darwin.python3Packages`.
+     * @return `true` iff the database has completely scraped the `AttrSet` at
+     *          @a path.
+     */
+    bool completedAttrSet( const flox::AttrPath & path );
+
+    /**
      * Get the attribute path for a given `AttrSet.id`.
-     * @param id A unique `row_id` ( unsigned 64bit int ).
+     * @param row A unique `row_id` ( unsigned 64bit int ).
      * @return An attribute path prefix such as `packages.x86_64-linux` or
      *         `legacyPackages.aarch64-darwin.python3Packages`.
      */
-    flox::AttrPath getAttrSetPath( row_id id );
+    flox::AttrPath getAttrSetPath( row_id row );
 
     /**
      * Get the `Packages.id` for a given path.
@@ -217,11 +233,11 @@ class PkgDbReadOnly {
 
     /**
      * Get the attribute path for a given `Packages.id`.
-     * @param id A unique `row_id` ( unsigned 64bit int ).
+     * @param row A unique `row_id` ( unsigned 64bit int ).
      * @return An attribute path such as `packages.x86_64-linux.hello` or
      *         `legacyPackages.aarch64-darwin.python3Packages.pip`.
      */
-    flox::AttrPath getPackagePath( row_id id );
+    flox::AttrPath getPackagePath( row_id row );
 
     /**
      * Check to see if database has a package at the attribute path @a path.
@@ -286,16 +302,15 @@ enum match_strength {
 
 /**
  * Predicate to detect failing SQLite3 return codes.
- * @param rc A SQLite3 _return code_.
+ * @param rcode A SQLite3 _return code_.
  * @return `true` iff @a rc is a SQLite3 error.
  */
-bool isSQLError( int rc );
+bool isSQLError( int rcode );
 
 
 /* -------------------------------------------------------------------------- */
 
-  }  /* End Namespace `flox::pkgdb' */
-}  /* End Namespace `flox' */
+}  /* End Namespace `flox::pkgdb' */
 
 
 /* -------------------------------------------------------------------------- *

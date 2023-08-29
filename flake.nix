@@ -16,15 +16,10 @@
   inputs.sqlite3pp.url                    = "github:aakropotkin/sqlite3pp";
   inputs.sqlite3pp.inputs.nixpkgs.follows = "/nixpkgs";
 
-  inputs.sql-builder = {
-    url   = "github:six-ddc/sql-builder";
-    flake = false;
-  };
-
 
 # ---------------------------------------------------------------------------- #
 
-  outputs = { nixpkgs, floco, argparse, sqlite3pp, sql-builder, ... }: let
+  outputs = { nixpkgs, floco, argparse, sqlite3pp, ... }: let
 
 # ---------------------------------------------------------------------------- #
 
@@ -46,12 +41,6 @@
     ];
     overlays.flox-pkgdb = final: prev: {
       flox-pkgdb  = final.callPackage ./pkg-fun.nix {};
-      sql-builder = final.runCommandNoCC "sql-builder" {
-        src = sql-builder;
-      } ''
-        mkdir -p "$out/include/sql-builder";
-        cp "$src/sql.h" "$out/include/sql-builder/sql.hh";
-      '';
     };
     overlays.default = nixpkgs.lib.composeExtensions overlays.deps
                                                      overlays.flox-pkgdb;
@@ -63,7 +52,7 @@
       pkgsFor = ( builtins.getAttr system nixpkgs.legacyPackages ).extend
                   overlays.default;
     in {
-      inherit (pkgsFor) flox-pkgdb sql-builder;
+      inherit (pkgsFor) flox-pkgdb;
       default = pkgsFor.flox-pkgdb;
     } );
 
@@ -105,7 +94,7 @@
           pkgsFor.valgrind
         ];
         inherit (pkgsFor.flox-pkgdb)
-          nix_INCDIR boost_CFLAGS sql_builder_CFLAGS libExt SEMVER_PATH
+          nix_INCDIR boost_CFLAGS libExt SEMVER_PATH
         ;
         shellHook = ''
           shopt -s autocd;

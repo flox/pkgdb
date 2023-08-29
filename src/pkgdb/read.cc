@@ -26,12 +26,12 @@ namespace flox::pkgdb {
 /* -------------------------------------------------------------------------- */
 
   bool
-isSQLError( int rc )
+isSQLError( int rcode )
 {
-  switch ( rc )
+  switch ( rcode )
   {
-    case SQLITE_OK:   return false; break;
-    case SQLITE_ROW:  return false; break;
+    case SQLITE_OK:
+    case SQLITE_ROW:
     case SQLITE_DONE: return false; break;
     default:          return true;  break;
   }
@@ -54,18 +54,32 @@ genPkgDbName( const Fingerprint & fingerprint )
 /* -------------------------------------------------------------------------- */
 
   void
+PkgDbReadOnly::init()
+{
+  if ( ! std::filesystem::exists( this->dbPath ) )
+    {
+      throw NoSuchDatabase( * this );
+    }
+  this->db.connect( this->dbPath.string().c_str(), SQLITE_OPEN_READONLY );
+  this->loadLockedFlake();
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
 PkgDbReadOnly::loadLockedFlake()
 {
   sqlite3pp::query qry(
     this->db
   , "SELECT fingerprint, string, attrs FROM LockedFlake LIMIT 1"
   );
-  auto r = * qry.begin();
-  std::string fingerprintStr = r.get<std::string>( 0 );
+  auto rsl = * qry.begin();
+  std::string fingerprintStr = rsl.get<std::string>( 0 );
   nix::Hash   fingerprint    =
     nix::Hash::parseNonSRIUnprefixed( fingerprintStr, nix::htSHA256 );
-  this->lockedRef.string = r.get<std::string>( 1 );
-  this->lockedRef.attrs  = nlohmann::json::parse( r.get<std::string>( 2 ) );
+  this->lockedRef.string = rsl.get<std::string>( 1 );
+  this->lockedRef.attrs  = nlohmann::json::parse( rsl.get<std::string>( 2 ) );
   /* Check to see if our fingerprint is already known.
    * If it isn't load it, otherwise assert it matches. */
   if ( this->fingerprint == nix::Hash( nix::htSHA256 ) )
@@ -102,10 +116,37 @@ PkgDbReadOnly::getDbVersion()
 /* -------------------------------------------------------------------------- */
 
   bool
+PkgDbReadOnly::completedAttrSet( const flox::AttrPath & path )
+{
+  /* Lookup the `AttrName.id' ( if one exists ) */
+  row_id row = 0;
+  for ( const auto & a : path )
+    {
+      sqlite3pp::query qryId(
+        this->db
+      , "SELECT id, done FROM AttrSets "
+        "WHERE ( attrName = :attrName ) AND ( parent = :parent )"
+      );
+      qryId.bind( ":attrName", a, sqlite3pp::copy );
+      qryId.bind( ":parent", (long long) row );
+      auto i = qryId.begin();
+      if ( i == qryId.end() ) { return false; }  /* No such path. */
+      /* If a parent attrset is marked `done', then all of it's children
+       * are also considered done. */
+      if ( ( * i ).get<bool>( 1 ) ) { return true; }
+      row = ( * i ).get<long long>( 0 );
+    }
+  return false;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  bool
 PkgDbReadOnly::hasAttrSet( const flox::AttrPath & path )
 {
   /* Lookup the `AttrName.id' ( if one exists ) */
-  row_id id = 0;
+  row_id row = 0;
   for ( const auto & a : path )
     {
       sqlite3pp::query qryId(
@@ -114,10 +155,10 @@ PkgDbReadOnly::hasAttrSet( const flox::AttrPath & path )
         "WHERE ( attrName = :attrName ) AND ( parent = :parent )"
       );
       qryId.bind( ":attrName", a, sqlite3pp::copy );
-      qryId.bind( ":parent", (long long) id );
+      qryId.bind( ":parent", (long long) row );
       auto i = qryId.begin();
       if ( i == qryId.end() ) { return false; }  /* No such path. */
-      id = ( * i ).get<long long>( 0 );
+      row = ( * i ).get<long long>( 0 );
     }
   return true;
 }
@@ -209,27 +250,27 @@ PkgDbReadOnly::getAttrSetId( const flox::AttrPath & path )
 /* -------------------------------------------------------------------------- */
 
   flox::AttrPath
-PkgDbReadOnly::getAttrSetPath( row_id id )
+PkgDbReadOnly::getAttrSetPath( row_id row )
 {
-  if ( id == 0 ) { return {}; }
+  if ( row == 0 ) { return {}; }
   std::list<std::string> path;
-  while ( id != 0 )
+  while ( row != 0 )
     {
       sqlite3pp::query qry(
         this->db
       , "SELECT parent, attrName FROM AttrSets WHERE ( id = :id )"
       );
-      qry.bind( ":id", (long long) id );
+      qry.bind( ":id", (long long) row );
       auto i = qry.begin();
       /* Handle no such path. */
       if ( i == qry.end() )
         {
           throw PkgDbException(
             this->dbPath
-          , nix::fmt( "No such `AttrSet.id' %llu.", id )
+          , nix::fmt( "No such `AttrSet.id' %llu.", row )
           );
         }
-      id = ( * i ).get<long long>( 0 );
+      row = ( * i ).get<long long>( 0 );
       path.push_front( ( * i ).get<std::string>( 1 ) );
     }
   return flox::AttrPath { std::make_move_iterator( std::begin( path ) )
@@ -272,21 +313,21 @@ PkgDbReadOnly::getPackageId( const flox::AttrPath & path )
 /* -------------------------------------------------------------------------- */
 
   flox::AttrPath
-PkgDbReadOnly::getPackagePath( row_id id )
+PkgDbReadOnly::getPackagePath( row_id row )
 {
-  if ( id == 0 ) { return {}; }
+  if ( row == 0 ) { return {}; }
   sqlite3pp::query qry(
     this->db
   , "SELECT parentId, attrName FROM Packages WHERE ( id = :id )"
   );
-  qry.bind( ":id", (long long) id );
+  qry.bind( ":id", (long long) row );
   auto i = qry.begin();
   /* Handle no such path. */
   if ( i == qry.end() )
     {
       throw PkgDbException(
         this->dbPath
-      , nix::fmt( "No such `Packages.id' %llu.", id )
+      , nix::fmt( "No such `Packages.id' %llu.", row )
       );
     }
   flox::AttrPath path = this->getAttrSetPath( ( * i ).get<long long>( 0 ) );
@@ -327,62 +368,7 @@ PkgDbReadOnly::getDescendantAttrSets( row_id root )
   std::vector<row_id>
 PkgDbReadOnly::getPackages( const PkgQueryArgs & params )
 {
-  auto [query, binds] = buildPkgQuery( params );
-  sqlite3pp::query qry( this->db, query.c_str() );
-  for ( const auto & [var, val] : binds )
-    {
-      qry.bind( var.c_str(), val, sqlite3pp::copy );
-    }
-
-  /* We can handle quite a bit of filtering and ordering in SQL, but `semver`
-   * has to be handled with post-processing here.
-   * We skip semver filtering for a few bogus "match anything" forms. */
-  if ( params.semver.has_value() &&
-       ( ! params.semver->empty() ) &&
-       ( ( * params.semver ) != "*" ) && ( ( * params.semver ) != "any" ) &&
-       ( ( * params.semver ) != "^*" ) && ( ( * params.semver ) != "~*" )
-     )
-    {
-      /* Use a vector to preserve ordering original ordering. */
-      std::vector<std::pair<row_id, std::string>> idVersions;
-      std::unordered_set<std::string>             versionsUniq;
-      for ( const auto & row : qry )
-        {
-          const auto & [_, version] = idVersions.emplace_back(
-            std::make_pair( row.get<long long>( 0 ), row.get<std::string>( 1 ) )
-          );
-          versionsUniq.emplace( version );
-        }
-      std::list<std::string> versions( versionsUniq.begin()
-                                     , versionsUniq.end()
-                                     );
-      /* Create a unique list of satisfactory versions  */
-      // TODO: Order by latest
-      versionsUniq.clear();
-      for ( const auto & version :
-              versions::semverSat( * params.semver, versions )
-          )
-        {
-          versionsUniq.emplace( version );
-        }
-
-      /* Filter SQL results to be those in the satisfactory list. */
-      std::vector<row_id> rsl;
-      for ( const auto & elem : idVersions )
-        {
-          if ( versionsUniq.find( elem.second ) != versionsUniq.end() )
-            {
-              rsl.push_back( elem.first );
-            }
-        }
-      return rsl;
-    }
-  else
-    {
-      std::vector<row_id> rsl;
-      for ( const auto row : qry ) { rsl.push_back( row.get<long long>( 0 ) ); }
-      return rsl;
-    }
+  return PkgQuery( params ).execute( this->db );
 }
 
 

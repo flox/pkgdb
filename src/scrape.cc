@@ -11,6 +11,7 @@
 
 #include "flox/pkgdb/command.hh"
 
+
 /* -------------------------------------------------------------------------- */
 
 namespace flox {
@@ -54,10 +55,13 @@ ScrapeCommand::run()
 {
   this->postProcessArgs();
 
+  /* If `--force' was given, clear the `done' fields for the prefix and its
+   * descendants to force them to re-evaluate. */
+  if ( this->force ) { this->db->setPrefixDone( this->attrPath, false ); }
+
   /* If we haven't processed this prefix before or `--force' was given, open
    * the eval cache and start scraping. */
-
-  if ( this->force || ( ! this->db->hasAttrSet( this->attrPath ) ) )
+  if ( ! this->db->completedAttrSet( this->attrPath ) )
     {
       flox::pkgdb::Todos todo;
       if ( flox::MaybeCursor root =
@@ -85,6 +89,9 @@ ScrapeCommand::run()
               );
               todo.pop();
             }
+
+          /* Mark the prefix and its descendants as "done" */
+          this->db->setPrefixDone( this->attrPath, true );
         }
       catch( const nix::EvalError & )
         {
@@ -103,7 +110,7 @@ ScrapeCommand::run()
 
 /* -------------------------------------------------------------------------- */
 
-  }  /* End namespaces `flox::command' */
+  }  /* End namespaces `flox::pkgdb' */
 }  /* End namespaces `flox' */
 
 

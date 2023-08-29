@@ -6,18 +6,31 @@ CRUD operations on `nix` package metadata.
 
 ### Purpose
 
-Evaluating nix expressions for an entire flake is expensive but necessary for features like package search. This tool provides a way to scrape the data from a flake once and store it in a database for later usage.
+Evaluating nix expressions for an entire flake is expensive but necessary for 
+features like package search. 
+This tool provides a way to scrape the data from a flake once and store it in a 
+database for later usage.
 
-The current responsibility of the `pkgdb` tool extends only as far as scraping a flake and generating a database. The database should be queried using standard sqlite tools and libraries and all decisions about how and when to generate and update the database are left up to the consumer.
+The current responsibility of the `pkgdb` tool extends only as far as scraping 
+a flake and generating a database. 
+The database should be queried using standard sqlite tools and libraries and all 
+decisions about how and when to generate and update the database are left up to 
+the consumer.
+
 
 ### Compilation
 
 ```bash
 $ nix develop;
-$ make -j8;  # set `-j<# Jobs>' as desired
+$ make -j;
 ```
 
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for more information.
+
+
 ### Usage
+
+#### `pkgdb scrape`
 
 Build the database with the `scrape` subcommand:
 
@@ -27,13 +40,17 @@ fetching flake 'github:NixOS/nixpkgs'...
 /Users/me/.cache/flox/pkgdb-v0/93a89abd052c90a33e8787a7740f2459cdb496980848011ae708b0de1bbfac82.sqlite
 ```
 
-By default, packages will be scraped from packages.[system arch] and stored in `~/.cache` in a database named after the flake fingerprint. These can be overridden as desired:
+By default, packages will be scraped from packages.[system arch] and stored in 
+`~/.cache` in a database named after the flake fingerprint. 
+These can be overridden as desired:
 
 ```bash
 $ pkgdb scrape github:NixOS/nixpkgs --database flakedb.sqlite legacyPackages aarch64-darwin
 ```
 
-If the database for a given flake already exists and is asked to reprocess an existing package set, it will be skipped. Use `--force` to force an update/regeneration.
+If the database for a given flake already exists and is asked to re-process an 
+existing package set, it will be skipped. Use `--force` to force 
+an update/regeneration.
 
 Once generated, the database can be opened and queried using `sqlite3`.
 
@@ -51,13 +68,20 @@ $ sqlite3 flakedb.sqlite '.mode json' 'SELECT name, version FROM Packages LIMIT 
 {"name":"CoinMP-1.8.4","version":"1.8.4"}]
 ```
 
-#### Expected Client Usage
-This utility is expected to be run multiple times if a client wishes to "fully scrape all the things" in a flake.
-This utility is a plumbing command used by a client application, we aren't particuarly concerned with the repetitive
-strain injury a user would suffer if they tried to scrape everything in a flake interactively; rather we aim to do
-less in a single run and avoid scraping info the caller might not need for their use case.
 
-A given client application that did want to scrape a flake completely would run something along the lines of:
+##### Expected Client Usage
+
+This utility is expected to be run multiple times if a client wishes to
+"fully scrape all the things" in a flake.
+This utility is a plumbing command used by a client application, we aren't
+particuarly concerned with the repetitive strain injury a user would suffer if
+they tried to scrape everything in a flake interactively; rather we aim to do
+less in a single run and avoid scraping info the caller might not need for their
+use case.
+
+A given client application that did want to scrape a flake completely would run
+something along the lines of:
+
 ```shell
 $ lockedRef="github:NixOS/nixpkgs/e8039594435c68eb4f780f3e9bf3972a7399c4b1";
 $ dbPath=;
@@ -78,16 +102,21 @@ $ for subtree in packages legacyPackages catalog; do
   done
 $ sqlite3 "$dbPath" 'SELECT COUNT( * ) FROM Packages';
 ```
-In the example above we the caller would passes in a locked ref, this was technically optional, but is strongly recommended.
-What's important is that invocations that intend to append to an existing database ABSOLUTELY SHOULD be using
-locked flake references.
-In the event that you want to use an unlocked reference on the first call, you can extract a locked flake reference from a
-database for later runs, but official recommendation is to lock flakes before looping.
 
-If the caller _really_ wants to they could pass an unlocked ref on the first invocation, and yank the locked reference from
-the resulting database.
-This is potentially useful for working with local flakes in the event that you don't want to use a utility like
-`nix flake prefetch` or `parser-util` to lock your references for you :
+In the example above we the caller would passes in a locked ref, this was
+technically optional, but is strongly recommended.
+What's important is that invocations that intend to append to an existing
+database ABSOLUTELY SHOULD be using locked flake references.
+In the event that you want to use an unlocked reference on the first call, you 
+can extract a locked flake reference from a database for later runs, but
+official recommendation is to lock flakes before looping.
+
+If the caller _really_ wants to they could pass an unlocked ref on the first
+invocation, and yank the locked reference from the resulting database.
+This is potentially useful for working with local flakes in the event that you 
+don't want to use a utility like `nix flake prefetch` or `parser-util` to lock 
+your references for you:
+
 ```shell
 $ dbPath="$( pkgdb scrape "$PWD/my-flake" packages x86_64-linux; )";
 $ lockedRef="$( sqlite3 "$dbPath" 'SELECT string FROM LockedFlake'; )";
@@ -95,22 +124,51 @@ $ pkgdb scrape "$lockedRef" packages aarch64-linux;
 ...<SNIP>...
 ```
 
+
+#### `pkdb get`
+
+The `pkgdb get {db,done,flake,id,path}` subcommands expose a handful of special
+queries for package databases that may be useful for simple scripts.
+These don't have queries for package metadata, `sqlite3` is recommended for
+these types of queries.
+
+Subcommands:
+- `pkgdb get db`    Get absolute path to Package DB for a flake
+- `pkgdb get done`  Check to see if an attrset and its children has been scraped
+- `pkgdb get flake` Get flake metadata from Package DB
+- `pkgdb get id`    Lookup an attribute set or package row `id`
+- `pkgdb get path`  Lookup an (AttrSets|Packages).id attribute path
+
+
 ### Schema
 
-The data is represented in a tree format matching the attrPath structure.
-The two entities are AttrSets (branches) and Packages (leaves). Packages and AttrSets each have a parentId, which is always found in AttrSets.
+The data is represented in a tree format matching the `attrPath` structure.
+The two entities are `AttrSets` (branches) and Packages (leaves).
+Packages and `AttrSets` each have a `parentId`, which is always found
+in `AttrSets`.
+`AttrSets.done` (boolean) indicates that an attribute set and all of its
+children, have been _fully scraped_ and do not need to be reprocessed.
 
-Descriptions are de-duplicated (for instance between two packages for separate architectures) by a Descriptions table.
+Descriptions are de-duplicated (for instance between two packages for separate
+architectures) by a `Descriptions` table.
 
-`DbVersions` and `LockedFlake` tables store metadata about the version of `pkgdb` that generated the database and the flake which was scraped.
+`DbVersions` and `LockedFlake` tables store metadata about the version of
+`pkgdb` that generated the database and the flake which was scraped.
+
 
 #### Details
 
-If they are defined explicitly, `pname` and `version` will be read from the corresponding attributes. Otherwise, they will be parsed from the `name`. If `version` can be converted to a semver, it will be.
+If they are defined explicitly, `pname` and `version` will be read from the
+corresponding attributes.
+Otherwise, they will be parsed from the `name`.
+If `version` can be converted to a semver, it will be.
 
-Note that the `attrName` for a package is the actual name in the tree. Therefore, for catalogs the `attrName` will be the package version, not the name.
+Note that the `attrName` for a package is the actual name in the tree.
+Therefore, for catalogs the `attrName` will be the package version, not
+the name.
 
-If `outputsToInstall` is not defined, it will be the set of `outputs` up to and including `"out"`.
+If `outputsToInstall` is not defined, it will be the set of `outputs` up to and
+including `"out"`.
 
 ```mermaid
 erDiagram
@@ -136,6 +194,7 @@ erDiagram
     int id
     int parent
     text attrName
+    bool done
   }
   DbVersions {
     text name

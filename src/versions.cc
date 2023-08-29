@@ -1,5 +1,9 @@
 /* ========================================================================== *
  *
+ * @file versions.cc
+ *
+ * @brief Interfaces used to perform version number analysis, especially
+ *        _Semantic Version_ processing.
  *
  *
  * -------------------------------------------------------------------------- */
@@ -7,8 +11,9 @@
 #include <string>
 #include <regex>
 #include <optional>
+#include <stdexcept>
 
-#include "semver.hh"
+#include "versions.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -28,8 +33,10 @@ static const char * const semverCoerceREStr =
 
 /* Match '-' separated date strings, e.g. `2023-05-31' or `5-1-23' */
 static const char * const dateREStr =
-  "([0-9][0-9]([0-9][0-9])?-[01]?[0-9]-[0-9][0-9]?|"
-  "[0-9][0-9]?-[0-9][0-9]?-[0-9][0-9]([0-9][0-9])?)(-[-[:alnum:]_+.]+)?";
+  "([12][0-9][0-9][0-9]-[0-1]?[0-9]-[0-3]?[0-9]|"  /* Y-M-D */
+  "[0-1]?[0-9]-[0-3]?[0-9]-[12][0-9][0-9][0-9])"   /* M-D-Y */
+  "(-[-[:alnum:]_+.]+)?"
+  ;
 
 
 /* -------------------------------------------------------------------------- */
@@ -41,14 +48,6 @@ isSemver( const std::string & version )
   return std::regex_match( version, semverRE );
 }
 
-  bool
-isSemver( std::string_view version )
-{
-  std::string vsn( version );
-  static const std::regex semverRE( semverREStr, std::regex::ECMAScript );
-  return std::regex_match( vsn, semverRE );
-}
-
 
 /* -------------------------------------------------------------------------- */
 
@@ -57,14 +56,6 @@ isDate( const std::string & version )
 {
   static const std::regex dateRE( dateREStr, std::regex::ECMAScript );
   return std::regex_match( version, dateRE );
-}
-
-  bool
-isDate( std::string_view version )
-{
-  static const std::regex dateRE( dateREStr, std::regex::ECMAScript );
-  std::string vsn( version );
-  return std::regex_match( vsn, dateRE );
 }
 
 
@@ -79,18 +70,6 @@ isCoercibleToSemver( const std::string & version )
                                         );
   return ( ! std::regex_match( version, dateRE ) ) &&
          std::regex_match( version, semverCoerceRE );
-}
-
-  bool
-isCoercibleToSemver( std::string_view version )
-{
-  static const std::regex dateRE( dateREStr, std::regex::ECMAScript );
-  static const std::regex semverCoerceRE( semverCoerceREStr
-                                        , std::regex::ECMAScript
-                                        );
-  std::string vsn( version );
-  return ( ! std::regex_match( vsn, dateRE ) ) &&
-         std::regex_match( vsn, semverCoerceRE );
 }
 
 
@@ -113,13 +92,6 @@ coerceSemver( std::string_view version )
     {
       return std::nullopt;
     }
-
-  #if defined( DEBUG ) && ( DEBUG != 0 )
-  for ( unsigned int i = 0; i < match.size(); ++i )
-    {
-      std::cerr << "[" << i << "]: " << match[i] << std::endl;
-    }
-  #endif
 
   /**
    * Capture Groups Example:

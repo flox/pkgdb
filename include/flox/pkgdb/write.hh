@@ -13,18 +13,7 @@
 
 /* -------------------------------------------------------------------------- */
 
-/* This is passed in by `make' and is set by `<pkgdb>/version' */
-#ifndef FLOX_PKGDB_VERSION
-#  define FLOX_PKGDB_VERSION  "NO.VERSION"
-#endif
-#define FLOX_PKGDB_SCHEMA_VERSION  "0.1.0"
-
-
-/* -------------------------------------------------------------------------- */
-
-namespace flox {
-
-  namespace pkgdb {
+namespace flox::pkgdb {
 
 /* -------------------------------------------------------------------------- */
 
@@ -66,7 +55,7 @@ class PkgDb : public PkgDbReadOnly {
      * Does NOT attempt to create a database if one does not exist.
      * @param dbPath Absolute path to database file.
      */
-    PkgDb( std::string_view dbPath ) : PkgDbReadOnly()
+    explicit PkgDb( std::string_view dbPath )
     {
       this->dbPath = dbPath;
       if ( ! std::filesystem::exists( this->dbPath ) )
@@ -89,7 +78,6 @@ class PkgDb : public PkgDbReadOnly {
     PkgDb( const Fingerprint      & fingerprint
          ,       std::string_view   dbPath
          )
-      : PkgDbReadOnly()
     {
       this->dbPath      = dbPath;
       this->fingerprint = fingerprint;
@@ -109,7 +97,7 @@ class PkgDb : public PkgDbReadOnly {
      * Does NOT attempt to create a database if one does not exist.
      * @param fingerprint Unique hash associated with locked flake.
      */
-    PkgDb( const Fingerprint & fingerprint )
+    explicit PkgDb( const Fingerprint & fingerprint )
       : PkgDb( fingerprint, genPkgDbName( fingerprint ) )
     {}
 
@@ -122,7 +110,6 @@ class PkgDb : public PkgDbReadOnly {
     PkgDb( const nix::flake::LockedFlake & flake
          ,       std::string_view          dbPath
          )
-      : PkgDbReadOnly()
     {
       this->dbPath      = dbPath;
       this->fingerprint = flake.getFingerprint();
@@ -142,7 +129,7 @@ class PkgDb : public PkgDbReadOnly {
      * Creates database if one does not exist.
      * @param flake Flake associated with the db. Used to write input metadata.
      */
-    PkgDb( const nix::flake::LockedFlake & flake )
+    explicit PkgDb( const nix::flake::LockedFlake & flake )
       : PkgDb( flake, genPkgDbName( flake.getFingerprint() ) )
     {}
 
@@ -151,7 +138,7 @@ class PkgDb : public PkgDbReadOnly {
 
   /* Basic Operations */
 
-  public:
+  // public:
 
     /**
      * Execute a raw sqlite statement on the database.
@@ -182,7 +169,7 @@ class PkgDb : public PkgDbReadOnly {
 
   /* Insert */
 
-  public:
+  // public:
 
     /**
      * Get the `AttrSet.id` for a given child of the attribute set associated
@@ -236,6 +223,20 @@ class PkgDb : public PkgDbReadOnly {
 
 
 /* -------------------------------------------------------------------------- */
+
+/* Updates */
+
+/**
+ * Update the `done` column for an attribute set and all of its
+ * children recursively.
+ * @param prefix Attribute set prefix to be updated.
+ * @param done Value to update `done` column to.
+ */
+void setPrefixDone( const flox::AttrPath & prefix, bool done );
+
+
+/* -------------------------------------------------------------------------- */
+
 /**
  * Scrape package definitions from an attribute set, adding any attributes
  * marked with `recurseForDerivatsions = true` to @a todo list.
@@ -261,8 +262,7 @@ scrape(       nix::SymbolTable & syms
 /* -------------------------------------------------------------------------- */
 
 
-  }  /* End Namespace `flox::pkgdb' */
-}  /* End Namespace `flox' */
+}  /* End Namespace `flox::pkgdb' */
 
 
 /* -------------------------------------------------------------------------- *

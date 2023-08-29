@@ -4,7 +4,7 @@
 
 ``` shell
 $ nix develop;
-$ make;
+$ make -j;
 $ ls ./bin/;
 pkgdb
 $ make check;
@@ -23,6 +23,33 @@ $ firefox ./docs/index.html;
 ```
 
 
+## Building Compilation Databases
+
+The files `.ccls` and `compile_commands.json` are available as
+`Makefile` targets.
+These may be used to support various C++ language server protocols, and tools
+such as `clang-tidy`.
+
+```shell
+$ make ccls;  # an alias of `.ccls'
+$ make compile_commands.json;
+$ make cdb;  # a shorthand to build both
+```
+
+
+## Linting
+
+Linting is a slow process, so we recommend running it in a separate terminal
+while you are hacking around or go get a coffee.
+
+Linting is performed by `clang-tidy`, and can be configured in the
+file [.clang-tidy](./.clang-tidy).
+
+```shell
+$ make lint;
+```
+
+
 ## Making a Release
 
 This project follows semantic version guidelines with then
@@ -38,9 +65,9 @@ incremented using the following rules:
   + If you didn't add any new features, and you didn't break existing tests,
     you should probably bump this.
 - _New Features_ and _Interfaces_ such as new subcommands/flags, new C++
-  interfaces/class member variables defined in any `<pkgdb>/include/` file, or
-  any change which does not otherwise effect backwards compatibility should
-  increment _minor_ version.
+  interfaces/class member variables defined in any [<pkgdb>/include/](./include)
+  file, or any change which does not otherwise effect backwards compatibility
+  should increment _minor_ version.
   + When users see that _minor_ was incremented they expect to update `pkgdb`
     without making changes to their existing usage, but they may be able to take
     advantage of new features if they choose to.
@@ -54,9 +81,9 @@ incremented using the following rules:
     public interfaces this should help reassure you that _minor_ is safe
     to bump.
 - _Removed Features_ or _Breaking Changes_ such as removed subcommands/flags,
-  removed interfaces/class member variables defined in any `<pkgdb>/include/`
-  file, or any change which may break existing usage patterns should increment
-  _major_ version.
+  removed interfaces/class member variables defined in any
+  [<pkgdb>/include/](./include) file, or any change which may break existing
+  usage patterns should increment _major_ version.
   + When users see that _major_ version was incremented they know that they
     should only perform an update if they have available time migrate some
     existing usage of `pkgdb` in their software.
@@ -77,9 +104,10 @@ These readers could care less if `pkgdb` is at version 3.2.1 or 30000.2.1!
 
 ### SQL Schema Version
 Changes to the `pkgdb` SQL schema should be indicated by semantic version
-numbers in the file `<pkgdb>/include/pkgdb.hh` using the variable
-`FLOX_PKGDB_SCHEMA_VERSION` which is used to populate newly created DBs and to
-detect old schemas in existing DBs.
+numbers in the file
+[<pkgdb>/include/flox/pkgdb/read.hh](./include/flox/pkgdb/read.hh) using the
+variable `FLOX_PKGDB_SCHEMA_VERSION` which is used to populate newly created DBs
+and to detect old schemas in existing DBs.
 
 Any changes to the schema version number should also trigger an equivalent
 increment to the `pkgdb` version number.
@@ -87,7 +115,7 @@ increment to the `pkgdb` version number.
 
 ### `pkgdb` Software Versioning
 Updates to `pkgdb` version numbers are controlled by the text file
-`<pkgdb>/version` ( in the repository root ).
+[<pkgdb>/version](./version) ( in the repository root ).
 This file is used to populate the CPP variable `FLOX_PKGDB_VERSION`, the `nix`
 derivation's version number, and the `pkg-config` manifest file's version.
 

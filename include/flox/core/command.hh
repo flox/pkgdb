@@ -16,15 +16,15 @@
 #include <argparse/argparse.hpp>
 
 #include "flox/core/types.hh"
+#include "flox/core/nix-state.hh"
 #include "flox/core/util.hh"
 #include "flox/flox-flake.hh"
 
+
 /* -------------------------------------------------------------------------- */
 
-namespace flox {
-
-  /** Executable command helpers, argument parsers, etc. */
-  namespace command {
+/** Executable command helpers, argument parsers, etc. */
+namespace flox::command {
 
 /* -------------------------------------------------------------------------- */
 
@@ -54,8 +54,19 @@ struct VerboseParser : public argparse::ArgumentParser {
 
 /** Virtual class for _mixins_ which extend a command's state blob */
 struct CommandStateMixin {
+
+  constexpr CommandStateMixin()                             = default;
+  constexpr CommandStateMixin( const CommandStateMixin &  ) = default;
+  constexpr CommandStateMixin(       CommandStateMixin && ) = default;
+
+  virtual ~CommandStateMixin() = default;
+
+  CommandStateMixin & operator=( const CommandStateMixin &  ) = default;
+  CommandStateMixin & operator=(       CommandStateMixin && ) = default;
+
   /** Hook run after parsing arguments and before running commands. */
   virtual void postProcessArgs() {};
+
 };  /* End struct `CommandStateMixin' */
 
 
@@ -63,11 +74,11 @@ struct CommandStateMixin {
 
 /** Extend a command's state blob with a @a flox::FloxFlake. */
 struct FloxFlakeMixin
-  :         public CommandStateMixin
-  , virtual public flox::NixState
+  : public CommandStateMixin
+  , public FloxFlakeParserMixin
 {
 
-  std::unique_ptr<flox::FloxFlake> flake;
+  std::shared_ptr<flox::FloxFlake> flake;
 
   /**
    * Populate the command state's @a flake with the a flake reference.
@@ -77,6 +88,7 @@ struct FloxFlakeMixin
 
   /** Extend an argument parser to accept a `flake-ref` argument. */
   argparse::Argument & addFlakeRefArg( argparse::ArgumentParser & parser );
+
 };  /* End struct `FloxFlakeMixin' */
 
 
@@ -107,8 +119,7 @@ struct AttrPathMixin : public CommandStateMixin {
 
 /* -------------------------------------------------------------------------- */
 
-  }  /* End namespaces `flox::command' */
-}  /* End namespaces `flox' */
+}  /* End namespaces `flox::command' */
 
 
 /* -------------------------------------------------------------------------- *

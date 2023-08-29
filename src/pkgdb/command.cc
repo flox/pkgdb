@@ -17,12 +17,11 @@
 
 #include "flox/pkgdb/command.hh"
 #include "flox/core/util.hh"
-#include "flox/pkgdb.hh"
+#include "flox/pkgdb/write.hh"
 
 /* -------------------------------------------------------------------------- */
 
-namespace flox {
-  namespace pkgdb {
+namespace flox::pkgdb {
 
 /* -------------------------------------------------------------------------- */
 
@@ -46,13 +45,13 @@ DbPathMixin::addDatabasePathOption( argparse::ArgumentParser & parser )
 
 /* -------------------------------------------------------------------------- */
 
-  void
-PkgDbMixin::openPkgDb()
+  template <> void
+PkgDbMixin<PkgDb>::openPkgDb()
 {
   if ( this->db != nullptr ) { return; }  /* Already loaded. */
   if ( ( this->flake != nullptr ) && this->dbPath.has_value() )
     {
-      this->db = std::make_unique<flox::pkgdb::PkgDb>(
+      this->db = std::make_shared<PkgDb>(
         this->flake->lockedFlake
       , (std::string) * this->dbPath
       );
@@ -63,7 +62,7 @@ PkgDbMixin::openPkgDb()
         this->flake->lockedFlake.getFingerprint()
       );
       std::filesystem::create_directories( this->dbPath->parent_path() );
-      this->db = std::make_unique<flox::pkgdb::PkgDb>(
+      this->db = std::make_shared<PkgDb>(
         this->flake->lockedFlake
       , (std::string) * this->dbPath
       );
@@ -71,9 +70,7 @@ PkgDbMixin::openPkgDb()
   else if ( this->dbPath.has_value() )
     {
       std::filesystem::create_directories( this->dbPath->parent_path() );
-      this->db = std::make_unique<flox::pkgdb::PkgDb>(
-        (std::string) * this->dbPath
-      );
+      this->db = std::make_shared<PkgDb>( (std::string) * this->dbPath );
     }
   else
     {
@@ -84,8 +81,58 @@ PkgDbMixin::openPkgDb()
 }
 
 
-  argparse::Argument &
-PkgDbMixin::addTargetArg( argparse::ArgumentParser & parser )
+/* -------------------------------------------------------------------------- */
+
+  template <> void
+PkgDbMixin<PkgDbReadOnly>::openPkgDb()
+{
+  if ( this->db != nullptr ) { return; }  /* Already loaded. */
+
+  if ( ! this->dbPath.has_value() )
+    {
+      if ( this->flake == nullptr )
+        {
+          throw flox::FloxException(
+            "You must provide either a path to a database, or "
+            "a flake-reference."
+          );
+        }
+      this->dbPath = flox::pkgdb::genPkgDbName(
+        this->flake->lockedFlake.getFingerprint()
+      );
+    }
+
+  /* Initialize empty DB if none exists. */
+  if ( ! std::filesystem::exists( this->dbPath.value() ) )
+    {
+      if ( this->flake != nullptr )
+        {
+          std::filesystem::create_directories( this->dbPath->parent_path() );
+          flox::pkgdb::PkgDb pdb( this->flake->lockedFlake
+                                , (std::string) * this->dbPath
+                                );
+        }
+    }
+
+  if ( this->flake != nullptr )
+    {
+      this->db = std::make_shared<PkgDbReadOnly>(
+        this->flake->lockedFlake.getFingerprint()
+      , (std::string) * this->dbPath
+      );
+    }
+  else
+    {
+      this->db =
+        std::make_shared<PkgDbReadOnly>( (std::string) * this->dbPath );
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  template <PkgDbType T> argparse::Argument &
+PkgDbMixin<T>::addTargetArg( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "target" )
                .help( "The source ( database path or flake-ref ) to read" )
@@ -100,7 +147,21 @@ PkgDbMixin::addTargetArg( argparse::ArgumentParser & parser )
                      }
                    else  /* flake-ref */
                      {
-                       this->parseFloxFlake( target );
+                       try
+                         {
+                           this->parseFloxFlake( target );
+                         }
+                       catch( ... )
+                         {
+                           if ( std::filesystem::exists( target ) )
+                             {
+                               throw FloxException(
+                                 "Argument '" + target + "' is neither a flake "
+                                 "reference or SQLite3 database"
+                               );
+                             }
+                           throw;
+                         }
                      }
                    this->openPkgDb();
                  }
@@ -110,8 +171,13 @@ PkgDbMixin::addTargetArg( argparse::ArgumentParser & parser )
 
 /* -------------------------------------------------------------------------- */
 
-  }  /* End namespaces `flox::pkgdb' */
-}  /* End namespaces `flox' */
+template struct PkgDbMixin<PkgDbReadOnly>;
+template struct PkgDbMixin<PkgDb>;
+
+
+/* -------------------------------------------------------------------------- */
+
+}  /* End namespaces `flox::pkgdb' */
 
 
 /* -------------------------------------------------------------------------- *

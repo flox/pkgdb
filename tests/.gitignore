@@ -1,4 +1,3 @@
 is_sqlite3
 pkgdb
-read
-semver
+versions

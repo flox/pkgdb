@@ -17,7 +17,7 @@
 
 #include "flox/core/command.hh"
 #include "flox/core/util.hh"
-#include "flox/pkgdb.hh"
+#include "flox/pkgdb/write.hh"
 
 /* -------------------------------------------------------------------------- */
 
@@ -62,19 +62,18 @@ VerboseParser::VerboseParser( const std::string & name
   void
 FloxFlakeMixin::parseFloxFlake( const std::string & flakeRef )
 {
-  nix::FlakeRef ref = flox::parseFlakeRef( flakeRef );
   {
+    nix::FlakeRef ref = flox::parseFlakeRef( flakeRef );
     nix::Activity act(
       * nix::logger
     , nix::lvlInfo
     , nix::actUnknown
     , nix::fmt( "fetching flake '%s'", ref.to_string() )
     );
-    this->flake = std::make_unique<flox::FloxFlake>(
-      (nix::ref<nix::EvalState>) this->state
-    , ref
-    );
+    this->flake = std::make_shared<flox::FloxFlake>( this->getState(), ref );
   }
+
+  this->flake = this->FloxFlakeParserMixin::parseFloxFlake( flakeRef );
 
   if ( ! this->flake->lockedFlake.flake.lockedRef.input.hasAllInfo()
      )

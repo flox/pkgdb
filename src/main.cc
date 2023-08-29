@@ -11,8 +11,9 @@
 #include <iostream>
 
 #include "flox/core/command.hh"
-#include "flox/pkgdb.hh"
+#include "flox/pkgdb/write.hh"
 #include "flox/pkgdb/command.hh"
+#include "flox/search/command.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -32,6 +33,9 @@ main( int argc, char * argv[] )
   flox::pkgdb::GetCommand cmdGet;
   prog.add_subparser( cmdGet.parser );
 
+  flox::search::SearchCommand cmdSearch;
+  prog.add_subparser( cmdSearch.parser );
+
 
   /* Parse Args */
 
@@ -39,9 +43,9 @@ main( int argc, char * argv[] )
     {
       prog.parse_args( argc, argv );
     }
-  catch( const std::runtime_error & err )
+  catch( const std::exception & err )
     {
-      std::cerr << err.what() << std::endl;
+      std::cerr << "ERROR: " << err.what() << std::endl;
       std::cerr << prog << std::endl;
       return EXIT_FAILURE;
     }
@@ -58,6 +62,10 @@ main( int argc, char * argv[] )
       if ( prog.is_subcommand_used( "get" ) )
         {
           return cmdGet.run();
+        }
+      if ( prog.is_subcommand_used( "search" ) )
+        {
+          return cmdSearch.run();
         }
     }
   catch( const std::exception & err )

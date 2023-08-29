@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS AttrSets (
   id        INTEGER       PRIMARY KEY
 , parent    INTEGER
 , attrName  VARCHAR( 255) NOT NULL
+, done      BOOL          NOT NULL DEFAULT FALSE
 , CONSTRAINT  UC_AttrSets UNIQUE ( id, parent )
 );
 
@@ -127,6 +128,34 @@ CREATE VIEW IF NOT EXISTS v_AttrPaths AS
     FROM AttrSets O INNER JOIN Tree as Parent ON ( Parent.id = O.parent )
   ) SELECT * FROM Tree;
 
+
+CREATE VIEW IF NOT EXISTS v_Semvers AS SELECT
+  semver
+, major
+, minor
+, ( iif( ( length( mPatch ) < 1 ), rest, mPatch ) ) AS patch
+, ( iif( ( length( mPatch ) < 1 ), NULL, rest ) )   AS preTag
+FROM (
+  SELECT semver
+       , major
+       , minor
+       , ( substr( rest, 0, instr( rest, '-' ) ) )  AS mPatch
+       , ( substr( rest, instr( rest, '-' ) + 1 ) ) AS rest
+  FROM (
+    SELECT semver
+         , major
+         , ( substr( rest, 0, instr( rest, '.' ) ) )  AS minor
+         , ( substr( rest, instr( rest, '.' ) + 1 ) ) AS rest
+    FROM (
+      SELECT semver
+           , ( substr( semver, 0, instr( semver, '.' ) ) )  AS major
+           , ( substr( semver, instr( semver, '.' ) + 1 ) ) AS rest
+      FROM ( SELECT DISTINCT semver FROM Packages )
+    )
+  )
+) ORDER BY major, minor, patch, preTag DESC NULLS FIRST;
+
+
 CREATE VIEW IF NOT EXISTS v_PackagesSearch AS SELECT
   Packages.id
 , v_AttrPaths.subtree
@@ -136,14 +165,39 @@ CREATE VIEW IF NOT EXISTS v_PackagesSearch AS SELECT
 , Packages.name
 , Packages.pname
 , Packages.version
+, iif( ( Packages.version IS NULL ), NULL
+  , iif( ( Packages.semver IS NOT NULL ), NULL
+       , iif( ( ( SELECT Packages.version = date( Packages.version ) )
+                IS NOT NULL )
+            , date( Packages.version ), NULL
+            )
+       )
+  ) AS versionDate
 , Packages.semver
+, v_Semvers.major
+, v_Semvers.minor
+, v_Semvers.patch
+, v_Semvers.preTag
+, ( iif( ( Packages.version IS NULL ), 3
+       , iif( ( Packages.semver IS NOT NULL ), 0
+         , iif( ( ( SELECT Packages.version = date( Packages.version ) )
+                  IS NOT NULL )
+              , 1
+              , 3
+              )
+         )
+       )
+  ) AS versionType
 , Packages.license
 , Packages.broken
+, iif( ( broken IS NULL ), 1, iif( broken, 2, 0 ) ) AS brokenRank
 , Packages.unfree
+, iif( ( unfree IS NULL ), 1, iif( unfree, 2, 0 ) ) AS unfreeRank
 , Descriptions.description
 FROM Packages
-JOIN Descriptions ON ( Packages.descriptionId = Descriptions.id )
-JOIN v_AttrPaths ON ( Packages.parentId = v_AttrPaths.id )
+LEFT OUTER JOIN Descriptions ON ( Packages.descriptionId = Descriptions.id  )
+LEFT OUTER JOIN v_Semvers    ON ( Packages.semver        = v_Semvers.semver )
+     INNER JOIN v_AttrPaths  ON ( Packages.parentId      = v_AttrPaths.id   )
 )SQL";
 
 
