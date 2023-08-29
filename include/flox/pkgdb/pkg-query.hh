@@ -78,7 +78,9 @@ struct PkgQueryArgs {
 
   /** Errors concerning validity of package query parameters. */
   struct PkgQueryInvalidArgException : public flox::FloxException {
+
     public:
+
       enum error_code {
         PQEC_ERROR = 1  /**< Generic Exception */
       /** Name/{pname,version,semver} are mutually exclusive */
@@ -92,15 +94,21 @@ struct PkgQueryArgs {
       , PQEC_INVALID_SYSTEM      = 8  /**< Unrecognized/unsupported system */
       , PQEC_INVALID_STABILITY   = 9  /**< Unrecognized stability */
       } errorCode;
+
     protected:
+
       static std::string errorMessage( const error_code & ecode );
+
     public:
-      PkgQueryInvalidArgException( const error_code & ecode = PQEC_ERROR )
-        : flox::FloxException(
+
+      explicit PkgQueryInvalidArgException(
+        const error_code & ecode = PQEC_ERROR
+      ) : flox::FloxException(
             PkgQueryInvalidArgException::errorMessage( ecode )
           )
         , errorCode( ecode )
       {}
+
   };  /* End struct `PkgDbQueryInvalidArgException' */
 
 
@@ -117,6 +125,7 @@ struct PkgQueryArgs {
    * @return `std::nullopt` iff the above conditions are met, an error
    *         code otherwise.
    */
+  [[nodiscard]]
   std::optional<PkgQueryInvalidArgException::error_code> validate() const;
 
 };  /* End struct `PkgQueryArgs' */
@@ -225,15 +234,15 @@ class PkgQuery : public PkgQueryArgs {
 
     PkgQuery() { this->init(); }
 
-    PkgQuery( const PkgQueryArgs & params ) : PkgQueryArgs( params )
+    explicit PkgQuery( const PkgQueryArgs & params ) : PkgQueryArgs( params )
     {
       this->init();
     }
 
     PkgQuery( const PkgQueryArgs             & params
-            , const std::vector<std::string> & exportedColumns
+            ,       std::vector<std::string>   exportedColumns
             )
-      : PkgQueryArgs( params ), exportedColumns( exportedColumns )
+      : PkgQueryArgs( params ), exportedColumns( std::move( exportedColumns ) )
     {
       this->init();
     }
