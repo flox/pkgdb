@@ -85,7 +85,7 @@ struct PkgQueryMixin : virtual public command::CommandStateMixin {
    * Run query on a @a pkgdb::PkgDbReadOnly database.
    * Any scraping should be performed before invoking this function.
    */
-  std::vector<pkgdb::row_id> queryDb( pkgdb::PkgDbReadOnly & db );
+  std::vector<pkgdb::row_id> queryDb( pkgdb::PkgDbReadOnly & pdb ) const;
 
 };  /* End struct `RegistryMixin' */
 

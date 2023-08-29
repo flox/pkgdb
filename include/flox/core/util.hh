@@ -105,7 +105,7 @@ bool isSQLiteDb( const std::string & dbPath );
   inline static nix::FlakeRef
 parseFlakeRef( const std::string & flakeRef )
 {
-  return ( flakeRef.find( '{' ) == flakeRef.npos )
+  return ( flakeRef.find( '{' ) == std::string::npos )
          ? nix::parseFlakeRef( flakeRef )
          : nix::FlakeRef::fromAttrs(
              nix::fetchers::jsonToAttrs( nlohmann::json::parse( flakeRef ) )

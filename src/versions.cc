@@ -1,5 +1,9 @@
 /* ========================================================================== *
  *
+ * @file versions.cc
+ *
+ * @brief Interfaces used to perform version number analysis, especially
+ *        _Semantic Version_ processing.
  *
  *
  * -------------------------------------------------------------------------- */

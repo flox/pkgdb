@@ -26,12 +26,12 @@ namespace flox::pkgdb {
 /* -------------------------------------------------------------------------- */
 
   bool
-isSQLError( int rc )
+isSQLError( int rcode )
 {
-  switch ( rc )
+  switch ( rcode )
   {
-    case SQLITE_OK:   return false; break;
-    case SQLITE_ROW:  return false; break;
+    case SQLITE_OK:
+    case SQLITE_ROW:
     case SQLITE_DONE: return false; break;
     default:          return true;  break;
   }
@@ -60,12 +60,12 @@ PkgDbReadOnly::loadLockedFlake()
     this->db
   , "SELECT fingerprint, string, attrs FROM LockedFlake LIMIT 1"
   );
-  auto r = * qry.begin();
-  std::string fingerprintStr = r.get<std::string>( 0 );
+  auto rsl = * qry.begin();
+  std::string fingerprintStr = rsl.get<std::string>( 0 );
   nix::Hash   fingerprint    =
     nix::Hash::parseNonSRIUnprefixed( fingerprintStr, nix::htSHA256 );
-  this->lockedRef.string = r.get<std::string>( 1 );
-  this->lockedRef.attrs  = nlohmann::json::parse( r.get<std::string>( 2 ) );
+  this->lockedRef.string = rsl.get<std::string>( 1 );
+  this->lockedRef.attrs  = nlohmann::json::parse( rsl.get<std::string>( 2 ) );
   /* Check to see if our fingerprint is already known.
    * If it isn't load it, otherwise assert it matches. */
   if ( this->fingerprint == nix::Hash( nix::htSHA256 ) )
@@ -105,7 +105,7 @@ PkgDbReadOnly::getDbVersion()
 PkgDbReadOnly::completedAttrSet( const flox::AttrPath & path )
 {
   /* Lookup the `AttrName.id' ( if one exists ) */
-  row_id id = 0;
+  row_id row = 0;
   for ( const auto & a : path )
     {
       sqlite3pp::query qryId(
@@ -114,13 +114,13 @@ PkgDbReadOnly::completedAttrSet( const flox::AttrPath & path )
         "WHERE ( attrName = :attrName ) AND ( parent = :parent )"
       );
       qryId.bind( ":attrName", a, sqlite3pp::copy );
-      qryId.bind( ":parent", (long long) id );
+      qryId.bind( ":parent", (long long) row );
       auto i = qryId.begin();
       if ( i == qryId.end() ) { return false; }  /* No such path. */
       /* If a parent attrset is marked `done', then all of it's children
        * are also considered done. */
       if ( ( * i ).get<bool>( 1 ) ) { return true; }
-      id = ( * i ).get<long long>( 0 );
+      row = ( * i ).get<long long>( 0 );
     }
   return false;
 }
@@ -132,7 +132,7 @@ PkgDbReadOnly::completedAttrSet( const flox::AttrPath & path )
 PkgDbReadOnly::hasAttrSet( const flox::AttrPath & path )
 {
   /* Lookup the `AttrName.id' ( if one exists ) */
-  row_id id = 0;
+  row_id row = 0;
   for ( const auto & a : path )
     {
       sqlite3pp::query qryId(
@@ -141,10 +141,10 @@ PkgDbReadOnly::hasAttrSet( const flox::AttrPath & path )
         "WHERE ( attrName = :attrName ) AND ( parent = :parent )"
       );
       qryId.bind( ":attrName", a, sqlite3pp::copy );
-      qryId.bind( ":parent", (long long) id );
+      qryId.bind( ":parent", (long long) row );
       auto i = qryId.begin();
       if ( i == qryId.end() ) { return false; }  /* No such path. */
-      id = ( * i ).get<long long>( 0 );
+      row = ( * i ).get<long long>( 0 );
     }
   return true;
 }

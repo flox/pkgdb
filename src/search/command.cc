@@ -22,10 +22,8 @@
 
 /* -------------------------------------------------------------------------- */
 
-namespace flox {
-
-  /** Interfaces used to search for packages in flakes. */
-  namespace search {
+/** Interfaces used to search for packages in flakes. */
+namespace flox::search {
 
 /* -------------------------------------------------------------------------- */
 
@@ -108,9 +106,9 @@ PkgQueryMixin::addQueryArgs( argparse::ArgumentParser & parser )
 /* -------------------------------------------------------------------------- */
 
   std::vector<pkgdb::row_id>
-PkgQueryMixin::queryDb( pkgdb::PkgDbReadOnly & db )
+PkgQueryMixin::queryDb( pkgdb::PkgDbReadOnly & pdb ) const
 {
-  return this->query.execute( db.db );
+  return this->query.execute( pdb.db );
 }
 
 
@@ -167,6 +165,14 @@ SearchCommand::scrapeIfNeeded()
         }
     };
 
+  auto scrapePrefix = [&]( const flox::AttrPath & prefix )
+    {
+      for ( auto & [name, input] : this->inputs )
+        {
+          maybeScrape( prefix, input );
+        }
+    };
+
   for ( const auto & subtree : subtrees )
     {
       flox::AttrPath prefix;
@@ -182,20 +188,14 @@ SearchCommand::scrapeIfNeeded()
           prefix.emplace_back( system );
           if ( subtree != ST_CATALOG )
             {
-              for ( auto & [name, input] : this->inputs )
-                {
-                  maybeScrape( prefix, input );
-                }
+              scrapePrefix( prefix );
             }
           else
             {
               for ( const auto & stability : stabilities )
                 {
                   prefix.emplace_back( stability );
-                  for ( auto & [name, input] : this->inputs )
-                    {
-                      maybeScrape( prefix, input );
-                    }
+                  scrapePrefix( prefix );
                 }
             }
         }
@@ -235,8 +235,7 @@ SearchCommand::run()
 
 /* -------------------------------------------------------------------------- */
 
-  }  /* End namespaces `flox::search' */
-}  /* End namespaces `flox' */
+}  /* End namespaces `flox::search' */
 
 
 /* -------------------------------------------------------------------------- *

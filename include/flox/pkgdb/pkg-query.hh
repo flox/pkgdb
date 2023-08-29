@@ -122,7 +122,7 @@ struct PkgQueryArgs {
 };  /* End struct `PkgQueryArgs' */
 
 
-void from_json( const nlohmann::json & j, PkgQueryArgs & pqa );
+void from_json( const nlohmann::json & jqa, PkgQueryArgs & pqa );
 
 
 /* -------------------------------------------------------------------------- */
@@ -233,14 +233,14 @@ struct PkgQuery : public PkgQueryArgs {
    * This does NOT perform filtering by `semver` which must be performed as a
    * post-processing step.
    */
-  std::shared_ptr<sqlite3pp::query> bind( sqlite3pp::database & db ) const;
+  std::shared_ptr<sqlite3pp::query> bind( sqlite3pp::database & pdb ) const;
 
   /**
    * Query a given database returning an ordered list of
    * satisfactory `Packages.id`s.
    * This performs `semver` filtering.
    */
-  std::vector<row_id> execute( sqlite3pp::database & db ) const;
+  std::vector<row_id> execute( sqlite3pp::database & pdb ) const;
 
 };
 

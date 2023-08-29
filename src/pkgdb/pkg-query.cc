@@ -87,9 +87,9 @@ PkgQueryArgs::validate() const
   /* Check licenses don't contain the ' character */
   if ( this->licenses.has_value() )
     {
-      for ( const auto & l : * this->licenses )
+      for ( const auto & license : * this->licenses )
         {
-          if ( l.find( '\'' ) != l.npos )
+          if ( license.find( '\'' ) != std::string::npos )
             {
               return error_code::PQEC_INVALID_LICENSE;
             }
@@ -97,11 +97,11 @@ PkgQueryArgs::validate() const
     }
 
   /* Systems */
-  for ( const auto & s : this->systems )
+  for ( const auto & system : this->systems )
     {
       if ( std::find( flox::defaultSystems.begin()
                     , flox::defaultSystems.end()
-                    , s
+                    , system
                     )
            == flox::defaultSystems.end()
          )
@@ -113,11 +113,11 @@ PkgQueryArgs::validate() const
   /* Stabilities */
   if ( this->stabilities.has_value() )
     {
-      for ( const auto & s : * this->stabilities )
+      for ( const auto & stability : * this->stabilities )
         {
           if ( std::find( flox::defaultCatalogStabilities.begin()
                         , flox::defaultCatalogStabilities.end()
-                        , s
+                        , stability
                         )
                == flox::defaultCatalogStabilities.end()
              )
@@ -154,10 +154,10 @@ PkgQueryArgs::clear()
 /* -------------------------------------------------------------------------- */
 
   void
-from_json( const nlohmann::json & j, PkgQueryArgs & pqa )
+from_json( const nlohmann::json & jqa, PkgQueryArgs & pqa )
 {
   pqa.clear();
-  for ( const auto & [key, value] : j.items() )
+  for ( const auto & [key, value] : jqa.items() )
     {
       if ( key == "match" )                  { pqa.match             = value; }
       else if ( key == "name" )              { pqa.name              = value; }
@@ -356,9 +356,9 @@ PkgQuery::init()
       size_t                   idx  = 0;
       std::vector<std::string> lst;
       std::stringstream        rank;
-      for ( const auto s : * this->subtrees )
+      for ( const auto subtree : * this->subtrees )
         {
-          switch ( s )
+          switch ( subtree )
             {
               case ST_LEGACY:   lst.emplace_back( "legacyPackages" ); break;
               case ST_PACKAGES: lst.emplace_back( "packages" );       break;
@@ -554,11 +554,11 @@ PkgQuery::filterSemvers(
 /* -------------------------------------------------------------------------- */
 
   std::shared_ptr<sqlite3pp::query>
-PkgQuery::bind( sqlite3pp::database & db ) const
+PkgQuery::bind( sqlite3pp::database & pdb ) const
 {
   std::string stmt = this->str();
   std::shared_ptr<sqlite3pp::query> qry =
-    std::make_shared<sqlite3pp::query>( db, stmt.c_str() );
+    std::make_shared<sqlite3pp::query>( pdb, stmt.c_str() );
   for ( const auto & [var, val] : this->binds )
     {
       qry->bind( var.c_str(), val, sqlite3pp::copy );
@@ -570,9 +570,9 @@ PkgQuery::bind( sqlite3pp::database & db ) const
 /* -------------------------------------------------------------------------- */
 
   std::vector<row_id>
-PkgQuery::execute( sqlite3pp::database & db ) const
+PkgQuery::execute( sqlite3pp::database & pdb ) const
 {
-  std::shared_ptr<sqlite3pp::query> qry = this->bind( db );
+  std::shared_ptr<sqlite3pp::query> qry = this->bind( pdb );
   std::vector<row_id>               rsl;
 
   /* If we don't need to handle `semver' this is easy. */

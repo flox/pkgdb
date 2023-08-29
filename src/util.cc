@@ -67,7 +67,7 @@ isSQLiteDb( const std::string & dbPath )
   nlohmann::json
 parseOrReadJSONObject( const std::string & jsonOrPath )
 {
-  if ( jsonOrPath.find( '{' ) != jsonOrPath.npos )
+  if ( jsonOrPath.find( '{' ) != std::string::npos )
     {
       return nlohmann::json::parse( jsonOrPath );
     }
