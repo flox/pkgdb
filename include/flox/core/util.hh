@@ -37,13 +37,16 @@ struct std::hash<std::list<std::string_view>>
   operator()( const std::list<std::string_view> & lst ) const noexcept
   {
     if ( lst.empty() ) { return 0; }
-    auto it = lst.begin();
-    std::size_t h1 = std::hash<std::string_view>{}( * it );
-    for ( ; it != lst.cend(); ++it )
+    auto itr = lst.begin();
+    std::size_t   hash = std::hash<std::string_view>{}( * itr );
+    for ( ; itr != lst.cend(); ++itr )
       {
-        h1 = ( h1 >> 1 ) ^ ( std::hash<std::string_view>{}( *it ) << 1 );
+        hash = ( hash >> ( (unsigned char) 1 ) ) ^
+               ( std::hash<std::string_view>{}( * itr ) <<
+                 ( (unsigned char) 1 )
+               );
       }
-    return h1;
+    return hash;
   }
 };
 
@@ -55,34 +58,36 @@ namespace flox {
 /* -------------------------------------------------------------------------- */
 
 /** Systems to resolve/search in. */
-static const std::vector<std::string> defaultSystems = {
- "x86_64-linux", "aarch64-linux", "x86_64-darwin", "aarch64-darwin"
-};
+  static const std::vector<std::string> &
+getDefaultSystems()
+{
+  static const std::vector<std::string> defaultSystems = {
+   "x86_64-linux", "aarch64-linux", "x86_64-darwin", "aarch64-darwin"
+  };
+  return defaultSystems;
+}
+
 
 /** `flake' subtrees to resolve/search in. */
-static const std::vector<std::string> defaultSubtrees = {
-  "catalog", "packages", "legacyPackages"
-};
+  static const std::vector<std::string> &
+getDefaultSubtrees()
+{
+  static const std::vector<std::string> defaultSubtrees = {
+    "catalog", "packages", "legacyPackages"
+  };
+  return defaultSubtrees;
+}
+
 
 /** Catalog stabilities to resolve/search in. */
-static const std::vector<std::string> defaultCatalogStabilities = {
-  "stable", "staging", "unstable"
-};
-
-
-/* -------------------------------------------------------------------------- */
-
-#if 0
-// TODO: Migrate from `github:flox/resolver'
-/**
- * Predicate which indicates whether a `storePath' is "substitutable".
- * @param storePath an absolute path in the `/nix/store'.
- *        This should be an `outPath' and NOT a `drvPath' in most cases.
- * @return true iff `storePath' is cached in a remote `nix' store and can be
- *              copied without being "rebuilt" from scratch.
- */
-bool isSubstitutable( std::string_view storePath );
-#endif
+  static const std::vector<std::string> &
+getDefaultCatalogStabilities()
+{
+  static const std::vector<std::string> defaultCatalogStabilities = {
+    "stable", "staging", "unstable"
+  };
+  return defaultCatalogStabilities;
+}
 
 
 /* -------------------------------------------------------------------------- */

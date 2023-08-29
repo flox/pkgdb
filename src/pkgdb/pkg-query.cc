@@ -99,11 +99,11 @@ PkgQueryArgs::validate() const
   /* Systems */
   for ( const auto & system : this->systems )
     {
-      if ( std::find( flox::defaultSystems.begin()
-                    , flox::defaultSystems.end()
+      if ( std::find( flox::getDefaultSystems().begin()
+                    , flox::getDefaultSystems().end()
                     , system
                     )
-           == flox::defaultSystems.end()
+           == flox::getDefaultSystems().end()
          )
         {
           return error_code::PQEC_INVALID_SYSTEM;
@@ -115,11 +115,11 @@ PkgQueryArgs::validate() const
     {
       for ( const auto & stability : * this->stabilities )
         {
-          if ( std::find( flox::defaultCatalogStabilities.begin()
-                        , flox::defaultCatalogStabilities.end()
+          if ( std::find( flox::getDefaultCatalogStabilities().begin()
+                        , flox::getDefaultCatalogStabilities().end()
                         , stability
                         )
-               == flox::defaultCatalogStabilities.end()
+               == flox::getDefaultCatalogStabilities().end()
              )
             {
               return error_code::PQEC_INVALID_STABILITY;

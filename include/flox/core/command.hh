@@ -23,10 +23,8 @@
 
 /* -------------------------------------------------------------------------- */
 
-namespace flox {
-
-  /** Executable command helpers, argument parsers, etc. */
-  namespace command {
+/** Executable command helpers, argument parsers, etc. */
+namespace flox::command {
 
 /* -------------------------------------------------------------------------- */
 
@@ -56,6 +54,15 @@ struct VerboseParser : public argparse::ArgumentParser {
 
 /** Virtual class for _mixins_ which extend a command's state blob */
 struct CommandStateMixin {
+
+  virtual ~CommandStateMixin() = default;
+
+  CommandStateMixin( const CommandStateMixin &  ) = default;
+  CommandStateMixin(       CommandStateMixin && ) = default;
+
+  CommandStateMixin & operator=( const CommandStateMixin &  ) = default;
+  CommandStateMixin & operator=(       CommandStateMixin && ) = default;
+
   /** Hook run after parsing arguments and before running commands. */
   virtual void postProcessArgs() {};
 };  /* End struct `CommandStateMixin' */
@@ -109,8 +116,7 @@ struct AttrPathMixin : public CommandStateMixin {
 
 /* -------------------------------------------------------------------------- */
 
-  }  /* End namespaces `flox::command' */
-}  /* End namespaces `flox' */
+}  /* End namespaces `flox::command' */
 
 
 /* -------------------------------------------------------------------------- *

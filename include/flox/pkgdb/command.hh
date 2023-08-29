@@ -14,8 +14,7 @@
 
 /* -------------------------------------------------------------------------- */
 
-namespace flox {
-  namespace pkgdb {
+namespace flox::pkgdb {
 
 /* -------------------------------------------------------------------------- */
 
@@ -49,8 +48,6 @@ struct PkgDbMixin
 {
 
   std::shared_ptr<T> db;
-
-  virtual ~PkgDbMixin() = default;
 
   /**
    * Open a @a flox::pkgdb::PkgDb connection using the command state's
@@ -166,8 +163,7 @@ struct GetCommand
 
 /* -------------------------------------------------------------------------- */
 
-  }  /* End namespaces `flox::pkgdb' */
-}  /* End namespaces `flox' */
+}  /* End namespaces `flox::pkgdb' */
 
 
 /* -------------------------------------------------------------------------- *

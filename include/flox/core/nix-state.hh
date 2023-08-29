@@ -47,7 +47,7 @@ struct NixState {
 
 /* -------------------------------------------------------------------------- */
 
-  public:
+  // public:
 
     /**
      * Construct `NixState` from an existing store connection.
@@ -56,9 +56,9 @@ struct NixState {
      * @param verbosity Verbosity level setting used throughout `nix` and
      *                  `flox`/`pkgdb` operations.
      */
-    NixState( nix::ref<nix::Store> store
-            , nix::Verbosity       verbosity = nix::lvlInfo
-            )
+    explicit NixState( nix::ref<nix::Store> & store
+                     , nix::Verbosity         verbosity = nix::lvlInfo
+                     )
       : store( (std::shared_ptr<nix::Store>) store )
     {
       nix::verbosity = verbosity;
@@ -70,7 +70,7 @@ struct NixState {
      * @param verbosity Verbosity level setting used throughout `nix` and
      *                  `flox`/`pkgdb` operations.
      */
-    NixState( nix::Verbosity verbosity = nix::lvlInfo )
+    explicit NixState( nix::Verbosity verbosity = nix::lvlInfo )
     {
       nix::verbosity = verbosity;
       initNix();
@@ -79,7 +79,7 @@ struct NixState {
 
 /* -------------------------------------------------------------------------- */
 
-  public:
+  // public:
 
     /**
      * Lazily open a `nix` store connection.
