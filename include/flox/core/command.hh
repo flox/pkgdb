@@ -66,6 +66,7 @@ struct CommandStateMixin {
 
   /** Hook run after parsing arguments and before running commands. */
   virtual void postProcessArgs() {};
+
 };  /* End struct `CommandStateMixin' */
 
 
@@ -87,6 +88,7 @@ struct FloxFlakeMixin
 
   /** Extend an argument parser to accept a `flake-ref` argument. */
   argparse::Argument & addFlakeRefArg( argparse::ArgumentParser & parser );
+
 };  /* End struct `FloxFlakeMixin' */
 
 

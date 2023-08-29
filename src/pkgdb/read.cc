@@ -236,27 +236,27 @@ PkgDbReadOnly::getAttrSetId( const flox::AttrPath & path )
 /* -------------------------------------------------------------------------- */
 
   flox::AttrPath
-PkgDbReadOnly::getAttrSetPath( row_id id )
+PkgDbReadOnly::getAttrSetPath( row_id row )
 {
-  if ( id == 0 ) { return {}; }
+  if ( row == 0 ) { return {}; }
   std::list<std::string> path;
-  while ( id != 0 )
+  while ( row != 0 )
     {
       sqlite3pp::query qry(
         this->db
       , "SELECT parent, attrName FROM AttrSets WHERE ( id = :id )"
       );
-      qry.bind( ":id", (long long) id );
+      qry.bind( ":id", (long long) row );
       auto i = qry.begin();
       /* Handle no such path. */
       if ( i == qry.end() )
         {
           throw PkgDbException(
             this->dbPath
-          , nix::fmt( "No such `AttrSet.id' %llu.", id )
+          , nix::fmt( "No such `AttrSet.id' %llu.", row )
           );
         }
-      id = ( * i ).get<long long>( 0 );
+      row = ( * i ).get<long long>( 0 );
       path.push_front( ( * i ).get<std::string>( 1 ) );
     }
   return flox::AttrPath { std::make_move_iterator( std::begin( path ) )
@@ -299,21 +299,21 @@ PkgDbReadOnly::getPackageId( const flox::AttrPath & path )
 /* -------------------------------------------------------------------------- */
 
   flox::AttrPath
-PkgDbReadOnly::getPackagePath( row_id id )
+PkgDbReadOnly::getPackagePath( row_id row )
 {
-  if ( id == 0 ) { return {}; }
+  if ( row == 0 ) { return {}; }
   sqlite3pp::query qry(
     this->db
   , "SELECT parentId, attrName FROM Packages WHERE ( id = :id )"
   );
-  qry.bind( ":id", (long long) id );
+  qry.bind( ":id", (long long) row );
   auto i = qry.begin();
   /* Handle no such path. */
   if ( i == qry.end() )
     {
       throw PkgDbException(
         this->dbPath
-      , nix::fmt( "No such `Packages.id' %llu.", id )
+      , nix::fmt( "No such `Packages.id' %llu.", row )
       );
     }
   flox::AttrPath path = this->getAttrSetPath( ( * i ).get<long long>( 0 ) );

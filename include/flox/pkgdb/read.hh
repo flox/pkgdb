@@ -29,10 +29,8 @@
 
 /* -------------------------------------------------------------------------- */
 
-namespace flox {
-
-  /** Interfaces for caching package metadata in SQLite3 databases. */
-  namespace pkgdb {
+/** Interfaces for caching package metadata in SQLite3 databases. */
+namespace flox::pkgdb {
 
 /* -------------------------------------------------------------------------- */
 
@@ -46,10 +44,8 @@ using sql_rc      = int;       /**< `SQLITE_*` result code. */
 
 struct PkgDbException : public FloxException {
   std::filesystem::path dbPath;
-  PkgDbException( const std::filesystem::path & dbPath
-                ,       std::string_view        msg
-                )
-    : FloxException( msg ), dbPath( dbPath )
+  PkgDbException( std::filesystem::path dbPath, std::string_view msg )
+    : FloxException( msg ), dbPath( std::move( dbPath ) )
   {}
 };  /* End struct `PkgDbException' */
 
@@ -81,22 +77,24 @@ class PkgDbReadOnly {
 
     /** Locked _flake reference_ for database's flake. */
     struct LockedFlakeRef {
-      std::string    string;  /**< Locked URI string.  */
-      nlohmann::json attrs;   /**< Exploded form of URI as an attr-set. */
-    } lockedRef;
+      std::string string;  /**< Locked URI string.  */
+      /** Exploded form of URI as an attr-set. */
+      nlohmann::json attrs = nlohmann::json::object();
+    };
+    LockedFlakeRef lockedRef;
 
 
 /* -------------------------------------------------------------------------- */
 
   /* Errors */
 
-  public:
+  // public:
 
     struct NoSuchDatabase : PkgDbException {
-      NoSuchDatabase( const PkgDbReadOnly & db )
+      explicit NoSuchDatabase( const PkgDbReadOnly & pdb )
         : PkgDbException(
-            db.dbPath
-          , std::string( "No such database '" + db.dbPath.string() + "'." )
+            pdb.dbPath
+          , std::string( "No such database '" + pdb.dbPath.string() + "'." )
           )
       {}
     };  /* End struct `NoSuchDatabase' */
@@ -116,14 +114,14 @@ class PkgDbReadOnly {
 
   /* Constructors */
 
-  protected:
+  // protected:
 
     /**
      * Dummy constructor required for child classes so that they can open
      * databases in read-only mode.
      * Does NOT attempt to create a database if one does not exist.
      */
-    PkgDbReadOnly() : db(), fingerprint( nix::htSHA256 ), dbPath() {}
+    PkgDbReadOnly() : fingerprint( nix::htSHA256 ) {}
 
 
   public:
@@ -149,7 +147,7 @@ class PkgDbReadOnly {
      * Does NOT attempt to create a database if one does not exist.
      * @param dbPath Absolute path to database file.
      */
-    PkgDbReadOnly( std::string_view dbPath )
+    explicit PkgDbReadOnly( std::string_view dbPath )
       : db( dbPath, SQLITE_OPEN_READONLY )
       , fingerprint( nix::htSHA256 )
       , dbPath( dbPath )
@@ -168,7 +166,7 @@ class PkgDbReadOnly {
      * Does NOT attempt to create a database if one does not exist.
      * @param fingerprint Unique hash associated with locked flake.
      */
-    PkgDbReadOnly( const Fingerprint & fingerprint )
+    explicit PkgDbReadOnly( const Fingerprint & fingerprint )
       : PkgDbReadOnly( fingerprint, genPkgDbName( fingerprint ) )
     {}
 
@@ -177,7 +175,7 @@ class PkgDbReadOnly {
 
   /* Queries */
 
-  public:
+  // public:
 
     /** @return The Package Database schema version. */
     std::string getDbVersion();
@@ -210,11 +208,11 @@ class PkgDbReadOnly {
 
     /**
      * Get the attribute path for a given `AttrSet.id`.
-     * @param id A unique `row_id` ( unsigned 64bit int ).
+     * @param row A unique `row_id` ( unsigned 64bit int ).
      * @return An attribute path prefix such as `packages.x86_64-linux` or
      *         `legacyPackages.aarch64-darwin.python3Packages`.
      */
-    flox::AttrPath getAttrSetPath( row_id id );
+    flox::AttrPath getAttrSetPath( row_id row );
 
     /**
      * Get the `Packages.id` for a given path.
@@ -227,11 +225,11 @@ class PkgDbReadOnly {
 
     /**
      * Get the attribute path for a given `Packages.id`.
-     * @param id A unique `row_id` ( unsigned 64bit int ).
+     * @param row A unique `row_id` ( unsigned 64bit int ).
      * @return An attribute path such as `packages.x86_64-linux.hello` or
      *         `legacyPackages.aarch64-darwin.python3Packages.pip`.
      */
-    flox::AttrPath getPackagePath( row_id id );
+    flox::AttrPath getPackagePath( row_id row );
 
     /**
      * Check to see if database has a package at the attribute path @a path.
@@ -304,8 +302,7 @@ bool isSQLError( int rcode );
 
 /* -------------------------------------------------------------------------- */
 
-  }  /* End Namespace `flox::pkgdb' */
-}  /* End Namespace `flox' */
+}  /* End Namespace `flox::pkgdb' */
 
 
 /* -------------------------------------------------------------------------- *
