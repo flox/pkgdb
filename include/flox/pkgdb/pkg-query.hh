@@ -93,13 +93,13 @@ struct PkgQueryArgs {
       , PQEC_INVALID_STABILITY   = 9  /**< Unrecognized stability */
       } errorCode;
     protected:
-      static std::string errorMessage( const error_code & ec );
+      static std::string errorMessage( const error_code & ecode );
     public:
-      PkgQueryInvalidArgException( const error_code & ec = PQEC_ERROR )
+      PkgQueryInvalidArgException( const error_code & ecode = PQEC_ERROR )
         : flox::FloxException(
-            PkgQueryInvalidArgException::errorMessage( ec )
+            PkgQueryInvalidArgException::errorMessage( ecode )
           )
-        , errorCode( ec )
+        , errorCode( ecode )
       {}
   };  /* End struct `PkgDbQueryInvalidArgException' */
 
@@ -127,120 +127,136 @@ void from_json( const nlohmann::json & jqa, PkgQueryArgs & pqa );
 
 /* -------------------------------------------------------------------------- */
 
-struct PkgQuery : public PkgQueryArgs {
+class PkgQuery : public PkgQueryArgs {
 
-  std::string from = "v_PackagesSearch";
+  private:
+    std::string from = "v_PackagesSearch";
 
-  std::stringstream selects;
-  bool              firstSelect = true;
+    std::stringstream selects;
+    bool              firstSelect = true;
 
-  std::stringstream orders;
-  bool              firstOrder = true;
+    std::stringstream orders;
+    bool              firstOrder = true;
 
-  std::stringstream wheres;
-  bool              firstWhere = true;
+    std::stringstream wheres;
+    bool              firstWhere = true;
 
-  std::unordered_map<std::string, std::string> binds;
+    std::unordered_map<std::string, std::string> binds;
 
-  /**
-   * Final set of columns to expose after all filtering and ordering has been
-   * performed on temporary fields.
-   * The value `*` may be used to export all fields.
-   *
-   * This setting is only intended for use by unit tests, any columns other
-   * than `id` and `semver` may be changed without being reflected in normal
-   * `pkgdb` semantic version updates.
-   */
-  std::vector<std::string> exportedColumns = { "id", "semver" };
+    /**
+     * Final set of columns to expose after all filtering and ordering has been
+     * performed on temporary fields.
+     * The value `*` may be used to export all fields.
+     *
+     * This setting is only intended for use by unit tests, any columns other
+     * than `id` and `semver` may be changed without being reflected in normal
+     * `pkgdb` semantic version updates.
+     */
+    std::vector<std::string> exportedColumns = { "id", "semver" };
 
-  /**
-   * Add a new column to the _inner_ `SELECT` statement.
-   * These selections may be used internally for filtering and ordering rows,
-   * and are only _exported_ in the final result if they are also listed
-   * in @a exportedColumns.
-   * @param column A column `SELECT` statement such as `v_PackagesSearch.id`
-   *               or `0 AS foo`.
-   */
-  void addSelection( std::string_view column );
-  /** Appends the `ORDER BY` block. */
-  void addOrderBy( std::string_view order );
-  /** Appends the `WHERE` block with a new `AND ( <COND> )` statement. */
-  void addWhere( std::string_view cond );
+    /**
+     * Clear member @a PkgQuery member variables of any state from past
+     * initialization runs.
+     * This is called by @a init before translating @a PkgQueryArgs members.
+     */
+    void clearBuilt();
 
-  /**
-   * Clear member @a PkgQuery member variables of any state from past
-   * initialization runs.
-   * This is called by @a init before translating @a PkgQueryArgs members.
-   */
-  void clearBuilt();
+    /**
+     * Add a new column to the _inner_ `SELECT` statement.
+     * These selections may be used internally for filtering and ordering rows,
+     * and are only _exported_ in the final result if they are also listed
+     * in @a exportedColumns.
+     * @param column A column `SELECT` statement such as `v_PackagesSearch.id`
+     *               or `0 AS foo`.
+     */
+    void addSelection( std::string_view column );
+    /** Appends the `ORDER BY` block. */
+    void addOrderBy( std::string_view order );
+    /** Appends the `WHERE` block with a new `AND ( <COND> )` statement. */
+    void addWhere( std::string_view cond );
 
-  /**
-   * Translate @a PkgQueryArgs parameters to a _built_ SQL statement held in
-   * `std::stringstream` member variables.
-   * This is called by constructors, and should be called manually if any
-   * @a PkgQueryArgs members are manually edited.
-   */
-  void init();
+    /**
+     * Filter a set of semantic version numbers by the range indicated in the
+     * @a semvers member variable.
+     * If @a semvers is unset, return the original set _as is_.
+     */
+      std::unordered_set<std::string>
+    filterSemvers( const std::unordered_set<std::string> & versions ) const;
 
-  PkgQuery() { this->init(); }
+    /** A helper of @a init() which handles `subtrees` filtering/ranking. */
+    void initSubtrees();
 
-  PkgQuery( const PkgQueryArgs & params ) : PkgQueryArgs( params )
-  {
-    this->init();
-  }
+    /** A helper of @a init() which handles `systems` filtering/ranking. */
+    void initSystems();
 
-  PkgQuery( PkgQueryArgs && params ) : PkgQueryArgs( std::move( params ) )
-  {
-    this->init();
-  }
+    /** A helper of @a init() which handles `stabilities` filtering/ranking. */
+    void initStabilities();
 
-  PkgQuery( const PkgQueryArgs             & params
-          , const std::vector<std::string> & exportedColumns
-          )
-    : PkgQueryArgs( params ), exportedColumns( exportedColumns )
-  {
-    this->init();
-  }
+    /** A helper of @a init() which constructs the `ORDER BY` block. */
+    void initOrderBy();
 
-  PkgQuery( PkgQueryArgs             && params
-          , std::vector<std::string> && exportedColumns
-          )
-    : PkgQueryArgs( std::move( params ) )
-    , exportedColumns( std::move( exportedColumns ) )
-  {
-    this->init();
-  }
+    /**
+     * Translate @a PkgQueryArgs parameters to a _built_ SQL statement held in
+     * `std::stringstream` member variables.
+     * This is called by constructors, and should be called manually if any
+     * @a PkgQueryArgs members are manually edited.
+     */
+    void init();
 
-  /**
-   * Produce an unbound SQL statement from various member variables.
-   * This must be run after @a init.
-   * The returned string still needs to be processed to _bind_ host parameters
-   * from @a binds before being executed.
-   * @return An unbound SQL query string.
-   */
-  std::string str() const;
 
-  /**
-   * Filter a set of semantic version numbers by the range indicated in the
-   * @a semvers member variable.
-   * If @a semvers is unset, return the original set _as is_.
-   */
-    std::unordered_set<std::string>
-  filterSemvers( const std::unordered_set<std::string> & versions ) const;
+  public:
 
-  /**
-   * Create a bound SQLite query ready for execution.
-   * This does NOT perform filtering by `semver` which must be performed as a
-   * post-processing step.
-   */
-  std::shared_ptr<sqlite3pp::query> bind( sqlite3pp::database & pdb ) const;
+    PkgQuery() { this->init(); }
 
-  /**
-   * Query a given database returning an ordered list of
-   * satisfactory `Packages.id`s.
-   * This performs `semver` filtering.
-   */
-  std::vector<row_id> execute( sqlite3pp::database & pdb ) const;
+    PkgQuery( const PkgQueryArgs & params ) : PkgQueryArgs( params )
+    {
+      this->init();
+    }
+
+    PkgQuery( PkgQueryArgs && params ) : PkgQueryArgs( std::move( params ) )
+    {
+      this->init();
+    }
+
+    PkgQuery( const PkgQueryArgs             & params
+            , const std::vector<std::string> & exportedColumns
+            )
+      : PkgQueryArgs( params ), exportedColumns( exportedColumns )
+    {
+      this->init();
+    }
+
+    PkgQuery( PkgQueryArgs             && params
+            , std::vector<std::string> && exportedColumns
+            )
+      : PkgQueryArgs( std::move( params ) )
+      , exportedColumns( std::move( exportedColumns ) )
+    {
+      this->init();
+    }
+
+    /**
+     * Produce an unbound SQL statement from various member variables.
+     * This must be run after @a init().
+     * The returned string still needs to be processed to _bind_ host parameters
+     * from @a binds before being executed.
+     * @return An unbound SQL query string.
+     */
+    std::string str() const;
+
+    /**
+     * Create a bound SQLite query ready for execution.
+     * This does NOT perform filtering by `semver` which must be performed as a
+     * post-processing step.
+     */
+    std::shared_ptr<sqlite3pp::query> bind( sqlite3pp::database & pdb ) const;
+
+    /**
+     * Query a given database returning an ordered list of
+     * satisfactory `Packages.id`s.
+     * This performs `semver` filtering.
+     */
+    std::vector<row_id> execute( sqlite3pp::database & pdb ) const;
 
 };
 

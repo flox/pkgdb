@@ -23,10 +23,10 @@ namespace flox::pkgdb {
 
   std::string
 PkgQueryArgs::PkgQueryInvalidArgException::errorMessage(
-  const PkgQueryArgs::PkgQueryInvalidArgException::error_code & ec
+  const PkgQueryArgs::PkgQueryInvalidArgException::error_code & ecode
 )
 {
-  switch ( ec )
+  switch ( ecode )
     {
       case PQEC_MIX_NAME:
         return "Queries may not mix `name' parameter with any of `pname', "
@@ -257,6 +257,180 @@ addIn( std::stringstream & oss, const std::vector<std::string> & elems )
 /* -------------------------------------------------------------------------- */
 
   void
+PkgQuery::initSubtrees()
+{
+  /* Handle `subtrees' filtering. */
+  if ( this->subtrees.has_value() )
+    {
+      size_t                   idx  = 0;
+      std::vector<std::string> lst;
+      std::stringstream        rank;
+      for ( const auto subtree : * this->subtrees )
+        {
+          switch ( subtree )
+            {
+              case ST_LEGACY:   lst.emplace_back( "legacyPackages" ); break;
+              case ST_PACKAGES: lst.emplace_back( "packages" );       break;
+              case ST_CATALOG:  lst.emplace_back( "catalog" );        break;
+              default:
+                throw PkgQueryArgs::PkgQueryInvalidArgException();
+                break;
+            }
+          rank << "iif( ( subtree = '" << lst.back() << "' ), " << idx << ", ";
+          ++idx;
+        }
+      /* subtree IN ( ...  ) */
+      std::stringstream cond;
+      cond << "subtree";
+      addIn( cond, lst );
+      this->addWhere( cond.str() );
+      /* Wrap up rankings assignment. */
+      if ( 1 < idx )
+        {
+          rank << idx;
+          for ( size_t i = 0; i < idx; ++i ) { rank << " )"; }
+          rank << " AS subtreesRank";
+          this->addSelection( rank.str() );
+        }
+      else
+        {
+          /* Add bogus rank so `ORDER BY subtreesRank' works. */
+          this->addSelection( "0 AS subtreesRank" );
+        }
+    }
+  else
+    {
+      /* Add bogus rank so `ORDER BY subtreesRank' works. */
+      this->addSelection( "0 AS subtreesRank" );
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
+PkgQuery::initSystems()
+{
+  /* Handle `systems' filtering. */
+  {
+    std::stringstream cond;
+    cond << "system";
+    addIn( cond, this->systems );
+    this->addWhere( cond.str() );
+  }
+  if ( 1 < this->systems.size() )
+    {
+      size_t            idx  = 0;
+      std::stringstream rank;
+      for ( const auto & system : this->systems )
+        {
+          rank << "iif( ( system = '" << system << "' ), " << idx << ", ";
+          ++idx;
+        }
+      rank << idx;
+      for ( size_t i = 0; i < idx; ++i ) { rank << " )"; }
+      rank << " AS systemsRank";
+      this->addSelection( rank.str() );
+    }
+  else
+    {
+      /* Add a bogus rank to `ORDER BY systemsRank' works. */
+      this->addSelection( "0 AS systemsRank" );
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
+PkgQuery::initStabilities()
+{
+  /* Handle `stabilities' filtering. */
+  if ( this->stabilities.has_value() )
+    {
+      std::stringstream cond;
+      cond << "( stability IS NULL ) OR ( stability ";
+      addIn( cond, * this->stabilities );
+      cond << " )";
+      this->addWhere( cond.str() );
+      if ( 1 < this->stabilities->size() )
+        {
+          size_t            idx  = 0;
+          std::stringstream rank;
+          rank << "iif( ( stability IS NULL ), NULL, ";
+          for ( const auto & stability : * this->stabilities )
+            {
+              rank << "iif( ( stability = '" << stability << "' ), " << idx;
+              rank << ", ";
+              ++idx;
+            }
+          rank << idx;
+          for ( size_t i = 0; i < idx; ++i ) { rank << " )"; }
+          rank << " ) AS stabilitiesRank";
+          this->addSelection( rank.str() );
+        }
+      else
+        {
+          /* Add a bogus rank so `ORDER BY stabilitiesRank' works. */
+          this->addSelection( "0 AS stabilitiesRank" );
+        }
+    }
+  else
+    {
+      /* Add a bogus rank so `ORDER BY stabilitiesRank' works. */
+      this->addSelection( "0 AS stabilitiesRank" );
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
+PkgQuery::initOrderBy()
+{
+  /* Establish ordering. */
+  this->addOrderBy( R"SQL(
+    matchStrength ASC
+  , subtreesRank ASC
+  , systemsRank ASC
+  , stabilitiesRank ASC NULLS LAST
+  , pname ASC
+  , versionType ASC
+  )SQL" );
+
+  /* Handle `preferPreReleases' and semver parts. */
+  if ( this->preferPreReleases )
+    {
+      this->addOrderBy( R"SQL(
+        major  DESC NULLS LAST
+      , minor  DESC NULLS LAST
+      , patch  DESC NULLS LAST
+      , preTag DESC NULLS FIRST
+      )SQL" );
+    }
+  else
+    {
+      this->addOrderBy( R"SQL(
+        preTag DESC NULLS FIRST
+      , major  DESC NULLS LAST
+      , minor  DESC NULLS LAST
+      , patch  DESC NULLS LAST
+      )SQL" );
+    }
+
+  this->addOrderBy( R"SQL(
+    versionDate DESC NULLS LAST
+  -- Lexicographic as fallback for misc. versions
+  , v_PackagesSearch.version ASC NULLS LAST
+  , brokenRank ASC
+  , unfreeRank ASC
+  )SQL" );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
 PkgQuery::init()
 {
   this->clearBuilt();
@@ -350,151 +524,10 @@ PkgQuery::init()
       this->addWhere( "( unfree IS NULL ) OR ( unfree = FALSE )" );
     }
 
-  /* Handle `subtrees' filtering. */
-  if ( this->subtrees.has_value() )
-    {
-      size_t                   idx  = 0;
-      std::vector<std::string> lst;
-      std::stringstream        rank;
-      for ( const auto subtree : * this->subtrees )
-        {
-          switch ( subtree )
-            {
-              case ST_LEGACY:   lst.emplace_back( "legacyPackages" ); break;
-              case ST_PACKAGES: lst.emplace_back( "packages" );       break;
-              case ST_CATALOG:  lst.emplace_back( "catalog" );        break;
-              default:
-                throw PkgQueryArgs::PkgQueryInvalidArgException();
-                break;
-            }
-          rank << "iif( ( subtree = '" << lst.back() << "' ), " << idx << ", ";
-          ++idx;
-        }
-      /* subtree IN ( ...  ) */
-      std::stringstream cond;
-      cond << "subtree";
-      addIn( cond, lst );
-      this->addWhere( cond.str() );
-      /* Wrap up rankings assignment. */
-      if ( 1 < idx )
-        {
-          rank << idx;
-          for ( size_t i = 0; i < idx; ++i ) { rank << " )"; }
-          rank << " AS subtreesRank";
-          this->addSelection( rank.str() );
-        }
-      else
-        {
-          /* Add bogus rank so `ORDER BY subtreesRank' works. */
-          this->addSelection( "0 AS subtreesRank" );
-        }
-    }
-  else
-    {
-      /* Add bogus rank so `ORDER BY subtreesRank' works. */
-      this->addSelection( "0 AS subtreesRank" );
-    }
-
-  /* Handle `systems' filtering. */
-  {
-    std::stringstream cond;
-    cond << "system";
-    addIn( cond, this->systems );
-    this->addWhere( cond.str() );
-  }
-  if ( 1 < this->systems.size() )
-    {
-      size_t            idx  = 0;
-      std::stringstream rank;
-      for ( const auto & system : this->systems )
-        {
-          rank << "iif( ( system = '" << system << "' ), " << idx << ", ";
-          ++idx;
-        }
-      rank << idx;
-      for ( size_t i = 0; i < idx; ++i ) { rank << " )"; }
-      rank << " AS systemsRank";
-      this->addSelection( rank.str() );
-    }
-  else
-    {
-      /* Add a bogus rank to `ORDER BY systemsRank' works. */
-      this->addSelection( "0 AS systemsRank" );
-    }
-
-  /* Handle `stabilities' filtering. */
-  if ( this->stabilities.has_value() )
-    {
-      std::stringstream cond;
-      cond << "( stability IS NULL ) OR ( stability ";
-      addIn( cond, * this->stabilities );
-      cond << " )";
-      this->addWhere( cond.str() );
-      if ( 1 < this->stabilities->size() )
-        {
-          size_t            idx  = 0;
-          std::stringstream rank;
-          rank << "iif( ( stability IS NULL ), NULL, ";
-          for ( const auto & stability : * this->stabilities )
-            {
-              rank << "iif( ( stability = '" << stability << "' ), " << idx;
-              rank << ", ";
-              ++idx;
-            }
-          rank << idx;
-          for ( size_t i = 0; i < idx; ++i ) { rank << " )"; }
-          rank << " ) AS stabilitiesRank";
-          this->addSelection( rank.str() );
-        }
-      else
-        {
-          /* Add a bogus rank so `ORDER BY stabilitiesRank' works. */
-          this->addSelection( "0 AS stabilitiesRank" );
-        }
-    }
-  else
-    {
-      /* Add a bogus rank so `ORDER BY stabilitiesRank' works. */
-      this->addSelection( "0 AS stabilitiesRank" );
-    }
-
-  /* Establish ordering. */
-  this->addOrderBy( R"SQL(
-    matchStrength ASC
-  , subtreesRank ASC
-  , systemsRank ASC
-  , stabilitiesRank ASC NULLS LAST
-  , pname ASC
-  , versionType ASC
-  )SQL" );
-
-  /* Handle `preferPreReleases' and semver parts. */
-  if ( this->preferPreReleases )
-    {
-      this->addOrderBy( R"SQL(
-        major  DESC NULLS LAST
-      , minor  DESC NULLS LAST
-      , patch  DESC NULLS LAST
-      , preTag DESC NULLS FIRST
-      )SQL" );
-    }
-  else
-    {
-      this->addOrderBy( R"SQL(
-        preTag DESC NULLS FIRST
-      , major  DESC NULLS LAST
-      , minor  DESC NULLS LAST
-      , patch  DESC NULLS LAST
-      )SQL" );
-    }
-
-  this->addOrderBy( R"SQL(
-    versionDate DESC NULLS LAST
-  -- Lexicographic as fallback for misc. versions
-  , v_PackagesSearch.version ASC NULLS LAST
-  , brokenRank ASC
-  , unfreeRank ASC
-  )SQL" );
+  this->initSubtrees();
+  this->initSystems();
+  this->initStabilities();
+  this->initOrderBy();
 
 }
 
