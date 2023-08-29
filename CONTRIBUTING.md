@@ -4,7 +4,7 @@
 
 ``` shell
 $ nix develop;
-$ make;
+$ make -j;
 $ ls ./bin/;
 pkgdb
 $ make check;
