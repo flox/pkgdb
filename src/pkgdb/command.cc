@@ -17,7 +17,7 @@
 
 #include "flox/pkgdb/command.hh"
 #include "flox/core/util.hh"
-#include "flox/pkgdb.hh"
+#include "flox/pkgdb/write.hh"
 
 /* -------------------------------------------------------------------------- */
 

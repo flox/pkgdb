@@ -11,7 +11,7 @@
 #include <set>
 #include <list>
 
-#include "flox/pkgdb.hh"
+#include "flox/pkgdb/write.hh"
 #include "flox/pkgdb/pkg-query.hh"
 
 

@@ -77,7 +77,7 @@ These readers could care less if `pkgdb` is at version 3.2.1 or 30000.2.1!
 
 ### SQL Schema Version
 Changes to the `pkgdb` SQL schema should be indicated by semantic version
-numbers in the file `<pkgdb>/include/pkgdb.hh` using the variable
+numbers in the file `<pkgdb>/include/pkgdb/write.hh` using the variable
 `FLOX_PKGDB_SCHEMA_VERSION` which is used to populate newly created DBs and to
 detect old schemas in existing DBs.
 

@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "flox/pkgdb.hh"
+#include "flox/pkgdb/write.hh"
 #include "flox/core/command.hh"
 
 /* -------------------------------------------------------------------------- */

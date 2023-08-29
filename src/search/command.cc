@@ -15,7 +15,7 @@
 
 #include "flox/core/util.hh"
 #include "flox/flox-flake.hh"
-#include "flox/pkgdb.hh"
+#include "flox/pkgdb/write.hh"
 #include "flox/search/command.hh"
 #include "flox/pkgdb/command.hh"
 

@@ -35,7 +35,7 @@
 #include "flox/flox-flake.hh"
 #include "flox/core/nix-state.hh"
 #include "flox/core/types.hh"
-#include "flox/pkgdb.hh"
+#include "flox/pkgdb/write.hh"
 #include "flox/pkgdb/pkg-query.hh"
 #include "test.hh"
 

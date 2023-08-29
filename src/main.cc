@@ -11,7 +11,7 @@
 #include <iostream>
 
 #include "flox/core/command.hh"
-#include "flox/pkgdb.hh"
+#include "flox/pkgdb/write.hh"
 #include "flox/pkgdb/command.hh"
 #include "flox/search/command.hh"
 
