@@ -120,7 +120,7 @@ SearchCommand::SearchCommand() : parser( "search" )
 {
   this->parser.add_description(
     "Search a set of flakes and emit a list satisfactory DB + "
-    "`Packages.id` pairs"
+    "`Packages.id' pairs"
   );
   this->addInputsArg( this->parser );
   this->addQueryArgs( this->parser );
@@ -160,7 +160,7 @@ SearchCommand::scrapeIfNeeded()
       if ( rsl != EXIT_SUCCESS )
         {
           throw FloxException( nix::fmt(
-            "Encountered error scraping flake '%s' at prefix '%s'"
+            "Encountered error scraping flake `%s' at prefix `%s'"
           , input.flake->lockedFlake.flake.lockedRef.to_string()
           , nix::concatStringsSep( ".", path )
           ) );

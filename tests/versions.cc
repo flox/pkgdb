@@ -60,110 +60,6 @@ test_isDate0()
 
 /* -------------------------------------------------------------------------- */
 
-  bool
-test_getVersionKind0()
-{
-  EXPECT_EQ( versions::VK_OTHER,  versions::getVersionKind( "" ) );
-  EXPECT_EQ( versions::VK_DATE,   versions::getVersionKind( "10-25-1917" ) );
-  EXPECT_EQ( versions::VK_DATE,   versions::getVersionKind( "1917-10-25" ) );
-  EXPECT_EQ( versions::VK_DATE,   versions::getVersionKind( "10-25-1917-x" ) );
-  EXPECT_EQ( versions::VK_DATE,   versions::getVersionKind( "1917-10-25-x" ) );
-  EXPECT_EQ( versions::VK_SEMVER, versions::getVersionKind( "4.2.0" ) );
-  EXPECT_EQ( versions::VK_SEMVER, versions::getVersionKind( "4.2.0-pre" ) );
-  EXPECT_EQ( versions::VK_OTHER,  versions::getVersionKind( "v4.2.0" ) );
-  EXPECT_EQ( versions::VK_OTHER,  versions::getVersionKind( "4.2" ) );
-  EXPECT_EQ( versions::VK_OTHER,  versions::getVersionKind( "4" ) );
-  return true;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  bool
-test_compareSemversLT0()
-{
-  /* Compare same version pre-release against release */
-  EXPECT( versions::compareSemversLT( "4.1.9-pre", "4.1.9" ) );
-  EXPECT( versions::compareSemversLT( "4.1.9-pre", "4.1.9", true ) );
-  EXPECT( ! versions::compareSemversLT( "4.1.9", "4.1.9-pre" ) );
-  EXPECT( ! versions::compareSemversLT( "4.1.9", "4.1.9-pre", true ) );
-
-  /* Compare next minor pre-release to past minor relese */
-  EXPECT( versions::compareSemversLT( "4.2.0-pre", "4.1.9" ) );
-  EXPECT( ! versions::compareSemversLT( "4.2.0-pre", "4.1.9", true ) );
-  EXPECT( ! versions::compareSemversLT( "4.1.9", "4.2.0-pre" ) );
-  EXPECT( versions::compareSemversLT( "4.1.9", "4.2.0-pre", true ) );
-
-  /* Compare next minor release to past minor relese */
-  EXPECT( ! versions::compareSemversLT( "4.2.0", "4.1.9" ) );
-  EXPECT( ! versions::compareSemversLT( "4.2.0", "4.1.9", true ) );
-  EXPECT( versions::compareSemversLT( "4.1.9", "4.2.0" ) );
-  EXPECT( versions::compareSemversLT( "4.1.9", "4.2.0", true ) );
-
-  /* Compare next minor pre-release to past minor pre-relese */
-  EXPECT( ! versions::compareSemversLT( "4.2.0-pre", "4.1.9-pre" ) );
-  EXPECT( ! versions::compareSemversLT( "4.2.0-pre", "4.1.9-pre", true ) );
-  EXPECT( versions::compareSemversLT( "4.1.9-pre", "4.2.0-pre" ) );
-  EXPECT( versions::compareSemversLT( "4.1.9-pre", "4.2.0-pre", true ) );
-
-  return true;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  bool
-test_compareDatesLT0()
-{
-  /* Ensure equal dates with different formats are equal */
-  EXPECT( versions::compareDatesLT( "1917-10-25", "10-25-1917" ) );
-  EXPECT( versions::compareDatesLT( "10-25-1917", "1917-10-25" ) );
-
-  /* Same format comparisons */
-  EXPECT( versions::compareDatesLT( "1917-10-25", "1917-10-26" ) );
-  EXPECT( ! versions::compareDatesLT( "1917-10-26", "1917-10-25" ) );
-  EXPECT( versions::compareDatesLT( "10-25-1917", "10-26-1917" ) );
-  EXPECT( ! versions::compareDatesLT( "10-26-1917", "10-25-1917" ) );
-
-  return true;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  bool
-test_compareVersionsLT0()
-{
-  /* Ensure equal dates with different formats are equal */
-  EXPECT( versions::compareVersionsLT( "1917-10-25", "10-25-1917" ) );
-  EXPECT( versions::compareVersionsLT( "10-25-1917", "1917-10-25" ) );
-
-  /* Same format comparisons */
-  EXPECT( versions::compareVersionsLT( "1917-10-25", "1917-10-26" ) );
-  EXPECT( ! versions::compareVersionsLT( "1917-10-26", "1917-10-25" ) );
-  EXPECT( versions::compareVersionsLT( "10-25-1917", "10-26-1917" ) );
-  EXPECT( ! versions::compareVersionsLT( "10-26-1917", "10-25-1917" ) );
-
-  /* Compare same version pre-release against release */
-  EXPECT( versions::compareVersionsLT( "4.1.9-pre", "4.1.9" ) );
-  EXPECT( versions::compareVersionsLT( "4.1.9-pre", "4.1.9", true ) );
-  EXPECT( ! versions::compareVersionsLT( "4.1.9", "4.1.9-pre" ) );
-  EXPECT( ! versions::compareVersionsLT( "4.1.9", "4.1.9-pre", true ) );
-
-  /* Compare different categories */
-  EXPECT( versions::compareVersionsLT( "10-25-1917", "4.1.9-pre" ) );
-  EXPECT( ! versions::compareVersionsLT( "4.1.9-pre", "10-25-1917" ) );
-  EXPECT( versions::compareVersionsLT( "howdy", "4.1.9-pre", true ) );
-  EXPECT( ! versions::compareVersionsLT( "4.1.9-pre", "howdy", true ) );
-  EXPECT( versions::compareVersionsLT( "howdy", "10-25-1970", true ) );
-  EXPECT( ! versions::compareVersionsLT( "10-25-1970", "howdy" ) );
-
-  return true;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
   int
 main()
 {
@@ -173,10 +69,6 @@ main()
   RUN_TEST( semverSat1 );
   RUN_TEST( isSemver0 );
   RUN_TEST( isDate0 );
-  RUN_TEST( getVersionKind0 );
-  RUN_TEST( compareSemversLT0 );
-  RUN_TEST( compareDatesLT0 );
-  RUN_TEST( compareVersionsLT0 );
 
   return ec;
 }

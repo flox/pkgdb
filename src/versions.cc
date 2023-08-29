@@ -10,7 +10,6 @@
 #include <stdexcept>
 
 #include "versions.hh"
-#include "date.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -53,111 +52,6 @@ isDate( const std::string & version )
 {
   static const std::regex dateRE( dateREStr, std::regex::ECMAScript );
   return std::regex_match( version, dateRE );
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  bool
-compareSemversLT( const std::string & lhs
-                , const std::string & rhs
-                ,       bool          preferPreReleases
-                )
-{
-  static const std::regex semverRE( semverREStr, std::regex::ECMAScript );
-  static const size_t     majorIdx  = 1;
-  static const size_t     minorIdx  = 2;
-  static const size_t     patchIdx  = 3;
-  static const size_t     preTagIdx = 4;
-
-  std::smatch matchL;
-  if ( ! std::regex_match( lhs, matchL, semverRE ) )
-    {
-      throw VersionException(
-        "'" + lhs + "' is not a semantic version string"
-      );
-    }
-
-  std::smatch matchR;
-  if ( ! std::regex_match( rhs, matchR, semverRE ) )
-    {
-      throw VersionException(
-        "'" + rhs + "' is not a semantic version string"
-      );
-    }
-
-  if ( ! preferPreReleases )
-    {
-      bool isPreL = ! matchL[preTagIdx].str().empty();
-      bool isPreR = ! matchR[preTagIdx].str().empty();
-      if ( isPreL != isPreR ) { return isPreL; }
-    }
-
-  /* Major */
-  unsigned valL = std::stoul( matchL[majorIdx].str() );
-  unsigned valR = std::stoul( matchR[majorIdx].str() );
-  if ( valL < valR ) { return true; } else if ( valR < valL ) { return false; }
-
-  /* Minor */
-  valL = std::stoul( matchL[minorIdx].str() );
-  valR = std::stoul( matchR[minorIdx].str() );
-  if ( valL < valR ) { return true; } else if ( valR < valL ) { return false; }
-
-  /* Patch */
-  valL = std::stoul( matchL[patchIdx].str() );
-  valR = std::stoul( matchR[patchIdx].str() );
-  if ( valL < valR ) { return true; } else if ( valR < valL ) { return false; }
-
-  std::string preR = matchR[preTagIdx].str();
-  if ( preR.empty() ) { return true; }
-  std::string preL = matchL[preTagIdx].str();
-  if ( preL.empty() ) { return false; }
-  return preL <= preR;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  bool
-compareDatesLT( const std::string & lhs, const std::string & rhs )
-{
-  datetime::Date lhd( lhs );
-  if ( lhs == lhd.rest )
-    {
-      throw VersionException( "'" + lhs + "' is not a date string" );
-    }
-
-  datetime::Date rhd( rhs );
-  if ( rhs == rhd.rest )
-    {
-      throw VersionException( "'" + rhs + "' is not a date string" );
-    }
-
-  /* Uses any trailing characters to break ties lexicographically. */
-  return lhd.isBefore( rhd, false );
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  bool
-compareVersionsLT( const std::string & lhs
-                 , const std::string & rhs
-                 ,       bool          preferPreReleases
-                 )
-{
-  const version_kind vkl = getVersionKind( lhs );
-  const version_kind vkr = getVersionKind( rhs );
-
-  if ( vkl != vkr ) { return vkl < vkr; }
-
-  if ( vkl == VK_SEMVER )
-    {
-      return compareSemversLT( lhs, rhs, preferPreReleases );
-    }
-  if ( vkl == VK_DATE ) { return compareDatesLT( lhs, rhs ); }
-  assert( vkl == VK_OTHER );
-  return lhs <= rhs;
 }
 
 
