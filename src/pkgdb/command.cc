@@ -87,35 +87,44 @@ PkgDbMixin<PkgDb>::openPkgDb()
 PkgDbMixin<PkgDbReadOnly>::openPkgDb()
 {
   if ( this->db != nullptr ) { return; }  /* Already loaded. */
-  if ( ( this->flake != nullptr ) && this->dbPath.has_value() )
+
+  if ( ! this->dbPath.has_value() )
     {
-      this->db = std::make_shared<PkgDbReadOnly>(
-        this->flake->lockedFlake.getFingerprint()
-      , (std::string) * this->dbPath
-      );
-    }
-  else if ( this->flake != nullptr )
-    {
+      if ( this->flake == nullptr )
+        {
+          throw flox::FloxException(
+            "You must provide either a path to a database, or "
+            "a flake-reference."
+          );
+        }
       this->dbPath = flox::pkgdb::genPkgDbName(
         this->flake->lockedFlake.getFingerprint()
       );
-      std::filesystem::create_directories( this->dbPath->parent_path() );
+    }
+
+  /* Initialize empty DB if none exists. */
+  if ( ! std::filesystem::exists( this->dbPath.value() ) )
+    {
+      if ( this->flake != nullptr )
+        {
+          std::filesystem::create_directories( this->dbPath->parent_path() );
+          flox::pkgdb::PkgDb pdb( this->flake->lockedFlake
+                                , (std::string) * this->dbPath
+                                );
+        }
+    }
+
+  if ( this->flake != nullptr )
+    {
       this->db = std::make_shared<PkgDbReadOnly>(
         this->flake->lockedFlake.getFingerprint()
       , (std::string) * this->dbPath
       );
     }
-  else if ( this->dbPath.has_value() )
-    {
-      std::filesystem::create_directories( this->dbPath->parent_path() );
-      this->db =
-        std::make_shared<PkgDbReadOnly>( (std::string) * this->dbPath );
-    }
   else
     {
-      throw flox::FloxException(
-        "You must provide either a path to a database, or a flake-reference."
-      );
+      this->db =
+        std::make_shared<PkgDbReadOnly>( (std::string) * this->dbPath );
     }
 }
 

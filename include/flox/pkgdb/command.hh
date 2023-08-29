@@ -108,10 +108,7 @@ struct ScrapeCommand
  *   + Print the absolute path to the associated flake's db.
  */
 struct GetCommand
-  // FIXME: `get db' is the one that requires R/W, but it really shouldn't.
-  // Modify `get db' so that it does not require a DB to exist, and then change
-  // this to be `PkgDbMixin<PkgDbReadOnly>'
-  : public PkgDbMixin<PkgDb>
+  : public PkgDbMixin<PkgDbReadOnly>
   , public command::AttrPathMixin
 {
 

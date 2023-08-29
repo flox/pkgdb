@@ -54,6 +54,20 @@ genPkgDbName( const Fingerprint & fingerprint )
 /* -------------------------------------------------------------------------- */
 
   void
+PkgDbReadOnly::init()
+{
+  if ( ! std::filesystem::exists( this->dbPath ) )
+    {
+      throw NoSuchDatabase( * this );
+    }
+  this->db.connect( this->dbPath.string().c_str(), SQLITE_OPEN_READONLY );
+  this->loadLockedFlake();
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
 PkgDbReadOnly::loadLockedFlake()
 {
   sqlite3pp::query qry(

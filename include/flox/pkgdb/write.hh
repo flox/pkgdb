@@ -13,18 +13,7 @@
 
 /* -------------------------------------------------------------------------- */
 
-/* This is passed in by `make' and is set by `<pkgdb>/version' */
-#ifndef FLOX_PKGDB_VERSION
-#  define FLOX_PKGDB_VERSION  "NO.VERSION"
-#endif
-#define FLOX_PKGDB_SCHEMA_VERSION  "0.1.0"
-
-
-/* -------------------------------------------------------------------------- */
-
-namespace flox {
-
-  namespace pkgdb {
+namespace flox::pkgdb {
 
 /* -------------------------------------------------------------------------- */
 
@@ -275,8 +264,7 @@ scrape(       nix::SymbolTable & syms
 /* -------------------------------------------------------------------------- */
 
 
-  }  /* End Namespace `flox::pkgdb' */
-}  /* End Namespace `flox' */
+}  /* End Namespace `flox::pkgdb' */
 
 
 /* -------------------------------------------------------------------------- *

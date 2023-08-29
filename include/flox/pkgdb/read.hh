@@ -29,6 +29,15 @@
 
 /* -------------------------------------------------------------------------- */
 
+/* This is passed in by `make' and is set by `<pkgdb>/version' */
+#ifndef FLOX_PKGDB_VERSION
+#  define FLOX_PKGDB_VERSION  "NO.VERSION"
+#endif
+#define FLOX_PKGDB_SCHEMA_VERSION  "0.1.0"
+
+
+/* -------------------------------------------------------------------------- */
+
 /** Interfaces for caching package metadata in SQLite3 databases. */
 namespace flox::pkgdb {
 
@@ -70,18 +79,16 @@ class PkgDbReadOnly {
 
   public:
 
-    SQLiteDb    db;           /**< SQLite3 database handle.         */
-    Fingerprint fingerprint;  /**< Unique hash of associated flake. */
-
-    std::filesystem::path dbPath;  /**< Absolute path to database. */
+    Fingerprint           fingerprint;  /**< Unique hash of associated flake. */
+    std::filesystem::path dbPath;       /**< Absolute path to database. */
+    SQLiteDb              db;           /**< SQLite3 database handle. */
 
     /** Locked _flake reference_ for database's flake. */
     struct LockedFlakeRef {
       std::string string;  /**< Locked URI string.  */
       /** Exploded form of URI as an attr-set. */
       nlohmann::json attrs = nlohmann::json::object();
-    };
-    LockedFlakeRef lockedRef;
+    } lockedRef;
 
 
 /* -------------------------------------------------------------------------- */
@@ -110,11 +117,20 @@ class PkgDbReadOnly {
     void loadLockedFlake();
 
 
+  private:
+
+    /**
+     * Open SQLite3 db connection at @a dbPath.
+     * Throw an error if no database exists.
+     */
+    void init();
+
+
 /* -------------------------------------------------------------------------- */
 
   /* Constructors */
 
-  // protected:
+  protected:
 
     /**
      * Dummy constructor required for child classes so that they can open
@@ -127,6 +143,18 @@ class PkgDbReadOnly {
   public:
 
     /**
+     * Opens an existing database.
+     * Does NOT attempt to create a database if one does not exist.
+     * @param dbPath Absolute path to database file.
+     */
+    explicit PkgDbReadOnly( std::string_view dbPath )
+      : fingerprint( nix::htSHA256 )  /* Filled by `loadLockedFlake' later */
+      , dbPath( dbPath )
+    {
+      this->init();
+    }
+
+    /**
      * Opens a DB directly by its fingerprint hash.
      * Does NOT attempt to create a database if one does not exist.
      * @param fingerprint Unique hash associated with locked flake.
@@ -135,30 +163,10 @@ class PkgDbReadOnly {
     PkgDbReadOnly( const Fingerprint      & fingerprint
                  ,       std::string_view   dbPath
                  )
-      : db( dbPath, SQLITE_OPEN_READONLY )
-      , fingerprint( fingerprint )
+      : fingerprint( fingerprint )
       , dbPath( dbPath )
     {
-      this->loadLockedFlake();
-    }
-
-    /**
-     * Opens an existing database.
-     * Does NOT attempt to create a database if one does not exist.
-     * @param dbPath Absolute path to database file.
-     */
-    explicit PkgDbReadOnly( std::string_view dbPath )
-      : db( dbPath, SQLITE_OPEN_READONLY )
-      , fingerprint( nix::htSHA256 )
-      , dbPath( dbPath )
-    {
-      // FIXME: this never gets run because non-existent `dbPath' crashes
-      // in `db' constructor.
-      if ( ! std::filesystem::exists( this->dbPath ) )
-        {
-          throw NoSuchDatabase( * this );
-        }
-      this->loadLockedFlake();
+      this->init();
     }
 
     /**
