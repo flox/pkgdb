@@ -43,9 +43,9 @@ main( int argc, char * argv[] )
     {
       prog.parse_args( argc, argv );
     }
-  catch( const std::runtime_error & err )
+  catch( const std::exception & err )
     {
-      std::cerr << err.what() << std::endl;
+      std::cerr << "ERROR: " << err.what() << std::endl;
       std::cerr << prog << std::endl;
       return EXIT_FAILURE;
     }

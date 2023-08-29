@@ -147,7 +147,21 @@ PkgDbMixin<T>::addTargetArg( argparse::ArgumentParser & parser )
                      }
                    else  /* flake-ref */
                      {
-                       this->parseFloxFlake( target );
+                       try
+                         {
+                           this->parseFloxFlake( target );
+                         }
+                       catch( ... )
+                         {
+                           if ( std::filesystem::exists( target ) )
+                             {
+                               throw FloxException(
+                                 "Argument '" + target + "' is neither a flake "
+                                 "reference or SQLite3 database"
+                               );
+                             }
+                           throw;
+                         }
                      }
                    this->openPkgDb();
                  }
