@@ -55,7 +55,7 @@ class PkgDb : public PkgDbReadOnly {
      * Does NOT attempt to create a database if one does not exist.
      * @param dbPath Absolute path to database file.
      */
-    PkgDb( std::string_view dbPath ) : PkgDbReadOnly()
+    explicit PkgDb( std::string_view dbPath )
     {
       this->dbPath = dbPath;
       if ( ! std::filesystem::exists( this->dbPath ) )
@@ -78,7 +78,6 @@ class PkgDb : public PkgDbReadOnly {
     PkgDb( const Fingerprint      & fingerprint
          ,       std::string_view   dbPath
          )
-      : PkgDbReadOnly()
     {
       this->dbPath      = dbPath;
       this->fingerprint = fingerprint;
@@ -98,7 +97,7 @@ class PkgDb : public PkgDbReadOnly {
      * Does NOT attempt to create a database if one does not exist.
      * @param fingerprint Unique hash associated with locked flake.
      */
-    PkgDb( const Fingerprint & fingerprint )
+    explicit PkgDb( const Fingerprint & fingerprint )
       : PkgDb( fingerprint, genPkgDbName( fingerprint ) )
     {}
 
@@ -111,7 +110,6 @@ class PkgDb : public PkgDbReadOnly {
     PkgDb( const nix::flake::LockedFlake & flake
          ,       std::string_view          dbPath
          )
-      : PkgDbReadOnly()
     {
       this->dbPath      = dbPath;
       this->fingerprint = flake.getFingerprint();
@@ -131,7 +129,7 @@ class PkgDb : public PkgDbReadOnly {
      * Creates database if one does not exist.
      * @param flake Flake associated with the db. Used to write input metadata.
      */
-    PkgDb( const nix::flake::LockedFlake & flake )
+    explicit PkgDb( const nix::flake::LockedFlake & flake )
       : PkgDb( flake, genPkgDbName( flake.getFingerprint() ) )
     {}
 
@@ -140,7 +138,7 @@ class PkgDb : public PkgDbReadOnly {
 
   /* Basic Operations */
 
-  public:
+  // public:
 
     /**
      * Execute a raw sqlite statement on the database.
@@ -171,7 +169,7 @@ class PkgDb : public PkgDbReadOnly {
 
   /* Insert */
 
-  public:
+  // public:
 
     /**
      * Get the `AttrSet.id` for a given child of the attribute set associated
