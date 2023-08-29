@@ -113,15 +113,6 @@ FloxFlakeParserMixin::parseFloxFlake( const std::string & flakeRef )
   std::shared_ptr<FloxFlake>
 FloxFlakeParserMixin::parseFloxFlakeJSON( const nlohmann::json & flakeRef )
 {
-  auto report = []( std::string_view type ) -> void
-  {
-    throw FloxException( nix::fmt(
-      "Flake references may only be parsed from JSON objects or strings, "
-      "but got JSON type '%s'."
-    , type
-    ) );
-  };
-
   switch ( flakeRef.type() )
     {
       case nlohmann::json::value_t::object:
@@ -136,15 +127,13 @@ FloxFlakeParserMixin::parseFloxFlakeJSON( const nlohmann::json & flakeRef )
         , nix::parseFlakeRef( flakeRef.get<std::string>() )
         );
         break;
-      case nlohmann::json::value_t::null:    report( "null" );    break;
-      case nlohmann::json::value_t::array:   report( "array" );   break;
-      case nlohmann::json::value_t::boolean: report( "boolean" ); break;
-      case nlohmann::json::value_t::number_integer:
-      case nlohmann::json::value_t::number_unsigned:
-      case nlohmann::json::value_t::number_float:
-        report( "number" );
+      default:
+        throw FloxException( nix::fmt(
+          "Flake references may only be parsed from JSON objects or strings, "
+          "but got JSON type '%s'."
+        , flakeRef.type_name()
+        ) );
         break;
-      default: report( "???" ); break;
     }
 
   return nullptr;  /* Unreachable */
