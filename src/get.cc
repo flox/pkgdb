@@ -24,6 +24,7 @@ GetCommand::GetCommand()
   : parser( "get" )
   , pId( "id" )
   , pPath( "path" )
+  , pDone( "done" )
   , pFlake( "flake" )
   , pDb( "db" )
 {
@@ -37,6 +38,13 @@ GetCommand::GetCommand()
   this->addTargetArg( this->pId );
   this->addAttrPathArgs( this->pId );
   this->parser.add_subparser( this->pId );
+
+  this->pDone.add_description(
+    "Check to see if an attrset and its children has been scraped"
+  );
+  this->addTargetArg( this->pDone );
+  this->addAttrPathArgs( this->pDone );
+  this->parser.add_subparser( this->pDone );
 
   this->pPath.add_description(
     "Lookup an (AttrSets|Packages).id attribute path"
@@ -80,6 +88,27 @@ GetCommand::runId()
       std::cout << this->db->getAttrSetId( this->attrPath ) << std::endl;
     }
   return EXIT_SUCCESS;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  int
+GetCommand::runDone()
+{
+  if ( this->db->completedAttrSet( this->attrPath ) )
+    {
+      if ( nix::lvlNotice < nix::verbosity )
+        {
+          std::cout << "true" << std::endl;
+        }
+      return EXIT_SUCCESS;
+    }
+  if ( nix::lvlNotice < nix::verbosity )
+    {
+      std::cout << "false" << std::endl;
+    }
+  return EXIT_FAILURE;
 }
 
 
@@ -157,6 +186,10 @@ GetCommand::run()
   if ( this->parser.is_subcommand_used( "db" ) )
     {
       return this->runDb();
+    }
+  if ( this->parser.is_subcommand_used( "done" ) )
+    {
+      return this->runDone();
     }
   std::cerr << this->parser << std::endl;
   throw flox::FloxException( "You must provide a valid 'get' subcommand" );

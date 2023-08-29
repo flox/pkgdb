@@ -264,6 +264,24 @@ require_shared() {
 
 
 # ---------------------------------------------------------------------------- #
+
+# bats test_tags=get:done
+
+@test "pkgdb get done <DB-PATH> legacyPackages $NIX_SYSTEM akkoma-emoji" {
+  require_shared;
+  run $PKGDB get 'done' "$DBPATH" legacyPackages "$NIX_SYSTEM" akkoma-emoji;
+  assert_success;
+}
+
+
+@test "pkgdb get done <DB-PATH> legacyPackages $NIX_SYSTEM" {
+  require_shared;
+  run $PKGDB get 'done' "$DBPATH" legacyPackages "$NIX_SYSTEM";
+  assert_failure;
+}
+
+
+# ---------------------------------------------------------------------------- #
 #
 #
 #

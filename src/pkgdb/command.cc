@@ -145,14 +145,6 @@ PkgDbMixin<T>::addTargetArg( argparse::ArgumentParser & parser )
                      {
                        this->dbPath = nix::absPath( target );
                      }
-                   else if ( ! std::filesystem::exists( target + "/flake.nix" )
-                           )
-                     {
-                       throw FloxException(
-                         "Argument '" + target + "' is neither a flake "
-                         "reference or SQLite3 database"
-                       );
-                     }
                    else  /* flake-ref */
                      {
                        try

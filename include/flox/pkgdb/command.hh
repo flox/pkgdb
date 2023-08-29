@@ -100,6 +100,8 @@ struct ScrapeCommand
  * This subcommand has additional subcommands:
  * - `pkgdb get id [--pkg] DB-PATH ATTR-PATH...`
  *   + Lookup `(AttrSet|Packages).id` for `ATTR-PATH`.
+ * - `pkgdb get done DB-PATH ATTR-PATH...`
+ *   + Lookup whether `AttrPath` has been scraped.
  * - `pkgdb get path [--pkg] DB-PATH ID`
  *   + Lookup `AttrPath` for `(AttrSet|Packages).id`.
  * - `pkgdb get flake DB-PATH`
@@ -115,6 +117,7 @@ struct GetCommand
   command::VerboseParser parser;          /**< `get`       parser */
   command::VerboseParser pId;             /**< `get id`    parser */
   command::VerboseParser pPath;           /**< `get path`  parser */
+  command::VerboseParser pDone;           /**< `get done`  parser */
   command::VerboseParser pFlake;          /**< `get flake` parser */
   command::VerboseParser pDb;             /**< `get db`    parser */
   bool                   isPkg  = false;
@@ -130,6 +133,12 @@ struct GetCommand
    * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
    */
   int runId();
+
+  /**
+   * Execute the `get done` routine.
+   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+   */
+  int runDone();
 
   /**
    * Execute the `get path` routine.
