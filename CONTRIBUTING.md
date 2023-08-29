@@ -23,6 +23,33 @@ $ firefox ./docs/index.html;
 ```
 
 
+## Building Compilation Databases
+
+The files `.ccls` and `compile_commands.json` are available as
+`Makefile` targets.
+These may be used to support various C++ language server protocols, and tools
+such as `clang-tidy`.
+
+```shell
+$ make ccls;  # an alias of `.ccls'
+$ make compile_commands.json;
+$ make cdb;  # a shorthand to build both
+```
+
+
+## Linting
+
+Linting is a slow process, so we recommend running it in a separate terminal
+while you are hacking around or go get a coffee.
+
+Linting is performed by `clang-tidy`, and can be configured in the
+file [.clang-tidy](./.clang-tidy).
+
+```shell
+$ make lint;
+```
+
+
 ## Making a Release
 
 This project follows semantic version guidelines with then
