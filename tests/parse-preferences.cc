@@ -39,27 +39,28 @@ printInput( const auto & pair )
 /* -------------------------------------------------------------------------- */
 
   int
-//main( int argc, char * argv[] )
-main()
+main( int argc, char * argv[] )
 {
-  //if ( argc < 2 )
-  //  {
-  //    std::cerr << "You must provide a preferences argument." << std::endl;
-  //    return EXIT_FAILURE;
-  //  }
-
+  nlohmann::json jprefs;
+  if ( argc < 2 )
+    {
+      jprefs = R"( {
+        "inputs": [
+          { "nixpkgs":  { "subtrees": ["legacyPackages"] } }
+        , { "floco":    { "subtrees": ["packages"] } }
+        , { "floxpkgs": { "subtrees": ["catalog"], "stabilities": ["stable"] } }
+        ]
+      , "systems": ["x86_64-linux"]
+      , "allow":  { "unfree": true, "broken": false }
+      , "semver": { "preferPreReleases": false }
+      } )"_json;
+    }
+  else
+    {
+      jprefs = nlohmann::json::parse( argv[1] );
+    }
 
   flox::search::Preferences prefs;
-  nlohmann::json            jprefs = R"( {
-    "inputs": [
-      { "nixpkgs":  { "subtrees": ["legacyPackages"] } }
-    , { "floco":    { "subtrees": ["packages"] } }
-    , { "floxpkgs": { "subtrees": ["catalog"], "stabilities": ["stable"] } }
-    ]
-  , "systems": ["x86_64-linux"]
-  , "allow":  { "unfree": true, "broken": false }
-  , "semver": { "preferPreReleases": false }
-  } )"_json;
 
   flox::search::from_json( jprefs, prefs );
 
