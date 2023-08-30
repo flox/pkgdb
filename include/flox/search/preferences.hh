@@ -131,11 +131,7 @@ from_json( const nlohmann::json & jfrom, Preferences::InputPreferences & prefs )
     {
       if ( key == "subtrees" )
         {
-          for ( const auto & subtree : value )
-            {
-              prefs.subtrees = std::vector<subtree_type>();
-              prefs.subtrees->emplace_back( subtree.get<subtree_type>() );
-            }
+          prefs.subtrees = (std::vector<subtree_type>) value;
         }
       else if ( key == "stabilities" )
         {

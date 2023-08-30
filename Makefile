@@ -66,14 +66,14 @@ INCLUDEDIR ?= $(PREFIX)/include
 rwildcard = $(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2)        \
                                              $(filter $(subst *,%,$2),$d))
 
+
 # ---------------------------------------------------------------------------- #
 
 LIBFLOXPKGDB = libflox-pkgdb$(libExt)
 
 LIBS           =  $(LIBFLOXPKGDB)
 COMMON_HEADERS =  $(call rwildcard,include,*.hh)
-$(info COMMON_HEADERS: $(COMMON_HEADERS))
-SRCS           =  $(call rwildcard src,*.cc)
+SRCS           =  $(call rwildcard,src,*.cc)
 bin_SRCS       =  $(addprefix src/,main.cc scrape.cc get.cc pkgdb/command.cc)
 bin_SRCS       += $(addprefix src/,search/command.cc)
 lib_SRCS       =  $(filter-out $(bin_SRCS),$(SRCS))
@@ -201,33 +201,36 @@ clean: FORCE
 # ---------------------------------------------------------------------------- #
 
 %.o: %.cc $(COMMON_HEADERS)
-	$(CXX) $(CXXFLAGS) -c "$<" -o "$@"
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 
+lib/$(LIBFLOXPKGDB): $(COMMON_HEADERS)
 lib/$(LIBFLOXPKGDB): CXXFLAGS += $(lib_CXXFLAGS)
 lib/$(LIBFLOXPKGDB): LDFLAGS  += $(lib_LDFLAGS)
 lib/$(LIBFLOXPKGDB): $(lib_SRCS:.cc=.o)
 	$(MKDIR_P) $(@D)
-	$(CXX) $^ $(LDFLAGS) -o "$@"
+	$(CXX) $(filter %.o,$^) $(LDFLAGS) -o $@
 
 
 # ---------------------------------------------------------------------------- #
 
 src/pkgdb/write.o: src/pkgdb/schemas.hh
 
+bin/pkgdb: $(COMMON_HEADERS)
 bin/pkgdb: CXXFLAGS += $(bin_CXXFLAGS)
 bin/pkgdb: LDFLAGS  += $(bin_LDFLAGS)
 bin/pkgdb: $(bin_SRCS:.cc=.o) lib/$(LIBFLOXPKGDB)
 	$(MKDIR_P) $(@D)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(filter %.o,$^) -o "$@"
+	$(CXX) $(CXXFLAGS) $(filter %.o,$^) $(LDFLAGS) -o $@
 
 
 # ---------------------------------------------------------------------------- #
 
+$(TESTS) $(TEST_UTILS): $(COMMON_HEADERS)
 $(TESTS) $(TEST_UTILS): CXXFLAGS += $(bin_CXXFLAGS)
 $(TESTS) $(TEST_UTILS): LDFLAGS  += $(bin_LDFLAGS)
 $(TESTS) $(TEST_UTILS): tests/%: tests/%.cc lib/$(LIBFLOXPKGDB)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) "$<" -o "$@"
+	$(CXX) $(CXXFLAGS) $< $(LDFLAGS)  -o $@
 
 
 # ---------------------------------------------------------------------------- #
