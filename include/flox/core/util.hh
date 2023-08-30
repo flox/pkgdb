@@ -9,8 +9,7 @@
 
 #pragma once
 
-#include <functional>  // For `std::hash' and `std::pair'
-#include <string>      // For `std::string' and `std::string_view'
+#include <functional>  // For `std::hash' and `std::pair' #include <string>      // For `std::string' and `std::string_view'
 #include <vector>
 #include <list>
 #include <optional>
@@ -76,6 +75,35 @@ namespace nlohmann {
     }
 
   };  /* End struct `adl_serializer<std::optional<T>>' */
+
+
+  /* Flake Refs */
+    template<>
+  struct adl_serializer<nix::FlakeRef> {
+
+      static void
+    to_json( json & jfrom, const nix::FlakeRef & ref )
+    {
+      jfrom = nix::fetchers::attrsToJSON( ref.toAttrs() );
+    }
+
+    /** _Move-only_ constructor for flake-ref from JSON. */
+      static nix::FlakeRef
+    from_json( const json & jfrom )
+    {
+      if ( jfrom.is_object() )
+        {
+          return {
+            nix::FlakeRef::fromAttrs( nix::fetchers::jsonToAttrs( jfrom ) )
+          };
+        }
+      else
+        {
+          return { nix::parseFlakeRef( jfrom.get<std::string>() ) };
+        }
+    }
+
+  };  /* End struct `adl_serializer<nix::FlakeRef>' */
 
 }  /* End namespace `nlohmann' */
 

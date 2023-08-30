@@ -48,21 +48,27 @@ main( int argc, char * argv[] )
         "registry": {
           "inputs": {
             "nixpkgs": {
-              "type": "github"
-            , "owner": "NixOS"
-            , "repo": "nixpkgs"
+              "from": {
+                "type": "github"
+              , "owner": "NixOS"
+              , "repo": "nixpkgs"
+              }
             , "subtrees": ["legacyPackages"]
             }
           , "floco": {
-              "type": "github"
-            , "owner": "aakropotkin"
-            , "repo": "floco"
+              "from": {
+                "type": "github"
+              , "owner": "aakropotkin"
+              , "repo": "floco"
+              }
             , "subtrees": ["packages"]
             }
           , "floxpkgs": {
-              "type": "github"
-            , "owner": "flox"
-            , "repo": "floxpkgs"
+              "from": {
+                "type": "github"
+              , "owner": "flox"
+              , "repo": "floxpkgs"
+              }
             , "subtrees": ["catalog"]
             , "stabilities": ["stable"]
             }

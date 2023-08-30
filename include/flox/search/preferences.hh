@@ -39,21 +39,27 @@ namespace flox::search {
  *   "registry": {
  *     "inputs": {
  *       "nixpkgs": {
- *         "type": "github"
- *       , "owner": "NixOS"
- *       , "repo": "nixpkgs"
+ *         "from": {
+ *           "type": "github"
+ *         , "owner": "NixOS"
+ *         , "repo": "nixpkgs"
+ *         }
  *       , "subtrees": ["legacyPackages"]
  *       }
  *     , "floco": {
- *         "type": "github"
- *       , "owner": "aakropotkin"
- *       , "repo": "floco"
+ *         "from": {
+ *           "type": "github"
+ *         , "owner": "aakropotkin"
+ *         , "repo": "floco"
+ *         }
  *       , "subtrees": ["packages"]
  *       }
  *     , "floxpkgs": {
- *         "type": "github"
- *       , "owner": "flox"
- *       , "repo": "floxpkgs"
+ *         "from": {
+ *           "type": "github"
+ *         , "owner": "flox"
+ *         , "repo": "floxpkgs"
+ *         }
  *       , "subtrees": ["catalog"]
  *       , "stabilities": ["stable"]
  *       }
@@ -90,23 +96,6 @@ struct SearchParams {
      */
     std::optional<std::vector<std::string>> stabilities;
 
-    InputPreferences() = default;
-
-    explicit InputPreferences( const nlohmann::json & input )
-    {
-      for ( const auto & [key, value] : input.items() )
-        {
-          if ( ( key == "subtrees" ) && ( ! value.is_null() ) )
-            {
-              this->subtrees = (std::vector<subtree_type>) value;
-            }
-          else if ( key == "stabilities" )
-            {
-              this->stabilities = value;
-            }
-        }
-    }
-
   };  /* End struct `InputPreferences' */
 
 
@@ -114,18 +103,7 @@ struct SearchParams {
 
   /** Preferences associated with a named registry input. */
   struct RegistryInput : public InputPreferences {
-
-    std::shared_ptr<nix::FlakeRef> ref;
-
-    explicit RegistryInput( nlohmann::json & input ) : InputPreferences( input )
-    {
-      input.erase( "subtrees" );
-      input.erase( "stabilities" );
-      this->ref = std::make_shared<nix::FlakeRef>(
-        nix::FlakeRef::fromAttrs( nix::fetchers::jsonToAttrs( input ) )
-      );
-    }
-
+    std::shared_ptr<nix::FlakeRef> from;
   };  /* End struct `RegistryInput' */
 
 

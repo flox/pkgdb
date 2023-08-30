@@ -66,6 +66,39 @@ SearchParams::fillQueryArgs( const std::string         & input
 /* -------------------------------------------------------------------------- */
 
   void
+from_json( const nlohmann::json                 & jfrom
+         ,       SearchParams::InputPreferences & prefs
+         )
+{
+  for ( const auto & [key, value] : jfrom.items() )
+    {
+      if ( ( key == "subtrees" ) && ( ! value.is_null() ) )
+        {
+          prefs.subtrees = (std::vector<subtree_type>) value;
+        }
+      else if ( key == "stabilities" )
+        {
+          prefs.stabilities = value;
+        }
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
+from_json( const nlohmann::json & jfrom, SearchParams::RegistryInput & rip )
+{
+  from_json( jfrom, (SearchParams::InputPreferences &) rip );
+  rip.from = std::make_shared<nix::FlakeRef>(
+    jfrom.at( "from" ).get<nix::FlakeRef>()
+  );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
 from_json( const nlohmann::json & jfrom, SearchParams & params )
 {
   params.clear();
@@ -77,21 +110,11 @@ from_json( const nlohmann::json & jfrom, SearchParams & params )
             {
               if ( rkey == "inputs" )
                 {
-                  for ( const auto & [ikey, ivalue] : rvalue.items() )
-                    {
-                      nlohmann::json copy = ivalue;
-                      params.registry.inputs.emplace(
-                        ikey
-                      , SearchParams::RegistryInput( copy )
-                      );
-                    }
+                  params.registry.inputs = rvalue;
                 }
               else if ( rkey == "defaults" )
                 {
-                  nlohmann::json copy( rvalue );
-                  SearchParams::InputPreferences dft( copy );
-                  params.registry.defaults.stabilities = dft.stabilities;
-                  params.registry.defaults.subtrees    = dft.subtrees;
+                  params.registry.defaults = rvalue;
                 }
               else if ( rkey == "priority" )
                 {
