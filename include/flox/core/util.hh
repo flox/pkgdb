@@ -9,10 +9,11 @@
 
 #pragma once
 
-#include <functional>  // For `std::hash'
+#include <functional>  // For `std::hash' and `std::pair'
 #include <string>      // For `std::string' and `std::string_view'
 #include <vector>
 #include <list>
+#include <optional>
 
 #include <nix/logging.hh>
 #include <nix/store-api.hh>
@@ -52,6 +53,53 @@ struct std::hash<std::list<std::string_view>>
 
 
 /* -------------------------------------------------------------------------- */
+
+/* Extension to the `nlohmann::json' serializer to support addition STLs. */
+namespace nlohmann {
+
+  /** Serializers for `std::optional` */
+    template <typename T>
+  struct adl_serializer<std::optional<T>> {
+
+      static void
+    to_json( json & jto, const std::optional<T> & opt )
+    {
+      if ( opt.has_value() ) { jto = * opt;   }
+      else                   { jto = nullptr; }
+    }
+
+      static void
+    from_json( const json & jfrom, std::optional<T> & opt )
+    {
+      if ( jfrom.is_null() ) { opt = std::nullopt;   }
+      else                   { opt = jfrom.get<T>(); }
+    }
+
+  };  /* End struct `adl_serializer<std::optional<T>>' */
+
+
+  ///** Serializers for `std::pair` */
+  //  template <typename F, typename S>
+  //struct adl_serializer<std::pair<F, S>> {
+
+  //    static void
+  //  to_json( json & jto, const std::pair<F, S> & pair )
+  //  {
+  //    jto = { pair.first, pair.second };
+  //  }
+
+  //    static void
+  //  from_json( const json & jfrom, std::pair<F, S> & pair )
+  //  {
+  //    pair = std::make_pair( jfrom.at( 0 ), jfrom.at( 1 ) );
+  //  }
+
+  //};  /* End struct `adl_serializer<std::pair<F, S>>' */
+
+}  /* End namespace `nlohmann' */
+
+
+/* ========================================================================== */
 
 namespace flox {
 

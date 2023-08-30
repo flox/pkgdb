@@ -16,6 +16,8 @@
 #include <nix/eval-cache.hh>
 #include <nix/ref.hh>
 
+#include <nlohmann/json.hpp>
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -43,6 +45,14 @@ enum subtree_type {
 , ST_PACKAGES = 2
 , ST_CATALOG  = 3
 };
+
+/* Generate `to_json' and `from_json' for enum. */
+NLOHMANN_JSON_SERIALIZE_ENUM( subtree_type, {
+  { ST_NONE,     nullptr          }
+, { ST_LEGACY,   "legacyPackages" }
+, { ST_PACKAGES, "packages"       }
+, { ST_CATALOG,  "catalog"        }
+} )
 
 
 /* -------------------------------------------------------------------------- */

@@ -57,8 +57,10 @@ struct PkgQueryArgs {
 
   /** Whether to include packages which are explicitly marked `broken`. */
   bool allowBroken = false;
+
   /** Whether to include packages which are explicitly marked `unfree`. */
   bool allowUnfree = true;
+
   /** Whether pre-release versions should be ordered before releases. */
   bool preferPreReleases = false;
 

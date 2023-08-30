@@ -59,17 +59,27 @@ INCLUDEDIR ?= $(PREFIX)/include
 
 # ---------------------------------------------------------------------------- #
 
+# rwildcard DIRS, PATTERNS
+# ------------------------
+# Recursive wildcard.
+#   Ex:  $(call rwildcard,src,*.cc *.hh)
+rwildcard = $(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2)        \
+                                             $(filter $(subst *,%,$2),$d))
+
+# ---------------------------------------------------------------------------- #
+
 LIBFLOXPKGDB = libflox-pkgdb$(libExt)
 
 LIBS           =  $(LIBFLOXPKGDB)
-COMMON_HEADERS =  $(wildcard include/*.hh include/**/*.hh)
-SRCS           =  $(wildcard src/*.cc) $(wildcard src/**/*.cc)
+COMMON_HEADERS =  $(call rwildcard,include,*.hh)
+$(info COMMON_HEADERS: $(COMMON_HEADERS))
+SRCS           =  $(call rwildcard src,*.cc)
 bin_SRCS       =  $(addprefix src/,main.cc scrape.cc get.cc pkgdb/command.cc)
 bin_SRCS       += $(addprefix src/,search/command.cc)
 lib_SRCS       =  $(filter-out $(bin_SRCS),$(SRCS))
 test_SRCS      =  $(wildcard tests/*.cc)
 BINS           =  pkgdb
-TEST_UTILS     =  tests/is_sqlite3
+TEST_UTILS     =  $(addprefix tests/,is_sqlite3 parse-preferences)
 TESTS          =  $(filter-out $(TEST_UTILS),$(test_SRCS:.cc=))
 CLEANDIRS      =
 CLEANFILES     =  $(SRCS:.cc=.o) $(test_SRCS:.cc=.o)
