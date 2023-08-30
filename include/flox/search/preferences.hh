@@ -22,6 +22,7 @@
 #include "flox/core/types.hh"
 #include "flox/core/util.hh"
 #include "flox/pkgdb/pkg-query.hh"
+#include "flox/registry.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -80,80 +81,8 @@ struct SearchParams {
 
 /* -------------------------------------------------------------------------- */
 
-  /** SearchParams associated with a registry input. */
-  struct InputPreferences {
-
-    /**
-     * Ordered list of subtrees to be searched.
-     * Results will be grouped by subtree in the order they appear here.
-     */
-    std::optional<std::vector<subtree_type>> subtrees;
-
-    /**
-     * Ordered list of stabilities to be searched.
-     * Catalog results will be grouped by stability in the order they
-     * appear here.
-     */
-    std::optional<std::vector<std::string>> stabilities;
-
-  };  /* End struct `InputPreferences' */
-
-
-/* -------------------------------------------------------------------------- */
-
-  /** Preferences associated with a named registry input. */
-  struct RegistryInput : public InputPreferences {
-    std::shared_ptr<nix::FlakeRef> from;
-  };  /* End struct `RegistryInput' */
-
-
-/* -------------------------------------------------------------------------- */
-
   /** Settings and fetcher information associated with inputs. */
-  struct Registry {
-
-    /** Settings and fetcher information associated with named inputs. */
-    std::map<std::string, RegistryInput> inputs;
-
-    /** Default/fallback settings for inputs. */
-    InputPreferences defaults;
-
-    /**
-     * Priority order used to process inputs.
-     * Inputs which do not appear in this list are handled in lexicographical
-     * order after any explicitly named inputs.
-     */
-    std::vector<std::string> priority;
-
-      auto
-    getOrder() const
-    {
-      std::vector<std::reference_wrapper<const std::string>> order(
-        this->priority.cbegin()
-      , this->priority.cend()
-      );
-      for ( const auto & [key, _] : this->inputs )
-        {
-          if ( std::find( this->priority.begin(), this->priority.end(), key )
-               == this->priority.end()
-             )
-            {
-              order.emplace_back( key );
-            }
-        }
-      return order;
-    }
-
-    /** Reset to default state. */
-      inline void
-    clear()
-    {
-      this->inputs.clear();
-      this->priority.clear();
-    }
-
-  } registry;
-
+  Registry registry;
 
   /**
    * Ordered list of systems to be searched.

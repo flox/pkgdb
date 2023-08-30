@@ -25,7 +25,7 @@ using namespace nlohmann::literals;
 printInput( const auto & pair )
 {
   const std::string                               & name   = pair.first;
-  const flox::search::SearchParams::RegistryInput & params = pair.second;
+  const flox::RegistryInput & params = pair.second;
   std::cout << "    " << name << std::endl
             << "      subtrees: "
             << nlohmann::json( params.subtrees ).dump() << std::endl

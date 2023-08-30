@@ -39,8 +39,7 @@ SearchParams::fillQueryArgs( const std::string         & input
    * then fill input specific settings. */
   try
     {
-      const SearchParams::RegistryInput & minput =
-        this->registry.inputs.at( input );
+      const RegistryInput & minput = this->registry.inputs.at( input );
       pqa.subtrees = minput.subtrees.has_value()
                      ? minput.subtrees
                      : this->registry.defaults.subtrees;
@@ -66,39 +65,6 @@ SearchParams::fillQueryArgs( const std::string         & input
 /* -------------------------------------------------------------------------- */
 
   void
-from_json( const nlohmann::json                 & jfrom
-         ,       SearchParams::InputPreferences & prefs
-         )
-{
-  for ( const auto & [key, value] : jfrom.items() )
-    {
-      if ( ( key == "subtrees" ) && ( ! value.is_null() ) )
-        {
-          prefs.subtrees = (std::vector<subtree_type>) value;
-        }
-      else if ( key == "stabilities" )
-        {
-          prefs.stabilities = value;
-        }
-    }
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  void
-from_json( const nlohmann::json & jfrom, SearchParams::RegistryInput & rip )
-{
-  from_json( jfrom, (SearchParams::InputPreferences &) rip );
-  rip.from = std::make_shared<nix::FlakeRef>(
-    jfrom.at( "from" ).get<nix::FlakeRef>()
-  );
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  void
 from_json( const nlohmann::json & jfrom, SearchParams & params )
 {
   params.clear();
@@ -106,21 +72,7 @@ from_json( const nlohmann::json & jfrom, SearchParams & params )
     {
       if ( key == "registry" )
         {
-          for ( const auto & [rkey, rvalue] : value.items() )
-            {
-              if ( rkey == "inputs" )
-                {
-                  params.registry.inputs = rvalue;
-                }
-              else if ( rkey == "defaults" )
-                {
-                  params.registry.defaults = rvalue;
-                }
-              else if ( rkey == "priority" )
-                {
-                  params.registry.priority = rvalue;
-                }
-            }
+          params.registry = value;
         }
       else if ( key == "systems" )
         {
