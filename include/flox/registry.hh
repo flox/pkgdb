@@ -122,24 +122,8 @@ struct Registry {
    */
   std::vector<std::string> priority;
 
-    auto
-  getOrder() const
-  {
-    std::vector<std::reference_wrapper<const std::string>> order(
-      this->priority.cbegin()
-    , this->priority.cend()
-    );
-    for ( const auto & [key, _] : this->inputs )
-      {
-        if ( std::find( this->priority.begin(), this->priority.end(), key )
-             == this->priority.end()
-           )
-          {
-            order.emplace_back( key );
-          }
-      }
-    return order;
-  }
+  /** @return A `std::ranges::ref_view` of input names in order of priority. */
+  auto getOrder() const;
 
   /** Reset to default state. */
     inline void

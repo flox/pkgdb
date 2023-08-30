@@ -19,6 +19,29 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
+  auto
+Registry::getOrder() const
+{
+  std::vector<std::reference_wrapper<const std::string>> order(
+    this->priority.cbegin()
+  , this->priority.cend()
+  );
+  for ( const auto & [key, _] : this->inputs )
+    {
+      if ( std::find( this->priority.begin(), this->priority.end(), key )
+           == this->priority.end()
+         )
+        {
+          order.emplace_back( key );
+        }
+    }
+  return order;
+}
+
+
+
+/* -------------------------------------------------------------------------- */
+
   void
 from_json( const nlohmann::json & jfrom, InputPreferences & prefs )
 {
