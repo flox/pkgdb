@@ -5,6 +5,7 @@
 # ---------------------------------------------------------------------------- #
 
 { stdenv
+, clang15Stdenv  # For Darwin
 , sqlite
 , pkg-config
 , nlohmann_json
@@ -13,7 +14,14 @@
 , argparse
 , semver
 , sqlite3pp
-}: stdenv.mkDerivation {
+}: let
+  pkgdbStdenv = if ( stdenv.hostPlatform.useLLVM or false ) ||
+                   ( stdenv.hostPlatform.isDarwin &&
+                     stdenv.hostPlatform.isAarch64
+                   )
+                then clang15Stdenv
+                else stdenv;
+in pkgdbStdenv.mkDerivation {
   pname   = "flox-pkgdb";
   version = builtins.replaceStrings ["\n"] [""] ( builtins.readFile ./version );
   src     = builtins.path {

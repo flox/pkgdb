@@ -17,9 +17,9 @@ namespace flox::search {
 /* -------------------------------------------------------------------------- */
 
   void
-Preferences::clear()
+SearchParams::clear()
 {
-  this->inputs                   = {};
+  this->registry.clear();
   this->systems                  = {};
   this->allow.unfree             = true;
   this->allow.broken             = false;
@@ -31,34 +31,27 @@ Preferences::clear()
 /* -------------------------------------------------------------------------- */
 
   pkgdb::PkgQueryArgs &
-Preferences::fillQueryArgs( std::string_view      input
-                          , pkgdb::PkgQueryArgs & pqa
-                          ) const
+SearchParams::fillQueryArgs( const std::string         & input
+                           ,       pkgdb::PkgQueryArgs & pqa
+                           ) const
 {
-  /* Look for the named input and our fallbacks/default in the inputs list. */
-  std::optional<Preferences::InputPreferences> dft;
-  std::optional<Preferences::InputPreferences> prefs;
-  for ( const auto & elem : this->inputs )
+  /* Look for the named input and our fallbacks/default in the inputs list.
+   * then fill input specific settings. */
+  try
     {
-      if ( elem.first == input )    { prefs = elem.second; }
-      else if ( elem.first == "*" ) { dft   = elem.second; }
+      const SearchParams::RegistryInput & minput =
+        this->registry.inputs.at( input );
+      pqa.subtrees = minput.subtrees.has_value()
+                     ? minput.subtrees
+                     : this->registry.defaults.subtrees;
+      pqa.stabilities = minput.stabilities.has_value()
+                        ? minput.stabilities
+                        : this->registry.defaults.stabilities;
     }
-
-  /* Try filling input specific settings. */
-  if ( dft.has_value() )
+  catch ( ... )
     {
-      if ( prefs.has_value() )
-        {
-          pqa.subtrees = prefs->subtrees.has_value() ? prefs->subtrees
-                                                     : dft->subtrees;
-          pqa.stabilities = prefs->stabilities.has_value() ? prefs->stabilities
-                                                           : dft->stabilities;
-        }
-      else if ( prefs.has_value() )
-        {
-          pqa.subtrees    = prefs->subtrees;
-          pqa.stabilities = prefs->stabilities;
-        }
+      pqa.subtrees    = this->registry.defaults.subtrees;
+      pqa.stabilities = this->registry.defaults.stabilities;
     }
 
   pqa.systems           = this->systems;
@@ -73,58 +66,42 @@ Preferences::fillQueryArgs( std::string_view      input
 /* -------------------------------------------------------------------------- */
 
   void
-from_json( const nlohmann::json & jfrom, Preferences::InputPreferences & prefs )
+from_json( const nlohmann::json & jfrom, SearchParams & params )
 {
-  prefs.subtrees    = std::nullopt;
-  prefs.stabilities = std::nullopt;
+  params.clear();
   for ( const auto & [key, value] : jfrom.items() )
     {
-      if ( key == "subtrees" )
+      if ( key == "registry" )
         {
-          prefs.subtrees = (std::vector<subtree_type>) value;
-        }
-      else if ( key == "stabilities" )
-        {
-          prefs.stabilities = value;
-        }
-      else
-        {
-          throw FloxException(
-            "Unexpected preferences field 'inputs.*." + key + '\''
-          );
-        }
-    }
-}
-
-
-  void
-from_json( const nlohmann::json & jfrom, Preferences & prefs )
-{
-  prefs.clear();
-  for ( const auto & [key, value] : jfrom.items() )
-    {
-      if ( key == "inputs" )
-        {
-          /* A list of `[{ "<NAME>": {..} }, ...]' plists. */
-          for ( const auto & input : value )
+          for ( const auto & [rkey, rvalue] : value.items() )
             {
-              std::string name = input.items().begin().key();
-              /* Make sure it hasn't been declared yet. */
-              for ( const auto & pinput : prefs.inputs )
+              if ( rkey == "inputs" )
                 {
-                  if ( name == pinput.first )
+                  for ( const auto & [ikey, ivalue] : rvalue.items() )
                     {
-                      throw FloxException(
-                        "Input '" + name + "' declared multiple times"
+                      nlohmann::json copy = ivalue;
+                      params.registry.inputs.emplace(
+                        ikey
+                      , SearchParams::RegistryInput( copy )
                       );
                     }
                 }
-              prefs.inputs.emplace_back( name, input.items().begin().value() );
+              else if ( rkey == "defaults" )
+                {
+                  nlohmann::json copy( rvalue );
+                  SearchParams::InputPreferences dft( copy );
+                  params.registry.defaults.stabilities = dft.stabilities;
+                  params.registry.defaults.subtrees    = dft.subtrees;
+                }
+              else if ( rkey == "priority" )
+                {
+                  params.registry.priority = rvalue;
+                }
             }
         }
       else if ( key == "systems" )
         {
-          prefs.systems = value;
+          params.systems = value;
         }
       else if ( key == "allow" )
         {
@@ -132,15 +109,15 @@ from_json( const nlohmann::json & jfrom, Preferences & prefs )
             {
               if ( akey == "unfree" )
                 {
-                  prefs.allow.unfree   = avalue;
+                  params.allow.unfree   = avalue;
                 }
               else if ( akey == "broken" )
                 {
-                  prefs.allow.broken   = avalue;
+                  params.allow.broken   = avalue;
                 }
               else if ( akey == "licenses" )
                 {
-                  prefs.allow.licenses = avalue;
+                  params.allow.licenses = avalue;
                 }
               else
                 {
@@ -156,7 +133,7 @@ from_json( const nlohmann::json & jfrom, Preferences & prefs )
             {
               if ( skey == "preferPreReleases" )
                 {
-                  prefs.semver.preferPreReleases = svalue;
+                  params.semver.preferPreReleases = svalue;
                 }
               else
                 {

@@ -24,14 +24,14 @@ using namespace nlohmann::literals;
   void
 printInput( const auto & pair )
 {
-  const std::string                                 & name  = pair.first;
-  const flox::search::Preferences::InputPreferences & prefs = pair.second;
-  std::cout << "  " << name << std::endl
-            << "    subtrees: "
-            << nlohmann::json( prefs.subtrees ).dump() << std::endl
-            << "    stabilities: "
+  const std::string                               & name   = pair.first;
+  const flox::search::SearchParams::RegistryInput & params = pair.second;
+  std::cout << "    " << name << std::endl
+            << "      subtrees: "
+            << nlohmann::json( params.subtrees ).dump() << std::endl
+            << "      stabilities: "
             << nlohmann::json(
-                 prefs.stabilities.value_or( std::vector<std::string> {} )
+                 params.stabilities.value_or( std::vector<std::string> {} )
                ).dump() << std::endl;
 }
 
@@ -41,50 +41,80 @@ printInput( const auto & pair )
   int
 main( int argc, char * argv[] )
 {
-  nlohmann::json jprefs;
+  nlohmann::json jparams;
   if ( argc < 2 )
     {
-      jprefs = R"( {
-        "inputs": [
-          { "nixpkgs":  { "subtrees": ["legacyPackages"] } }
-        , { "floco":    { "subtrees": ["packages"] } }
-        , { "floxpkgs": { "subtrees": ["catalog"], "stabilities": ["stable"] } }
-        ]
+      jparams = R"( {
+        "registry": {
+          "inputs": {
+            "nixpkgs": {
+              "type": "github"
+            , "owner": "NixOS"
+            , "repo": "nixpkgs"
+            , "subtrees": ["legacyPackages"]
+            }
+          , "floco": {
+              "type": "github"
+            , "owner": "aakropotkin"
+            , "repo": "floco"
+            , "subtrees": ["packages"]
+            }
+          , "floxpkgs": {
+              "type": "github"
+            , "owner": "flox"
+            , "repo": "floxpkgs"
+            , "subtrees": ["catalog"]
+            , "stabilities": ["stable"]
+            }
+          }
+        , "defaults": {
+            "subtrees": null
+          , "stabilities": ["stable"]
+          }
+        , "priority": ["nixpkgs", "floco", "floxpkgs"]
+        }
       , "systems": ["x86_64-linux"]
-      , "allow":  { "unfree": true, "broken": false }
-      , "semver": { "preferPreReleases": false }
+      , "allow":   { "unfree": true, "broken": false, "licenses": ["MIT"] }
+      , "semver":  { "preferPreReleases": false }
       } )"_json;
     }
   else
     {
-      jprefs = nlohmann::json::parse( argv[1] );
+      jparams = nlohmann::json::parse( argv[1] );
     }
 
-  flox::search::Preferences prefs;
+  flox::search::SearchParams params;
 
-  flox::search::from_json( jprefs, prefs );
+  flox::search::from_json( jparams, params );
 
-  std::cout << "inputs:" << std::endl;
-  for ( const auto & pair : prefs.inputs ) { printInput( pair ); }
+  std::cout << "registry:" << std::endl << "  inputs:" << std::endl;
+  for ( const auto & pair : params.registry.inputs ) { printInput( pair ); }
+  std::cout << "  defaults:" << std::endl
+            << "    subtrees: " << nlohmann::json(
+                                     params.registry.defaults.subtrees
+                                   ).dump() << std::endl
+            << "    stabilities: " << nlohmann::json(
+                                        params.registry.defaults.stabilities
+                                      ).dump() << std::endl;
 
-  std::cout << "systems: " << nlohmann::json( prefs.systems ).dump()
+  std::cout << "systems: " << nlohmann::json( params.systems ).dump()
             << std::endl;
 
   /* Allow */
   std::cout << "allow:" << std::endl
-            << "  unfree: " << nlohmann::json( prefs.allow.unfree ).dump()
+            << "  unfree: " << nlohmann::json( params.allow.unfree ).dump()
             << std::endl
-            << "  broken: " << nlohmann::json( prefs.allow.broken ).dump()
+            << "  broken: " << nlohmann::json( params.allow.broken ).dump()
             << std::endl
             << "  licenses: "
             << nlohmann::json(
-                 prefs.allow.licenses.value_or( std::vector<std::string> {} )
+                 params.allow.licenses.value_or( std::vector<std::string> {} )
                ).dump() << std::endl;
 
   /* Semver */
   std::cout << "semver:" << std::endl
             << "  preferPreReleases: "
-            << nlohmann::json( prefs.semver.preferPreReleases ).dump()
+            << nlohmann::json( params.semver.preferPreReleases ).dump()
             << std::endl;
 
   return EXIT_SUCCESS;

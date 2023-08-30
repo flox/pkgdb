@@ -11,8 +11,12 @@
 
 #include <functional>
 #include <vector>
+#include <ranges>
+#include <map>
 
 #include <nlohmann/json.hpp>
+#include <nix/flake/flakeref.hh>
+#include <nix/fetchers.hh>
 
 #include "flox/core/exceptions.hh"
 #include "flox/core/types.hh"
@@ -27,25 +31,50 @@ namespace flox::search {
 /* -------------------------------------------------------------------------- */
 
 /**
- * @brief Preferences used to search for packages in a collection of inputs.
+ * @brief SearchParams used to search for packages in a collection of inputs.
  *
  * @example
  * ```
  * {
- *   "inputs": [
- *     { "nixpkgs":  { "subtrees": ["legacyPackages"] } }
- *   , { "floco":    { "subtrees": ["packages"] } }
- *   , { "floxpkgs": { "subtrees": ["catalog"], "stabilities": ["stable"] } }
- *   ]
+ *   "registry": {
+ *     "inputs": {
+ *       "nixpkgs": {
+ *         "type": "github"
+ *       , "owner": "NixOS"
+ *       , "repo": "nixpkgs"
+ *       , "subtrees": ["legacyPackages"]
+ *       }
+ *     , "floco": {
+ *         "type": "github"
+ *       , "owner": "aakropotkin"
+ *       , "repo": "floco"
+ *       , "subtrees": ["packages"]
+ *       }
+ *     , "floxpkgs": {
+ *         "type": "github"
+ *       , "owner": "flox"
+ *       , "repo": "floxpkgs"
+ *       , "subtrees": ["catalog"]
+ *       , "stabilities": ["stable"]
+ *       }
+ *     }
+ *   , "defaults": {
+ *       "subtrees": null
+ *     , "stabilities": ["stable"]
+ *     }
+ *   , "priority": ["nixpkgs", "floco", "floxpkgs"]
+ *   }
  * , "systems": ["x86_64-linux"]
  * , "allow":   { "unfree": true, "broken": false, "licenses": ["MIT"] }
  * , "semver":  { "preferPreReleases": false }
  * }
  * ```
  */
-struct Preferences {
+struct SearchParams {
 
-  /** Preferences associated with a named registry input. */
+/* -------------------------------------------------------------------------- */
+
+  /** SearchParams associated with a registry input. */
   struct InputPreferences {
 
     /**
@@ -61,18 +90,91 @@ struct Preferences {
      */
     std::optional<std::vector<std::string>> stabilities;
 
+    InputPreferences() = default;
+
+    explicit InputPreferences( const nlohmann::json & input )
+    {
+      for ( const auto & [key, value] : input.items() )
+        {
+          if ( ( key == "subtrees" ) && ( ! value.is_null() ) )
+            {
+              this->subtrees = (std::vector<subtree_type>) value;
+            }
+          else if ( key == "stabilities" )
+            {
+              this->stabilities = value;
+            }
+        }
+    }
+
   };  /* End struct `InputPreferences' */
 
 
-  /**
-   * Ordered list of settings associated with specific inputs.
-   * Results will be grouped by input in the order they appear here.
-   *
-   * The identifier `*` is reserved to represent settings which should be
-   * used as defaults/fallbacks for any input that doesn't explicitly
-   * set a preference.
-   */
-  std::vector<std::pair<std::string, InputPreferences>> inputs = {};
+/* -------------------------------------------------------------------------- */
+
+  /** Preferences associated with a named registry input. */
+  struct RegistryInput : public InputPreferences {
+
+    std::shared_ptr<nix::FlakeRef> ref;
+
+    explicit RegistryInput( nlohmann::json & input ) : InputPreferences( input )
+    {
+      input.erase( "subtrees" );
+      input.erase( "stabilities" );
+      this->ref = std::make_shared<nix::FlakeRef>(
+        nix::FlakeRef::fromAttrs( nix::fetchers::jsonToAttrs( input ) )
+      );
+    }
+
+  };  /* End struct `RegistryInput' */
+
+
+/* -------------------------------------------------------------------------- */
+
+  /** Settings and fetcher information associated with inputs. */
+  struct Registry {
+
+    /** Settings and fetcher information associated with named inputs. */
+    std::map<std::string, RegistryInput> inputs;
+
+    /** Default/fallback settings for inputs. */
+    InputPreferences defaults;
+
+    /**
+     * Priority order used to process inputs.
+     * Inputs which do not appear in this list are handled in lexicographical
+     * order after any explicitly named inputs.
+     */
+    std::vector<std::string> priority;
+
+      auto
+    getOrder() const
+    {
+      std::vector<std::reference_wrapper<const std::string>> order(
+        this->priority.cbegin()
+      , this->priority.cend()
+      );
+      for ( const auto & [key, _] : this->inputs )
+        {
+          if ( std::find( this->priority.begin(), this->priority.end(), key )
+               == this->priority.end()
+             )
+            {
+              order.emplace_back( key );
+            }
+        }
+      return order;
+    }
+
+    /** Reset to default state. */
+      inline void
+    clear()
+    {
+      this->inputs.clear();
+      this->priority.clear();
+    }
+
+  } registry;
 
 
   /**
@@ -118,21 +220,17 @@ struct Preferences {
    * @param pqa   A set of query args to _fill_ with preferences.
    * @return A reference to the modified query args.
    */
-  pkgdb::PkgQueryArgs & fillQueryArgs( std::string_view      input
-                                     , pkgdb::PkgQueryArgs & pqa
+  pkgdb::PkgQueryArgs & fillQueryArgs( const std::string         & input
+                                     ,       pkgdb::PkgQueryArgs & pqa
                                      ) const;
 
 
-};  /* End struct `Preferences' */
+};  /* End struct `SearchParams' */
 
 
 /* -------------------------------------------------------------------------- */
 
-void from_json( const nlohmann::json                & jfrom
-              ,       Preferences::InputPreferences & prefs
-              );
-
-void from_json( const nlohmann::json & jfrom, Preferences & prefs );
+void from_json( const nlohmann::json & jfrom, SearchParams & prefs );
 
 
 /* -------------------------------------------------------------------------- */
