@@ -26,7 +26,24 @@ namespace flox::search {
 
 /* -------------------------------------------------------------------------- */
 
-/** Preferences used to search for packages in a collection of inputs. */
+/**
+ * @brief Preferences used to search for packages in a collection of inputs.
+ *
+ * @example
+ * ```
+ * {
+ *   "inputs": [
+ *     { "nixpkgs":  { "subtrees": ["legacyPackages"] } }
+ *   , { "floco":    { "subtrees": ["packages"] } }
+ *   , { "floxpkgs": { "subtrees": ["catalog"], "stabilities": ["stable"] } }
+ *   ]
+ * , "systems": ["x86_64-linux"]
+ * , "allow":  { "unfree": true, "broken": false, "licenses": ["MIT"] }
+ * , "semver": { "preferPreReleases": false }
+ * }
+ * ```
+ *
+ */
 struct Preferences {
 
   /** Preferences associated with a named registry input. */
