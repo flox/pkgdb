@@ -38,11 +38,10 @@ namespace flox::search {
  *   , { "floxpkgs": { "subtrees": ["catalog"], "stabilities": ["stable"] } }
  *   ]
  * , "systems": ["x86_64-linux"]
- * , "allow":  { "unfree": true, "broken": false, "licenses": ["MIT"] }
- * , "semver": { "preferPreReleases": false }
+ * , "allow":   { "unfree": true, "broken": false, "licenses": ["MIT"] }
+ * , "semver":  { "preferPreReleases": false }
  * }
  * ```
- *
  */
 struct Preferences {
 
