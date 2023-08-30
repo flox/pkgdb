@@ -1,6 +1,6 @@
 /* ========================================================================== *
  *
- * @file flox/search/preferences.cc
+ * @file flox/search/preferences.hh
  *
  * @brief A set of user inputs used to set input preferences during search.
  *
@@ -93,17 +93,7 @@ struct Preferences {
 /* -------------------------------------------------------------------------- */
 
   /** Reset preferences to default/empty state. */
-    void
-  clear()
-  {
-    this->inputs                   = {};
-    this->systems                  = {};
-    this->allow.unfree             = true;
-    this->allow.broken             = false;
-    this->allow.licenses           = std::nullopt;
-    this->semver.preferPreReleases = false;
-  }
-
+  void clear();
 
   /**
    * Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to lookup
@@ -122,106 +112,11 @@ struct Preferences {
 
 /* -------------------------------------------------------------------------- */
 
-  static void
-from_json( const nlohmann::json & jfrom, Preferences::InputPreferences & prefs )
-{
-  prefs.subtrees    = std::nullopt;
-  prefs.stabilities = std::nullopt;
-  for ( const auto & [key, value] : jfrom.items() )
-    {
-      if ( key == "subtrees" )
-        {
-          prefs.subtrees = (std::vector<subtree_type>) value;
-        }
-      else if ( key == "stabilities" )
-        {
-          prefs.stabilities = value;
-        }
-      else
-        {
-          throw FloxException(
-            "Unexpected preferences field 'inputs.*." + key + '\''
-          );
-        }
-    }
-}
+void from_json( const nlohmann::json                & jfrom
+              ,       Preferences::InputPreferences & prefs
+              );
 
-
-  static void
-from_json( const nlohmann::json & jfrom, Preferences & prefs )
-{
-  prefs.clear();
-  for ( const auto & [key, value] : jfrom.items() )
-    {
-      if ( key == "inputs" )
-        {
-          /* A list of `[{ "<NAME>": {..} }, ...]' plists. */
-          for ( const auto & input : value )
-            {
-              std::string name = input.items().begin().key();
-              /* Make sure it hasn't been declared yet. */
-              for ( const auto & pinput : prefs.inputs )
-                {
-                  if ( name == pinput.first )
-                    {
-                      throw FloxException(
-                        "Input '" + name + "' declared multiple times"
-                      );
-                    }
-                }
-              prefs.inputs.emplace_back( name, input.items().begin().value() );
-            }
-        }
-      else if ( key == "systems" )
-        {
-          prefs.systems = value;
-        }
-      else if ( key == "allow" )
-        {
-          for ( const auto & [akey, avalue] : value.items() )
-            {
-              if ( akey == "unfree" )
-                {
-                  prefs.allow.unfree   = avalue;
-                }
-              else if ( akey == "broken" )
-                {
-                  prefs.allow.broken   = avalue;
-                }
-              else if ( akey == "licenses" )
-                {
-                  prefs.allow.licenses = avalue;
-                }
-              else
-                {
-                  throw FloxException(
-                    "Unexpected preferences field 'allow." + key + '\''
-                  );
-                }
-            }
-        }
-      else if ( key == "semver" )
-        {
-          for ( const auto & [skey, svalue] : value.items() )
-            {
-              if ( skey == "preferPreReleases" )
-                {
-                  prefs.semver.preferPreReleases = svalue;
-                }
-              else
-                {
-                  throw FloxException(
-                    "Unexpected preferences field 'semver." + key + '\''
-                  );
-                }
-            }
-        }
-      else
-        {
-          throw FloxException( "Unexpected preferences field '" + key + '\'' );
-        }
-    }
-}
+void from_json( const nlohmann::json & jfrom, Preferences & prefs );
 
 
 /* -------------------------------------------------------------------------- */

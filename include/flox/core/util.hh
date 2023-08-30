@@ -77,25 +77,6 @@ namespace nlohmann {
 
   };  /* End struct `adl_serializer<std::optional<T>>' */
 
-
-  ///** Serializers for `std::pair` */
-  //  template <typename F, typename S>
-  //struct adl_serializer<std::pair<F, S>> {
-
-  //    static void
-  //  to_json( json & jto, const std::pair<F, S> & pair )
-  //  {
-  //    jto = { pair.first, pair.second };
-  //  }
-
-  //    static void
-  //  from_json( const json & jfrom, std::pair<F, S> & pair )
-  //  {
-  //    pair = std::make_pair( jfrom.at( 0 ), jfrom.at( 1 ) );
-  //  }
-
-  //};  /* End struct `adl_serializer<std::pair<F, S>>' */
-
 }  /* End namespace `nlohmann' */
 
 
