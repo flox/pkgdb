@@ -1,8 +1,8 @@
 /* ========================================================================== *
  *
- * @file tests/is_sqlite3.cc
+ * @file tests/parse-preferences.cc
  *
- * @brief Minimal executable to detect if a path is a SQLite3 database.
+ * @brief Minimal executable that parses a `flox::search::Preferences` struct.
  *
  *
  * -------------------------------------------------------------------------- */
