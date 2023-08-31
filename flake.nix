@@ -88,7 +88,7 @@
           pkgsFor.ccls
           pkgsFor.bear
           # For lints/fmt
-          pkgsFor.clang-tools
+          pkgsFor.clang-tools_16
         ] ++ nixpkgs.lib.optionals pkgsFor.stdenv.isLinux [
           # For debugging
           pkgsFor.valgrind
