@@ -5,7 +5,7 @@
 # ---------------------------------------------------------------------------- #
 
 { stdenv
-, clang15Stdenv  # For Darwin
+, clang16Stdenv  # For Darwin
 , sqlite
 , pkg-config
 , nlohmann_json
@@ -16,10 +16,8 @@
 , sqlite3pp
 }: let
   pkgdbStdenv = if ( stdenv.hostPlatform.useLLVM or false ) ||
-                   ( stdenv.hostPlatform.isDarwin &&
-                     stdenv.hostPlatform.isAarch64
-                   )
-                then clang15Stdenv
+                   ( stdenv.hostPlatform.isDarwin or false )
+                then clang16Stdenv
                 else stdenv;
 in pkgdbStdenv.mkDerivation {
   pname   = "flox-pkgdb";
