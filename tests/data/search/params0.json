@@ -2,13 +2,43 @@
   "registry": {
     "inputs": {
       "nixpkgs": {
-        "from": { "type": "github", "owner": "NixOS", "repo": "nixpkgs" }
+        "from": {
+          "type": "github"
+        , "owner": "NixOS"
+        , "repo": "nixpkgs"
+        , "rev": "9f72839fd81838291af5e094cbc6c6d15a5e030b"
+        }
       , "subtrees": ["legacyPackages"]
+      }
+    , "floxpkgs": {
+        "from": {
+          "type": "github"
+        , "owner": "flox"
+        , "repo": "nixpkgs-flox"
+        , "rev": "fc6c62cc2f56cd6d601440fc3e49dfabb71ff0b6"
+        }
+      , "subtrees": ["catalog"]
+      , "stabilities": ["stable"]
+      }
+    , "floco": {
+        "from": {
+          "type": "github"
+        , "owner": "aakropotkin"
+        , "repo": "floco"
+        , "rev": "1e84b4b16bba5746e1195fa3a4d8addaaf2d9ef4"
+        }
+      , "subtrees": ["packages"]
       }
     }
   }
 , "systems": ["x86_64-linux"]
 , "allow":   { "unfree": true, "broken": false, "licenses": null }
 , "semver":  { "preferPreReleases": false }
-, "query":   { "match": "hello" }
+, "query":   {
+    "match": "hello"
+  , "name": null
+  , "pname": null
+  , "version": null
+  , "semver": "^2.12.0"
+  }
 }
