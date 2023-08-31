@@ -1,8 +1,9 @@
 /* ========================================================================== *
  *
- * @file flox/search/preferences.hh
+ * @file flox/search/params.hh
  *
- * @brief A set of user inputs used to set input preferences during search.
+ * @brief A set of user inputs used to set input preferences and query
+ * parameters during search.
  *
  *
  * -------------------------------------------------------------------------- */

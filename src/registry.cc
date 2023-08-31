@@ -2,7 +2,7 @@
  *
  * @file registry.cc
  *
- * @brief A set of user inputs used to set input preferences during search.
+ * @brief A set of user inputs and preferences used for resolution and search.
  *
  *
  * -------------------------------------------------------------------------- */

@@ -1,13 +1,14 @@
 /* ========================================================================== *
  *
- * @file search/preferences.cc
+ * @file search/params.cc
  *
- * @brief A set of user inputs used to set input preferences during search.
+ * @brief A set of user inputs used to set input preferences and query
+ * parameters during search.
  *
  *
  * -------------------------------------------------------------------------- */
 
-#include "flox/search/preferences.hh"
+#include "flox/search/params.hh"
 
 
 /* -------------------------------------------------------------------------- */

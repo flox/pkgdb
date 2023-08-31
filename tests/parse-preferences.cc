@@ -13,7 +13,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include "flox/search/preferences.hh"
+#include "flox/search/params.hh"
 
 
 /* -------------------------------------------------------------------------- */
