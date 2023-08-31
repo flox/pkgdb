@@ -92,6 +92,11 @@
         ] ++ nixpkgs.lib.optionals pkgsFor.stdenv.isLinux [
           # For debugging
           pkgsFor.valgrind
+        ] ++ nixpkgs.lib.optionals (
+          ( pkgsFor.stdenv.hostPlatform.useLLVM or false ) ||
+          ( pkgsFor.stdenv.hostPlatform.isDarwin or false )
+        ) [
+          pkgsFor.clang_16
         ];
         inherit (pkgsFor.flox-pkgdb)
           nix_INCDIR boost_CFLAGS libExt SEMVER_PATH
