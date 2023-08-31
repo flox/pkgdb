@@ -12,7 +12,6 @@
 
 #include <functional>
 #include <vector>
-#include <ranges>
 #include <map>
 
 #include <nlohmann/json.hpp>
@@ -155,7 +154,7 @@ struct Registry {
    * // => nixpkgs floxpkgs floco
    * ```
    *
-   * @return A `std::ranges::ref_view` of input names in order of priority.
+   * @return A list of input names in order of priority.
    */
   std::vector<std::reference_wrapper<const std::string>> getOrder() const;
 

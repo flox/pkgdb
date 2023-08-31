@@ -12,7 +12,6 @@
 
 #include <functional>
 #include <vector>
-#include <ranges>
 #include <map>
 
 #include <nlohmann/json.hpp>
