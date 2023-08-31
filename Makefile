@@ -95,13 +95,11 @@ CXXFLAGS       ?= $(EXTRA_CFLAGS) $(EXTRA_CXXFLAGS)
 CXXFLAGS       += '-I$(MAKEFILE_DIR)/include'
 CXXFLAGS       += '-DFLOX_PKGDB_VERSION="$(VERSION)"'
 LDFLAGS        ?= $(EXTRA_LDFLAGS)
+lib_CXXFLAGS   ?= -fPIC
 ifeq (Linux,$(OS))
-SHARED = -shared
-else
-SHARED =
+lib_CXXFLAGS += -shared
 endif
-lib_CXXFLAGS ?= $(SHARED) -fPIC
-lib_LDFLAGS  ?= $(SHARED) -fPIC -Wl,-undefined,error
+lib_LDFLAGS  ?= -shared -fPIC -Wl,-undefined,error
 bin_CXXFLAGS ?=
 bin_LDFLAGS  ?=
 
