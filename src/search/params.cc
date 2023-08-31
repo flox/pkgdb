@@ -18,6 +18,25 @@ namespace flox::search {
 /* -------------------------------------------------------------------------- */
 
   void
+from_json( const nlohmann::json & jfrom, SearchQuery & qry )
+{
+  qry.clear();
+  pkgdb::from_json( jfrom, (pkgdb::PkgDescriptorBase &) qry );
+  try { jfrom.at( "match" ).get_to( qry.match ); }
+  catch( const std::out_of_range & ) {}
+}
+
+  void
+to_json( nlohmann::json & jfrom, const SearchQuery & qry )
+{
+  pkgdb::to_json( jfrom, (pkgdb::PkgDescriptorBase &) qry );
+  jfrom["match"] = qry.match;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
 SearchParams::clear()
 {
   this->registry.clear();

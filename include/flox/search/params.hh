@@ -33,6 +33,31 @@ namespace flox::search {
 /* -------------------------------------------------------------------------- */
 
 /**
+ * @brief A set of query parameters.
+ * This is essentially a reorganized form of @a flox::pkgdb::PkgQueryArgs
+ * that is suited for JSON input.
+ */
+struct SearchQuery : pkgdb::PkgDescriptorBase {
+  /** Filter results by partial name/description match. */
+  std::optional<std::string> match;
+
+  /** Reset to default state. */
+    inline void
+  clear()
+  {
+    this->pkgdb::PkgDescriptorBase::clear();
+    this->match = std::nullopt;
+  }
+};  /* End struct "SearchQuery' */
+
+
+void from_json( const nlohmann::json & jfrom,       SearchQuery & desc );
+void to_json(         nlohmann::json & jfrom, const SearchQuery & desc );
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
  * @brief SearchParams used to search for packages in a collection of inputs.
  *
  * @example

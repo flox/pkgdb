@@ -38,19 +38,39 @@ using row_id = uint64_t;  /**< A _row_ index in a SQLite3 table. */
 
 /* -------------------------------------------------------------------------- */
 
+/** Minimal set of query parameters related to a single package. */
+struct PkgDescriptorBase {
+  std::optional<std::string> name;    /**< Filter results by exact `name`. */
+  std::optional<std::string> pname;   /**< Filter results by exact `pname`. */
+  std::optional<std::string> version; /**< Filter results by exact version. */
+  std::optional<std::string> semver;  /**< Filter results by version range. */
+
+  /** Reset to default state. */
+    inline void
+  clear()
+  {
+    this->name    = std::nullopt;
+    this->pname   = std::nullopt;
+    this->version = std::nullopt;
+    this->semver  = std::nullopt;
+  }
+};
+
+void from_json( const nlohmann::json & jfrom,       PkgDescriptorBase & desc );
+void to_json(         nlohmann::json & jfrom, const PkgDescriptorBase & desc );
+
+
+/* -------------------------------------------------------------------------- */
+
 /**
  * Collection of query parameters used to lookup packages in a database.
  * These use a combination of SQL statements and post processing with
  * `node-semver` to produce a list of satisfactory packages.
  */
-struct PkgQueryArgs {
+struct PkgQueryArgs : public PkgDescriptorBase {
 
   /** Filter results by partial name/description match. */
   std::optional<std::string> match;
-  std::optional<std::string> name;    /**< Filter results by exact `name`. */
-  std::optional<std::string> pname;   /**< Filter results by exact `pname`. */
-  std::optional<std::string> version; /**< Filter results by exact version. */
-  std::optional<std::string> semver;  /**< Filter results by version range. */
 
   /** Filter results to those explicitly marked with the given licenses. */
   std::optional<std::vector<std::string>> licenses;

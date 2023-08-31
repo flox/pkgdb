@@ -655,6 +655,34 @@ PkgQuery::execute( sqlite3pp::database & pdb ) const
 
 /* -------------------------------------------------------------------------- */
 
+  void
+from_json( const nlohmann::json & jfrom, PkgDescriptorBase & desc )
+{
+  desc.clear();
+  for ( const auto & [key, value] : jfrom.items() )
+    {
+      if ( key == "name" )         { desc.name    = value.get<std::string>(); }
+      else if ( key == "pname" )   { desc.pname   = value.get<std::string>(); }
+      else if ( key == "version" ) { desc.version = value.get<std::string>(); }
+      else if ( key == "semver" )  { desc.semver  = value.get<std::string>(); }
+    }
+}
+
+
+  void
+to_json( nlohmann::json & jfrom, const PkgDescriptorBase & desc )
+{
+  jfrom = {
+    { "name",    desc.name    }
+  , { "pname",   desc.pname   }
+  , { "version", desc.version }
+  , { "semver",  desc.semver  }
+  };
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 }  /* End Namespace `flox::pkgdb' */
 
 
