@@ -162,7 +162,9 @@ CREATE VIEW IF NOT EXISTS v_PackagesSearch AS SELECT
 , v_AttrPaths.system
 , v_AttrPaths.stability
 , json_insert( v_AttrPaths.path, '$[#]', Packages.attrName ) AS path
+, ( json_extract( v_AttrPaths.path, '$[#]' ) + 1 ) AS depth
 , Packages.name
+, Packages.attrName
 , Packages.pname
 , Packages.version
 , iif( ( Packages.version IS NULL ), NULL
