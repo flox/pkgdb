@@ -32,9 +32,15 @@
     }
   }
 , "systems": ["x86_64-linux"]
-, "allow":   { "unfree": true, "broken": false, "licenses": null }
-, "semver":  { "preferPreReleases": false }
-, "query":   {
+, "allow": {
+    "unfree": true
+  , "broken": false
+  , "licenses": null
+  }
+, "semver": {
+    "preferPreReleases": false
+  }
+, "query": {
     "match": "hello"
   , "name": null
   , "pname": null
