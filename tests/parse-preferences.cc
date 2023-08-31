@@ -9,6 +9,7 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <algorithm>
 
 #include <nlohmann/json.hpp>
 
@@ -122,6 +123,12 @@ main( int argc, char * argv[] )
             << "  preferPreReleases: "
             << nlohmann::json( params.semver.preferPreReleases ).dump()
             << std::endl;
+
+  std::ranges::for_each(
+    params.registry.getOrder()
+  , []( const auto & name ) { std::cout << name.get() << std::endl; }
+  );
+
 
   return EXIT_SUCCESS;
 }
