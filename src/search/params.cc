@@ -27,10 +27,25 @@ from_json( const nlohmann::json & jfrom, SearchQuery & qry )
 }
 
   void
-to_json( nlohmann::json & jfrom, const SearchQuery & qry )
+to_json( nlohmann::json & jto, const SearchQuery & qry )
 {
-  pkgdb::to_json( jfrom, (pkgdb::PkgDescriptorBase &) qry );
-  jfrom["match"] = qry.match;
+  pkgdb::to_json( jto, (pkgdb::PkgDescriptorBase &) qry );
+  jto["match"] = qry.match;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  pkgdb::PkgQueryArgs &
+SearchQuery::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
+{
+  pqa.clear();
+  pqa.name    = this->name;
+  pqa.pname   = this->pname;
+  pqa.version = this->version;
+  pqa.semver  = this->semver;
+  pqa.match   = this->match;
+  return pqa;
 }
 
 
@@ -40,6 +55,7 @@ to_json( nlohmann::json & jfrom, const SearchQuery & qry )
 SearchParams::clear()
 {
   this->registry.clear();
+  this->query.clear();
   this->systems                  = {};
   this->allow.unfree             = true;
   this->allow.broken             = false;
@@ -51,10 +67,13 @@ SearchParams::clear()
 /* -------------------------------------------------------------------------- */
 
   pkgdb::PkgQueryArgs &
-SearchParams::fillQueryArgs( const std::string         & input
-                           ,       pkgdb::PkgQueryArgs & pqa
-                           ) const
+SearchParams::fillPkgQueryArgs( const std::string         & input
+                              ,       pkgdb::PkgQueryArgs & pqa
+                              ) const
 {
+  pqa.clear();
+  this->query.fillPkgQueryArgs( pqa );
+
   /* Look for the named input and our fallbacks/default in the inputs list.
    * then fill input specific settings. */
   try
@@ -92,11 +111,15 @@ from_json( const nlohmann::json & jfrom, SearchParams & params )
     {
       if ( key == "registry" )
         {
-          params.registry = value;
+          value.get_to( params.registry );
+        }
+      else if ( key == "query" )
+        {
+          value.get_to( params.query );
         }
       else if ( key == "systems" )
         {
-          params.systems = value;
+          value.get_to( params.systems );
         }
       else if ( key == "allow" )
         {
@@ -104,15 +127,15 @@ from_json( const nlohmann::json & jfrom, SearchParams & params )
             {
               if ( akey == "unfree" )
                 {
-                  params.allow.unfree   = avalue;
+                  avalue.get_to( params.allow.unfree );
                 }
               else if ( akey == "broken" )
                 {
-                  params.allow.broken   = avalue;
+                  avalue.get_to( params.allow.broken );
                 }
               else if ( akey == "licenses" )
                 {
-                  params.allow.licenses = avalue;
+                  avalue.get_to( params.allow.licenses );
                 }
               else
                 {
@@ -128,7 +151,7 @@ from_json( const nlohmann::json & jfrom, SearchParams & params )
             {
               if ( skey == "preferPreReleases" )
                 {
-                  params.semver.preferPreReleases = svalue;
+                  svalue.get_to( params.semver.preferPreReleases );
                 }
               else
                 {
@@ -143,6 +166,24 @@ from_json( const nlohmann::json & jfrom, SearchParams & params )
           throw FloxException( "Unexpected preferences field '" + key + '\'' );
         }
     }
+}
+
+
+  void
+to_json( nlohmann::json & jto, const SearchParams & prefs )
+{
+  jto = {
+    { "registry", prefs.registry }
+  , { "systems",  prefs.systems  }
+  , { "allow", {
+        { "unfree",   prefs.allow.unfree   }
+      , { "broken",   prefs.allow.broken   }
+      , { "licenses", prefs.allow.licenses }
+      }
+    }
+  , { "semver", { { "preferPreReleases", prefs.semver.preferPreReleases } } }
+  , { "query", prefs.query }
+  };
 }
 
 

@@ -82,9 +82,9 @@ namespace nlohmann {
   struct adl_serializer<nix::FlakeRef> {
 
       static void
-    to_json( json & jfrom, const nix::FlakeRef & ref )
+    to_json( json & jto, const nix::FlakeRef & ref )
     {
-      jfrom = nix::fetchers::attrsToJSON( ref.toAttrs() );
+      jto = nix::fetchers::attrsToJSON( ref.toAttrs() );
     }
 
     /** _Move-only_ constructor for flake-ref from JSON. */

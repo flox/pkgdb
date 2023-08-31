@@ -42,10 +42,11 @@ printInput( const auto & pair )
   int
 main( int argc, char * argv[] )
 {
-  nlohmann::json jparams;
+  flox::search::SearchParams params;
+
   if ( argc < 2 )
     {
-      jparams = R"( {
+      nlohmann::json::parse( R"( {
         "registry": {
           "inputs": {
             "nixpkgs": {
@@ -83,51 +84,15 @@ main( int argc, char * argv[] )
       , "systems": ["x86_64-linux"]
       , "allow":   { "unfree": true, "broken": false, "licenses": ["MIT"] }
       , "semver":  { "preferPreReleases": false }
-      } )"_json;
+      , "query":   { "match": "hello" }
+      } )" ).get_to( params );
     }
   else
     {
-      jparams = nlohmann::json::parse( argv[1] );
+      nlohmann::json::parse( argv[1] ).get_to( params );
     }
 
-  flox::search::SearchParams params;
-
-  flox::search::from_json( jparams, params );
-
-  std::cout << "registry:" << std::endl << "  inputs:" << std::endl;
-  for ( const auto & pair : params.registry.inputs ) { printInput( pair ); }
-  std::cout << "  defaults:" << std::endl
-            << "    subtrees: " << nlohmann::json(
-                                     params.registry.defaults.subtrees
-                                   ).dump() << std::endl
-            << "    stabilities: " << nlohmann::json(
-                                        params.registry.defaults.stabilities
-                                      ).dump() << std::endl;
-
-  std::cout << "systems: " << nlohmann::json( params.systems ).dump()
-            << std::endl;
-
-  /* Allow */
-  std::cout << "allow:" << std::endl
-            << "  unfree: " << nlohmann::json( params.allow.unfree ).dump()
-            << std::endl
-            << "  broken: " << nlohmann::json( params.allow.broken ).dump()
-            << std::endl
-            << "  licenses: "
-            << nlohmann::json(
-                 params.allow.licenses.value_or( std::vector<std::string> {} )
-               ).dump() << std::endl;
-
-  /* Semver */
-  std::cout << "semver:" << std::endl
-            << "  preferPreReleases: "
-            << nlohmann::json( params.semver.preferPreReleases ).dump()
-            << std::endl;
-
-  std::ranges::for_each(
-    params.registry.getOrder()
-  , []( const auto & name ) { std::cout << name.get() << std::endl; }
-  );
+  std::cout << nlohmann::json( params ).dump() << std::endl;
 
 
   return EXIT_SUCCESS;

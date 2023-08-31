@@ -56,8 +56,9 @@ struct PkgDescriptorBase {
   }
 };
 
+
 void from_json( const nlohmann::json & jfrom,       PkgDescriptorBase & desc );
-void to_json(         nlohmann::json & jfrom, const PkgDescriptorBase & desc );
+void to_json(         nlohmann::json & jto,   const PkgDescriptorBase & desc );
 
 
 /* -------------------------------------------------------------------------- */

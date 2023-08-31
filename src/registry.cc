@@ -49,28 +49,28 @@ from_json( const nlohmann::json & jfrom, InputPreferences & prefs )
     {
       if ( ( key == "subtrees" ) && ( ! value.is_null() ) )
         {
-          prefs.subtrees = (std::vector<subtree_type>) value;
+          value.get_to( prefs.subtrees );
         }
       else if ( key == "stabilities" )
         {
-          prefs.stabilities = value;
+          value.get_to( prefs.stabilities );
         }
     }
 }
 
 
   void
-to_json( nlohmann::json & jfrom, const InputPreferences & prefs )
+to_json( nlohmann::json & jto, const InputPreferences & prefs )
 {
   if ( prefs.subtrees.has_value() )
     {
-      jfrom.emplace( "subtrees", * prefs.subtrees );
+      jto.emplace( "subtrees", * prefs.subtrees );
     }
   else
     {
-      jfrom.emplace( "subtrees", nullptr );
+      jto.emplace( "subtrees", nullptr );
     }
-  jfrom.emplace( "stabilities", prefs.stabilities );
+  jto.emplace( "stabilities", prefs.stabilities );
 }
 
 
@@ -87,16 +87,16 @@ from_json( const nlohmann::json & jfrom, RegistryInput & rip )
 
 
   void
-to_json( nlohmann::json & jfrom, const RegistryInput & rip )
+to_json( nlohmann::json & jto, const RegistryInput & rip )
 {
-  to_json( jfrom, (InputPreferences &) rip );
+  to_json( jto, (InputPreferences &) rip );
   if ( rip.from == nullptr )
     {
-      jfrom.emplace( "from", nullptr );
+      jto.emplace( "from", nullptr );
     }
   else
     {
-      jfrom.emplace( "from"
+      jto.emplace( "from"
                    , nix::fetchers::attrsToJSON( rip.from->toAttrs() )
                    );
     }
@@ -110,19 +110,19 @@ from_json( const nlohmann::json & jfrom, Registry & reg )
 {
   for ( const auto & [key, value] : jfrom.items() )
     {
-      if ( key == "inputs" )        { reg.inputs   = value; }
-      else if ( key == "defaults" ) { reg.defaults = value; }
-      else if ( key == "priority" ) { reg.priority = value; }
+      if ( key == "inputs" )        { value.get_to( reg.inputs );   }
+      else if ( key == "defaults" ) { value.get_to( reg.defaults ); }
+      else if ( key == "priority" ) { value.get_to( reg.priority ); }
     }
 }
 
 
   void
-to_json( nlohmann::json & jfrom, const Registry & reg )
+to_json( nlohmann::json & jto, const Registry & reg )
 {
-  jfrom.emplace( "inputs",   reg.inputs );
-  jfrom.emplace( "defaults", reg.defaults );
-  jfrom.emplace( "priority", reg.priority );
+  jto.emplace( "inputs",   reg.inputs   );
+  jto.emplace( "defaults", reg.defaults );
+  jto.emplace( "priority", reg.priority );
 }
 
 

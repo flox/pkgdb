@@ -50,7 +50,7 @@ struct InputPreferences {
 };  /* End struct `InputPreferences' */
 
 void from_json( const nlohmann::json & jfrom,       InputPreferences & prefs );
-void to_json(         nlohmann::json & jfrom, const InputPreferences & prefs );
+void to_json(         nlohmann::json & jto,   const InputPreferences & prefs );
 
 
 /* -------------------------------------------------------------------------- */
@@ -61,7 +61,7 @@ struct RegistryInput : public InputPreferences {
 };  /* End struct `RegistryInput' */
 
 void from_json( const nlohmann::json & jfrom,       RegistryInput & rip );
-void to_json(         nlohmann::json & jfrom, const RegistryInput & rip );
+void to_json(         nlohmann::json & jto,   const RegistryInput & rip );
 
 /* -------------------------------------------------------------------------- */
 
@@ -171,7 +171,7 @@ struct Registry {
 
 
 void from_json( const nlohmann::json & jfrom,       Registry & reg );
-void to_json(         nlohmann::json & jfrom, const Registry & reg );
+void to_json(         nlohmann::json & jto,   const Registry & reg );
 
 
 /* -------------------------------------------------------------------------- */

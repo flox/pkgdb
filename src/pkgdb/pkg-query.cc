@@ -661,18 +661,18 @@ from_json( const nlohmann::json & jfrom, PkgDescriptorBase & desc )
   desc.clear();
   for ( const auto & [key, value] : jfrom.items() )
     {
-      if ( key == "name" )         { desc.name    = value.get<std::string>(); }
-      else if ( key == "pname" )   { desc.pname   = value.get<std::string>(); }
-      else if ( key == "version" ) { desc.version = value.get<std::string>(); }
-      else if ( key == "semver" )  { desc.semver  = value.get<std::string>(); }
+      if ( key == "name" )         { value.get_to( desc.name );    }
+      else if ( key == "pname" )   { value.get_to( desc.pname );   }
+      else if ( key == "version" ) { value.get_to( desc.version ); }
+      else if ( key == "semver" )  { value.get_to( desc.semver );  }
     }
 }
 
 
   void
-to_json( nlohmann::json & jfrom, const PkgDescriptorBase & desc )
+to_json( nlohmann::json & jto, const PkgDescriptorBase & desc )
 {
-  jfrom = {
+  jto = {
     { "name",    desc.name    }
   , { "pname",   desc.pname   }
   , { "version", desc.version }

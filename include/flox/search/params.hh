@@ -38,6 +38,7 @@ namespace flox::search {
  * that is suited for JSON input.
  */
 struct SearchQuery : pkgdb::PkgDescriptorBase {
+
   /** Filter results by partial name/description match. */
   std::optional<std::string> match;
 
@@ -48,11 +49,22 @@ struct SearchQuery : pkgdb::PkgDescriptorBase {
     this->pkgdb::PkgDescriptorBase::clear();
     this->match = std::nullopt;
   }
+
+
+  /**
+   * Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to lookup
+   * packages filtered by @a SearchQuery requirements.
+   * @param pqa   A set of query args to _fill_ with preferences.
+   * @return A reference to the modified query args.
+   */
+    pkgdb::PkgQueryArgs &
+  fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
+
 };  /* End struct "SearchQuery' */
 
 
-void from_json( const nlohmann::json & jfrom,       SearchQuery & desc );
-void to_json(         nlohmann::json & jfrom, const SearchQuery & desc );
+void from_json( const nlohmann::json & jfrom,       SearchQuery & qry );
+void to_json(         nlohmann::json & jto,   const SearchQuery & qry );
 
 
 /* -------------------------------------------------------------------------- */
@@ -100,6 +112,7 @@ void to_json(         nlohmann::json & jfrom, const SearchQuery & desc );
  * , "systems": ["x86_64-linux"]
  * , "allow":   { "unfree": true, "broken": false, "licenses": ["MIT"] }
  * , "semver":  { "preferPreReleases": false }
+ * , "query":   { "match": "hello" }
  * }
  * ```
  */
@@ -141,6 +154,9 @@ struct SearchParams {
   } semver;
 
 
+  SearchQuery query;
+
+
 /* -------------------------------------------------------------------------- */
 
   /** Reset preferences to default/empty state. */
@@ -153,9 +169,9 @@ struct SearchParams {
    * @param pqa   A set of query args to _fill_ with preferences.
    * @return A reference to the modified query args.
    */
-  pkgdb::PkgQueryArgs & fillQueryArgs( const std::string         & input
-                                     ,       pkgdb::PkgQueryArgs & pqa
-                                     ) const;
+  pkgdb::PkgQueryArgs & fillPkgQueryArgs( const std::string         & input
+                                        ,       pkgdb::PkgQueryArgs & pqa
+                                        ) const;
 
 
 };  /* End struct `SearchParams' */
@@ -163,7 +179,8 @@ struct SearchParams {
 
 /* -------------------------------------------------------------------------- */
 
-void from_json( const nlohmann::json & jfrom, SearchParams & prefs );
+void from_json( const nlohmann::json & jfrom,       SearchParams & prefs );
+void to_json(         nlohmann::json & jto,   const SearchParams & prefs );
 
 
 /* -------------------------------------------------------------------------- */
