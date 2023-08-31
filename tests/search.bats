@@ -78,7 +78,7 @@ genParams() {
 
 # ---------------------------------------------------------------------------- #
 
-# bats test_tags=search:version
+# bats test_tags=search:version, search:pname
 
 # Exact `version' match
 @test "'pkgdb search' 'pname=nodejs & version=18.16.0'" {
@@ -92,7 +92,7 @@ genParams() {
 
 # ---------------------------------------------------------------------------- #
 
-# bats test_tags=search:semver
+# bats test_tags=search:semver, search:pname
 
 # Test `semver' by filtering to >18.16, leaving only 20.2 and its alias.
 @test "'pkgdb search' 'pname=nodejs & semver=>18.16.0'" {
@@ -120,10 +120,54 @@ genParams() {
 
 # ---------------------------------------------------------------------------- #
 
-# TODO: unfree
-# TODO: unbroken
-# TODO: licenses
-# TODO: preferPreReleases
+# bats test_tags=search:name, search:license
+
+# Licenses filter
+@test "'pkgdb search' 'pname=blobs.gg & licenses=[Apache-2.0]'" {
+  run sh -c "$PKGDB search '$(
+    genParams '.query.pname|="blobs.gg"|.allow.licenses|=["Apache-2.0"]';
+  )'|wc -l;";
+  assert_success;
+  assert_output 1;
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# bats test_tags=search:unfree
+
+# Unfree filter
+@test "'pkgdb search' 'allow.unfree=false'" {
+  run sh -c "$PKGDB search '$( genParams '.allow.unfree=false'; )'|wc -l;";
+  assert_success;
+  assert_output 61338;
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# bats test_tags=search:broken
+
+# Unfree filter
+@test "'pkgdb search' 'allow.broken=true'" {
+  run sh -c "$PKGDB search '$( genParams '.allow.broken=true'; )'|wc -l;";
+  assert_success;
+  assert_output 64037;
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# bats test_tags=search:prerelease, search:pname
+
+# preferPreReleases ordering
+@test "'pkgdb search' 'semver.preferPreReleases=true'" {
+  run sh -c "$PKGDB search '$(
+    genParams '.semver.preferPreReleases=true|.query.pname="zfs-kernel"';
+  )'|head -n1|jq -r .version;";
+  assert_success;
+  assert_output '2.1.12-staging-2023-04-18-6.1.31';
+}
 
 
 # ---------------------------------------------------------------------------- #
