@@ -1,0 +1,14 @@
+{
+  "registry": {
+    "inputs": {
+      "nixpkgs": {
+        "from": { "type": "github", "owner": "NixOS", "repo": "nixpkgs" }
+      , "subtrees": ["legacyPackages"]
+      }
+    }
+  }
+, "systems": ["x86_64-linux"]
+, "allow":   { "unfree": true, "broken": false, "licenses": null }
+, "semver":  { "preferPreReleases": false }
+, "query":   { "match": "hello" }
+}

@@ -94,9 +94,8 @@ PkgQueryMixin::addQueryArgs( argparse::ArgumentParser & parser )
                .metavar( "QUERY" )
                .action( [&]( const std::string & query )
                         {
-                          nlohmann::json jqry = nlohmann::json::parse( query );
                           pkgdb::PkgQueryArgs args;
-                          pkgdb::from_json( jqry, args );
+                          nlohmann::json::parse( query ).get_to( args );
                           this->query = pkgdb::PkgQuery( args );
                         }
                       );
@@ -114,14 +113,55 @@ PkgQueryMixin::queryDb( pkgdb::PkgDbReadOnly & pdb ) const
 
 /* ========================================================================== */
 
+  void
+SearchParamsMixin::setInput( const std::string & name )
+{
+  pkgdb::PkgQueryArgs args;
+  this->query = pkgdb::PkgQuery( this->params.fillPkgQueryArgs( name, args ) );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  argparse::Argument &
+SearchParamsMixin::addSearchParamArgs( argparse::ArgumentParser & parser )
+{
+  auto parse = [&]( const std::string & params )
+    {
+      nlohmann::json paramsJSON = parseOrReadJSONObject( params );
+      paramsJSON.get_to( this->params );
+      for ( const auto & _name : this->params.registry.getOrder() )
+        {
+          const std::string & name = _name.get();
+          this->inputs.emplace_back( std::make_pair(
+            name
+          , InputsMixin::Input {
+              std::make_shared<FloxFlake>(
+                this->getState()
+              , * this->params.registry.inputs.at( name ).from
+              )
+            , nullptr
+            }
+          ) );
+        }
+    };
+  return parser.add_argument( "parameters" )
+               .help( "search paramaters as inline JSON or a path to a file" )
+               .required()
+               .metavar( "PARAMS" )
+               .action( std::move( parse ) );
+}
+
+
+/* ========================================================================== */
+
 SearchCommand::SearchCommand() : parser( "search" )
 {
   this->parser.add_description(
     "Search a set of flakes and emit a list satisfactory DB + "
     "`Packages.id' pairs"
   );
-  this->addInputsArg( this->parser );
-  this->addQueryArgs( this->parser );
+  this->addSearchParamArgs( this->parser );
 }
 
 
@@ -218,15 +258,70 @@ SearchCommand::postProcessArgs()
 
 /* -------------------------------------------------------------------------- */
 
+#if 0
+  static void
+showRowSimple(       SearchCommand      & search
+             ,       std::string_view     inputName
+             , const InputsMixin::Input & input
+             ,       pkgdb::row_id        row
+             )
+{
+  std::cout << input.db->dbPath.string() << " " << row << std::endl;
+}
+#endif
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
+SearchCommand::showRow(
+        std::string_view     inputName
+, const InputsMixin::Input & input
+,       pkgdb::row_id        row
+)
+{
+  sqlite3pp::query qry(
+    input.db->db
+  , R"SQL(
+      SELECT json_object(
+        'pname',       pname
+      , 'version',     version
+      , 'description', description
+      , 'broken',      iif( broken, json( 'true' ), json( 'false' ) )
+      , 'unfree',      iif( broken, json( 'true' ), json( 'false' ) )
+      , 'license',     license
+      ) AS json
+      FROM Packages
+      LEFT OUTER JOIN Descriptions
+        ON ( Packages.descriptionId = Descriptions.id  )
+      WHERE ( Packages.id = :row )
+      LIMIT 1
+    )SQL"
+  );
+  qry.bind( ":row", (long long) row );
+
+  nlohmann::json rsl = nlohmann::json::parse(
+    ( * qry.begin() ).get<std::string>( 0 )
+  );
+  rsl.emplace( "input", inputName );
+  rsl.emplace( "path",  input.db->getPackagePath( row ) );
+  std::cout << rsl.dump() << std::endl;
+
+}
+
+
+/* -------------------------------------------------------------------------- */
+
   int
 SearchCommand::run()
 {
   this->postProcessArgs();
   for ( const auto & [name, input] : this->inputs )
     {
+      this->setInput( name );
       for ( const auto & row : this->queryDb( * input.db ) )
         {
-          std::cout << input.db->dbPath.string() << " " << row << std::endl;
+          this->showRow( name, input, row );
         }
     }
   return EXIT_SUCCESS;

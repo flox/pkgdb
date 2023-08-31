@@ -15,6 +15,7 @@
 #include "flox/flox-flake.hh"
 #include "flox/pkgdb/write.hh"
 #include "flox/pkgdb/command.hh"
+#include "flox/search/params.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -47,12 +48,13 @@ struct InputsMixin
 
   /**
    * Parse inputs from an inline JSON string, or JSON file.
-   * @a Input::a members are initialized, but no databases are opened yet.
+   * @a Input::flake members are initialized, but no databases are opened yet.
    */
   void parseInputs( const std::string & jsonOrFile );
 
   /**
-   * Open read-only database handles forall inputs.
+   * @brief Open read-only database handles forall inputs.
+   *
    * After parsing query parameters those handles may be changed to read/write
    * if scraping is required, but ownership of writable databases is not handled
    * by this mixin.
@@ -68,10 +70,6 @@ struct InputsMixin
 
 
 /* -------------------------------------------------------------------------- */
-
-// TODO: Preferences and Descriptors are completely different and you can't just
-// parse JSON for the "real" search.
-// This exists for testing/development.
 
 /** Package query parser. */
 struct PkgQueryMixin : virtual public command::CommandStateMixin {
@@ -92,10 +90,33 @@ struct PkgQueryMixin : virtual public command::CommandStateMixin {
 
 /* -------------------------------------------------------------------------- */
 
-/** Search flakes for packages satisfying a set of filters. */
-struct SearchCommand
+/**
+ * @brief Search parameters _single JSON object_ parser.
+ *
+ * This uses the same _plumbin_ as @a InputsMixin and @a PkgQueryMixin for
+ * post-processing, but does not use their actual parsers.
+ */
+struct SearchParamsMixin
   : public InputsMixin
   , public PkgQueryMixin
+{
+  SearchParams params;
+
+  /** Add argument to any parser to construct a @a search::SearchParams. */
+  argparse::Argument & addSearchParamArgs( argparse::ArgumentParser & parser );
+
+  /** Sets @a pkgdb::PkgQuery member with settings for a named input. */
+  void setInput( const std::string & name );
+
+  using InputsMixin::postProcessArgs;
+
+};  /* End struct `SearchParamsMixin' */
+
+
+/* -------------------------------------------------------------------------- */
+
+/** Search flakes for packages satisfying a set of filters. */
+struct SearchCommand :  SearchParamsMixin
 {
 
   command::VerboseParser parser;
@@ -116,6 +137,12 @@ struct SearchCommand
    * This may trigger scraping.
    */
   void postProcessArgs() override;
+
+  /** Display a single row from the given @a input. */
+  void showRow(       std::string_view     inputName
+              , const InputsMixin::Input & input
+              ,       pkgdb::row_id        row
+              );
 
   /**
    * Execute the `search` routine.

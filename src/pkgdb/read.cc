@@ -129,12 +129,12 @@ PkgDbReadOnly::completedAttrSet( const flox::AttrPath & path )
       );
       qryId.bind( ":attrName", a, sqlite3pp::copy );
       qryId.bind( ":parent", (long long) row );
-      auto i = qryId.begin();
-      if ( i == qryId.end() ) { return false; }  /* No such path. */
+      auto itr = qryId.begin();
+      if ( itr == qryId.end() ) { return false; }  /* No such path. */
       /* If a parent attrset is marked `done', then all of it's children
        * are also considered done. */
-      if ( ( * i ).get<bool>( 1 ) ) { return true; }
-      row = ( * i ).get<long long>( 0 );
+      if ( ( * itr ).get<bool>( 1 ) ) { return true; }
+      row = ( * itr ).get<long long>( 0 );
     }
   return false;
 }
