@@ -122,8 +122,42 @@ struct Registry {
    */
   std::vector<std::string> priority;
 
-  /** @return A `std::ranges::ref_view` of input names in order of priority. */
-  auto getOrder() const;
+  /**
+   * @a brief Return an ordered list of input names.
+   *
+   * This appends @a priority with any missing @a inputs in
+   * lexicographical order.
+   *
+   * The resulting list contains wrapped references and need to be accessed
+   * using @a std::reference_wrapper<T>::get().
+   *
+   * @example
+   * ```
+   * Registry reg = R"( {
+   *   "inputs": {
+   *     "floco": {
+   *       "from": { "type": "github", "owner": "aakropotkin", "repo": "floco" }
+   *     }
+   *   , "floxpkgs": {
+   *       "from": { "type": "github", "owner": "flox", "repo": "floxpkgs" }
+   *     }
+   *   , "nixpkgs": {
+   *       "from": { "type": "github", "owner": "NixOS", "repo": "nixpkgs" }
+   *     }
+   *   }
+   * , "priority": ["nixpkgs", "floxpkgs"]
+   * } )"_json;
+   * for ( const auto & name : reg.getOrder() )
+   *   {
+   *     std::cout << name.get() << " ";
+   *   }
+   * std::cout << std::endl;
+   * // => nixpkgs floxpkgs floco
+   * ```
+   *
+   * @return A `std::ranges::ref_view` of input names in order of priority.
+   */
+  std::vector<std::reference_wrapper<const std::string>> getOrder() const;
 
   /** Reset to default state. */
     inline void

@@ -19,7 +19,7 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
-  auto
+  std::vector<std::reference_wrapper<const std::string>>
 Registry::getOrder() const
 {
   std::vector<std::reference_wrapper<const std::string>> order(
