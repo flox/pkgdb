@@ -258,21 +258,6 @@ SearchCommand::postProcessArgs()
 
 /* -------------------------------------------------------------------------- */
 
-#if 0
-  static void
-showRowSimple(       SearchCommand      & search
-             ,       std::string_view     inputName
-             , const InputsMixin::Input & input
-             ,       pkgdb::row_id        row
-             )
-{
-  std::cout << input.db->dbPath.string() << " " << row << std::endl;
-}
-#endif
-
-
-/* -------------------------------------------------------------------------- */
-
   void
 SearchCommand::showRow(
         std::string_view     inputName
@@ -280,33 +265,10 @@ SearchCommand::showRow(
 ,       pkgdb::row_id        row
 )
 {
-  sqlite3pp::query qry(
-    input.db->db
-  , R"SQL(
-      SELECT json_object(
-        'pname',       pname
-      , 'version',     version
-      , 'description', description
-      , 'broken',      iif( broken, json( 'true' ), json( 'false' ) )
-      , 'unfree',      iif( broken, json( 'true' ), json( 'false' ) )
-      , 'license',     license
-      ) AS json
-      FROM Packages
-      LEFT OUTER JOIN Descriptions
-        ON ( Packages.descriptionId = Descriptions.id  )
-      WHERE ( Packages.id = :row )
-      LIMIT 1
-    )SQL"
-  );
-  qry.bind( ":row", (long long) row );
-
-  nlohmann::json rsl = nlohmann::json::parse(
-    ( * qry.begin() ).get<std::string>( 0 )
-  );
+  nlohmann::json rsl = input.db->getPackage( row );
   rsl.emplace( "input", inputName );
   rsl.emplace( "path",  input.db->getPackagePath( row ) );
   std::cout << rsl.dump() << std::endl;
-
 }
 
 

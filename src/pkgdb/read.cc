@@ -44,9 +44,22 @@ isSQLError( int rcode )
   std::string
 genPkgDbName( const Fingerprint & fingerprint )
 {
-  nix::Path   cacheDir = nix::getCacheDir() + "/flox/pkgdb-v0";
-  std::string fpStr    = fingerprint.to_string( nix::Base16, false );
-  nix::Path   dbPath   = cacheDir + "/" + fpStr + ".sqlite";
+  /* Take the major version number on the first run for the directory name */
+  static std::string schemaMajor;
+  if ( schemaMajor.empty() )
+    {
+      schemaMajor = FLOX_PKGDB_SCHEMA_VERSION;
+      schemaMajor = std::string(
+        schemaMajor.begin()
+      , schemaMajor.begin() + schemaMajor.find( '.' )
+      );
+    }
+
+  static const nix::Path cacheDir =
+    nix::getCacheDir() + "/flox/pkgdb-v" + schemaMajor;
+
+  std::string fpStr  = fingerprint.to_string( nix::Base16, false );
+  nix::Path   dbPath = cacheDir + "/" + fpStr + ".sqlite";
   return dbPath;
 }
 
@@ -369,6 +382,41 @@ PkgDbReadOnly::getDescendantAttrSets( row_id root )
 PkgDbReadOnly::getPackages( const PkgQueryArgs & params )
 {
   return PkgQuery( params ).execute( this->db );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  nlohmann::json
+PkgDbReadOnly::getPackage( row_id row )
+{
+  sqlite3pp::query qry(
+    this->db
+  , R"SQL(
+      SELECT json_object(
+        'pname',       pname
+      , 'version',     version
+      , 'description', description
+      , 'broken',      iif( broken, json( 'true' ), json( 'false' ) )
+      , 'unfree',      iif( broken, json( 'true' ), json( 'false' ) )
+      , 'license',     license
+      ) AS json
+      FROM Packages
+      LEFT OUTER JOIN Descriptions
+        ON ( Packages.descriptionId = Descriptions.id  )
+      WHERE ( Packages.id = :row )
+      LIMIT 1
+    )SQL"
+  );
+  qry.bind( ":row", (long long) row );
+  return nlohmann::json::parse( ( * qry.begin() ).get<std::string>( 0 ) );
+}
+
+
+  nlohmann::json
+PkgDbReadOnly::getPackage( const flox::AttrPath & path )
+{
+  return this->getPackage( this->getPackageId( path ) );
 }
 
 

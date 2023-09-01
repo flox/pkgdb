@@ -33,7 +33,7 @@
 #ifndef FLOX_PKGDB_VERSION
 #  define FLOX_PKGDB_VERSION  "NO.VERSION"
 #endif
-#define FLOX_PKGDB_SCHEMA_VERSION  "0.1.0"
+#define FLOX_PKGDB_SCHEMA_VERSION  "1.0.0"
 
 
 /* -------------------------------------------------------------------------- */
@@ -46,7 +46,7 @@ namespace flox::pkgdb {
 /** A unique hash associated with a locked flake. */
 using Fingerprint = nix::flake::Fingerprint;
 using SQLiteDb    = sqlite3pp::database;
-using sql_rc      = int;       /**< `SQLITE_*` result code. */
+using sql_rc      = int;                      /**< `SQLITE_*` result code. */
 
 
 /* -------------------------------------------------------------------------- */
@@ -272,6 +272,26 @@ class PkgDbReadOnly {
      * TODO: document parameters effected by ordering.
      */
      std::vector<row_id> getPackages( const PkgQueryArgs & params );
+
+
+    /**
+     * @brief Get metadata about a single package.
+     * Return `pname`, `version`, `description`, `broken`, `unfree`,
+     * and `license` columns.
+     * @param row A `Packages.id` to lookup.
+     * @return A JSON object containing information about a package.
+     */
+     nlohmann::json getPackage( row_id row );
+
+
+    /**
+     * @brief Get metadata about a single package.
+     * Return `pname`, `version`, `description`, `broken`, `unfree`,
+     * and `license` columns.
+     * @param row An attribute path to a package.
+     * @return A JSON object containing information about a package.
+     */
+    nlohmann::json getPackage( const flox::AttrPath & path );
 
 
 /* -------------------------------------------------------------------------- */
