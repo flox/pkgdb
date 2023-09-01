@@ -74,15 +74,17 @@ LIBFLOXPKGDB = libflox-pkgdb$(libExt)
 LIBS           =  $(LIBFLOXPKGDB)
 COMMON_HEADERS =  $(call rwildcard,include,*.hh)
 SRCS           =  $(call rwildcard,src,*.cc)
-bin_SRCS       =  $(addprefix src/,main.cc scrape.cc get.cc pkgdb/command.cc)
-bin_SRCS       += $(addprefix src/,search/command.cc)
+bin_SRCS       =  src/main.cc
+bin_SRCS       += $(addprefix src/pkgdb/,scrape.cc get.cc command.cc)
+bin_SRCS       += $(addprefix src/search/,command.cc)
 lib_SRCS       =  $(filter-out $(bin_SRCS),$(SRCS))
 test_SRCS      =  $(wildcard tests/*.cc)
+ALL_SRCS       = $(SRCS) $(test_SRCS)
 BINS           =  pkgdb
 TEST_UTILS     =  $(addprefix tests/,is_sqlite3 parse-preferences)
 TESTS          =  $(filter-out $(TEST_UTILS),$(test_SRCS:.cc=))
 CLEANDIRS      =
-CLEANFILES     =  $(SRCS:.cc=.o) $(test_SRCS:.cc=.o)
+CLEANFILES     =  $(ALL_SRCS:.cc=.o)
 CLEANFILES     += $(addprefix bin/,$(BINS)) $(addprefix lib/,$(LIBS))
 CLEANFILES     += $(TESTS) $(TEST_UTILS)
 
@@ -278,7 +280,7 @@ cdb: compile_commands.json
 
 compile_commands.json: flake.nix flake.lock pkg-fun.nix
 compile_commands.json: $(lastword $(MAKEFILE_LIST))
-compile_commands.json: $(COMMON_HEADERS) $(SRCS) $(test_SRCS)
+compile_commands.json: $(COMMON_HEADERS) $(ALL_SRCS)
 	-$(MAKE) -C $(MAKEFILE_DIR) clean;
 	$(BEAR) --output "$@" -- $(MAKE) -C $(MAKEFILE_DIR) -j all;
 
@@ -286,7 +288,7 @@ compile_commands.json: $(COMMON_HEADERS) $(SRCS) $(test_SRCS)
 # ---------------------------------------------------------------------------- #
 
 .PHONY: lint
-lint: compile_commands.json $(COMMON_HEADERS) $(SRCS) $(test_SRCS)
+lint: compile_commands.json $(COMMON_HEADERS) $(ALL_SRCS)
 	$(TIDY) $(filter-out compile_commands.json,$^)
 
 

@@ -27,6 +27,7 @@ GetCommand::GetCommand()
   , pDone( "done" )
   , pFlake( "flake" )
   , pDb( "db" )
+  , pPkg( "pkg" )
 {
   this->parser.add_description( "Get metadata from Package DB" );
 
@@ -71,6 +72,19 @@ GetCommand::GetCommand()
   this->pDb.add_description( "Get absolute path to Package DB for a flake" );
   this->addTargetArg( this->pDb );
   this->parser.add_subparser( this->pDb );
+
+  this->pPkg.add_description( "Get info about a single package" );
+  this->addTargetArg( this->pPkg );
+  /* In `runPkg' we check for a singleton and if it's an integer it
+   * is interpreted as a row id. */
+  this->pPkg.add_argument( "id-or-path" )
+            .help( "Attribute path to package, or `Packages.id`" )
+            .metavar( "<ID|ATTRS...>" )
+            .remaining()
+            .action( [&]( const std::string & idOrPath ) {
+              this->attrPath.emplace_back( idOrPath );
+            } );
+  this->parser.add_subparser( this->pPkg );
 }
 
 
@@ -168,6 +182,41 @@ GetCommand::runDb()
 
 /* -------------------------------------------------------------------------- */
 
+  static bool
+is_number( std::string_view str )
+{
+  return ( ! str.empty() ) &&
+         ( std::find_if( str.begin(), str.end(), []( unsigned char c ) {
+             return ! std::isdigit( c );
+           } ) == str.end() );
+}
+
+
+  int
+GetCommand::runPkg()
+{
+  nlohmann::json rsl;
+  if ( ( this->attrPath.size() == 1 ) &&
+       ( is_number( this->attrPath.front() ) )
+     )
+    {
+      this->id = stoull( this->attrPath.front() );
+      this->attrPath.clear();
+      rsl = this->db->getPackage( this->id );
+      this->attrPath = this->db->getPackagePath( this->id );
+    }
+  else
+    {
+      rsl = this->db->getPackage( this->attrPath );
+    }
+  rsl.emplace( "path", this->attrPath );
+  std::cout << rsl << std::endl;
+  return EXIT_SUCCESS;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
   int
 GetCommand::run()
 {
@@ -190,6 +239,10 @@ GetCommand::run()
   if ( this->parser.is_subcommand_used( "done" ) )
     {
       return this->runDone();
+    }
+  if ( this->parser.is_subcommand_used( "pkg" ) )
+    {
+      return this->runPkg();
     }
   std::cerr << this->parser << std::endl;
   throw flox::FloxException( "You must provide a valid 'get' subcommand" );

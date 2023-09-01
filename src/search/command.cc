@@ -167,16 +167,20 @@ SearchCommand::SearchCommand() : parser( "search" )
 
 /* -------------------------------------------------------------------------- */
 
+// FIXME: this needs to use `setInput' or something, you aren't going to scrape
+// the correct subtrees or stabilities here.
   void
 SearchCommand::scrapeIfNeeded()
 {
   this->openDatabases();
-  std::vector<subtree_type> subtrees = this->query.subtrees.value_or(
-    std::vector<subtree_type> { ST_PACKAGES, ST_LEGACY, ST_CATALOG }
-  );
-  std::vector<std::string> stabilities = this->query.stabilities.value_or(
-    std::vector<std::string> { "stable" }
-  );
+  std::vector<subtree_type> subtrees =
+    this->params.registry.defaults.subtrees.value_or(
+      std::vector<subtree_type> { ST_PACKAGES, ST_LEGACY, ST_CATALOG }
+    );
+  std::vector<std::string> stabilities =
+    this->params.registry.defaults.stabilities.value_or(
+      std::vector<std::string> { "stable" }
+    );
 
   auto maybeScrape =
     [&]( const flox::AttrPath & path, Input & input ) -> void
@@ -223,7 +227,7 @@ SearchCommand::scrapeIfNeeded()
           case ST_CATALOG:  prefix = { "catalog" };          break;
           default: throw FloxException( "Invalid subtree" ); break;
         }
-      for ( const auto & system : this->query.systems )
+      for ( const auto & system : this->params.systems )
         {
           prefix.emplace_back( system );
           if ( subtree != ST_CATALOG )

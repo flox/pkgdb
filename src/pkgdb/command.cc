@@ -137,7 +137,7 @@ PkgDbMixin<T>::addTargetArg( argparse::ArgumentParser & parser )
   return parser.add_argument( "target" )
                .help( "The source ( database path or flake-ref ) to read" )
                .required()
-               .metavar( "DB-OR-FLAKE-REF" )
+               .metavar( "<DB-PATH|FLAKE-REF>" )
                .action(
                  [&]( const std::string & target )
                  {

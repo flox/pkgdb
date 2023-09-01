@@ -120,6 +120,7 @@ struct GetCommand
   command::VerboseParser pDone;           /**< `get done`  parser */
   command::VerboseParser pFlake;          /**< `get flake` parser */
   command::VerboseParser pDb;             /**< `get db`    parser */
+  command::VerboseParser pPkg;            /**< `get pkg`   parser */
   bool                   isPkg  = false;
   row_id                 id     = 0;
 
@@ -157,6 +158,12 @@ struct GetCommand
    * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
    */
   int runDb();
+
+  /**
+   * Execute the `get pkg` routine.
+   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+   */
+  int runPkg();
 
   /**
    * Execute the `get` routine.
