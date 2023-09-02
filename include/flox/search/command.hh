@@ -47,12 +47,6 @@ struct InputsMixin
   std::vector<std::pair<std::string, Input>> inputs;
 
   /**
-   * Parse inputs from an inline JSON string, or JSON file.
-   * @a Input::flake members are initialized, but no databases are opened yet.
-   */
-  void parseInputs( const std::string & jsonOrFile );
-
-  /**
    * @brief Open read-only database handles forall inputs.
    *
    * After parsing query parameters those handles may be changed to read/write
@@ -60,11 +54,6 @@ struct InputsMixin
    * by this mixin.
    */
   void openDatabases();
-
-  inline void postProcessArgs() override { this->openDatabases(); }
-
-  /** Add `inputs` argument to parse flake inputs from. */
-  argparse::Argument & addInputsArg( argparse::ArgumentParser & parser );
 
 };  /* End struct `InputsMixin' */
 
@@ -108,7 +97,7 @@ struct SearchParamsMixin
   /** Sets @a pkgdb::PkgQuery member with settings for a named input. */
   void setInput( const std::string & name );
 
-  using InputsMixin::postProcessArgs;
+  inline void postProcessArgs() { this->openDatabases(); }
 
 };  /* End struct `SearchParamsMixin' */
 

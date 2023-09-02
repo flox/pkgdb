@@ -28,23 +28,6 @@ namespace flox::search {
 /* -------------------------------------------------------------------------- */
 
   void
-InputsMixin::parseInputs( const std::string & jsonOrFile )
-{
-  nlohmann::json inputsJSON = parseOrReadJSONObject( jsonOrFile );
-
-  for ( const auto & [name, flakeRef] :  inputsJSON.items() )
-    {
-      this->inputs.emplace_back( std::make_pair(
-        name
-      , Input { this->parseFloxFlakeJSON( flakeRef ), nullptr }
-      ) );
-    }
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  void
 InputsMixin::openDatabases()
 {
   for ( auto & [name, input] : this->inputs )
@@ -63,23 +46,6 @@ InputsMixin::openDatabases()
       /* Open a read-only copy. */
       input.db = std::make_shared<pkgdb::PkgDbReadOnly>( (std::string) dbPath );
     }
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  argparse::Argument &
-InputsMixin::addInputsArg( argparse::ArgumentParser & parser )
-{
-  return parser.add_argument( "inputs" )
-               .help( "flakes to be searched" )
-               .required()
-               .metavar( "INPUTS" )
-               .action( [&]( const std::string & inputs )
-                        {
-                          this->parseInputs( inputs );
-                        }
-                      );
 }
 
 
