@@ -20,7 +20,7 @@ namespace flox {
 /* -------------------------------------------------------------------------- */
 
   std::vector<std::reference_wrapper<const std::string>>
-Registry::getOrder() const
+RegistryRaw::getOrder() const
 {
   std::vector<std::reference_wrapper<const std::string>> order(
     this->priority.cbegin()
@@ -105,7 +105,7 @@ to_json( nlohmann::json & jto, const RegistryInput & rip )
 /* -------------------------------------------------------------------------- */
 
   void
-from_json( const nlohmann::json & jfrom, Registry & reg )
+from_json( const nlohmann::json & jfrom, RegistryRaw & reg )
 {
   for ( const auto & [key, value] : jfrom.items() )
     {
@@ -117,7 +117,7 @@ from_json( const nlohmann::json & jfrom, Registry & reg )
 
 
   void
-to_json( nlohmann::json & jto, const Registry & reg )
+to_json( nlohmann::json & jto, const RegistryRaw & reg )
 {
   jto.emplace( "inputs",   reg.inputs   );
   jto.emplace( "defaults", reg.defaults );
@@ -127,7 +127,14 @@ to_json( nlohmann::json & jto, const Registry & reg )
 
 /* -------------------------------------------------------------------------- */
 
-}  /* End namespaces `flox::search' */
+/* Instantiate class templates for common registries. */
+
+template class Registry<RegistryInput>;
+
+
+/* -------------------------------------------------------------------------- */
+
+}  /* End namespaces `flox' */
 
 
 /* -------------------------------------------------------------------------- *

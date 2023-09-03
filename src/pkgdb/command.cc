@@ -131,7 +131,7 @@ PkgDbMixin<PkgDbReadOnly>::openPkgDb()
 
 /* -------------------------------------------------------------------------- */
 
-  template <PkgDbType T> argparse::Argument &
+  template <pkgdb_typename T> argparse::Argument &
 PkgDbMixin<T>::addTargetArg( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "target" )

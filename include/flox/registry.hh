@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <functional>
 #include <vector>
 #include <map>
@@ -22,6 +23,7 @@
 #include "flox/core/types.hh"
 #include "flox/core/util.hh"
 #include "flox/pkgdb/pkg-query.hh"
+#include "flox/flox-flake.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -52,6 +54,11 @@ void from_json( const nlohmann::json & jfrom,       InputPreferences & prefs );
 void to_json(         nlohmann::json & jto,   const InputPreferences & prefs );
 
 
+  template <typename T>
+concept input_preferences_typename =
+    std::is_base_of<InputPreferences, T>::value;
+
+
 /* -------------------------------------------------------------------------- */
 
 /** Preferences associated with a named registry input. */
@@ -61,6 +68,11 @@ struct RegistryInput : public InputPreferences {
 
 void from_json( const nlohmann::json & jfrom,       RegistryInput & rip );
 void to_json(         nlohmann::json & jto,   const RegistryInput & rip );
+
+  template<typename T>
+concept constructibe_from_registry_input =
+    std::constructible_from<T, const RegistryInput &>;
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -106,7 +118,15 @@ void to_json(         nlohmann::json & jto,   const RegistryInput & rip );
  * }
  * ```
  */
-struct Registry {
+struct RegistryRaw {
+
+  virtual ~RegistryRaw() = default;
+  RegistryRaw( const RegistryRaw &  ) = default;
+  RegistryRaw(       RegistryRaw && ) = default;
+
+  RegistryRaw & operator=( const RegistryRaw &  ) = default;
+  RegistryRaw & operator=(       RegistryRaw && ) = default;
+
 
   /** Settings and fetcher information associated with named inputs. */
   std::map<std::string, RegistryInput> inputs;
@@ -156,7 +176,9 @@ struct Registry {
    *
    * @return A list of input names in order of priority.
    */
-  std::vector<std::reference_wrapper<const std::string>> getOrder() const;
+    [[nodiscard]]
+    virtual std::vector<std::reference_wrapper<const std::string>>
+  getOrder() const;
 
   /** Reset to default state. */
     inline void
@@ -169,8 +191,160 @@ struct Registry {
 };  /* End struct `Registry' */
 
 
-void from_json( const nlohmann::json & jfrom,       Registry & reg );
-void to_json(         nlohmann::json & jto,   const Registry & reg );
+void from_json( const nlohmann::json & jfrom,       RegistryRaw & reg );
+void to_json(         nlohmann::json & jto,   const RegistryRaw & reg );
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * An input registry that may hold arbitrary types of inputs.
+ * Unlike @a RegistryRaw, inputs are held in order, and any default settings
+ * have been applied to inputs.
+ */
+  template<constructibe_from_registry_input InputType>
+  requires input_preferences_typename<InputType>
+class Registry : FloxFlakeParserMixin
+{
+
+  private:
+
+    /**
+     * Orginal raw registry.
+     * This is saved to allow the raw user input to be recorded in lockfiles.
+     */
+    RegistryRaw registryRaw;
+
+    /** A list of `<SHORTNAME>, <FLAKE>` pairs in priority order. */
+    std::vector<std::pair<std::string, std::shared_ptr<InputType>>> inputs;
+
+
+  public:
+
+    using input_type = InputType;
+
+    explicit Registry( const RegistryRaw & registry )
+      : registryRaw( registry )
+    {
+      for ( const std::reference_wrapper<const std::string> & _name :
+              registry.getOrder()
+          )
+        {
+          const auto & pair = std::find_if(
+            registry.inputs.begin()
+          , registry.inputs.end()
+          , [&]( const auto & pair ) { return pair.first == _name.get(); }
+          );
+
+          /* Fill default/fallback values if none are defined. */
+          RegistryInput input = pair->second;
+          if ( ! input.subtrees.has_value() )
+            {
+              input.subtrees = registry.defaults.subtrees;
+            }
+          if ( ! input.stabilities.has_value() )
+            {
+              input.stabilities = registry.defaults.stabilities;
+            }
+          this->inputs.emplace_back(
+            std::make_pair( pair->first, std::make_shared<InputType>( input ) )
+          );
+        }
+    }
+
+
+    /**
+     * Get a flake by name with convenience wrappers for evaluation.
+     * @param name Registry shortname for the target flake.
+     * @return A flake wrapped with a nix evaluator, or `nullptr` if no such
+     *         @a name exists in the registry.
+     */
+      [[nodiscard]]
+      std::shared_ptr<InputType>
+    get( const std::string & name ) noexcept
+    {
+      auto maybeInput = std::find_if(
+        this->inputs.begin()
+      , this->inputs.end()
+      , [&]( const auto & pair ) { return pair.first == name; }
+      );
+      if ( maybeInput == this->inputs.end() ) { return nullptr; }
+      return maybeInput->second;
+    }
+
+    /**
+     * Get a flake by name with convenience wrappers for evaluation.
+     * @param name Registry shortname for the target flake.
+     * @return A flake wrapped with a nix evaluator, or `nullptr` if no such
+     *         @a name exists in the registry.
+     */
+      [[nodiscard]]
+      const std::shared_ptr<InputType>
+    get( const std::string & name ) const noexcept
+    {
+      const auto maybeInput = std::find_if(
+        this->inputs.begin()
+      , this->inputs.end()
+      , [&]( const auto & pair ) { return pair.first == name; }
+      );
+      if ( maybeInput == this->inputs.end() ) { return nullptr; }
+      return maybeInput->second;
+    }
+
+
+    [[nodiscard]]
+      std::shared_ptr<InputType>
+    at( const std::string & name )
+    {
+      std::shared_ptr<InputType> maybeInput = this->get( name );
+      if ( maybeInput == nullptr )
+        {
+          throw std::out_of_range( "No such input '" + name + "'" );
+        }
+      return maybeInput;
+    }
+
+    [[nodiscard]]
+      const std::shared_ptr<InputType>
+    at( const std::string & name ) const
+    {
+      const std::shared_ptr<InputType> maybeInput = this->get( name );
+      if ( maybeInput == nullptr )
+        {
+          throw std::out_of_range( "No such input '" + name + "'" );
+        }
+      return maybeInput;
+    }
+
+
+      [[nodiscard]]
+      std::vector<std::reference_wrapper<const std::string>>
+    getOrder() const
+    {
+      std::vector<std::reference_wrapper<const std::string>> order;
+      /* Extract names from `flakes' list. */
+      for ( const auto & pair : this->inputs )
+        {
+          order.emplace_back( pair.first );
+        }
+      return order;
+    }
+
+
+    [[nodiscard]]
+    const RegistryRaw & getRaw() const { return this->registryRaw; }
+
+    /* Forwarded container functions. */
+    [[nodiscard]] auto begin()        { return this->inputs.begin();  }
+    [[nodiscard]] auto end()          { return this->inputs.end();    }
+    [[nodiscard]] auto begin()  const { return this->inputs.cbegin(); }
+    [[nodiscard]] auto end()    const { return this->inputs.cend();   }
+    [[nodiscard]] auto cbegin()       { return this->inputs.cbegin(); }
+    [[nodiscard]] auto cend()         { return this->inputs.cend();   }
+    [[nodiscard]] auto size()   const { return this->inputs.size();   }
+    [[nodiscard]] auto empty()  const { return this->inputs.empty();  }
+
+};  /* End class `Registry' */
 
 
 /* -------------------------------------------------------------------------- */
