@@ -72,14 +72,21 @@ struct RegistryInput : public InputPreferences {
 void from_json( const nlohmann::json & jfrom,       RegistryInput & rip );
 void to_json(         nlohmann::json & jto,   const RegistryInput & rip );
 
+
+/** A type that can be constructed from a @a RegistryInput. */
   template<typename T>
 concept constructibe_from_registry_input =
     std::constructible_from<T, const RegistryInput &>;
 
+/**
+ * @brief A type that can be constructed from a `nix::ref<nix::EvalState>`
+ *        and @a RegistryInput.
+ */
   template<typename T>
 concept constructibe_from_nix_evaluator_and_registry_input =
     std::constructible_from<T, nix::ref<nix::EvalState>, const RegistryInput &>;
 
+/** @brief A type that is suitable as a @a Registry value. */
   template<typename T>
 concept registry_input_typename = input_preferences_typename<T> && (
     constructibe_from_registry_input<T> ||
@@ -201,7 +208,7 @@ struct RegistryRaw {
     this->priority.clear();
   }
 
-};  /* End struct `Registry' */
+};  /* End struct `RegistryRaw' */
 
 
 void from_json( const nlohmann::json & jfrom,       RegistryRaw & reg );
@@ -211,9 +218,14 @@ void to_json(         nlohmann::json & jto,   const RegistryRaw & reg );
 /* -------------------------------------------------------------------------- */
 
 /**
- * An input registry that may hold arbitrary types of inputs.
+ * @brief An input registry that may hold arbitrary types of inputs.
+ *
  * Unlike @a RegistryRaw, inputs are held in order, and any default settings
  * have been applied to inputs.
+ *
+ * Any type that is constructible from a @a RegistryInput and (optional) a
+ * `nix::ref<nix::EvalState>`, and is derived from @a InputPreferences may be a
+ * value type in a registry.
  */
   template<registry_input_typename InputType>
 class Registry : FloxFlakeParserMixin
@@ -229,6 +241,7 @@ class Registry : FloxFlakeParserMixin
 
     /** A list of `<SHORTNAME>, <FLAKE>` pairs in priority order. */
     std::vector<std::pair<std::string, std::shared_ptr<InputType>>> inputs;
+
 
       template<constructibe_from_registry_input T>
       inline std::shared_ptr<T>
@@ -273,6 +286,8 @@ class Registry : FloxFlakeParserMixin
             {
               input.stabilities = registry.defaults.stabilities;
             }
+
+          /* Construct the input */
           this->inputs.emplace_back(
             std::make_pair( pair->first, this->mkInput<InputType>( input ) )
           );
