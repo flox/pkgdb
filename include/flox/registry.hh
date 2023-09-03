@@ -56,7 +56,9 @@ void to_json(         nlohmann::json & jto,   const InputPreferences & prefs );
 
   template <typename T>
 concept input_preferences_typename =
-    std::is_base_of<InputPreferences, T>::value;
+    std::is_base_of<InputPreferences, T>::value && requires( T & t ) {
+      { t.getFrom() } -> std::convertible_to<nix::FlakeRef>;
+    };
 
 
 /* -------------------------------------------------------------------------- */
@@ -64,6 +66,7 @@ concept input_preferences_typename =
 /** Preferences associated with a named registry input. */
 struct RegistryInput : public InputPreferences {
   std::shared_ptr<nix::FlakeRef> from;
+  [[nodiscard]] nix::FlakeRef getFrom() const { return * this->from; };
 };  /* End struct `RegistryInput' */
 
 void from_json( const nlohmann::json & jfrom,       RegistryInput & rip );
@@ -72,6 +75,16 @@ void to_json(         nlohmann::json & jto,   const RegistryInput & rip );
   template<typename T>
 concept constructibe_from_registry_input =
     std::constructible_from<T, const RegistryInput &>;
+
+  template<typename T>
+concept constructibe_from_nix_evaluator_and_registry_input =
+    std::constructible_from<T, nix::ref<nix::EvalState>, const RegistryInput &>;
+
+  template<typename T>
+concept registry_input_typename = input_preferences_typename<T> && (
+    constructibe_from_registry_input<T> ||
+    constructibe_from_nix_evaluator_and_registry_input<T>
+  );
 
 
 /* -------------------------------------------------------------------------- */
@@ -202,8 +215,7 @@ void to_json(         nlohmann::json & jto,   const RegistryRaw & reg );
  * Unlike @a RegistryRaw, inputs are held in order, and any default settings
  * have been applied to inputs.
  */
-  template<constructibe_from_registry_input InputType>
-  requires input_preferences_typename<InputType>
+  template<registry_input_typename InputType>
 class Registry : FloxFlakeParserMixin
 {
 
@@ -218,10 +230,25 @@ class Registry : FloxFlakeParserMixin
     /** A list of `<SHORTNAME>, <FLAKE>` pairs in priority order. */
     std::vector<std::pair<std::string, std::shared_ptr<InputType>>> inputs;
 
+      template<constructibe_from_registry_input T>
+      inline std::shared_ptr<T>
+    mkInput( const RegistryInput & input )
+    {
+      return std::make_shared<T>( input );
+    }
+
+      template<constructibe_from_nix_evaluator_and_registry_input T>
+      inline std::shared_ptr<T>
+    mkInput( const RegistryInput & input )
+    {
+      return std::make_shared<T>( this->getState(), input );
+    }
+
 
   public:
 
     using input_type = InputType;
+
 
     explicit Registry( const RegistryRaw & registry )
       : registryRaw( registry )
@@ -247,7 +274,7 @@ class Registry : FloxFlakeParserMixin
               input.stabilities = registry.defaults.stabilities;
             }
           this->inputs.emplace_back(
-            std::make_pair( pair->first, std::make_shared<InputType>( input ) )
+            std::make_pair( pair->first, this->mkInput<InputType>( input ) )
           );
         }
     }
@@ -345,6 +372,29 @@ class Registry : FloxFlakeParserMixin
     [[nodiscard]] auto empty()  const { return this->inputs.empty();  }
 
 };  /* End class `Registry' */
+
+
+/* -------------------------------------------------------------------------- */
+
+struct FloxFlakeInput : public InputPreferences {
+
+  std::shared_ptr<FloxFlake> flake;
+
+  FloxFlakeInput( nix::ref<nix::EvalState> state, const RegistryInput & input )
+    : flake( std::make_shared<FloxFlake>( state, input.getFrom() ) )
+  {
+    this->subtrees    = input.subtrees;
+    this->stabilities = input.stabilities;
+  }
+
+    [[nodiscard]]
+    nix::FlakeRef
+  getFrom() const
+  {
+    return this->flake->lockedFlake.flake.lockedRef;
+  }
+
+};  /* End struct `FloxFlakeInput' */
 
 
 /* -------------------------------------------------------------------------- */
