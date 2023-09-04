@@ -40,10 +40,14 @@
       argparse.overlays.default
     ];
     overlays.flox-pkgdb = final: prev: {
-      flox-pkgdb = final.callPackage ./pkg-fun.nix {
-        stdenv = if prev.stdenv.cc.isClang then prev.clang16Stdenv
-                                           else prev.stdenv;
-      };
+      flox-pkgdb = let
+        llvmOverrides = {
+          stdenv = prev.clang16Stdenv;
+          nix    = prev.nix.override { stdenv = prev.clang16Stdenv; };
+        };
+      in final.callPackage ./pkg-fun.nix (
+        if prev.stdenv.cc.isClang or false then llvmOverrides else {}
+      );
     };
     overlays.default = nixpkgs.lib.composeExtensions overlays.deps
                                                      overlays.flox-pkgdb;
