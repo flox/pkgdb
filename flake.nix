@@ -77,8 +77,9 @@
         ] );
         # We need Clang v16 so if clang is detected,
         # override the Clang v11 default.
-        mkShell = if ! pkgsFor.stdenv.cc.isClang then pkgsFor.mkShell else
-                  pkgsFor.mkShell.override { stdenv = pkgsFor.clang16Stdenv; };
+        mkShell =
+          if ! ( pkgsFor.stdenv.cc.isClang or false ) then pkgsFor.mkShell else
+          ( pkgsFor.mkShell.override { stdenv = pkgsFor.clang16Stdenv; } );
       in mkShell {
         name       = "flox-pkgdb-shell";
         inputsFrom = [pkgsFor.flox-pkgdb];
