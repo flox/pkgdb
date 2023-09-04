@@ -65,10 +65,10 @@ jobs:
           { printf '    bash   version: '; bash   --version|head -n1; } >&2;
           { printf '    nix    version: '; nix    --version; } >&2;
           echo "# ---------------------------------------------------------------------------- #" >&2;
-          echo 'Development Environment Versions ( this may take a minute )' >&2;
           NO_WELCOME=: nix develop --no-update-lock-file --command sh -c '
-            echo '';
-            printf '    nix    version: '; nix    --version;
+            echo "";
+            echo "Development Environment Versions";
+            printf "    nix    version: "; nix    --version;
             printf "    CXX    version: "; $CXX --version|head -n1;
           ' >&2;
           echo "# ============================================================================ #" >&2;
