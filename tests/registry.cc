@@ -25,7 +25,7 @@ using namespace nlohmann::literals;
 /* -------------------------------------------------------------------------- */
 
 /* Initialized in `main' */
-static flox::RegistryRaw commonRegistry;
+static flox::RegistryRaw commonRegistry;  // NOLINT
 
 
 /* -------------------------------------------------------------------------- */
@@ -56,19 +56,15 @@ test_FloxFlakeInputRegistry0()
   int
 main( int argc, char * argv[] )
 {
-  int ec = EXIT_SUCCESS;
-# define RUN_TEST( ... )  _RUN_TEST( ec, __VA_ARGS__ )
+  int exitCode = EXIT_SUCCESS;
+# define RUN_TEST( ... )  _RUN_TEST( exitCode, __VA_ARGS__ )
 
 /* -------------------------------------------------------------------------- */
 
-  nix::Verbosity verbosity;
-  if ( ( 1 < argc ) && ( std::string_view( argv[1] ) == "-v" ) )
+  nix::Verbosity verbosity = nix::lvlWarn;
+  if ( ( 1 < argc ) && ( std::string_view( argv[1] ) == "-v" ) ) // NOLINT
     {
       verbosity = nix::lvlDebug;
-    }
-  else
-    {
-      verbosity = nix::lvlWarn;
     }
 
   /* Initialize `nix' */
@@ -130,7 +126,7 @@ main( int argc, char * argv[] )
 
 /* -------------------------------------------------------------------------- */
 
-  return ec;
+  return exitCode;
 }
 
 
