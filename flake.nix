@@ -89,7 +89,9 @@
           pkgsFor.jq
           # For profiling
           pkgsFor.lcov
-          ( if pkgsFor.stdenv.cc.isGNU then pkgsFor.gdb else pkgsFor.lldb_16 )
+          ( if pkgsFor.stdenv.cc.isGNU or false then pkgsFor.gdb else
+            pkgsFor.lldb_16
+          )
           # For doc
           pkgsFor.doxygen
           # For IDEs
@@ -98,7 +100,9 @@
           # For lints/fmt
           pkgsFor.clang-tools_16
           # For debugging
-        ] ++ ( if pkgsFor.stdenv.isLinux then [pkgsFor.valgrind] else [] );
+        ] ++ (
+          if pkgsFor.stdenv.isLinux or false then [pkgsFor.valgrind] else []
+        );
         inherit (pkgsFor.flox-pkgdb) nix_INCDIR boost_CFLAGS libExt SEMVER_PATH;
         shellHook = ''
           shopt -s autocd;
