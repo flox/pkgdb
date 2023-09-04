@@ -41,6 +41,23 @@ jobs:
             stalled-download-timeout = 90
             timeout = 0
 
+      # This is performed to reduce cpu/memory overhead in tests later.
+      # NOTE: Ensure this `rev' is aligned with `<pkgdb>/tests/setup_suite.bats'
+      - name: Warm Nix Eval Caches
+        run: |
+          set -eu;
+          set -o pipefail;
+          rev="e8039594435c68eb4f780f3e9bf3972a7399c4b1"
+          echo "Priming Eval Cache: nixpkgs/$rev" >&2;
+          NIX_SYSTEM="$(
+            nix eval --raw --impure --expr builtins.currentSystem;
+          )";
+          nix flake show --legacy "github:NixOS/nixpkgs/$rev"  \
+                         --system "$NIX_SYSTEM" >/dev/null;
+
+      - name: Nix Flake Check
+        run: nix flake check
+
       - name: Setup
         run: |
           echo "# ============================================================================ #" >&2;
@@ -61,23 +78,6 @@ jobs:
 
       - name: Build Tests
         run: nix develop --no-update-lock-file --command make tests -j4
-
-      - name: Nix Flake Check
-        run: nix flake check
-
-      # This is performed to reduce cpu/memory overhead in tests later.
-      # NOTE: Ensure this `rev' is aligned with `<pkgdb>/tests/setup_suite.bats'
-      - name: Warm Nix Eval Caches
-        run: |
-          set -eu;
-          set -o pipefail;
-          rev="e8039594435c68eb4f780f3e9bf3972a7399c4b1"
-          echo "Priming Eval Cache: nixpkgs/$rev" >&2;
-          NIX_SYSTEM="$(
-            nix eval --raw --impure --expr builtins.currentSystem;
-          )";
-          nix flake show --legacy "github:NixOS/nixpkgs/$rev"  \
-                         --system "$NIX_SYSTEM" >/dev/null;
 
       - name: Run Tests
         run: nix develop --no-update-lock-file --command make check -j4
