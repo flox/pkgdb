@@ -89,7 +89,7 @@
           pkgsFor.jq
           # For profiling
           pkgsFor.lcov
-          ( if pkgsFor.stdenv.cc.isGNU then pkgsFor.gdb else pkgsFor.lldb )
+          ( if pkgsFor.stdenv.cc.isGNU then pkgsFor.gdb else pkgsFor.lldb_16 )
           # For doc
           pkgsFor.doxygen
           # For IDEs
