@@ -42,7 +42,7 @@
     overlays.flox-pkgdb = final: prev: {
       flox-pkgdb = final.callPackage ./pkg-fun.nix {
         stdenv = if prev.stdenv.cc.isClang then prev.clang16Stdenv
-                                            else prev.stdenv;
+                                           else prev.stdenv;
       };
     };
     overlays.default = nixpkgs.lib.composeExtensions overlays.deps
