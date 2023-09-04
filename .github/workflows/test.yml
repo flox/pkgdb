@@ -54,7 +54,7 @@ jobs:
           } >&2;
           {
             printf '    CXX    version ';
-            nix develop --no-update-lock-file --command sh -c "$CXX --version"|head -n1;
+            nix develop --no-update-lock-file --command sh -c '$CXX --version'|head -n1;
           } >&2;
           echo "# ============================================================================ #" >&2;
 
