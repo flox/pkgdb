@@ -43,7 +43,11 @@
       flox-pkgdb = let
         llvmOverrides = {
           stdenv = prev.clang16Stdenv;
-          nix    = prev.nix.override { stdenv = prev.clang16Stdenv; };
+          boost  = prev.boost.override { stdenv = prev.clang16Stdenv; };
+          nix    = prev.nix.override   {
+            stdenv = prev.clang16Stdenv;
+            boost  = prev.boost.override { stdenv = prev.clang16Stdenv; };
+          };
         };
       in final.callPackage ./pkg-fun.nix (
         if prev.stdenv.cc.isClang or false then llvmOverrides else {}
