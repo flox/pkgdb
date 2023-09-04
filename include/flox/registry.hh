@@ -87,7 +87,10 @@ concept constructibe_from_registry_input =
  */
   template<typename T>
 concept constructibe_from_nix_evaluator_and_registry_input =
-    std::constructible_from<T, nix::ref<nix::EvalState>, const RegistryInput &>;
+    std::constructible_from< T
+                           ,       nix::ref<nix::EvalState> &
+                           , const RegistryInput            &
+                           >;
 
 
 /* -------------------------------------------------------------------------- */
@@ -146,10 +149,10 @@ concept registry_input_typename = input_preferences_typename<T> && (
  */
 struct RegistryRaw {
 
-  virtual ~RegistryRaw() = default;
-  RegistryRaw()                       = default;
-  RegistryRaw( const RegistryRaw &  ) = default;
-  RegistryRaw(       RegistryRaw && ) = default;
+  virtual ~RegistryRaw()                       = default;
+           RegistryRaw()                       = default;
+  explicit RegistryRaw( const RegistryRaw &  ) = default;
+  explicit RegistryRaw(       RegistryRaw && ) = default;
 
   RegistryRaw & operator=( const RegistryRaw &  ) = default;
   RegistryRaw & operator=(       RegistryRaw && ) = default;
@@ -263,7 +266,8 @@ class Registry : FloxFlakeParserMixin
       inline std::shared_ptr<T>
     mkInput( const RegistryInput & input )
     {
-      return std::make_shared<T>( this->getState(), input );
+      nix::ref<nix::EvalState> state = this->getState();
+      return std::make_shared<T>( state, input );
     }
 
 
@@ -409,7 +413,9 @@ struct FloxFlakeInput : public InputPreferences {
 
   std::shared_ptr<FloxFlake> flake;
 
-  FloxFlakeInput( nix::ref<nix::EvalState> state, const RegistryInput & input )
+  FloxFlakeInput(       nix::ref<nix::EvalState> & state
+                , const RegistryInput            & input
+                )
     : flake( std::make_shared<FloxFlake>( state, input.getFlakeRef() ) )
   {
     this->subtrees    = input.subtrees;

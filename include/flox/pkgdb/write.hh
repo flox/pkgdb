@@ -285,7 +285,9 @@ class PkgDbInput : public FloxFlakeInput {
 
   public:
 
-    PkgDbInput( nix::ref<nix::EvalState> state, const RegistryInput & input )
+    PkgDbInput(       nix::ref<nix::EvalState> & state
+              , const RegistryInput            & input
+              )
       : FloxFlakeInput( state, input )
       , dbPath( genPkgDbName( this->flake->lockedFlake.getFingerprint() ) )
     {
