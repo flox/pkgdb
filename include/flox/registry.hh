@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include <concepts>
 #include <algorithm>
 #include <functional>
 #include <vector>

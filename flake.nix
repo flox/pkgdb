@@ -40,7 +40,10 @@
       argparse.overlays.default
     ];
     overlays.flox-pkgdb = final: prev: {
-      flox-pkgdb  = final.callPackage ./pkg-fun.nix {};
+      flox-pkgdb = final.callPackage ./pkg-fun.nix {
+        stdenv = if prev.stdenv.cc.isClang then prev.clang16Stdenv
+                                            else prev.stdenv;
+      };
     };
     overlays.default = nixpkgs.lib.composeExtensions overlays.deps
                                                      overlays.flox-pkgdb;
@@ -72,7 +75,11 @@
           libs.bats-file
           libs.bats-support
         ] );
-      in pkgsFor.mkShell {
+        # We need Clang v16 so if clang is detected,
+        # override the Clang v11 default.
+        mkShell = if ! pkgsFor.stdenv.cc.isClang then pkgsFor.mkShell else
+                  pkgsFor.mkShell.override { stdenv = pkgsFor.clang16Stdenv; };
+      in mkShell {
         name       = "flox-pkgdb-shell";
         inputsFrom = [pkgsFor.flox-pkgdb];
         packages   = [
@@ -89,13 +96,9 @@
           pkgsFor.bear
           # For lints/fmt
           pkgsFor.clang-tools_16
-        ] ++ nixpkgs.lib.optionals pkgsFor.stdenv.isLinux [
           # For debugging
-          pkgsFor.valgrind
-        ];
-        inherit (pkgsFor.flox-pkgdb)
-          nix_INCDIR boost_CFLAGS libExt SEMVER_PATH
-        ;
+        ] ++ ( if pkgsFor.stdenv.isLinux then [pkgsFor.valgrind] else [] );
+        inherit (pkgsFor.flox-pkgdb) nix_INCDIR boost_CFLAGS libExt SEMVER_PATH;
         shellHook = ''
           shopt -s autocd;
 

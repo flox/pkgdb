@@ -47,15 +47,25 @@ jobs:
           { printf '    bash   version: '; bash   --version|head -n1; } >&2;
           { printf '    nix    version: '; nix    --version; } >&2;
           echo "# ---------------------------------------------------------------------------- #" >&2;
-
-      - name: Nix Flake Check
-        run: nix flake check
+          echo 'Development Environment Versions:' >&2;
+          {
+            printf '    nix    version ';
+            nix develop --no-update-lock-file --command nix --version;
+          } >&2;
+          {
+            printf '    CXX    version ';
+            nix develop --no-update-lock-file --command sh -c "$CXX --version"|head -n1;
+          } >&2;
+          echo "# ============================================================================ #" >&2;
 
       - name: Run Build
         run: nix develop --no-update-lock-file --command make -j4
 
-      - name: Run Help
-        run: ./bin/pkgdb --help
+      - name: Build Tests
+        run: nix develop --no-update-lock-file --command make tests -j4
+
+      - name: Nix Flake Check
+        run: nix flake check
 
       # This is performed to reduce cpu/memory overhead in tests later.
       # NOTE: Ensure this `rev' is aligned with `<pkgdb>/tests/setup_suite.bats'
@@ -70,9 +80,6 @@ jobs:
           )";
           nix flake show --legacy "github:NixOS/nixpkgs/$rev"  \
                          --system "$NIX_SYSTEM" >/dev/null;
-
-      - name: Build Tests
-        run: nix develop --no-update-lock-file --command make tests -j4
 
       - name: Run Tests
         run: nix develop --no-update-lock-file --command make check -j4
