@@ -44,18 +44,16 @@ jobs:
       - name: Setup
         run: |
           echo "# ============================================================================ #" >&2;
+          echo 'Runner Version' >&2;
           { printf '    bash   version: '; bash   --version|head -n1; } >&2;
           { printf '    nix    version: '; nix    --version; } >&2;
           echo "# ---------------------------------------------------------------------------- #" >&2;
-          echo 'Development Environment Versions:' >&2;
-          {
-            printf '    nix    version ';
-            nix develop --no-update-lock-file --command nix --version;
-          } >&2;
-          {
-            printf '    CXX    version ';
-            nix develop --no-update-lock-file --command sh -c '$CXX --version'|head -n1;
-          } >&2;
+          echo 'Development Environment Versions ( this may take a minute )' >&2;
+          NO_WELCOME=: nix develop --no-update-lock-file --command sh -c '
+            echo '';
+            printf '    nix    version: '; nix    --version;
+            printf "    CXX    version: "; $CXX --version|head -n1;
+          ' >&2;
           echo "# ============================================================================ #" >&2;
 
       - name: Run Build

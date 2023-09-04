@@ -108,18 +108,20 @@
           alias gl='git pull';
           alias gp='git push';
 
-          {
-            echo "";
-            echo "Build with \`make' ( or \`make -j8' to go fast )";
-            echo "";
-            echo "Run with \`./bin/pkgdb --help'";
-            echo "";
-            echo "Test with \`make check'";
-            echo "";
-            echo "Read docs with: \`make docs && firefox ./docs/index.hml'";
-            echo "";
-            echo "See more tips in \`CONTRIBUTING.md'";
-          } >&2;
+          if [ -z "''${NO_WELCOME:-}" ]; then
+            {
+              echo "";
+              echo "Build with \`make' ( or \`make -j8' to go fast )";
+              echo "";
+              echo "Run with \`./bin/pkgdb --help'";
+              echo "";
+              echo "Test with \`make check'";
+              echo "";
+              echo "Read docs with: \`make docs && firefox ./docs/index.hml'";
+              echo "";
+              echo "See more tips in \`CONTRIBUTING.md'";
+            } >&2;
+          fi
         '';
       };
     in {
