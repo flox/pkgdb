@@ -120,7 +120,7 @@ struct SearchParams {
 /* -------------------------------------------------------------------------- */
 
   /** Settings and fetcher information associated with inputs. */
-  Registry registry;
+  RegistryRaw registry;
 
   /**
    * Ordered list of systems to be searched.

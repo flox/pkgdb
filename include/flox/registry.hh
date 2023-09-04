@@ -57,7 +57,7 @@ void to_json(         nlohmann::json & jto,   const InputPreferences & prefs );
   template <typename T>
 concept input_preferences_typename =
     std::is_base_of<InputPreferences, T>::value && requires( T & t ) {
-      { t.getFrom() } -> std::convertible_to<nix::FlakeRef>;
+      { t.getFlakeRef() } -> std::convertible_to<nix::FlakeRef>;
     };
 
 
@@ -65,8 +65,11 @@ concept input_preferences_typename =
 
 /** Preferences associated with a named registry input. */
 struct RegistryInput : public InputPreferences {
+
   std::shared_ptr<nix::FlakeRef> from;
-  [[nodiscard]] nix::FlakeRef getFrom() const { return * this->from; };
+
+  [[nodiscard]] nix::FlakeRef getFlakeRef() const { return * this->from; };
+
 };  /* End struct `RegistryInput' */
 
 void from_json( const nlohmann::json & jfrom,       RegistryInput & rip );
@@ -85,6 +88,9 @@ concept constructibe_from_registry_input =
   template<typename T>
 concept constructibe_from_nix_evaluator_and_registry_input =
     std::constructible_from<T, nix::ref<nix::EvalState>, const RegistryInput &>;
+
+
+/* -------------------------------------------------------------------------- */
 
 /** @brief A type that is suitable as a @a Registry value. */
   template<typename T>
@@ -141,6 +147,7 @@ concept registry_input_typename = input_preferences_typename<T> && (
 struct RegistryRaw {
 
   virtual ~RegistryRaw() = default;
+  RegistryRaw()                       = default;
   RegistryRaw( const RegistryRaw &  ) = default;
   RegistryRaw(       RegistryRaw && ) = default;
 
@@ -234,7 +241,7 @@ class Registry : FloxFlakeParserMixin
   private:
 
     /**
-     * Orginal raw registry.
+     * @brief Orginal raw registry.
      * This is saved to allow the raw user input to be recorded in lockfiles.
      */
     RegistryRaw registryRaw;
@@ -242,6 +249,8 @@ class Registry : FloxFlakeParserMixin
     /** A list of `<SHORTNAME>, <FLAKE>` pairs in priority order. */
     std::vector<std::pair<std::string, std::shared_ptr<InputType>>> inputs;
 
+
+/* -------------------------------------------------------------------------- */
 
       template<constructibe_from_registry_input T>
       inline std::shared_ptr<T>
@@ -257,6 +266,8 @@ class Registry : FloxFlakeParserMixin
       return std::make_shared<T>( this->getState(), input );
     }
 
+
+/* -------------------------------------------------------------------------- */
 
   public:
 
@@ -295,11 +306,13 @@ class Registry : FloxFlakeParserMixin
     }
 
 
+/* -------------------------------------------------------------------------- */
+
     /**
-     * Get a flake by name with convenience wrappers for evaluation.
+     * @brief Get an input by name.
      * @param name Registry shortname for the target flake.
-     * @return A flake wrapped with a nix evaluator, or `nullptr` if no such
-     *         @a name exists in the registry.
+     * @return `nullputr` iff no such input exists,
+     *         otherwise the input associated with @a name.
      */
       [[nodiscard]]
       std::shared_ptr<InputType>
@@ -315,10 +328,10 @@ class Registry : FloxFlakeParserMixin
     }
 
     /**
-     * Get a flake by name with convenience wrappers for evaluation.
+     * @brief Get an input by name.
      * @param name Registry shortname for the target flake.
-     * @return A flake wrapped with a nix evaluator, or `nullptr` if no such
-     *         @a name exists in the registry.
+     * @return `nullputr` iff no such input exists,
+     *         otherwise the input associated with @a name.
      */
       [[nodiscard]]
       const std::shared_ptr<InputType>
@@ -334,6 +347,13 @@ class Registry : FloxFlakeParserMixin
     }
 
 
+/* -------------------------------------------------------------------------- */
+
+    /**
+     * @brief Get an input by name, or throw an error if no such input exists.
+     * @param name Registry shortname for the target flake.
+     * @return The input associated with @a name.
+     */
     [[nodiscard]]
       std::shared_ptr<InputType>
     at( const std::string & name )
@@ -346,6 +366,11 @@ class Registry : FloxFlakeParserMixin
       return maybeInput;
     }
 
+    /**
+     * @brief Get an input by name, or throw an error if no such input exists.
+     * @param name Registry shortname for the target flake.
+     * @return The input associated with @a name.
+     */
     [[nodiscard]]
       const std::shared_ptr<InputType>
     at( const std::string & name ) const
@@ -359,19 +384,7 @@ class Registry : FloxFlakeParserMixin
     }
 
 
-      [[nodiscard]]
-      std::vector<std::reference_wrapper<const std::string>>
-    getOrder() const
-    {
-      std::vector<std::reference_wrapper<const std::string>> order;
-      /* Extract names from `flakes' list. */
-      for ( const auto & pair : this->inputs )
-        {
-          order.emplace_back( pair.first );
-        }
-      return order;
-    }
-
+/* -------------------------------------------------------------------------- */
 
     [[nodiscard]]
     const RegistryRaw & getRaw() const { return this->registryRaw; }
@@ -391,12 +404,13 @@ class Registry : FloxFlakeParserMixin
 
 /* -------------------------------------------------------------------------- */
 
+/** A simple @a RegistryInput that opens a `nix` evaluator for a flake. */
 struct FloxFlakeInput : public InputPreferences {
 
   std::shared_ptr<FloxFlake> flake;
 
   FloxFlakeInput( nix::ref<nix::EvalState> state, const RegistryInput & input )
-    : flake( std::make_shared<FloxFlake>( state, input.getFrom() ) )
+    : flake( std::make_shared<FloxFlake>( state, input.getFlakeRef() ) )
   {
     this->subtrees    = input.subtrees;
     this->stabilities = input.stabilities;
@@ -404,7 +418,7 @@ struct FloxFlakeInput : public InputPreferences {
 
     [[nodiscard]]
     nix::FlakeRef
-  getFrom() const
+  getFlakeRef() const
   {
     return this->flake->lockedFlake.flake.lockedRef;
   }
