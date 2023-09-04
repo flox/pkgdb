@@ -40,18 +40,7 @@
       argparse.overlays.default
     ];
     overlays.flox-pkgdb = final: prev: {
-      flox-pkgdb = let
-        llvmOverrides = {
-          stdenv = prev.clang16Stdenv;
-          boost  = prev.boost.override { stdenv = prev.clang16Stdenv; };
-          nix    = prev.nix.override   {
-            stdenv = prev.clang16Stdenv;
-            boost  = prev.boost.override { stdenv = prev.clang16Stdenv; };
-          };
-        };
-      in final.callPackage ./pkg-fun.nix (
-        if prev.stdenv.cc.isClang or false then llvmOverrides else {}
-      );
+      flox-pkgdb = final.callPackage ./pkg-fun.nix {};
     };
     overlays.default = nixpkgs.lib.composeExtensions overlays.deps
                                                      overlays.flox-pkgdb;
@@ -83,12 +72,7 @@
           libs.bats-file
           libs.bats-support
         ] );
-        # We need Clang v16 so if clang is detected,
-        # override the Clang v11 default.
-        mkShell =
-          if ! ( pkgsFor.stdenv.cc.isClang or false ) then pkgsFor.mkShell else
-          ( pkgsFor.mkShell.override { stdenv = pkgsFor.clang16Stdenv; } );
-      in mkShell {
+      in pkgsFor.mkShell {
         name       = "flox-pkgdb-shell";
         inputsFrom = [pkgsFor.flox-pkgdb];
         packages   = [
@@ -98,7 +82,7 @@
           # For profiling
           pkgsFor.lcov
           ( if pkgsFor.stdenv.cc.isGNU or false then pkgsFor.gdb else
-            pkgsFor.lldb_16
+            pkgsFor.lldb
           )
           # For doc
           pkgsFor.doxygen
