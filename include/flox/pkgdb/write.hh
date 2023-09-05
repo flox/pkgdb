@@ -215,11 +215,11 @@ class PkgDb : public PkgDbReadOnly {
      *                 where the caller has already checked themselves.
      * @return The `Packages.id` value for the added package.
      */
-    row_id addPackage( row_id           parentId
-                     , std::string_view attrName
-                     , flox::Cursor     cursor
-                     , bool             replace  = false
-                     , bool             checkDrv = true
+    row_id addPackage(       row_id             parentId
+                     ,       std::string_view   attrName
+                     , const flox::Cursor     & cursor
+                     ,       bool               replace  = false
+                     ,       bool               checkDrv = true
                      );
 
 
@@ -250,7 +250,7 @@ void setPrefixDone( const flox::AttrPath & prefix, bool done );
   void
 scrape(       nix::SymbolTable & syms
       , const flox::AttrPath   & prefix
-      ,       flox::Cursor       cursor
+      , const flox::Cursor     & cursor
       ,       Todos            & todo
       );
 
