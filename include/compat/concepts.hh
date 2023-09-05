@@ -19,7 +19,8 @@
 
 /* -------------------------------------------------------------------------- */
 
-/* Yeah, I know: "iT's IlLeGaL tO eXtEnD `std::*'". Grow up. */
+/* Yeah, I know: "iT's IlLeGaL tO eXtEnD `std::*'".
+ * This backports definitions exactly as written, so it's fine. */
 namespace std {
 
 /* -------------------------------------------------------------------------- */
