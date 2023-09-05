@@ -114,7 +114,9 @@ CREATE VIEW IF NOT EXISTS v_AttrPaths AS
                    , Parent.subtree
                    , iif( ( Parent.system IS NULL ), O.attrName, Parent.system )
                      AS system
-                   , iif( ( Parent.subtree = 'catalog' )
+                   , iif( ( ( Parent.subtree IS NOT NULL ) AND
+                            ( Parent.subtree = 'catalog' )
+                          )
                         , iif( ( ( Parent.stability IS NULL ) AND
                                  ( Parent.system IS NOT NULL )
                                )

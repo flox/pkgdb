@@ -301,22 +301,10 @@ class PkgDbReadOnly {
 
 /* -------------------------------------------------------------------------- */
 
-/**
- * Measures a "strength" ranking that can be used to order packages by how
- * closely they a match string.
- * - 0 :: Case-insensitive exact match with `pname`
- * - 1 :: Case-insensitive substring match with `pname` and `description`.
- * - 2 :: Case-insensitive substring match with `pname`.
- * - 3 :: Case insensitive substring match with `description`.
- * - 4 :: No match.
- */
-enum match_strength {
-  MS_EXACT_PNAME        = 0
-, MS_PARTIAL_PNAME_DESC = 1
-, MS_PARTIAL_PNAME      = 2
-, MS_PARTIAL_DESC       = 3
-, MS_NONE               = 4  /* Ensure this is always the highest. */
-};
+/** Restricts template parameters to classes that extend @a PkgDbReadOnly. */
+  template <typename T>
+concept pkgdb_typename = std::is_base_of<PkgDbReadOnly, T>::value;
+
 
 /* -------------------------------------------------------------------------- */
 

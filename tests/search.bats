@@ -20,6 +20,11 @@ genParams() {
   jq '.query.match|=null' "$TDATA/params0.json"|jq "${1?}";
 }
 
+genParamsNixpkgsFlox() {
+  jq '.query.match|=null|.registry.inputs|=( del( .nixpkgs )|del( .floco ) )'  \
+     "$TDATA/params1.json"|jq "${1?}";
+}
+
 
 # ---------------------------------------------------------------------------- #
 
@@ -198,6 +203,26 @@ genParams() {
   assert_output --partial '1 x86_64-linux';
   refute_output --partial '2 ';
 }
+
+
+# ---------------------------------------------------------------------------- #
+
+# bats test_tags=search:stabilities, search:pname
+
+# `stabilities' ordering
+@test "'pkgdb search' stabilities order" {
+  run sh -c "$PKGDB search '$( genParamsNixpkgsFlox                            \
+    '.registry.inputs["nixpkgs-flox"].stabilities+=["unstable"]
+    |.query.pname|="hello"
+    |.query.version|="2.12.1"';
+  )';";
+  #)'|jq -rs 'to_entries|map( ( .key|tostring ) + \" \" + .value.path[2] )[]'";
+  assert_success;
+  assert_output --partial '0 stable';
+  assert_output --partial '1 unstable';
+  refute_output --partial '2 ';
+}
+
 
 
 # ---------------------------------------------------------------------------- #

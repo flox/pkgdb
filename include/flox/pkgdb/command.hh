@@ -35,9 +35,6 @@ struct DbPathMixin
 
 /* -------------------------------------------------------------------------- */
 
-  template <class T>
-concept pkgdb_typename = std::is_base_of<PkgDbReadOnly, T>::value;
-
 /**
  * Adds a package database and optionally an associated flake to a state blob.
  */
