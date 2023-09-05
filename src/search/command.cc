@@ -27,30 +27,6 @@ namespace flox::search {
 
 /* -------------------------------------------------------------------------- */
 
-  void
-InputsMixin::openDatabases()
-{
-  for ( auto & [name, input] : this->inputs )
-    {
-      std::filesystem::path dbPath = pkgdb::genPkgDbName(
-        input.flake->lockedFlake.getFingerprint()
-      );
-
-      /* Initialize DB if none exists. */
-      if ( ! std::filesystem::exists( dbPath ) )
-        {
-          std::filesystem::create_directories( dbPath.parent_path() );
-          pkgdb::PkgDb( input.flake->lockedFlake, (std::string) dbPath );
-        }
-
-      /* Open a read-only copy. */
-      input.db = std::make_shared<pkgdb::PkgDbReadOnly>( (std::string) dbPath );
-    }
-}
-
-
-/* ========================================================================== */
-
   argparse::Argument &
 PkgQueryMixin::addQueryArgs( argparse::ArgumentParser & parser )
 {
@@ -79,43 +55,20 @@ PkgQueryMixin::queryDb( pkgdb::PkgDbReadOnly & pdb ) const
 
 /* ========================================================================== */
 
-  void
-SearchParamsMixin::setInput( const std::string & name )
-{
-  pkgdb::PkgQueryArgs args;
-  this->query = pkgdb::PkgQuery( this->params.fillPkgQueryArgs( name, args ) );
-}
-
-
-/* -------------------------------------------------------------------------- */
-
   argparse::Argument &
 SearchParamsMixin::addSearchParamArgs( argparse::ArgumentParser & parser )
 {
-  auto parse = [&]( const std::string & params )
-    {
-      nlohmann::json paramsJSON = parseOrReadJSONObject( params );
-      paramsJSON.get_to( this->params );
-      for ( const auto & _name : this->params.registry.getOrder() )
-        {
-          const std::string & name = _name.get();
-          this->inputs.emplace_back( std::make_pair(
-            name
-          , InputsMixin::Input {
-              std::make_shared<FloxFlake>(
-                this->getState()
-              , * this->params.registry.inputs.at( name ).from
-              )
-            , nullptr
-            }
-          ) );
-        }
-    };
   return parser.add_argument( "parameters" )
                .help( "search paramaters as inline JSON or a path to a file" )
                .required()
                .metavar( "PARAMS" )
-               .action( std::move( parse ) );
+               .action( [&]( const std::string & params )
+                        {
+                          nlohmann::json paramsJSON =
+                            parseOrReadJSONObject( params );
+                          paramsJSON.get_to( this->params );
+                        }
+                      );
 }
 
 
@@ -133,82 +86,26 @@ SearchCommand::SearchCommand() : parser( "search" )
 
 /* -------------------------------------------------------------------------- */
 
-// FIXME: this needs to use `setInput' or something, you aren't going to scrape
-// the correct subtrees or stabilities here.
+  void
+SearchCommand::initRegistry()
+{
+  nix::ref<nix::Store> store = this->getStore();
+  this->registry = std::make_shared<Registry<pkgdb::PkgDbInput>>(
+    store
+  , this->params.registry
+  );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
   void
 SearchCommand::scrapeIfNeeded()
 {
-  this->openDatabases();
-  std::vector<subtree_type> subtrees =
-    this->params.registry.defaults.subtrees.value_or(
-      std::vector<subtree_type> { ST_PACKAGES, ST_LEGACY, ST_CATALOG }
-    );
-  std::vector<std::string> stabilities =
-    this->params.registry.defaults.stabilities.value_or(
-      std::vector<std::string> { "stable" }
-    );
-
-  auto maybeScrape =
-    [&]( const flox::AttrPath & path, Input & input ) -> void
+  assert( this->registry != nullptr );
+  for ( auto & [name, input] : * this->registry )
     {
-      if ( input.db->completedAttrSet( path ) ) { return; }
-      pkgdb::ScrapeCommand cmd {};
-      cmd.store    = (std::shared_ptr<nix::Store>)     this->getStore();
-      cmd.state    = (std::shared_ptr<nix::EvalState>) this->getState();
-      cmd.dbPath   = { input.db->dbPath };
-      cmd.flake    = input.flake;
-      cmd.attrPath = path;
-      cmd.openPkgDb();
-      /* Push `STDOUT' fd. */
-      std::ofstream    out( "/dev/null" );
-      std::streambuf * coutbuf = std::cout.rdbuf();
-      std::cout.rdbuf( out.rdbuf() );
-      int rsl = cmd.run();
-      std::cout.rdbuf( coutbuf );  /* Restore `STDOUT' */
-      if ( rsl != EXIT_SUCCESS )
-        {
-          throw FloxException( nix::fmt(
-            "Encountered error scraping flake `%s' at prefix `%s'"
-          , input.flake->lockedFlake.flake.lockedRef.to_string()
-          , nix::concatStringsSep( ".", path )
-          ) );
-        }
-    };
-
-  auto scrapePrefix = [&]( const flox::AttrPath & prefix )
-    {
-      for ( auto & [name, input] : this->inputs )
-        {
-          maybeScrape( prefix, input );
-        }
-    };
-
-  for ( const auto & subtree : subtrees )
-    {
-      flox::AttrPath prefix;
-      switch ( subtree )
-        {
-          case ST_PACKAGES: prefix = { "packages" };         break;
-          case ST_LEGACY:   prefix = { "legacyPackages" };   break;
-          case ST_CATALOG:  prefix = { "catalog" };          break;
-          default: throw FloxException( "Invalid subtree" ); break;
-        }
-      for ( const auto & system : this->params.systems )
-        {
-          prefix.emplace_back( system );
-          if ( subtree != ST_CATALOG )
-            {
-              scrapePrefix( prefix );
-            }
-          else
-            {
-              for ( const auto & stability : stabilities )
-                {
-                  prefix.emplace_back( stability );
-                  scrapePrefix( prefix );
-                }
-            }
-        }
+      input->scrapeSystems( this->params.systems );
     }
 }
 
@@ -220,7 +117,7 @@ SearchCommand::postProcessArgs()
 {
   static bool didPost = false;
   if ( didPost ) { return; }
-  this->openDatabases();
+  this->initRegistry();
   this->scrapeIfNeeded();
   didPost = true;
 }
@@ -230,14 +127,14 @@ SearchCommand::postProcessArgs()
 
   void
 SearchCommand::showRow(
-        std::string_view     inputName
-, const InputsMixin::Input & input
-,       pkgdb::row_id        row
+  std::string_view    inputName
+, pkgdb::PkgDbInput & input
+, pkgdb::row_id       row
 )
 {
-  nlohmann::json rsl = input.db->getPackage( row );
+  nlohmann::json rsl = input.getDbReadOnly()->getPackage( row );
   rsl.emplace( "input", inputName );
-  rsl.emplace( "path",  input.db->getPackagePath( row ) );
+  rsl.emplace( "path",  input.getDbReadOnly()->getPackagePath( row ) );
   std::cout << rsl.dump() << std::endl;
 }
 
@@ -248,12 +145,15 @@ SearchCommand::showRow(
 SearchCommand::run()
 {
   this->postProcessArgs();
-  for ( const auto & [name, input] : this->inputs )
+  assert( this->registry != nullptr );
+  pkgdb::PkgQueryArgs args;
+  for ( const auto & [name, input] : * this->registry )
     {
-      this->setInput( name );
-      for ( const auto & row : this->queryDb( * input.db ) )
+      this->query =
+        pkgdb::PkgQuery( this->params.fillPkgQueryArgs( name, args ) );
+      for ( const auto & row : this->queryDb( * input->getDbReadOnly() ) )
         {
-          this->showRow( name, input, row );
+          this->showRow( name, * input, row );
         }
     }
   return EXIT_SUCCESS;

@@ -10,7 +10,9 @@
 #pragma once
 
 #include "flox/pkgdb/write.hh"
+#include "flox/pkgdb/pkgdb-input.hh"
 #include "flox/core/command.hh"
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -68,24 +70,38 @@ struct PkgDbMixin
 
 /** Scrape a flake prefix producing a SQLite3 database with package metadata. */
 struct ScrapeCommand
-  : public PkgDbMixin<PkgDb>
+  : public DbPathMixin
   , public command::AttrPathMixin
+  , public command::InlineInputMixin
 {
 
-  command::VerboseParser parser;
+  protected:
 
-  bool force = false;  /**< Whether to force re-evaluation. */
+    std::optional<PkgDbInput> input;
 
-  ScrapeCommand();
+    bool force = false;  /**< Whether to force re-evaluation. */
 
-  /** Invoke "child" `preProcessArgs` for `PkgDbMixin` and `AttrPathMixin`. */
-  void postProcessArgs() override;
 
-  /**
-   * @brief Execute the `scrape` routine.
-   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
-   */
-  int run();
+  public:
+
+    command::VerboseParser parser;
+
+    ScrapeCommand();
+
+    /** @brief Initialize @a input from @a registryInput. */
+    void initInput();
+
+    /**
+     * @brief Invoke "child" `preProcessArgs` for `AttrPathMixin`, and
+     *        @a initInput.
+     */
+    void postProcessArgs() override;
+
+    /**
+     * @brief Execute the `scrape` routine.
+     * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+     */
+    int run();
 
 };  /* End struct `ScrapeCommand' */
 
@@ -125,7 +141,7 @@ struct GetCommand
 
   GetCommand();
 
-  /** Prevent "child" `preProcessArgs` routines from running */
+  /** Prevent "child" `postProcessArgs` routines from running */
   void postProcessArgs() override {}
 
   /**

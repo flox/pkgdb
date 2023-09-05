@@ -19,6 +19,7 @@
 #include "flox/core/nix-state.hh"
 #include "flox/core/util.hh"
 #include "flox/flox-flake.hh"
+#include "flox/registry.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -94,6 +95,47 @@ struct FloxFlakeMixin
 
 /* -------------------------------------------------------------------------- */
 
+/** Extend a command's state blob with a single @a RegistryInput. */
+struct InlineInputMixin
+  :         public CommandStateMixin
+  , virtual public NixState
+{
+
+  protected:
+
+    RegistryInput registryInput;
+
+    /**
+     * @brief Fill @a registryInput by parsing a flake ref.
+     * @param flakeRef A flake reference as a URL string or JSON attribute set.
+     */
+      void
+    parseFlakeRef( const std::string & flakeRef )
+    {
+      this->registryInput.from = std::make_shared<nix::FlakeRef>(
+        flox::parseFlakeRef( flakeRef )
+      );
+    }
+
+
+  public:
+
+    argparse::Argument & addSubtreeArg(   argparse::ArgumentParser & parser );
+    argparse::Argument & addStabilityArg( argparse::ArgumentParser & parser );
+    argparse::Argument & addFlakeRefArg(  argparse::ArgumentParser & parser );
+
+    /**
+     * @brief Return the parsed @a RegistryInput.
+     * @return The parsed @a RegistryInput.
+     */
+    [[nodiscard]]
+    const RegistryInput & getRegistryInput() { return this->registryInput; }
+
+};  /* End struct `InlineInputMixin' */
+
+
+/* -------------------------------------------------------------------------- */
+
 /** Extend a command state blob with an attribute path to "target". */
 struct AttrPathMixin : public CommandStateMixin {
 
@@ -112,7 +154,9 @@ struct AttrPathMixin : public CommandStateMixin {
    * If `attrPath` is one element then add "current system" as `<SYSTEM>`.
    * If `attrPath` is a catalog with no stability use `stable`.
    */
-  void postProcessArgs() override;
+  void fixupAttrPath();
+
+  inline void postProcessArgs() override { this->fixupAttrPath(); }
 
 };  /* End struct `AttrPathMixin' */
 

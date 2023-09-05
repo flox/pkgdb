@@ -12,16 +12,18 @@ load setup_suite.bash;
 
 setup_file() {
   export TDATA="$TESTS_DIR/data/search";
-  export DBPATH="$( $PKGDB get db "$NIXPKGS_REF"; )";
+  export PKGDB_CACHEDIR="$BATS_FILE_TMPDIR/pkgdbs";
+  echo "PKGDB_CACHEDIR: $PKGDB_CACHEDIR" >&3;
 }
 
 # Dump parameters for a query on `nixpkgs'.
 genParams() {
-  jq '.query.match|=null' "$TDATA/params0.json"|jq "${1?}";
+  jq -r '.query.match|=null' "$TDATA/params0.json"|jq "${1?}";
 }
 
 genParamsNixpkgsFlox() {
-  jq '.query.match|=null|.registry.inputs|=( del( .nixpkgs )|del( .floco ) )'  \
+  jq -r '.query.match|=null
+        |.registry.inputs|=( del( .nixpkgs )|del( .floco ) )'  \
      "$TDATA/params1.json"|jq "${1?}";
 }
 
@@ -47,6 +49,7 @@ genParamsNixpkgsFlox() {
 # tried to scrape that prefix in the past.
 
 #@test "'pkgdb search' scrapes only named subtrees" {
+#  DBPATH="$( $PKGDB get db "$NIXPKGS_REF"; )";
 #  run $PKGDB search "$TDATA/params0.json";
 #  assert_success;
 #  run $PKGDB get id "$DBPATH" x86_64-linux packages;
@@ -182,7 +185,7 @@ genParamsNixpkgsFlox() {
 # `systems' ordering
 @test "'pkgdb search' systems order" {
   run sh -c "$PKGDB search '$(
-    genParams '.systems+=["x86_64-darwin"]|.query.pname="hello"';
+    genParams '.systems=["x86_64-linux","x86_64-darwin"]|.query.pname="hello"';
   )'|jq -rs 'to_entries|map( ( .key|tostring ) + \" \" + .value.path[1] )[]'";
   assert_success;
   assert_output --partial '0 x86_64-linux';
@@ -207,20 +210,31 @@ genParamsNixpkgsFlox() {
 
 # ---------------------------------------------------------------------------- #
 
+# TODO: Scanning catalogs takes _for fucking ever_.
+#       Make it faster or else make a mini-catalog for testing against.
+
 # bats test_tags=search:stabilities, search:pname
 
 # `stabilities' ordering
 @test "'pkgdb search' stabilities order" {
+  if [ -n "${CI:-}" ]; then
+    skip "This is way too slow for CI/CD but it works";
+  fi
   run sh -c "$PKGDB search '$( genParamsNixpkgsFlox                            \
     '.registry.inputs["nixpkgs-flox"].stabilities+=["unstable"]
     |.query.pname|="hello"
     |.query.version|="2.12.1"';
-  )';";
-  #)'|jq -rs 'to_entries|map( ( .key|tostring ) + \" \" + .value.path[2] )[]'";
+  )'|jq -rs 'to_entries|map( ( .key|tostring ) + \" \" + .value.path[2] )[]'";
   assert_success;
+  # catalog.x86_64-linux.stable.hello.2_12_1
   assert_output --partial '0 stable';
+  # catalog.x86_64-linux.unstable.hello.2_12_1
   assert_output --partial '1 unstable';
-  refute_output --partial '2 ';
+  # catalog.x86_64-linux.stable.hello.latest
+  assert_output --partial '2 stable';
+  # catalog.x86_64-linux.unstable.hello.latest
+  assert_output --partial '3 unstable';
+  refute_output --partial '4 ';
 }
 
 

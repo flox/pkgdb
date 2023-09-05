@@ -109,6 +109,110 @@ FloxFlakeMixin::addFlakeRefArg( argparse::ArgumentParser & parser )
 /* -------------------------------------------------------------------------- */
 
   argparse::Argument &
+InlineInputMixin::addFlakeRefArg( argparse::ArgumentParser & parser )
+{
+  return parser.add_argument( "flake-ref" )
+               .help(
+                 "flake-ref URI string or JSON attrs ( preferably locked )"
+               )
+               .required()
+               .metavar( "FLAKE-REF" )
+               .action( [&]( const std::string & flakeRef )
+                        {
+                          this->parseFlakeRef( flakeRef );
+                        }
+                      );
+}
+
+
+  argparse::Argument &
+InlineInputMixin::addSubtreeArg( argparse::ArgumentParser & parser )
+{
+  return parser.add_argument( "--subtree" )
+               .help(
+                 "A subtree name, being one of `packages`, `legacyPackages`, "
+                 "or `catalog', that should be processed. "
+                 "May be used multiple times."
+               )
+               .required()
+               .metavar( "SUBTREE" )
+               .action( [&]( const std::string & subtree )
+                        {
+                          /* Parse the subtree type to an enum. */
+                          subtree_type stype;
+                          from_json( nlohmann::json( subtree ), stype );
+                          /* Create or append the `subtrees' list. */
+                          if ( this->registryInput.subtrees.has_value() )
+                            {
+                              if ( auto has =
+                                     std::find(
+                                       this->registryInput.subtrees->begin()
+                                     , this->registryInput.subtrees->end()
+                                     , stype
+                                     );
+                                   has == this->registryInput.subtrees->end()
+                                 )
+                                {
+                                  this->registryInput.subtrees->emplace_back(
+                                    stype
+                                  );
+                                }
+                            }
+                          else
+                            {
+                              this->registryInput.subtrees = {
+                                std::vector<subtree_type> { stype }
+                              };
+                            }
+                        }
+                      );
+}
+
+
+  argparse::Argument &
+InlineInputMixin::addStabilityArg( argparse::ArgumentParser & parser )
+{
+  return parser.add_argument( "--stability" )
+               .help(
+                 "A stability name, being one of `stable`, `staging`, "
+                 "or `unstable', that should be processed. "
+                 "May be used multiple times."
+               )
+               .required()
+               .metavar( "STABILITY" )
+               .action( [&]( const std::string & stability )
+                        {
+                          /* Create or append the `stabilities' list. */
+                          if ( this->registryInput.stabilities.has_value() )
+                            {
+                              if ( auto has =
+                                     std::find(
+                                       this->registryInput.stabilities->begin()
+                                     , this->registryInput.stabilities->end()
+                                     , stability
+                                     );
+                                   has == this->registryInput.stabilities->end()
+                                 )
+                                {
+                                  this->registryInput.stabilities->emplace_back(
+                                    stability
+                                  );
+                                }
+                            }
+                          else
+                            {
+                              this->registryInput.stabilities = {
+                                std::vector<std::string> { stability }
+                              };
+                            }
+                        }
+                      );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  argparse::Argument &
 AttrPathMixin::addAttrPathArgs( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "attr-path" )
@@ -124,7 +228,7 @@ AttrPathMixin::addAttrPathArgs( argparse::ArgumentParser & parser )
 
 
   void
-AttrPathMixin::postProcessArgs()
+AttrPathMixin::fixupAttrPath()
 {
   if ( this->attrPath.empty() ) { this->attrPath.push_back( "packages" ); }
   if ( this->attrPath.size() < 2 )

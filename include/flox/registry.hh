@@ -257,6 +257,40 @@ class Registry : FloxFlakeParserMixin
 
 /* -------------------------------------------------------------------------- */
 
+      void
+    init()
+    {
+      for ( const std::reference_wrapper<const std::string> & _name :
+              this->registryRaw.getOrder()
+          )
+        {
+          const auto & pair = std::find_if(
+            this->registryRaw.inputs.begin()
+          , this->registryRaw.inputs.end()
+          , [&]( const auto & pair ) { return pair.first == _name.get(); }
+          );
+
+          /* Fill default/fallback values if none are defined. */
+          RegistryInput input = pair->second;
+          if ( ! input.subtrees.has_value() )
+            {
+              input.subtrees = this->registryRaw.defaults.subtrees;
+            }
+          if ( ! input.stabilities.has_value() )
+            {
+              input.stabilities = this->registryRaw.defaults.stabilities;
+            }
+
+          /* Construct the input */
+          this->inputs.emplace_back(
+            std::make_pair( pair->first, this->mkInput<InputType>( input ) )
+          );
+        }
+    }
+
+
+/* -------------------------------------------------------------------------- */
+
       template<constructibe_from_registry_input T>
       inline std::shared_ptr<T>
     mkInput( const RegistryInput & input )
@@ -279,36 +313,18 @@ class Registry : FloxFlakeParserMixin
 
     using input_type = InputType;
 
-
-    explicit Registry( const RegistryRaw & registry )
-      : registryRaw( registry )
+    explicit Registry( const RegistryRaw & registry ) : registryRaw( registry )
     {
-      for ( const std::reference_wrapper<const std::string> & _name :
-              registry.getOrder()
-          )
-        {
-          const auto & pair = std::find_if(
-            registry.inputs.begin()
-          , registry.inputs.end()
-          , [&]( const auto & pair ) { return pair.first == _name.get(); }
-          );
+      this->init();
+    }
 
-          /* Fill default/fallback values if none are defined. */
-          RegistryInput input = pair->second;
-          if ( ! input.subtrees.has_value() )
-            {
-              input.subtrees = registry.defaults.subtrees;
-            }
-          if ( ! input.stabilities.has_value() )
-            {
-              input.stabilities = registry.defaults.stabilities;
-            }
-
-          /* Construct the input */
-          this->inputs.emplace_back(
-            std::make_pair( pair->first, this->mkInput<InputType>( input ) )
-          );
-        }
+    explicit Registry(       nix::ref<nix::Store> & store
+                     , const RegistryRaw          & registry
+                     )
+      : NixState( store )
+      , registryRaw( registry )
+    {
+      this->init();
     }
 
 

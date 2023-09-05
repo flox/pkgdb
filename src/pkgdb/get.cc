@@ -220,6 +220,13 @@ GetCommand::runPkg()
   int
 GetCommand::run()
 {
+  if ( this->parser.is_subcommand_used( "db" ) )
+    {
+      return this->runDb();
+    }
+
+  this->openPkgDb();
+
   if ( this->parser.is_subcommand_used( "id" ) )
     {
       return this->runId();
@@ -231,10 +238,6 @@ GetCommand::run()
   if ( this->parser.is_subcommand_used( "flake" ) )
     {
       return this->runFlake();
-    }
-  if ( this->parser.is_subcommand_used( "db" ) )
-    {
-      return this->runDb();
     }
   if ( this->parser.is_subcommand_used( "done" ) )
     {
