@@ -18,7 +18,7 @@ namespace flox::pkgdb {
 
 /* -------------------------------------------------------------------------- */
 
-/** Adds a package database path to a state blob. */
+/** Adds a single package database path to a state blob. */
 struct DbPathMixin
   :         public command::CommandStateMixin
   , virtual public flox::NixState
@@ -36,7 +36,8 @@ struct DbPathMixin
 /* -------------------------------------------------------------------------- */
 
 /**
- * Adds a package database and optionally an associated flake to a state blob.
+ * @brief Adds a single package database and optionally an associated flake to a
+ *        state blob.
  */
   template <pkgdb_typename T>
 struct PkgDbMixin
@@ -47,16 +48,16 @@ struct PkgDbMixin
   std::shared_ptr<T> db;
 
   /**
-   * Open a @a flox::pkgdb::PkgDb connection using the command state's
-   * @a dbPath or @a flake value.
+   * @brief Open a @a flox::pkgdb::PkgDb connection using the command state's
+   *        @a dbPath or @a flake value.
    */
   void openPkgDb();
 
   inline void postProcessArgs() override { this->openPkgDb(); }
 
   /**
-   * Add `target` argument to any parser to read either a `flake-ref` or
-   * path to an existing database.
+   * @brief Add `target` argument to any parser to read either a `flake-ref` or
+   *        path to an existing database.
    */
   argparse::Argument & addTargetArg( argparse::ArgumentParser & parser );
 
@@ -81,7 +82,7 @@ struct ScrapeCommand
   void postProcessArgs() override;
 
   /**
-   * Execute the `scrape` routine.
+   * @brief Execute the `scrape` routine.
    * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
    */
   int run();
@@ -92,8 +93,9 @@ struct ScrapeCommand
 /* -------------------------------------------------------------------------- */
 
 /**
- * Minimal set of DB queries, largely focused on looking up info that is
- * non-trivial to query with a "plain" SQLite statement.
+ * @brief Minimal set of DB queries, largely focused on looking up info that is
+ *        non-trivial to query with a "plain" SQLite statement.
+ *
  * This subcommand has additional subcommands:
  * - `pkgdb get id [--pkg] DB-PATH ATTR-PATH...`
  *   + Lookup `(AttrSet|Packages).id` for `ATTR-PATH`.
@@ -127,43 +129,43 @@ struct GetCommand
   void postProcessArgs() override {}
 
   /**
-   * Execute the `get id` routine.
+   * @brief Execute the `get id` routine.
    * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
    */
   int runId();
 
   /**
-   * Execute the `get done` routine.
+   * @brief Execute the `get done` routine.
    * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
    */
   int runDone();
 
   /**
-   * Execute the `get path` routine.
+   * @brief Execute the `get path` routine.
    * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
    */
   int runPath();
 
   /**
-   * Execute the `get flake` routine.
+   * @brief Execute the `get flake` routine.
    * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
    */
   int runFlake();
 
   /**
-   * Execute the `get db` routine.
+   * @brief Execute the `get db` routine.
    * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
    */
   int runDb();
 
   /**
-   * Execute the `get pkg` routine.
+   * @brief Execute the `get pkg` routine.
    * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
    */
   int runPkg();
 
   /**
-   * Execute the `get` routine.
+   * @brief Execute the `get` routine.
    * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
    */
   int run();

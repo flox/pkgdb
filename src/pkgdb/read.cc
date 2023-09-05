@@ -41,8 +41,8 @@ isSQLError( int rcode )
 
 /* -------------------------------------------------------------------------- */
 
-  std::string
-genPkgDbName( const Fingerprint & fingerprint )
+  std::filesystem::path
+getPkgDbCachedir()
 {
   /* Take the major version number on the first run for the directory name */
   static std::string schemaMajor;
@@ -55,12 +55,26 @@ genPkgDbName( const Fingerprint & fingerprint )
       );
     }
 
-  static const nix::Path cacheDir =
+  static const std::filesystem::path cacheDir =
     nix::getCacheDir() + "/flox/pkgdb-v" + schemaMajor;
 
-  std::string fpStr  = fingerprint.to_string( nix::Base16, false );
-  nix::Path   dbPath = cacheDir + "/" + fpStr + ".sqlite";
-  return dbPath;
+  std::optional<std::string> fromEnv = nix::getEnv( "PKGDB_CACHEDIR" );
+
+  if ( fromEnv.has_value() ) { return * fromEnv; }
+
+  return cacheDir;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  std::filesystem::path
+genPkgDbName( const Fingerprint           & fingerprint
+            , const std::filesystem::path & cacheDir
+            )
+{
+  std::string fpStr = fingerprint.to_string( nix::Base16, false );
+  return cacheDir.string() + "/" + fpStr + ".sqlite";
 }
 
 

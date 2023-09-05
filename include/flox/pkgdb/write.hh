@@ -25,8 +25,8 @@ using Todos  = std::queue<Target, std::list<Target>>;
 /* -------------------------------------------------------------------------- */
 
 /**
- * A SQLite3 database used to cache derivation/package information about a
- * single locked flake.
+ * @brief A SQLite3 database used to cache derivation/package information about
+ *        a single locked flake.
  */
 class PkgDb : public PkgDbReadOnly {
 
@@ -40,8 +40,8 @@ class PkgDb : public PkgDbReadOnly {
     void initTables();
 
     /**
-     * Write @a this `PkgDb` `lockedRef` and `fingerprint` fields to
-     * database metadata.
+     * @brief Write @a this `PkgDb` `lockedRef` and `fingerprint` fields to
+     *        database metadata.
      */
     void writeInput();
 
@@ -52,7 +52,8 @@ class PkgDb : public PkgDbReadOnly {
 
   public:
     /**
-     * Opens an existing database.
+     * @brief Opens an existing database.
+     *
      * Does NOT attempt to create a database if one does not exist.
      * @param dbPath Absolute path to database file.
      */
@@ -71,7 +72,8 @@ class PkgDb : public PkgDbReadOnly {
     }
 
     /**
-     * Opens a DB directly by its fingerprint hash.
+     * @brief Opens a DB directly by its fingerprint hash.
+     *
      * Does NOT attempt to create a database if one does not exist.
      * @param fingerprint Unique hash associated with locked flake.
      * @param dbPath Absolute path to database file.
@@ -94,16 +96,18 @@ class PkgDb : public PkgDbReadOnly {
     }
 
     /**
-     * Opens a DB directly by its fingerprint hash.
+     * @brief Opens a DB directly by its fingerprint hash.
+     *
      * Does NOT attempt to create a database if one does not exist.
      * @param fingerprint Unique hash associated with locked flake.
      */
     explicit PkgDb( const Fingerprint & fingerprint )
-      : PkgDb( fingerprint, genPkgDbName( fingerprint ) )
+      : PkgDb( fingerprint, genPkgDbName( fingerprint ).string() )
     {}
 
     /**
-     * Opens a DB associated with a locked flake.
+     * @brief Opens a DB associated with a locked flake.
+     *
      * Creates database if one does not exist.
      * @param flake Flake associated with the db. Used to write input metadata.
      * @param dbPath Absolute path to database file.
@@ -126,12 +130,13 @@ class PkgDb : public PkgDbReadOnly {
     }
 
     /**
-     * Opens a DB associated with a locked flake.
+     * @brief Opens a DB associated with a locked flake.
+     *
      * Creates database if one does not exist.
      * @param flake Flake associated with the db. Used to write input metadata.
      */
     explicit PkgDb( const nix::flake::LockedFlake & flake )
-      : PkgDb( flake, genPkgDbName( flake.getFingerprint() ) )
+      : PkgDb( flake, genPkgDbName( flake.getFingerprint() ).string() )
     {}
 
 
@@ -142,7 +147,7 @@ class PkgDb : public PkgDbReadOnly {
   // public:
 
     /**
-     * Execute a raw sqlite statement on the database.
+     * @brief Execute a raw sqlite statement on the database.
      * @param stmt String statement to execute.
      * @return `SQLITE_*` [error code](https://www.sqlite.org/rescode.html).
      */
@@ -154,7 +159,7 @@ class PkgDb : public PkgDbReadOnly {
      }
 
     /**
-     * Execute raw sqlite statements on the database.
+     * @brief Execute raw sqlite statements on the database.
      * @param stmt String statement to execute.
      * @return `SQLITE_*` [error code](https://www.sqlite.org/rescode.html).
      */
@@ -173,9 +178,9 @@ class PkgDb : public PkgDbReadOnly {
   // public:
 
     /**
-     * Get the `AttrSet.id` for a given child of the attribute set associated
-     * with `parent` if it exists, or insert a new row for @a path and return
-     * its `id`.
+     * @brief Get the `AttrSet.id` for a given child of the attribute set
+     *        associated with `parent` if it exists, or insert a new row for
+     *        @a path and return its `id`.
      * @param attrName An attribute set field name.
      * @param parent The `AttrSet.id` containing @a attrName.
      *               The `id` 0 may be used to indicate that @a attrName has no
@@ -186,8 +191,8 @@ class PkgDb : public PkgDbReadOnly {
     row_id addOrGetAttrSetId( const std::string & attrName, row_id parent = 0 );
 
     /**
-     * Get the `AttrSet.id` for a given path if it exists, or insert a
-     * new row for @a path and return its `pathId`.
+     * @brief Get the `AttrSet.id` for a given path if it exists, or insert a
+     *        new row for @a path and return its `pathId`.
      * @param path An attribute path prefix such as `packages.x86_64-linux` or
      *             `legacyPackages.aarch64-darwin.python3Packages`.
      * @return A unique `row_id` ( unsigned 64bit int ) associated with @a path.
@@ -195,8 +200,8 @@ class PkgDb : public PkgDbReadOnly {
     row_id addOrGetAttrSetId( const flox::AttrPath & path );
 
     /**
-     * Get the `Descriptions.id` for a given string if it exists, or insert a
-     * new row for @a description and return its `id`.
+     * @brief Get the `Descriptions.id` for a given string if it exists, or
+     *        insert a new row for @a description and return its `id`.
      * @param description A string describing a package.
      * @return A unique `row_id` ( unsigned 64bit int ) associated
      *         with @a description.
@@ -204,7 +209,7 @@ class PkgDb : public PkgDbReadOnly {
     row_id addOrGetDescriptionId( const std::string & description );
 
     /**
-     * Adds a package to the database.
+     * @brief Adds a package to the database.
      * @param parentId The `pathId` associated with the parent path.
      * @param attrName The name of the attribute name to be added ( last element
      *                 of the attribute path ).
@@ -228,8 +233,8 @@ class PkgDb : public PkgDbReadOnly {
 /* Updates */
 
 /**
- * Update the `done` column for an attribute set and all of its
- * children recursively.
+ * @brief Update the `done` column for an attribute set and all of its
+ *        children recursively.
  * @param prefix Attribute set prefix to be updated.
  * @param done Value to update `done` column to.
  */
@@ -239,8 +244,10 @@ void setPrefixDone( const flox::AttrPath & prefix, bool done );
 /* -------------------------------------------------------------------------- */
 
 /**
- * Scrape package definitions from an attribute set, adding any attributes
- * marked with `recurseForDerivatsions = true` to @a todo list.
+ * @brief Scrape package definitions from an attribute set.
+ *
+ * Adds any attributes marked with `recurseForDerivatsions = true` to
+ * @a todo list.
  * @param syms Symbol table from @a cursor evaluator.
  * @param prefix Attribute path to scrape.
  * @param cursor `nix` evaluator cursor associated with @a prefix

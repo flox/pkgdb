@@ -61,8 +61,20 @@ struct PkgDbException : public FloxException {
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * @brief Get the default pkgdb cache directory to save databases.
+ *
+ * The environment variable `PKGDB_CACHEDIR` is respected if it is set,
+ * otherwise we use
+ * `${XDG_CACHE_HOME:-$HOME/.cache}/flox/pkgdb-v<SCHEMA-MAJOR>`.
+ */
+std::filesystem::path getPkgDbCachedir();
+
 /** Get an absolute path to the `PkgDb' for a given fingerprint hash. */
-std::string genPkgDbName( const Fingerprint & fingerprint );
+std::filesystem::path genPkgDbName(
+  const Fingerprint           & fingerprint
+, const std::filesystem::path & cacheDir = getPkgDbCachedir()
+);
 
 
 /* -------------------------------------------------------------------------- */
@@ -175,7 +187,7 @@ class PkgDbReadOnly {
      * @param fingerprint Unique hash associated with locked flake.
      */
     explicit PkgDbReadOnly( const Fingerprint & fingerprint )
-      : PkgDbReadOnly( fingerprint, genPkgDbName( fingerprint ) )
+      : PkgDbReadOnly( fingerprint, genPkgDbName( fingerprint ).string() )
     {}
 
 
