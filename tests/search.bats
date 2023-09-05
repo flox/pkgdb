@@ -171,6 +171,36 @@ genParams() {
 
 
 # ---------------------------------------------------------------------------- #
+
+# bats test_tags=search:system, search:pname
+
+# `systems' ordering
+@test "'pkgdb search' systems order" {
+  run sh -c "$PKGDB search '$(
+    genParams '.systems+=["x86_64-darwin"]|.query.pname="hello"';
+  )'|jq -rs 'to_entries|map( ( .key|tostring ) + \" \" + .value.path[1] )[]'";
+  assert_success;
+  assert_output --partial '0 x86_64-linux';
+  assert_output --partial '1 x86_64-darwin';
+  refute_output --partial '2 ';
+}
+
+
+# bats test_tags=search:system, search:pname
+
+# `systems' ordering, reverse order of previous
+@test "'pkgdb search' systems order ( reversed )" {
+  run sh -c "$PKGDB search '$(
+    genParams '.systems=["x86_64-darwin","x86_64-linux"]|.query.pname="hello"';
+  )'|jq -rs 'to_entries|map( ( .key|tostring ) + \" \" + .value.path[1] )[]'";
+  assert_success;
+  assert_output --partial '0 x86_64-darwin';
+  assert_output --partial '1 x86_64-linux';
+  refute_output --partial '2 ';
+}
+
+
+# ---------------------------------------------------------------------------- #
 #
 #
 #
