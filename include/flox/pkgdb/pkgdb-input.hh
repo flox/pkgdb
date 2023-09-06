@@ -47,8 +47,6 @@ class PkgDbInput : public FloxFlakeInput {
       void
     init()
     {
-      if ( this->dbRW != nullptr ) { return; }
-
       /* Initialized DB if missing. */
       if ( ! std::filesystem::exists( this->dbPath ) )
         {
@@ -89,28 +87,55 @@ class PkgDbInput : public FloxFlakeInput {
     }
 
 
-
 /* -------------------------------------------------------------------------- */
 
   public:
 
+    /**
+     * @brief Tag used to disambiguate construction with database path and
+     *        cache directory path.
+     */
+    struct db_path_tag  {};
+
+    /**
+     * @brief Construct a @a PkgDbInput from a @a RegistryInput and a path to
+     *        the database.
+     * @param state `nix` evaluator.
+     * @param input A @a RegistryInput.
+     * @param dbPath Path to the database.
+     * @param db_path_tag Tag used to disambiguate this constructor from
+     *                    other constructor which takes a cache directory.
+     */
     PkgDbInput(       nix::ref<nix::EvalState> & state
               , const RegistryInput            & input
+              ,       std::filesystem::path      dbPath
+              , const db_path_tag              & /* unused */
               )
       : FloxFlakeInput( state, input )
-      , dbPath( genPkgDbName( this->flake->lockedFlake.getFingerprint() ) )
+      , dbPath( std::move( dbPath ) )
     {
+      this->init();
     }
 
 
-/* -------------------------------------------------------------------------- */
-
-      void
-    setDbPath( const std::filesystem::path & path )
+    /**
+     * @brief Construct a @a PkgDbInput from a @a RegistryInput and a path to
+     *        the directory where the database should be cached.
+     * @param state `nix` evaluator.
+     * @param input A @a RegistryInput.
+     * @param cacheDir Path to the directory where the database should
+     *                 be cached.
+     */
+    PkgDbInput(       nix::ref<nix::EvalState> & state
+              , const RegistryInput            & input
+              , const std::filesystem::path    & cacheDir = getPkgDbCachedir()
+              )
+      : FloxFlakeInput( state, input )
+      , dbPath(
+          genPkgDbName( this->flake->lockedFlake.getFingerprint(), cacheDir )
+        )
     {
-      this->dbRO   = nullptr;
-      this->dbRW   = nullptr;
-      this->dbPath = path;
+      this->init();
     }
 
 
@@ -121,10 +146,9 @@ class PkgDbInput : public FloxFlakeInput {
      */
       [[nodiscard]]
       nix::ref<PkgDbReadOnly>
-    getDbReadOnly()
+    getDbReadOnly() const
     {
-      if ( this->dbRO == nullptr ) { this->init(); }
-      return (nix::ref<PkgDbReadOnly>) this->dbRO;
+      return static_cast<nix::ref<PkgDbReadOnly>>( this->dbRO );
     }
 
 
@@ -145,7 +169,7 @@ class PkgDbInput : public FloxFlakeInput {
           , this->dbPath.string()
           );
         }
-      return (nix::ref<PkgDb>) this->dbRW;
+      return static_cast<nix::ref<PkgDb>>( this->dbRW );
     }
 
 
@@ -184,7 +208,7 @@ class PkgDbInput : public FloxFlakeInput {
            root != nullptr
          )
         {
-          todo.push(
+          todo.emplace(
             std::make_pair( prefix
                           , static_cast<flox::Cursor>( root )
                           )
@@ -277,6 +301,39 @@ class PkgDbInput : public FloxFlakeInput {
 /* -------------------------------------------------------------------------- */
 
 };  /* End struct `PkgDbInput' */
+
+
+/* -------------------------------------------------------------------------- */
+
+class PkgDbInputFactory {
+
+  private:
+    nix::ref<nix::EvalState> state;    /**< `nix` evaluator. */
+    std::filesystem::path    cacheDir; /**< Cache directory. */
+
+  public:
+    using input_type = PkgDbInput;
+
+    /** Construct a factory using a `nix` evaluator. */
+    explicit PkgDbInputFactory(
+      nix::ref<nix::EvalState> & state
+    , std::filesystem::path      cacheDir = getPkgDbCachedir()
+    ) : state( state )
+      , cacheDir( std::move( cacheDir ) )
+    {}
+
+    /** Construct an input from a @a RegistryInput. */
+      [[nodiscard]]
+      std::shared_ptr<PkgDbInput>
+    mkInput( const std::string & /* unused */, const RegistryInput & input )
+    {
+      return std::make_shared<PkgDbInput>( this->state, input, this->cacheDir );
+    }
+
+};  /* End class `PkgDbInputFactory' */
+
+
+static_assert( registry_input_factory<PkgDbInputFactory> );
 
 
 /* -------------------------------------------------------------------------- */

@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <concepts>
+
 #include <nix/logging.hh>
 #include <nix/store-api.hh>
 #include <nix/eval-cache.hh>
@@ -28,6 +30,22 @@ namespace flox {
  * it is effectively a no-op.
  */
 void initNix();
+
+
+/* -------------------------------------------------------------------------- */
+
+  template <typename T>
+concept has_getStore = requires( T & ref ) {
+  { ref.getStore() } -> std::convertible_to<nix::ref<nix::Store>>;
+};
+
+  template <typename T>
+concept has_getState = requires( T & ref ) {
+  { ref.getState() } -> std::convertible_to<nix::ref<nix::EvalState>>;
+};
+
+  template <typename T>
+concept nix_state = has_getStore<T> && has_getState<T>;
 
 
 /* -------------------------------------------------------------------------- */
@@ -119,6 +137,11 @@ struct NixState {
 /* -------------------------------------------------------------------------- */
 
 };  /* End class `NixState' */
+
+
+/* -------------------------------------------------------------------------- */
+
+static_assert( nix_state<NixState> );
 
 
 /* -------------------------------------------------------------------------- */

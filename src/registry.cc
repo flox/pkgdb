@@ -11,6 +11,7 @@
 
 #include "flox/core/util.hh"
 #include "flox/registry.hh"
+#include "flox/pkgdb/pkgdb-input.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -129,7 +130,9 @@ to_json( nlohmann::json & jto, const RegistryRaw & reg )
 
 /* Instantiate class templates for common registries. */
 
-template class Registry<RegistryInput>;
+template class Registry<RegistryInputFactory>;
+template class Registry<FloxFlakeInputFactory>;
+template class Registry<pkgdb::PkgDbInputFactory>;
 
 
 /* -------------------------------------------------------------------------- */

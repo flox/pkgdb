@@ -58,8 +58,8 @@ void to_json(         nlohmann::json & jto,   const InputPreferences & prefs );
 
   template <typename T>
 concept input_preferences_typename =
-    std::is_base_of<InputPreferences, T>::value && requires( T & t ) {
-      { t.getFlakeRef() } -> std::convertible_to<nix::FlakeRef>;
+    std::is_base_of<InputPreferences, T>::value && requires( T ref ) {
+      { ref.getFlakeRef() } -> std::convertible_to<nix::FlakeRef>;
     };
 
 
@@ -78,31 +78,34 @@ void from_json( const nlohmann::json & jfrom,       RegistryInput & rip );
 void to_json(         nlohmann::json & jto,   const RegistryInput & rip );
 
 
-/** A type that can be constructed from a @a RegistryInput. */
-  template<typename T>
-concept constructibe_from_registry_input =
-    std::constructible_from<T, const RegistryInput &>;
-
-/**
- * @brief A type that can be constructed from a `nix::ref<nix::EvalState>`
- *        and @a RegistryInput.
- */
-  template<typename T>
-concept constructibe_from_nix_evaluator_and_registry_input =
-    std::constructible_from< T
-                           ,       nix::ref<nix::EvalState> &
-                           , const RegistryInput            &
-                           >;
+/** Restricts types to those which can construct @a RegistryInput values. */
+  template <typename T>
+concept registry_input_factory =
+  requires { typename T::input_type; } &&
+  input_preferences_typename<typename T::input_type> &&
+  requires( T ref, const std::string & name, const RegistryInput & rip ) {
+    { ref.mkInput( name, rip ) } ->
+      std::convertible_to<std::shared_ptr<typename T::input_type>>;
+  };
 
 
-/* -------------------------------------------------------------------------- */
+/** The simplest @a RegistryInput _factory_ which just copies inputs. */
+class RegistryInputFactory {
 
-/** @brief A type that is suitable as a @a Registry value. */
-  template<typename T>
-concept registry_input_typename = input_preferences_typename<T> && (
-    constructibe_from_registry_input<T> ||
-    constructibe_from_nix_evaluator_and_registry_input<T>
-  );
+  public:
+    using input_type = RegistryInput;
+
+    /** Construct an input from a @a RegistryInput. */
+      [[nodiscard]]
+      std::shared_ptr<RegistryInput>
+    mkInput( const std::string &, const RegistryInput & input )
+    {
+      return std::make_shared<RegistryInput>( input );
+    }
+
+};  /* End class `RegistryInputFactory' */
+
+static_assert( registry_input_factory<RegistryInputFactory> );
 
 
 /* -------------------------------------------------------------------------- */
@@ -153,8 +156,8 @@ struct RegistryRaw {
 
   virtual ~RegistryRaw()                       = default;
            RegistryRaw()                       = default;
-  explicit RegistryRaw( const RegistryRaw &  ) = default;
-  explicit RegistryRaw(       RegistryRaw && ) = default;
+           RegistryRaw( const RegistryRaw &  ) = default;
+           RegistryRaw(       RegistryRaw && ) = default;
 
   RegistryRaw & operator=( const RegistryRaw &  ) = default;
   RegistryRaw & operator=(       RegistryRaw && ) = default;
@@ -239,7 +242,7 @@ void to_json(         nlohmann::json & jto,   const RegistryRaw & reg );
  * `nix::ref<nix::EvalState>`, and is derived from @a InputPreferences may be a
  * value type in a registry.
  */
-  template<registry_input_typename InputType>
+  template<registry_input_factory FactoryType>
 class Registry : FloxFlakeParserMixin
 {
 
@@ -252,13 +255,21 @@ class Registry : FloxFlakeParserMixin
     RegistryRaw registryRaw;
 
     /** A list of `<SHORTNAME>, <FLAKE>` pairs in priority order. */
-    std::vector<std::pair<std::string, std::shared_ptr<InputType>>> inputs;
+    std::vector< std::pair<std::string
+               , std::shared_ptr<typename FactoryType::input_type>>
+               > inputs;
 
 
 /* -------------------------------------------------------------------------- */
 
-      void
-    init()
+  public:
+
+    using input_type = typename FactoryType::input_type;
+
+/* -------------------------------------------------------------------------- */
+
+    explicit Registry( RegistryRaw registry, FactoryType & factory )
+      : registryRaw( std::move( registry ) )
     {
       for ( const std::reference_wrapper<const std::string> & _name :
               this->registryRaw.getOrder()
@@ -283,7 +294,7 @@ class Registry : FloxFlakeParserMixin
 
           /* Construct the input */
           this->inputs.emplace_back(
-            std::make_pair( pair->first, this->mkInput<InputType>( input ) )
+            std::make_pair( pair->first, factory.mkInput( pair->first, input ) )
           );
         }
     }
@@ -291,45 +302,6 @@ class Registry : FloxFlakeParserMixin
 
 /* -------------------------------------------------------------------------- */
 
-      template<constructibe_from_registry_input T>
-      inline std::shared_ptr<T>
-    mkInput( const RegistryInput & input )
-    {
-      return std::make_shared<T>( input );
-    }
-
-      template<constructibe_from_nix_evaluator_and_registry_input T>
-      inline std::shared_ptr<T>
-    mkInput( const RegistryInput & input )
-    {
-      nix::ref<nix::EvalState> state = this->getState();
-      return std::make_shared<T>( state, input );
-    }
-
-
-/* -------------------------------------------------------------------------- */
-
-  public:
-
-    using input_type = InputType;
-
-    explicit Registry( const RegistryRaw & registry ) : registryRaw( registry )
-    {
-      this->init();
-    }
-
-    explicit Registry(       nix::ref<nix::Store> & store
-                     , const RegistryRaw          & registry
-                     )
-      : NixState( store )
-      , registryRaw( registry )
-    {
-      this->init();
-    }
-
-
-/* -------------------------------------------------------------------------- */
-
     /**
      * @brief Get an input by name.
      * @param name Registry shortname for the target flake.
@@ -337,26 +309,7 @@ class Registry : FloxFlakeParserMixin
      *         otherwise the input associated with @a name.
      */
       [[nodiscard]]
-      std::shared_ptr<InputType>
-    get( const std::string & name ) noexcept
-    {
-      auto maybeInput = std::find_if(
-        this->inputs.begin()
-      , this->inputs.end()
-      , [&]( const auto & pair ) { return pair.first == name; }
-      );
-      if ( maybeInput == this->inputs.end() ) { return nullptr; }
-      return maybeInput->second;
-    }
-
-    /**
-     * @brief Get an input by name.
-     * @param name Registry shortname for the target flake.
-     * @return `nullputr` iff no such input exists,
-     *         otherwise the input associated with @a name.
-     */
-      [[nodiscard]]
-      const std::shared_ptr<InputType>
+      std::shared_ptr<typename FactoryType::input_type>
     get( const std::string & name ) const noexcept
     {
       const auto maybeInput = std::find_if(
@@ -377,27 +330,11 @@ class Registry : FloxFlakeParserMixin
      * @return The input associated with @a name.
      */
     [[nodiscard]]
-      std::shared_ptr<InputType>
-    at( const std::string & name )
-    {
-      std::shared_ptr<InputType> maybeInput = this->get( name );
-      if ( maybeInput == nullptr )
-        {
-          throw std::out_of_range( "No such input '" + name + "'" );
-        }
-      return maybeInput;
-    }
-
-    /**
-     * @brief Get an input by name, or throw an error if no such input exists.
-     * @param name Registry shortname for the target flake.
-     * @return The input associated with @a name.
-     */
-    [[nodiscard]]
-      const std::shared_ptr<InputType>
+      std::shared_ptr<typename FactoryType::input_type>
     at( const std::string & name ) const
     {
-      const std::shared_ptr<InputType> maybeInput = this->get( name );
+      const std::shared_ptr<typename FactoryType::input_type> maybeInput =
+        this->get( name );
       if ( maybeInput == nullptr )
         {
           throw std::out_of_range( "No such input '" + name + "'" );
@@ -448,6 +385,36 @@ struct FloxFlakeInput : public InputPreferences {
   }
 
 };  /* End struct `FloxFlakeInput' */
+
+
+/** A factory for @a FloxFlakeInput objects. */
+class FloxFlakeInputFactory {
+
+  private:
+    nix::ref<nix::EvalState> state;  /**< `nix` evaluator. */
+
+  public:
+    using input_type = FloxFlakeInput;
+
+    FloxFlakeInputFactory() : state( NixState().getState() ) {}
+
+    /** Construct a factory using a `nix` evaluator. */
+    FloxFlakeInputFactory( nix::ref<nix::EvalState> & state )
+      : state( state )
+    {}
+
+    /** Construct an input from a @a RegistryInput. */
+      [[nodiscard]]
+      std::shared_ptr<FloxFlakeInput>
+    mkInput( const std::string &, const RegistryInput & input )
+    {
+      return std::make_shared<FloxFlakeInput>( this->state, input );
+    }
+
+};  /* End class `FloxFlakeInputFactory' */
+
+
+static_assert( registry_input_factory<FloxFlakeInputFactory> );
 
 
 /* -------------------------------------------------------------------------- */

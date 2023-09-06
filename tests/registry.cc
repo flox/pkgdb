@@ -35,7 +35,8 @@ test_FloxFlakeInputRegistry0()
 {
   using namespace flox;
 
-  Registry<FloxFlakeInput> registry( commonRegistry );
+  FloxFlakeInputFactory           factory;
+  Registry<FloxFlakeInputFactory> registry( commonRegistry, factory );
   size_t count = 0;
   for ( const auto & [name, flake] : registry )
     {
@@ -48,8 +49,6 @@ test_FloxFlakeInputRegistry0()
   return true;
 }
 
-
-/* -------------------------------------------------------------------------- */
 
 /* ========================================================================== */
 

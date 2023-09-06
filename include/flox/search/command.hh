@@ -74,7 +74,7 @@ struct SearchCommand : public SearchParamsMixin
 
     bool force = false;  /**< Whether to force re-evaluation. */
 
-    std::shared_ptr<Registry<pkgdb::PkgDbInput>> registry;
+    std::shared_ptr<Registry<pkgdb::PkgDbInputFactory>> registry;
 
     /** Initialize @a registry member from @a params.registry. */
     void initRegistry();
