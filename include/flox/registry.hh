@@ -270,6 +270,7 @@ class Registry : FloxFlakeParserMixin
 
     using input_type = typename FactoryType::input_type;
 
+
 /* -------------------------------------------------------------------------- */
 
     explicit Registry( RegistryRaw registry, FactoryType & factory )
