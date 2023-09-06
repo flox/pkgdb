@@ -78,6 +78,8 @@ void from_json( const nlohmann::json & jfrom,       RegistryInput & rip );
 void to_json(         nlohmann::json & jto,   const RegistryInput & rip );
 
 
+/* -------------------------------------------------------------------------- */
+
 /** Restricts types to those which can construct @a RegistryInput values. */
   template <typename T>
 concept registry_input_factory =
@@ -89,6 +91,8 @@ concept registry_input_factory =
   };
 
 
+/* -------------------------------------------------------------------------- */
+
 /** The simplest @a RegistryInput _factory_ which just copies inputs. */
 class RegistryInputFactory {
 
@@ -97,8 +101,8 @@ class RegistryInputFactory {
 
     /** Construct an input from a @a RegistryInput. */
       [[nodiscard]]
-      std::shared_ptr<RegistryInput>
-    mkInput( const std::string &, const RegistryInput & input )
+      static std::shared_ptr<RegistryInput>
+    mkInput( const std::string & /* unused */, const RegistryInput & input )
     {
       return std::make_shared<RegistryInput>( input );
     }
@@ -329,7 +333,7 @@ class Registry : FloxFlakeParserMixin
      * @param name Registry shortname for the target flake.
      * @return The input associated with @a name.
      */
-    [[nodiscard]]
+      [[nodiscard]]
       std::shared_ptr<typename FactoryType::input_type>
     at( const std::string & name ) const
     {
@@ -399,14 +403,14 @@ class FloxFlakeInputFactory {
     FloxFlakeInputFactory() : state( NixState().getState() ) {}
 
     /** Construct a factory using a `nix` evaluator. */
-    FloxFlakeInputFactory( nix::ref<nix::EvalState> & state )
+    explicit FloxFlakeInputFactory( nix::ref<nix::EvalState> & state )
       : state( state )
     {}
 
     /** Construct an input from a @a RegistryInput. */
       [[nodiscard]]
       std::shared_ptr<FloxFlakeInput>
-    mkInput( const std::string &, const RegistryInput & input )
+    mkInput( const std::string & /* unused */, const RegistryInput & input )
     {
       return std::make_shared<FloxFlakeInput>( this->state, input );
     }
