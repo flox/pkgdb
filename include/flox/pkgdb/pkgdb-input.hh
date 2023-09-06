@@ -305,6 +305,7 @@ class PkgDbInput : public FloxFlakeInput {
 
 /* -------------------------------------------------------------------------- */
 
+/** Factory for @a PkgDbInput. */
 class PkgDbInputFactory {
 
   private:
