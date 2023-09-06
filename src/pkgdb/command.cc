@@ -53,7 +53,7 @@ PkgDbMixin<PkgDb>::openPkgDb()
     {
       this->db = std::make_shared<PkgDb>(
         this->flake->lockedFlake
-      , (std::string) * this->dbPath
+      , static_cast<std::string>( * this->dbPath )
       );
     }
   else if ( this->flake != nullptr )
@@ -64,13 +64,15 @@ PkgDbMixin<PkgDb>::openPkgDb()
       std::filesystem::create_directories( this->dbPath->parent_path() );
       this->db = std::make_shared<PkgDb>(
         this->flake->lockedFlake
-      , (std::string) * this->dbPath
+      , static_cast<std::string>( * this->dbPath )
       );
     }
   else if ( this->dbPath.has_value() )
     {
       std::filesystem::create_directories( this->dbPath->parent_path() );
-      this->db = std::make_shared<PkgDb>( (std::string) * this->dbPath );
+      this->db = std::make_shared<PkgDb>(
+        static_cast<std::string>( * this->dbPath )
+      );
     }
   else
     {
@@ -109,7 +111,7 @@ PkgDbMixin<PkgDbReadOnly>::openPkgDb()
         {
           std::filesystem::create_directories( this->dbPath->parent_path() );
           flox::pkgdb::PkgDb pdb( this->flake->lockedFlake
-                                , (std::string) * this->dbPath
+                                , static_cast<std::string>( * this->dbPath )
                                 );
         }
     }
@@ -118,13 +120,14 @@ PkgDbMixin<PkgDbReadOnly>::openPkgDb()
     {
       this->db = std::make_shared<PkgDbReadOnly>(
         this->flake->lockedFlake.getFingerprint()
-      , (std::string) * this->dbPath
+      , static_cast<std::string>( * this->dbPath )
       );
     }
   else
     {
-      this->db =
-        std::make_shared<PkgDbReadOnly>( (std::string) * this->dbPath );
+      this->db = std::make_shared<PkgDbReadOnly>(
+        static_cast<std::string>( * this->dbPath )
+      );
     }
 }
 
