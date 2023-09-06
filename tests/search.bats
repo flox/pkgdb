@@ -217,9 +217,7 @@ genParamsNixpkgsFlox() {
 
 # `stabilities' ordering
 @test "'pkgdb search' stabilities order" {
-  if [ -n "${CI:-}" ]; then
-    skip "This is way too slow for CI/CD but it works";
-  fi
+  skip "This is way too slow but it works. TODO: make small catalog for tests";
   run sh -c "$PKGDB search '$( genParamsNixpkgsFlox                            \
     '.registry.inputs["nixpkgs-flox"].stabilities+=["unstable"]
     |.query.pname|="hello"
