@@ -44,10 +44,11 @@ struct DbPathMixin
   template <pkgdb_typename T>
 struct PkgDbMixin
   : virtual public DbPathMixin
-  , virtual public command::FloxFlakeMixin
+  , virtual public command::InlineInputMixin
 {
 
-  std::shared_ptr<T> db;
+  std::shared_ptr<FloxFlake> flake;
+  std::shared_ptr<T>         db;
 
   /**
    * @brief Open a @a flox::pkgdb::PkgDb connection using the command state's

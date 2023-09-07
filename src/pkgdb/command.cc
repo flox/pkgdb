@@ -152,7 +152,15 @@ PkgDbMixin<T>::addTargetArg( argparse::ArgumentParser & parser )
                      {
                        try
                          {
-                           this->parseFloxFlake( target );
+                           this->parseFlakeRef( target );
+                           nix::ref<nix::Store> store = this->getStore();
+                           FloxFlakeInput input( store
+                                               , this->getRegistryInput()
+                                               );
+                           this->flake =
+                             static_cast<std::shared_ptr<FloxFlake>>(
+                               input.getFlake()
+                             );
                          }
                        catch( ... )
                          {
@@ -166,7 +174,6 @@ PkgDbMixin<T>::addTargetArg( argparse::ArgumentParser & parser )
                            throw;
                          }
                      }
-                   this->openPkgDb();
                  }
                );
 }

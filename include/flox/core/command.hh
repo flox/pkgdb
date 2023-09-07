@@ -73,37 +73,17 @@ struct CommandStateMixin {
 
 /* -------------------------------------------------------------------------- */
 
-/** Extend a command's state blob with a @a flox::FloxFlake. */
-struct FloxFlakeMixin
-  : public CommandStateMixin
-  , public FloxFlakeParserMixin
-{
-
-  std::shared_ptr<flox::FloxFlake> flake;
-
-  /**
-   * Populate the command state's @a flake with the a flake reference.
-   * @param flakeRef A URI string or JSON representation of a flake reference.
-   */
-  void parseFloxFlake( const std::string & flakeRef );
-
-  /** Extend an argument parser to accept a `flake-ref` argument. */
-  argparse::Argument & addFlakeRefArg( argparse::ArgumentParser & parser );
-
-};  /* End struct `FloxFlakeMixin' */
-
-
-/* -------------------------------------------------------------------------- */
-
 /** Extend a command's state blob with a single @a RegistryInput. */
-struct InlineInputMixin
+class InlineInputMixin
   :         public CommandStateMixin
   , virtual public NixState
 {
 
-  protected:
+  private:
 
     RegistryInput registryInput;
+
+  protected:
 
     /**
      * @brief Fill @a registryInput by parsing a flake ref.

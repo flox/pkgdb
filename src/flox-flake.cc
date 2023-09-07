@@ -96,50 +96,6 @@ FloxFlake::openCursor( const AttrPath & path )
 }
 
 
-/* ========================================================================== */
-
-  std::shared_ptr<FloxFlake>
-FloxFlakeParserMixin::parseFloxFlake( const std::string & flakeRef )
-{
-  return std::make_shared<FloxFlake>(
-    this->getState()
-  , flox::parseFlakeRef( flakeRef )
-  );
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  std::shared_ptr<FloxFlake>
-FloxFlakeParserMixin::parseFloxFlakeJSON( const nlohmann::json & flakeRef )
-{
-  switch ( flakeRef.type() )
-    {
-      case nlohmann::json::value_t::object:
-        return std::make_shared<FloxFlake>(
-          this->getState()
-        , nix::FlakeRef::fromAttrs( nix::fetchers::jsonToAttrs( flakeRef ) )
-        );
-        break;
-      case nlohmann::json::value_t::string:
-        return std::make_shared<FloxFlake>(
-          this->getState()
-        , nix::parseFlakeRef( flakeRef.get<std::string>() )
-        );
-        break;
-      default:
-        throw FloxException( nix::fmt(
-          "Flake references may only be parsed from JSON objects or strings, "
-          "but got JSON type '%s'."
-        , flakeRef.type_name()
-        ) );
-        break;
-    }
-
-  return nullptr;  /* Unreachable */
-}
-
-
 /* -------------------------------------------------------------------------- */
 
 }  /* End Namespace `flox' */

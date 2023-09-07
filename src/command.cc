@@ -59,55 +59,6 @@ VerboseParser::VerboseParser( const std::string & name
 
 /* -------------------------------------------------------------------------- */
 
-  void
-FloxFlakeMixin::parseFloxFlake( const std::string & flakeRef )
-{
-  {
-    nix::FlakeRef ref = flox::parseFlakeRef( flakeRef );
-    nix::Activity act(
-      * nix::logger
-    , nix::lvlInfo
-    , nix::actUnknown
-    , nix::fmt( "fetching flake '%s'", ref.to_string() )
-    );
-    this->flake = std::make_shared<flox::FloxFlake>( this->getState(), ref );
-  }
-
-  this->flake = this->FloxFlakeParserMixin::parseFloxFlake( flakeRef );
-
-  if ( ! this->flake->lockedFlake.flake.lockedRef.input.hasAllInfo()
-     )
-    {
-      if ( nix::lvlWarn <= nix::verbosity )
-        {
-          nix::logger->warn(
-            "flake-reference is unlocked/dirty - "
-            "resulting DB may not be cached."
-          );
-        }
-    }
-}
-
-
-  argparse::Argument &
-FloxFlakeMixin::addFlakeRefArg( argparse::ArgumentParser & parser )
-{
-  return parser.add_argument( "flake-ref" )
-               .help(
-                 "flake-ref URI string or JSON attrs ( preferably locked )"
-               )
-               .required()
-               .metavar( "FLAKE-REF" )
-               .action( [&]( const std::string & ref )
-                        {
-                          this->parseFloxFlake( ref );
-                        }
-                      );
-}
-
-
-/* -------------------------------------------------------------------------- */
-
   argparse::Argument &
 InlineInputMixin::addFlakeRefArg( argparse::ArgumentParser & parser )
 {
