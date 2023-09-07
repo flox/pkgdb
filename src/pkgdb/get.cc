@@ -167,7 +167,7 @@ GetCommand::runDb()
 {
   if ( this->dbPath.has_value() )
     {
-      std::cout << ( (std::string) * this->dbPath ) << std::endl;
+      std::cout << static_cast<std::string>( * this->dbPath ) << std::endl;
     }
   else
     {
@@ -186,9 +186,15 @@ GetCommand::runDb()
 is_number( std::string_view str )
 {
   return ( ! str.empty() ) &&
-         ( std::find_if( str.begin(), str.end(), []( unsigned char c ) {
-             return ! std::isdigit( c );
-           } ) == str.end() );
+         ( std::find_if( str.begin()
+                       , str.end()
+                       , []( unsigned char chr )
+                         {
+                           return std::isdigit( chr ) != 0;
+                         }
+                       )
+           == str.end()
+         );
 }
 
 

@@ -14,9 +14,9 @@ namespace flox {
 /* -------------------------------------------------------------------------- */
 
 RawPackage::RawPackage( const nlohmann::json & drvInfo )
-  : _pathS( drvInfo.contains("pathS")
+  : _pathS( drvInfo.contains( "pathS" )
             ? drvInfo["pathS"].get<std::vector<std::string>>()
-            : std::vector<std::string>{}
+            : std::vector<std::string> {}
           )
   , _fullname( drvInfo.at( "name" ) )
   , _pname( drvInfo.at( "pname" ) )
@@ -34,12 +34,13 @@ RawPackage::RawPackage( const nlohmann::json & drvInfo )
             )
   , _outputs( drvInfo.contains( "outputs" )
               ? drvInfo["outputs"].get<std::vector<std::string>>()
-              : std::vector<std::string>{}
+              : std::vector<std::string> {}
             )
-  , _outputsToInstall( drvInfo.contains("outputsToInstall")
-                       ? drvInfo["outputsToInstall"].get<std::vector<std::string>>()
-                       : std::vector<std::string>{}
-                     )
+  , _outputsToInstall(
+      drvInfo.contains( "outputsToInstall" )
+      ? drvInfo["outputsToInstall"].get<std::vector<std::string>>()
+      : std::vector<std::string> {}
+    )
   , _broken( drvInfo.contains( "broken" )
               ? std::make_optional( drvInfo.at( "broken" ).get<bool>() )
               : std::nullopt
@@ -58,9 +59,9 @@ RawPackage::RawPackage( const nlohmann::json & drvInfo )
 /* -------------------------------------------------------------------------- */
 
 RawPackage::RawPackage( nlohmann::json && drvInfo )
-  : _pathS( drvInfo.contains("pathS")
+  : _pathS( drvInfo.contains( "pathS" )
             ? drvInfo["pathS"].get<std::vector<std::string>>()
-            : std::vector<std::string>{}
+            : std::vector<std::string> {}
           )
   , _fullname( std::move( drvInfo.at( "name" ) ) )
   , _pname( std::move( drvInfo.at( "pname" ) ) )
@@ -78,12 +79,13 @@ RawPackage::RawPackage( nlohmann::json && drvInfo )
             )
   , _outputs( drvInfo.contains( "outputs" )
               ? drvInfo["outputs"].get<std::vector<std::string>>()
-              : std::vector<std::string>{}
+              : std::vector<std::string> {}
             )
-  , _outputsToInstall( drvInfo.contains("outputsToInstall")
-                       ? drvInfo["outputsToInstall"].get<std::vector<std::string>>()
-                       : std::vector<std::string>{}
-                     )
+  , _outputsToInstall(
+      drvInfo.contains( "outputsToInstall" )
+      ? drvInfo["outputsToInstall"].get<std::vector<std::string>>()
+      : std::vector<std::string> {}
+    )
   , _broken( drvInfo.contains( "broken" )
               ? std::make_optional( drvInfo.at( "broken" ).get<bool>() )
               : std::nullopt

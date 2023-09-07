@@ -66,7 +66,7 @@ FloxFlake::openEvalCache()
         }
       );
     }
-  return (nix::ref<nix::eval_cache::EvalCache>) this->_cache;
+  return static_cast<nix::ref<nix::eval_cache::EvalCache>>( this->_cache );
 }
 
 
