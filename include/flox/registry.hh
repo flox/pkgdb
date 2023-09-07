@@ -252,8 +252,7 @@ void to_json(         nlohmann::json & jto,   const RegistryRaw & reg );
  * value type in a registry.
  */
   template<registry_input_factory FactoryType>
-class Registry : FloxFlakeParserMixin
-{
+class Registry {
 
   private:
 
