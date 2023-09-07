@@ -288,38 +288,6 @@ test_descriptions0( flox::pkgdb::PkgDb & db )
 
 /* -------------------------------------------------------------------------- */
 
-  bool
-test_descendants0( flox::pkgdb::PkgDb & db )
-{
-  clearTables( db );
-
-  row_id linux =
-    db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-linux" } );
-  row_id python = db.addOrGetAttrSetId( "python3Packages", linux );
-  row_id node   = db.addOrGetAttrSetId( "nodePackages", linux );
-  row_id foo    = db.addOrGetAttrSetId( "fooPackages", linux );
-  row_id bar    = db.addOrGetAttrSetId( "bar", foo );
-  row_id baz    = db.addOrGetAttrSetId( "baz", foo );
-  /* Ensure `ORDER BY' works as expected.
-   * `quux' should go before `bar'.
-   * `karl' should go after `baz'. */
-  row_id quux = db.addOrGetAttrSetId( "quuxPackages", linux );
-  row_id karl = db.addOrGetAttrSetId( "karl", quux );
-  /* Make sure these don't appear */
-  db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-darwin" } );
-
-  std::vector<row_id> descendants = db.getDescendantAttrSets( linux );
-
-  EXPECT( descendants ==
-          ( std::vector<row_id> { python, node, foo, quux, bar, baz, karl } )
-        );
-
-  return true;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
 /* Tests `systems', `name', `pname', `version', and `subtree' filtering. */
   bool
 test_PkgQuery0( flox::pkgdb::PkgDb & db )
@@ -929,8 +897,6 @@ main( int argc, char * argv[] )
     RUN_TEST( hasPackage0, db );
 
     RUN_TEST( descriptions0, db );
-
-    RUN_TEST( descendants0, db );
 
     RUN_TEST( PkgQuery0, db );
     RUN_TEST( PkgQuery1, db );

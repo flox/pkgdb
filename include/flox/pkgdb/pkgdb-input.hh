@@ -206,22 +206,20 @@ class PkgDbInput : public FloxFlakeInput {
 
       Todos todo;
 
-      bool wasRW = this->dbRW != nullptr;
+      bool        wasRW    = this->dbRW != nullptr;
+      MaybeCursor root     = this->getFlake()->maybeOpenCursor( prefix );
 
-      if ( flox::MaybeCursor root = this->getFlake()->maybeOpenCursor( prefix );
-           root != nullptr
-         )
-        {
-          todo.emplace(
-            std::make_tuple( prefix
-                           , static_cast<flox::Cursor>( root )
-                           , this->getDbReadWrite()->addOrGetAttrSetId( prefix )
-                           )
-          );
-        }
+      if (root == nullptr ) { return; }
+
+      auto   db  = this->getDbReadWrite();
+      row_id row = db->addOrGetAttrSetId( prefix );
+
+      todo.emplace(
+        std::make_tuple( prefix, static_cast<flox::Cursor>( root ), row )
+      );
 
       /* Start a transaction */
-      sqlite3pp::transaction txn( this->getDbReadWrite()->db );
+      sqlite3pp::transaction txn( db->db );
       try
         {
           while ( ! todo.empty() )
@@ -235,7 +233,7 @@ class PkgDbInput : public FloxFlakeInput {
             }
 
           /* Mark the prefix and its descendants as "done" */
-          this->dbRW->setPrefixDone( prefix, true );
+          this->dbRW->setPrefixDone( row, true );
         }
       catch( const nix::EvalError & )
         {
@@ -244,7 +242,10 @@ class PkgDbInput : public FloxFlakeInput {
           if ( ! wasRW ) { this->dbRW = nullptr; }
           throw;
         }
+
+      /* Close the transaction. */
       txn.commit();
+
       /* Close the r/w connection if we opened it. */
       if ( ! wasRW ) { this->dbRW = nullptr; }
 

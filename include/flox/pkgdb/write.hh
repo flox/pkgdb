@@ -236,57 +236,43 @@ class PkgDb : public PkgDbReadOnly {
 
 /* -------------------------------------------------------------------------- */
 
-/* Updates */
+    /* Updates */
 
-/**
- * @brief Update the `done` column for an attribute set and all of its
- *        children recursively.
- * @param prefix Attribute set prefix to be updated.
- * @param done Value to update `done` column to.
- */
-void setPrefixDone( const flox::AttrPath & prefix, bool done );
+    /**
+     * @brief Update the `done` column for an attribute set and all of its
+     *        children recursively.
+     * @param prefixId `AttrSets.id` for the prefix to be updated.
+     * @param done Value to update `done` column to.
+     */
+    void setPrefixDone( row_id prefixId, bool done );
+
+    /**
+     * @brief Update the `done` column for an attribute set and all of its
+     *        children recursively.
+     * @param prefix Attribute set prefix to be updated.
+     * @param done Value to update `done` column to.
+     */
+    void setPrefixDone( const flox::AttrPath & prefix, bool done );
 
 
 /* -------------------------------------------------------------------------- */
 
-/**
- * @brief Scrape package definitions from an attribute set.
- *
- * Adds any attributes marked with `recurseForDerivatsions = true` to
- * @a todo list.
- * @param syms Symbol table from @a cursor evaluator.
- * @param target A tuple containing the attribute path to scrape, a cursor,
- *               and a SQLite _row id_.
- * @param todo Queue to add `recurseForDerivations = true` cursors to so they
- *             may be scraped by later invocations.
- */
-  void
-scrape(       nix::SymbolTable & syms
-      , const Target           & target
-      ,       Todos            & todo
-      );
-
-/**
- * @brief Scrape package definitions from an attribute set.
- *
- * Adds any attributes marked with `recurseForDerivatsions = true` to
- * @a todo list.
- * @param syms Symbol table from @a cursor evaluator.
- * @param prefix Attribute path to scrape.
- * @param cursor `nix` evaluator cursor associated with @a prefix
- * @param todo Queue to add `recurseForDerivations = true` cursors to so they
- *             may be scraped by later invocations.
- */
-  inline void
-scrape(       nix::SymbolTable & syms
-      , const flox::AttrPath   & prefix
-      , const flox::Cursor     & cursor
-      ,       Todos            & todo
-      )
-{
-  row_id parentId = this->addOrGetAttrSetId( prefix );
-  scrape( syms, std::make_tuple( prefix, cursor, parentId ), todo );
-}
+    /**
+     * @brief Scrape package definitions from an attribute set.
+     *
+     * Adds any attributes marked with `recurseForDerivatsions = true` to
+     * @a todo list.
+     * @param syms Symbol table from @a cursor evaluator.
+     * @param target A tuple containing the attribute path to scrape, a cursor,
+     *               and a SQLite _row id_.
+     * @param todo Queue to add `recurseForDerivations = true` cursors to so
+     *             they may be scraped by later invocations.
+     */
+      void
+    scrape(       nix::SymbolTable & syms
+          , const Target           & target
+          ,       Todos            & todo
+          );
 
 
 /* -------------------------------------------------------------------------- */

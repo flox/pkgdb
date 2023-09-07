@@ -131,24 +131,22 @@ PkgDb::initTables()
   row_id
 PkgDb::addOrGetAttrSetId( const std::string & attrName, row_id parent )
 {
-  sqlite3pp::query qryId(
+  sqlite3pp::command cmd(
     this->db
-  , "SELECT id FROM AttrSets "
-    "WHERE ( attrName = :attrName ) AND ( parent = :parent )"
+  , "INSERT INTO AttrSets ( attrName, parent ) VALUES ( ?, ? )"
   );
-  qryId.bind( ":attrName", attrName, sqlite3pp::copy );
-  qryId.bind( ":parent", static_cast<long long>( parent ) );
-  auto row = qryId.begin();
-  if ( row == qryId.end() )
+  cmd.bind( 1, attrName, sqlite3pp::copy );
+  cmd.bind( 2, static_cast<long long>( parent ) );
+  if ( sql_rc rcode = cmd.execute(); isSQLError( rcode ) )
     {
-      sqlite3pp::command cmd(
+      sqlite3pp::query qryId(
         this->db
-      , "INSERT OR IGNORE INTO AttrSets ( attrName, parent ) "
-        "VALUES ( :attrName, :parent )"
+      , "SELECT id FROM AttrSets WHERE ( attrName = ? ) AND ( parent = ? )"
       );
-      cmd.bind( ":attrName", attrName, sqlite3pp::copy );
-      cmd.bind( ":parent", static_cast<long long>( parent ) );
-      if ( sql_rc rcode = cmd.execute(); isSQLError( rcode ) )
+      qryId.bind( 1, attrName, sqlite3pp::copy );
+      qryId.bind( 2, static_cast<long long>( parent ) );
+      auto row = qryId.begin();
+      if ( row == qryId.end() )
         {
           throw PkgDbException(
             this->dbPath
@@ -160,9 +158,9 @@ PkgDb::addOrGetAttrSetId( const std::string & attrName, row_id parent )
                     )
           );
         }
-      return this->db.last_insert_rowid();
+      return ( * row ).get<long long>( 0 );
     }
-  return ( * row ).get<long long>( 0 );
+  return this->db.last_insert_rowid();
 }
 
 
@@ -184,9 +182,9 @@ PkgDb::addOrGetDescriptionId( const std::string & description )
 {
   sqlite3pp::query qry(
     this->db
-  , "SELECT id FROM Descriptions WHERE description = :description LIMIT 1"
+  , "SELECT id FROM Descriptions WHERE description = ? LIMIT 1"
   );
-  qry.bind( ":description", description, sqlite3pp::copy );
+  qry.bind( 1, description, sqlite3pp::copy );
   auto rows = qry.begin();
   if ( rows != qry.end() )
     {
@@ -201,9 +199,9 @@ PkgDb::addOrGetDescriptionId( const std::string & description )
 
   sqlite3pp::command cmd(
     this->db
-  , "INSERT INTO Descriptions ( description ) VALUES ( :description )"
+  , "INSERT INTO Descriptions ( description ) VALUES ( ? )"
   );
-  cmd.bind( ":description", description, sqlite3pp::copy );
+  cmd.bind( 1, description, sqlite3pp::copy );
   nix::Activity act(
     * nix::logger
   , nix::lvlDebug
@@ -353,9 +351,8 @@ PkgDb::addPackage(       row_id             parentId
 /* -------------------------------------------------------------------------- */
 
   void
-PkgDb::setPrefixDone( const flox::AttrPath & prefix, bool done )
+PkgDb::setPrefixDone( row_id prefixId, bool done )
 {
-  row_id prefixId = this->addOrGetAttrSetId( prefix );
   sqlite3pp::command cmd( this->db, R"SQL(
     UPDATE AttrSets SET done = :done WHERE id in (
       WITH RECURSIVE Tree AS (
@@ -375,12 +372,18 @@ PkgDb::setPrefixDone( const flox::AttrPath & prefix, bool done )
       throw PkgDbException(
         this->dbPath
       , nix::fmt( "Failed to set AttrSets.done for subtree '%s':(%d) %s"
-                , nix::concatStringsSep( ".", prefix )
+                , nix::concatStringsSep( ".", this->getAttrSetPath( prefixId ) )
                 , rcode
                 , this->db.error_msg()
                 )
       );
     }
+}
+
+  void
+PkgDb::setPrefixDone( const flox::AttrPath & prefix, bool done )
+{
+  this->setPrefixDone( this->addOrGetAttrSetId( prefix ), done );
 }
 
 
