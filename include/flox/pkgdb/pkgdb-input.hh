@@ -206,18 +206,19 @@ class PkgDbInput : public FloxFlakeInput {
 
       Todos todo;
 
+      bool wasRW = this->dbRW != nullptr;
+
       if ( flox::MaybeCursor root = this->getFlake()->maybeOpenCursor( prefix );
            root != nullptr
          )
         {
           todo.emplace(
-            std::make_pair( prefix
-                          , static_cast<flox::Cursor>( root )
-                          )
+            std::make_tuple( prefix
+                           , static_cast<flox::Cursor>( root )
+                           , this->getDbReadWrite()->addOrGetAttrSetId( prefix )
+                           )
           );
         }
-
-      bool wasRW = this->dbRW != nullptr;
 
       /* Start a transaction */
       sqlite3pp::transaction txn( this->getDbReadWrite()->db );
@@ -225,11 +226,9 @@ class PkgDbInput : public FloxFlakeInput {
         {
           while ( ! todo.empty() )
             {
-              auto & [prefix, cursor] = todo.front();
               this->dbRW->scrape(
                 this->getFlake()->state->symbols
-              , prefix
-              , cursor
+              , todo.front()
               , todo
               );
               todo.pop();

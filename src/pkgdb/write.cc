@@ -393,13 +393,14 @@ PkgDb::setPrefixDone( const flox::AttrPath & prefix, bool done )
  * ~1m40s using a queue. */
   void
 PkgDb::scrape(       nix::SymbolTable & syms
-             , const flox::AttrPath   & prefix
-             , const flox::Cursor     & cursor
+             , const Target           & target
              ,       Todos            & todo
              )
 {
+  const auto & [prefix, cursor, parentId] = target;
+
   /* If it has previously been scraped then bail out. */
-  if ( this->completedAttrSet( prefix ) ) { return; }
+  if ( this->completedAttrSet( parentId ) ) { return; }
 
   bool tryRecur = prefix.front() != "packages";
 
@@ -411,9 +412,6 @@ PkgDb::scrape(       nix::SymbolTable & syms
             , nix::concatStringsSep( ".", prefix )
             )
   );
-
-  /* Lookup/create the `pathId' for for this attr-path in our DB. */
-  flox::pkgdb::row_id parentId = this->addOrGetAttrSetId( prefix );
 
   /* Scrape loop over attrs */
   for ( nix::Symbol & aname : cursor->getAttrs() )
@@ -455,7 +453,13 @@ PkgDb::scrape(       nix::SymbolTable & syms
                   , "\tpushing target '" + pathS + "'"
                   );
                 }
-              todo.emplace( std::make_pair( std::move( path ), child ) );
+              row_id childId = this->addOrGetAttrSetId( syms[aname], parentId );
+              todo.emplace( std::make_tuple(
+                              std::move( path )
+                            , std::move( child )
+                            , childId
+                            )
+                          );
             }
         }
       catch( const nix::EvalError & err )

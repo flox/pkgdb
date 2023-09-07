@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <tuple>
+
 #include "flox/pkgdb/read.hh"
 
 
@@ -18,7 +20,7 @@ namespace flox::pkgdb {
 
 /* -------------------------------------------------------------------------- */
 
-using Target = std::pair<flox::AttrPath, flox::Cursor>;
+using Target = std::tuple<flox::AttrPath, flox::Cursor, row_id>;
 using Todos  = std::queue<Target, std::list<Target>>;
 
 
@@ -253,17 +255,38 @@ void setPrefixDone( const flox::AttrPath & prefix, bool done );
  * Adds any attributes marked with `recurseForDerivatsions = true` to
  * @a todo list.
  * @param syms Symbol table from @a cursor evaluator.
- * @param prefix Attribute path to scrape.
- * @param cursor `nix` evaluator cursor associated with @a prefix
+ * @param target A tuple containing the attribute path to scrape, a cursor,
+ *               and a SQLite _row id_.
  * @param todo Queue to add `recurseForDerivations = true` cursors to so they
  *             may be scraped by later invocations.
  */
   void
 scrape(       nix::SymbolTable & syms
+      , const Target           & target
+      ,       Todos            & todo
+      );
+
+/**
+ * @brief Scrape package definitions from an attribute set.
+ *
+ * Adds any attributes marked with `recurseForDerivatsions = true` to
+ * @a todo list.
+ * @param syms Symbol table from @a cursor evaluator.
+ * @param prefix Attribute path to scrape.
+ * @param cursor `nix` evaluator cursor associated with @a prefix
+ * @param todo Queue to add `recurseForDerivations = true` cursors to so they
+ *             may be scraped by later invocations.
+ */
+  inline void
+scrape(       nix::SymbolTable & syms
       , const flox::AttrPath   & prefix
       , const flox::Cursor     & cursor
       ,       Todos            & todo
-      );
+      )
+{
+  row_id parentId = this->addOrGetAttrSetId( prefix );
+  scrape( syms, std::make_tuple( prefix, cursor, parentId ), todo );
+}
 
 
 /* -------------------------------------------------------------------------- */

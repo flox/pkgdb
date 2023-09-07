@@ -224,6 +224,15 @@ class PkgDbReadOnly {
     /**
      * @brief Check to see if database has a complete list of packages under the
      *        prefix @a path.
+     * @param row The `AttrSets.id` to lookup.
+     * @return `true` iff the database has completely scraped the `AttrSet` at
+     *          @a path.
+     */
+    bool completedAttrSet( row_id row );
+
+    /**
+     * @brief Check to see if database has a complete list of packages under the
+     *        prefix @a path.
      * @param path An attribute path prefix such as `packages.x86_64-linux` or
      *             `legacyPackages.aarch64-darwin.python3Packages`.
      * @return `true` iff the database has completely scraped the `AttrSet` at
