@@ -59,7 +59,7 @@ void to_json(         nlohmann::json & jto,   const InputPreferences & prefs );
   template <typename T>
 concept input_preferences_typename =
     std::is_base_of<InputPreferences, T>::value && requires( T ref ) {
-      { ref.getFlakeRef() } -> std::convertible_to<nix::FlakeRef>;
+      { ref.getFlakeRef() } -> std::convertible_to<nix::ref<nix::FlakeRef>>;
     };
 
 
@@ -70,7 +70,12 @@ struct RegistryInput : public InputPreferences {
 
   std::shared_ptr<nix::FlakeRef> from;
 
-  [[nodiscard]] nix::FlakeRef getFlakeRef() const { return * this->from; };
+    [[nodiscard]]
+    nix::ref<nix::FlakeRef>
+  getFlakeRef() const
+  {
+    return static_cast<nix::ref<nix::FlakeRef>>( this->from );
+  };
 
 };  /* End struct `RegistryInput' */
 
@@ -369,25 +374,45 @@ class Registry : FloxFlakeParserMixin
 /* -------------------------------------------------------------------------- */
 
 /** A simple @a RegistryInput that opens a `nix` evaluator for a flake. */
-struct FloxFlakeInput : public InputPreferences {
+class FloxFlakeInput : public InputPreferences {
 
-  std::shared_ptr<FloxFlake> flake;
+  private:
+    nix::ref<nix::FlakeRef>    flakeRef;
+    nix::ref<nix::Store>       store;
+    std::shared_ptr<FloxFlake> flake;
 
-  FloxFlakeInput(       nix::ref<nix::EvalState> & state
-                , const RegistryInput            & input
-                )
-    : flake( std::make_shared<FloxFlake>( state, input.getFlakeRef() ) )
-  {
-    this->subtrees    = input.subtrees;
-    this->stabilities = input.stabilities;
-  }
+  public:
 
-    [[nodiscard]]
-    nix::FlakeRef
-  getFlakeRef() const
-  {
-    return this->flake->lockedFlake.flake.lockedRef;
-  }
+    FloxFlakeInput(       nix::ref<nix::Store> & store
+                  , const RegistryInput        & input
+                  )
+      : flakeRef( input.getFlakeRef() )
+      , store( store )
+    {
+      this->subtrees    = input.subtrees;
+      this->stabilities = input.stabilities;
+    }
+
+      [[nodiscard]]
+      nix::ref<nix::FlakeRef>
+    getFlakeRef() const
+    {
+      return this->flakeRef;
+    }
+
+      [[nodiscard]]
+      nix::ref<FloxFlake>
+    getFlake()
+    {
+      if ( this->flake == nullptr )
+        {
+          this->flake = std::make_shared<FloxFlake>(
+            NixState( this->store ).getState()
+          , * this->flakeRef
+          );
+        }
+      return static_cast<nix::ref<FloxFlake>>( this->flake );
+    }
 
 };  /* End struct `FloxFlakeInput' */
 
@@ -396,16 +421,16 @@ struct FloxFlakeInput : public InputPreferences {
 class FloxFlakeInputFactory {
 
   private:
-    nix::ref<nix::EvalState> state;  /**< `nix` evaluator. */
+    nix::ref<nix::Store> store;  /**< `nix` store connection. */
 
   public:
     using input_type = FloxFlakeInput;
 
-    FloxFlakeInputFactory() : state( NixState().getState() ) {}
+    FloxFlakeInputFactory() : store( NixState().getStore() ) {}
 
-    /** Construct a factory using a `nix` evaluator. */
-    explicit FloxFlakeInputFactory( nix::ref<nix::EvalState> & state )
-      : state( state )
+    /** Construct a factory using a `nix` store connection. */
+    explicit FloxFlakeInputFactory( nix::ref<nix::Store> & store )
+      : store( store )
     {}
 
     /** Construct an input from a @a RegistryInput. */
@@ -413,7 +438,7 @@ class FloxFlakeInputFactory {
       std::shared_ptr<FloxFlakeInput>
     mkInput( const std::string & /* unused */, const RegistryInput & input )
     {
-      return std::make_shared<FloxFlakeInput>( this->state, input );
+      return std::make_shared<FloxFlakeInput>( this->store, input );
     }
 
 };  /* End class `FloxFlakeInputFactory' */

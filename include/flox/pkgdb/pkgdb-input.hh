@@ -55,11 +55,11 @@ class PkgDbInput : public FloxFlakeInput {
             nix::lvlTalkative
           , nix::fmt( "Creating database '%s'", this->dbPath.string() )
           );
-          PkgDb( this->flake->lockedFlake, this->dbPath.string() );
+          PkgDb( this->getFlake()->lockedFlake, this->dbPath.string() );
         }
 
       this->dbRO = std::make_shared<PkgDbReadOnly>(
-        this->flake->lockedFlake.getFingerprint()
+        this->getFlake()->lockedFlake.getFingerprint()
       , this->dbPath.string()
       );
 
@@ -71,7 +71,7 @@ class PkgDbInput : public FloxFlakeInput {
           , nix::fmt( "Clearing outdated database '%s'", this->dbPath.string() )
           );
           std::filesystem::remove( this->dbPath );
-          PkgDb( this->flake->lockedFlake, this->dbPath.string() );
+          PkgDb( this->getFlake()->lockedFlake, this->dbPath.string() );
         }
 
       /* If the schema version is still wrong throw an error, but we don't
@@ -100,18 +100,18 @@ class PkgDbInput : public FloxFlakeInput {
     /**
      * @brief Construct a @a PkgDbInput from a @a RegistryInput and a path to
      *        the database.
-     * @param state `nix` evaluator.
+     * @param store A `nix` store connection.
      * @param input A @a RegistryInput.
      * @param dbPath Path to the database.
      * @param db_path_tag Tag used to disambiguate this constructor from
      *                    other constructor which takes a cache directory.
      */
-    PkgDbInput(       nix::ref<nix::EvalState> & state
-              , const RegistryInput            & input
-              ,       std::filesystem::path      dbPath
-              , const db_path_tag              & /* unused */
+    PkgDbInput(       nix::ref<nix::Store>  & store
+              , const RegistryInput         & input
+              ,       std::filesystem::path   dbPath
+              , const db_path_tag           & /* unused */
               )
-      : FloxFlakeInput( state, input )
+      : FloxFlakeInput( store, input )
       , dbPath( std::move( dbPath ) )
     {
       this->init();
@@ -121,18 +121,20 @@ class PkgDbInput : public FloxFlakeInput {
     /**
      * @brief Construct a @a PkgDbInput from a @a RegistryInput and a path to
      *        the directory where the database should be cached.
-     * @param state `nix` evaluator.
+     * @param store A `nix` store connection.
      * @param input A @a RegistryInput.
      * @param cacheDir Path to the directory where the database should
      *                 be cached.
      */
-    PkgDbInput(       nix::ref<nix::EvalState> & state
-              , const RegistryInput            & input
-              , const std::filesystem::path    & cacheDir = getPkgDbCachedir()
+    PkgDbInput(       nix::ref<nix::Store>  & store
+              , const RegistryInput         & input
+              , const std::filesystem::path & cacheDir = getPkgDbCachedir()
               )
-      : FloxFlakeInput( state, input )
+      : FloxFlakeInput( store, input )
       , dbPath(
-          genPkgDbName( this->flake->lockedFlake.getFingerprint(), cacheDir )
+          genPkgDbName( this->getFlake()->lockedFlake.getFingerprint()
+                      , cacheDir
+                      )
         )
     {
       this->init();
@@ -165,7 +167,7 @@ class PkgDbInput : public FloxFlakeInput {
       if ( this->dbRW == nullptr )
         {
           this->dbRW = std::make_shared<PkgDb>(
-            this->flake->lockedFlake
+            this->getFlake()->lockedFlake
           , this->dbPath.string()
           );
         }
@@ -204,7 +206,7 @@ class PkgDbInput : public FloxFlakeInput {
 
       Todos todo;
 
-      if ( flox::MaybeCursor root = this->flake->maybeOpenCursor( prefix );
+      if ( flox::MaybeCursor root = this->getFlake()->maybeOpenCursor( prefix );
            root != nullptr
          )
         {
@@ -225,7 +227,7 @@ class PkgDbInput : public FloxFlakeInput {
             {
               auto & [prefix, cursor] = todo.front();
               this->dbRW->scrape(
-                this->flake->state->symbols
+                this->getFlake()->state->symbols
               , prefix
               , cursor
               , todo
@@ -309,17 +311,17 @@ class PkgDbInput : public FloxFlakeInput {
 class PkgDbInputFactory {
 
   private:
-    nix::ref<nix::EvalState> state;    /**< `nix` evaluator. */
-    std::filesystem::path    cacheDir; /**< Cache directory. */
+    nix::ref<nix::Store>  store;    /**< `nix` store connection. */
+    std::filesystem::path cacheDir; /**< Cache directory. */
 
   public:
     using input_type = PkgDbInput;
 
     /** Construct a factory using a `nix` evaluator. */
     explicit PkgDbInputFactory(
-      nix::ref<nix::EvalState> & state
-    , std::filesystem::path      cacheDir = getPkgDbCachedir()
-    ) : state( state )
+      nix::ref<nix::Store>  & store
+    , std::filesystem::path   cacheDir = getPkgDbCachedir()
+    ) : store( store )
       , cacheDir( std::move( cacheDir ) )
     {}
 
@@ -328,7 +330,7 @@ class PkgDbInputFactory {
       std::shared_ptr<PkgDbInput>
     mkInput( const std::string & /* unused */, const RegistryInput & input )
     {
-      return std::make_shared<PkgDbInput>( this->state, input, this->cacheDir );
+      return std::make_shared<PkgDbInput>( this->store, input, this->cacheDir );
     }
 
 };  /* End class `PkgDbInputFactory' */

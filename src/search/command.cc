@@ -89,8 +89,8 @@ SearchCommand::SearchCommand() : parser( "search" )
   void
 SearchCommand::initRegistry()
 {
-  nix::ref<nix::EvalState> state = this->getState();
-  pkgdb::PkgDbInputFactory factory( state );  // TODO: cacheDir
+  nix::ref<nix::Store> store = this->getStore();
+  pkgdb::PkgDbInputFactory factory( store );  // TODO: cacheDir
   this->registry = std::make_shared<Registry<pkgdb::PkgDbInputFactory>>(
     this->params.registry
   , factory

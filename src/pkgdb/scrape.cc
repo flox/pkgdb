@@ -39,12 +39,12 @@ ScrapeCommand::ScrapeCommand() : parser( "scrape" )
   void
 ScrapeCommand::initInput()
 {
-  nix::ref<nix::EvalState> state = this->getState();
+  nix::ref<nix::Store> store = this->getStore();
   /* Change the database path if `--database' was given. */
   if ( this->dbPath.has_value() )
     {
       this->input = std::make_optional<PkgDbInput>(
-        state
+        store
       , this->getRegistryInput()
       , * this->dbPath
       , PkgDbInput::db_path_tag()
@@ -53,7 +53,7 @@ ScrapeCommand::initInput()
   else
     {
       this->input = std::make_optional<PkgDbInput>(
-        state
+        store
       , this->getRegistryInput()
       );
     }
