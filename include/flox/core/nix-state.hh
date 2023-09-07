@@ -41,8 +41,8 @@ struct NixState {
 
   public:
 
-    std::shared_ptr<nix::Store>     store;  /**< Nix store connection.   */
-    std::shared_ptr<nix::EvalState> state;  /**< Nix evaluator instance. */
+    std::shared_ptr<nix::Store>     store;  /**< `nix` store connection.   */
+    std::shared_ptr<nix::EvalState> state;  /**< `nix` evaluator instance. */
 
 
 /* -------------------------------------------------------------------------- */
@@ -59,7 +59,7 @@ struct NixState {
     explicit NixState( nix::ref<nix::Store> & store
                      , nix::Verbosity         verbosity = nix::lvlInfo
                      )
-      : store( (std::shared_ptr<nix::Store>) store )
+      : store( static_cast<std::shared_ptr<nix::Store>>( store ) )
     {
       nix::verbosity = verbosity;
       initNix();
@@ -92,7 +92,7 @@ struct NixState {
         {
           this->store = nix::openStore();
         }
-      return (nix::ref<nix::Store>) this->store;
+      return static_cast<nix::ref<nix::Store>>( this->store );
     }
 
 
@@ -112,7 +112,7 @@ struct NixState {
           );
           this->state->repair = nix::NoRepair;
         }
-      return (nix::ref<nix::EvalState>) this->state;
+      return static_cast<nix::ref<nix::EvalState>>( this->state );
     }
 
 
