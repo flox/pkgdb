@@ -386,6 +386,11 @@ PkgDb::setPrefixDone( const flox::AttrPath & prefix, bool done )
 
 /* -------------------------------------------------------------------------- */
 
+/* NOTE:
+ * Benchmarks on large catalogs have indicated that using a _todo_ queue instead
+ * of recursion is faster and consumes less memory.
+ * Repeated runs against `nixpkgs-flox` come in at ~2m03s using recursion and
+ * ~1m40s using a queue. */
   void
 PkgDb::scrape(       nix::SymbolTable & syms
              , const flox::AttrPath   & prefix
@@ -413,16 +418,19 @@ PkgDb::scrape(       nix::SymbolTable & syms
   /* Scrape loop over attrs */
   for ( nix::Symbol & aname : cursor->getAttrs() )
     {
-      const std::string pathS =
-        nix::concatStringsSep( ".", prefix ) + "." + syms[aname];
-
       if ( syms[aname] == "recurseForDerivations" ) { continue; }
+
+      /* Used for logging, but can skip it at low verbosity levels. */
+      const std::string pathS =
+        ( nix::lvlTalkative <= nix::verbosity )
+        ? nix::concatStringsSep( ".", prefix ) + "." + syms[aname]
+        : "";
 
       nix::Activity act(
         * nix::logger
       , nix::lvlTalkative
       , nix::actUnknown
-      , nix::fmt( "\tevaluating attribute '%s'", pathS )
+      , "\tevaluating attribute '" + pathS + "'"
       );
 
       try
@@ -440,9 +448,13 @@ PkgDb::scrape(       nix::SymbolTable & syms
             {
               flox::AttrPath path = prefix;
               path.emplace_back( syms[aname] );
-              nix::logger->log( nix::lvlTalkative
-                              , nix::fmt( "\tpushing target '%s'", pathS )
-                              );
+              if ( nix::lvlTalkative <= nix::verbosity )
+                {
+                  nix::logger->log(
+                    nix::lvlTalkative
+                  , "\tpushing target '" + pathS + "'"
+                  );
+                }
               todo.emplace( std::make_pair( std::move( path ), child ) );
             }
         }
