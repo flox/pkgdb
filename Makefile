@@ -107,9 +107,16 @@ endif
 bin_CXXFLAGS ?=
 bin_LDFLAGS  ?=
 
+# Debug Mode
 ifneq ($(DEBUG),)
 CXXFLAGS += -ggdb3 -pg
 LDFLAGS  += -ggdb3 -pg
+endif
+
+# Coverage Mode
+ifneq ($(COV),)
+CXXFLAGS += -fprofile-arcs -ftest-coverage
+LDFLAGS  += -fprofile-arcs -ftest-coverage
 endif
 
 
@@ -198,7 +205,8 @@ clean: FORCE
 	-$(RM) $(CLEANFILES)
 	-$(RM) -r $(CLEANDIRS)
 	-$(RM) result
-	-$(RM) gmon.out *.log
+	-$(RM) **/gmon.out gmon.out **/*.log *.log
+	-$(RM) **/*.gcno *.gcno **/*.gcda *.gcda **/*.gcov *.gcov
 
 
 # ---------------------------------------------------------------------------- #
