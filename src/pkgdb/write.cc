@@ -147,7 +147,7 @@ PkgDb::addOrGetAttrSetId( const std::string & attrName, row_id parent )
         "VALUES ( :attrName, :parent )"
       );
       cmd.bind( ":attrName", attrName, sqlite3pp::copy );
-      cmd.bind( ":parent", (long long) parent );
+      cmd.bind( ":parent", static_cast<long long>( parent ) );
       if ( sql_rc rcode = cmd.execute(); isSQLError( rcode ) )
         {
           throw PkgDbException(
@@ -368,7 +368,7 @@ PkgDb::setPrefixDone( const flox::AttrPath & prefix, bool done )
       JOIN AttrSets AS Parent ON ( C.parent = Parent.id )
     )
   )SQL" );
-  cmd.bind( ":root", (long long) prefixId );
+  cmd.bind( ":root", static_cast<long long>( prefixId ) );
   cmd.bind( ":done", static_cast<int>( done ) );
   if ( sql_rc rcode = cmd.execute(); isSQLError( rcode ) )
     {

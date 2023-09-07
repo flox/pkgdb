@@ -21,7 +21,7 @@ namespace flox::search {
 from_json( const nlohmann::json & jfrom, SearchQuery & qry )
 {
   qry.clear();
-  pkgdb::from_json( jfrom, (pkgdb::PkgDescriptorBase &) qry );
+  pkgdb::from_json( jfrom, dynamic_cast<pkgdb::PkgDescriptorBase &>( qry ) );
   try { jfrom.at( "match" ).get_to( qry.match ); }
   catch( const std::out_of_range & ) {}
 }
@@ -29,7 +29,7 @@ from_json( const nlohmann::json & jfrom, SearchQuery & qry )
   void
 to_json( nlohmann::json & jto, const SearchQuery & qry )
 {
-  pkgdb::to_json( jto, (pkgdb::PkgDescriptorBase &) qry );
+  pkgdb::to_json( jto, dynamic_cast<const pkgdb::PkgDescriptorBase &>( qry ) );
   jto["match"] = qry.match;
 }
 

@@ -38,7 +38,8 @@ VerboseParser::VerboseParser( const std::string & name
         {
           nix::verbosity =
             ( nix::verbosity <= nix::lvlError )
-              ? nix::lvlError : (nix::Verbosity) ( nix::verbosity - 1 );
+            ? nix::lvlError
+            : static_cast<nix::Verbosity>( nix::verbosity - 1 );
         }
       ).default_value( false ).implicit_value( true )
       .append();
@@ -50,7 +51,8 @@ VerboseParser::VerboseParser( const std::string & name
         {
           nix::verbosity =
             ( nix::lvlVomit <= nix::verbosity )
-              ? nix::lvlVomit : (nix::Verbosity) ( nix::verbosity + 1 );
+            ? nix::lvlVomit
+            : static_cast<nix::Verbosity>( nix::verbosity + 1 );
         }
       ).default_value( false ).implicit_value( true )
       .append();

@@ -199,7 +199,7 @@ PkgDbReadOnly::hasAttrSet( const flox::AttrPath & path )
         "WHERE ( attrName = :attrName ) AND ( parent = :parent )"
       );
       qryId.bind( ":attrName", a, sqlite3pp::copy );
-      qryId.bind( ":parent", (long long) row );
+      qryId.bind( ":parent", static_cast<long long>( row ) );
       auto i = qryId.begin();
       if ( i == qryId.end() ) { return false; }  /* No such path. */
       row = ( * i ).get<long long>( 0 );
@@ -219,7 +219,7 @@ PkgDbReadOnly::getDescription( row_id descriptionId )
     this->db
   , "SELECT description FROM Descriptions WHERE id = :descriptionId"
   );
-  qryId.bind( ":descriptionId", (long long) descriptionId );
+  qryId.bind( ":descriptionId", static_cast<long long>( descriptionId ) );
   auto i = qryId.begin();
   /* Handle no such path. */
   if ( i == qryId.end() )
@@ -251,7 +251,7 @@ PkgDbReadOnly::hasPackage( const flox::AttrPath & path )
   , "SELECT id FROM Packages WHERE ( parentId = :parentId ) "
     "AND ( attrName = :attrName ) LIMIT 1"
   );
-  qryPkgs.bind( ":parentId", (long long) id );
+  qryPkgs.bind( ":parentId", static_cast<long long>( id ) );
   qryPkgs.bind( ":attrName", std::string( path.back() ), sqlite3pp::copy );
   return ( * qryPkgs.begin() ).get<int>( 0 ) != 0;
 }
@@ -272,7 +272,7 @@ PkgDbReadOnly::getAttrSetId( const flox::AttrPath & path )
         "WHERE ( attrName = :attrName ) AND ( parent = :parent ) LIMIT 1"
       );
       qryId.bind( ":attrName", a, sqlite3pp::copy );
-      qryId.bind( ":parent", (long long) id );
+      qryId.bind( ":parent", static_cast<long long>( id ) );
       auto i = qryId.begin();
       /* Handle no such path. */
       if ( i == qryId.end() )
@@ -304,7 +304,7 @@ PkgDbReadOnly::getAttrSetPath( row_id row )
         this->db
       , "SELECT parent, attrName FROM AttrSets WHERE ( id = :id )"
       );
-      qry.bind( ":id", (long long) row );
+      qry.bind( ":id", static_cast<long long>( row ) );
       auto i = qry.begin();
       /* Handle no such path. */
       if ( i == qry.end() )
@@ -339,7 +339,7 @@ PkgDbReadOnly::getPackageId( const flox::AttrPath & path )
   , "SELECT id FROM Packages WHERE "
     "( parentId = :parentId ) AND ( attrName = :attrName )"
   );
-  qry.bind( ":parentId", (long long) parent );
+  qry.bind( ":parentId", static_cast<long long>( parent ) );
   qry.bind( ":attrName", path.back(), sqlite3pp::copy );
   auto i = qry.begin();
   /* Handle no such path. */
@@ -364,7 +364,7 @@ PkgDbReadOnly::getPackagePath( row_id row )
     this->db
   , "SELECT parentId, attrName FROM Packages WHERE ( id = :id )"
   );
-  qry.bind( ":id", (long long) row );
+  qry.bind( ":id", static_cast<long long>( row ) );
   auto i = qry.begin();
   /* Handle no such path. */
   if ( i == qry.end() )
@@ -397,7 +397,7 @@ PkgDbReadOnly::getDescendantAttrSets( row_id root )
       WHERE ( C.id != :root ) ORDER BY C.depth, C.parent
     )SQL"
   );
-  qry.bind( ":root", (long long) root );
+  qry.bind( ":root", static_cast<long long>( root ) );
   std::vector<row_id> descendants;
   for ( auto row : qry )
     {
@@ -439,7 +439,7 @@ PkgDbReadOnly::getPackage( row_id row )
       LIMIT 1
     )SQL"
   );
-  qry.bind( ":row", (long long) row );
+  qry.bind( ":row", static_cast<long long>( row ) );
   return nlohmann::json::parse( ( * qry.begin() ).get<std::string>( 0 ) );
 }
 

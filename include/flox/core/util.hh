@@ -42,9 +42,9 @@ struct std::hash<std::list<std::string_view>>
     std::size_t   hash = std::hash<std::string_view>{}( * itr );
     for ( ; itr != lst.cend(); ++itr )
       {
-        hash = ( hash >> ( (unsigned char) 1 ) ) ^
+        hash = ( hash >> ( static_cast<unsigned char>( 1 ) ) ) ^
                ( std::hash<std::string_view>{}( * itr ) <<
-                 ( (unsigned char) 1 )
+                 ( static_cast<unsigned char>( 1 ) )
                );
       }
     return hash;

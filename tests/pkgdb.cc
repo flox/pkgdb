@@ -560,7 +560,7 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
       {
         ++count;
         flox::pkgdb::match_strength strength =
-          (flox::pkgdb::match_strength) row.get<int>( 0 );
+          static_cast<flox::pkgdb::match_strength>( row.get<int>( 0 ) );
         if ( count == 1 )
           {
             EXPECT_EQ( strength, flox::pkgdb::MS_EXACT_PNAME );
@@ -603,7 +603,7 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
       {
         ++count;
         flox::pkgdb::match_strength strength =
-          (flox::pkgdb::match_strength) row.get<int>( 0 );
+          static_cast<flox::pkgdb::match_strength>( row.get<int>( 0 ) );
         if ( count == 1 )
           {
             EXPECT_EQ( strength, flox::pkgdb::MS_PARTIAL_PNAME_DESC );
@@ -736,12 +736,12 @@ test_getPackages1( flox::pkgdb::PkgDb & db )
     , ( 4, :legacyDarwinId,   'hello', 'hello', '["out"]', :descriptionId )
     , ( 5, :packagesDarwinId, 'hello', 'hello', '["out"]', :descriptionId )
   )SQL" );
-  cmd.bind( ":descriptionId",    (long long) desc  );
-  cmd.bind( ":stableLinuxId",    (long long) stableLinux );
-  cmd.bind( ":unstableLinuxId",  (long long) unstableLinux );
-  cmd.bind( ":packagesLinuxId",  (long long) packagesLinux );
-  cmd.bind( ":legacyDarwinId",   (long long) legacyDarwin );
-  cmd.bind( ":packagesDarwinId", (long long) packagesDarwin );
+  cmd.bind( ":descriptionId",    static_cast<long long>( desc )  );
+  cmd.bind( ":stableLinuxId",    static_cast<long long>( stableLinux ) );
+  cmd.bind( ":unstableLinuxId",  static_cast<long long>( unstableLinux ) );
+  cmd.bind( ":packagesLinuxId",  static_cast<long long>( packagesLinux ) );
+  cmd.bind( ":legacyDarwinId",   static_cast<long long>( legacyDarwin ) );
+  cmd.bind( ":packagesDarwinId", static_cast<long long>( packagesDarwin ) );
   if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
     {
       throw flox::pkgdb::PkgDbException(
