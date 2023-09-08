@@ -23,7 +23,7 @@ ResolveCommand::addResolveParamArgs( argparse::ArgumentParser & parser )
                .help( "query parameters" )
                .required()
                .metavar( "QUERY" )
-               .action( [&]( const std::string & input )
+               .action( [&]( const std::string & query )
                         {
                           pkgdb::PkgQueryArgs args;
                           nlohmann::json::parse( query ).get_to( args );

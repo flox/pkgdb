@@ -77,6 +77,7 @@ SRCS           =  $(call rwildcard,src,*.cc)
 bin_SRCS       =  src/main.cc
 bin_SRCS       += $(addprefix src/pkgdb/,scrape.cc get.cc command.cc)
 bin_SRCS       += $(addprefix src/search/,command.cc)
+bin_SRCS       += $(addprefix src/resolver/,command.cc)
 lib_SRCS       =  $(filter-out $(bin_SRCS),$(SRCS))
 test_SRCS      =  $(wildcard tests/*.cc)
 ALL_SRCS       = $(SRCS) $(test_SRCS)

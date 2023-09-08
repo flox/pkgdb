@@ -170,19 +170,19 @@ from_json( const nlohmann::json & jfrom, SearchParams & params )
 
 
   void
-to_json( nlohmann::json & jto, const SearchParams & prefs )
+to_json( nlohmann::json & jto, const SearchParams & params )
 {
   jto = {
-    { "registry", prefs.registry }
-  , { "systems",  prefs.systems  }
+    { "registry", params.registry }
+  , { "systems",  params.systems  }
   , { "allow", {
-        { "unfree",   prefs.allow.unfree   }
-      , { "broken",   prefs.allow.broken   }
-      , { "licenses", prefs.allow.licenses }
+        { "unfree",   params.allow.unfree   }
+      , { "broken",   params.allow.broken   }
+      , { "licenses", params.allow.licenses }
       }
     }
-  , { "semver", { { "preferPreReleases", prefs.semver.preferPreReleases } } }
-  , { "query", prefs.query }
+  , { "semver", { { "preferPreReleases", params.semver.preferPreReleases } } }
+  , { "query", params.query }
   };
 }
 
