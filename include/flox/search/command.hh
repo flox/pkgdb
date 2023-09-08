@@ -88,7 +88,7 @@ class SearchCommand : public PkgDbRegistryMixin, public PkgQueryMixin {
 
     SearchParams params;
 
-    /** Add argument to any parser to construct a @a search::SearchParams. */
+    /** Add argument to any parser to construct a @a SearchParams. */
       argparse::Argument &
     addSearchParamArgs( argparse::ArgumentParser & parser );
 

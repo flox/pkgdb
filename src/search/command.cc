@@ -22,7 +22,6 @@
 
 /* -------------------------------------------------------------------------- */
 
-/** Interfaces used to search for packages in flakes. */
 namespace flox::search {
 
 /* -------------------------------------------------------------------------- */
@@ -104,8 +103,7 @@ SearchCommand::addSearchParamArgs( argparse::ArgumentParser & parser )
 SearchCommand::SearchCommand() : parser( "search" )
 {
   this->parser.add_description(
-    "Search a set of flakes and emit a list satisfactory DB + "
-    "`Packages.id' pairs"
+    "Search a set of flakes and emit a list satisfactory packages"
   );
   this->addSearchParamArgs( this->parser );
 }

@@ -160,6 +160,19 @@ struct ResolveOneParams {
   /** Reset preferences to default/empty state. */
   void clear();
 
+  /**
+   * Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to lookup
+   * packages in a particular input.
+   * @param input The input name to be searched.
+   * @param pqa   A set of query args to _fill_ with preferences.
+   * @return `true` if @a pqa was modified, indicating that the input should be
+   *         searched, `false` otherwise.
+   */
+  bool fillPkgQueryArgs( const std::string         & input
+                       ,       pkgdb::PkgQueryArgs & pqa
+                       ) const;
+
+
 };  /* End struct `ResolveOneParams' */
 
 
