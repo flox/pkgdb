@@ -46,7 +46,12 @@ struct PkgQueryMixin {
 
 /* -------------------------------------------------------------------------- */
 
-/** Provides a registry of @a PkgDb managers. */
+/**
+ * @brief Provides a registry of @a PkgDb managers.
+ *
+ * Derived classes must provide their own @a getRegistryRaw and @a getSystems
+ * implementations to support @a initRegistry and @a scrapeIfNeeded.
+ */
 struct PkgDbRegistryMixin : virtual public NixState {
 
   protected:

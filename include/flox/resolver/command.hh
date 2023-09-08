@@ -19,7 +19,7 @@ namespace flox::resolver {
 
 /* -------------------------------------------------------------------------- */
 
-struct ResolveCommand : public NixState, public PkgQueryMixin {
+struct ResolveCommand : public NixState, public search::PkgQueryMixin {
 
 };  /* End struct `ResolveCommand' */
 

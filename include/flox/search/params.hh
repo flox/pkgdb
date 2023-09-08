@@ -73,7 +73,7 @@ void to_json(         nlohmann::json & jto,   const SearchQuery & qry );
 /**
  * @brief SearchParams used to search for packages in a collection of inputs.
  *
- * @example
+ * Example Parameters:
  * ```
  * {
  *   "registry": {
@@ -121,7 +121,7 @@ struct SearchParams {
 
 /* -------------------------------------------------------------------------- */
 
-  /** Settings and fetcher information associated with inputs. */
+  /** @brief Settings and fetcher information associated with inputs. */
   RegistryRaw registry;
 
   /**
@@ -131,7 +131,7 @@ struct SearchParams {
   std::vector<std::string> systems;
 
 
-  /** Allow/disallow packages with certain metadata. */
+  /** @brief Allow/disallow packages with certain metadata. */
   struct Allows {
 
     /** Whether to include packages which are explicitly marked `unfree`. */
@@ -146,7 +146,7 @@ struct SearchParams {
   } allow;
 
 
-  /** Settings associated with semantic version processing. */
+  /** @brief Settings associated with semantic version processing. */
   struct Semver {
 
     /** Whether pre-release versions should be ordered before releases. */
