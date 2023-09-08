@@ -29,12 +29,12 @@ PkgDb::writeInput()
   sqlite3pp::command cmd(
     this->db
   , "INSERT OR IGNORE INTO LockedFlake ( fingerprint, string, attrs ) VALUES"
-    "  ( :fingerprint, :string, :attrs )"
+    "  ( ?, ?, ? )"
   );
   std::string fpStr = fingerprint.to_string( nix::Base16, false );
-  cmd.bind( ":fingerprint", fpStr, sqlite3pp::copy );
-  cmd.bind( ":string", this->lockedRef.string, sqlite3pp::nocopy );
-  cmd.bind( ":attrs",  this->lockedRef.attrs.dump(), sqlite3pp::copy );
+  cmd.bind( 1, fpStr, sqlite3pp::copy );
+  cmd.bind( 2, this->lockedRef.string, sqlite3pp::nocopy );
+  cmd.bind( 3,  this->lockedRef.attrs.dump(), sqlite3pp::copy );
   if ( sql_rc rcode = cmd.execute(); isSQLError( rcode ) )
     {
       throw PkgDbException(
@@ -354,10 +354,10 @@ PkgDb::addPackage(       row_id             parentId
 PkgDb::setPrefixDone( row_id prefixId, bool done )
 {
   sqlite3pp::command cmd( this->db, R"SQL(
-    UPDATE AttrSets SET done = :done WHERE id in (
+    UPDATE AttrSets SET done = ? WHERE id in (
       WITH RECURSIVE Tree AS (
         SELECT id, parent, 0 as depth FROM AttrSets
-        WHERE ( id = :root )
+        WHERE ( id = ? )
         UNION ALL SELECT O.id, O.parent, ( Parent.depth + 1 ) AS depth
         FROM AttrSets O
         JOIN Tree AS Parent ON ( Parent.id = O.parent )
@@ -365,8 +365,8 @@ PkgDb::setPrefixDone( row_id prefixId, bool done )
       JOIN AttrSets AS Parent ON ( C.parent = Parent.id )
     )
   )SQL" );
-  cmd.bind( ":root", static_cast<long long>( prefixId ) );
-  cmd.bind( ":done", static_cast<int>( done ) );
+  cmd.bind( 1, static_cast<int>( done ) );
+  cmd.bind( 2, static_cast<long long>( prefixId ) );
   if ( sql_rc rcode = cmd.execute(); isSQLError( rcode ) )
     {
       throw PkgDbException(
