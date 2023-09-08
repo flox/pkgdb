@@ -46,31 +46,12 @@ struct PkgQueryMixin {
 
 /* -------------------------------------------------------------------------- */
 
-/**
- * @brief Search parameters _single JSON object_ parser.
- *
- * This uses the same _plumbin_ as @a InputsMixin and @a PkgQueryMixin for
- * post-processing, but does not use their actual parsers.
- */
-struct SearchParamsMixin : virtual public NixState, public PkgQueryMixin {
-
-  SearchParams params;
-
-  /** Add argument to any parser to construct a @a search::SearchParams. */
-  argparse::Argument & addSearchParamArgs( argparse::ArgumentParser & parser );
-
-};  /* End struct `SearchParamsMixin' */
-
-
-/* -------------------------------------------------------------------------- */
-
-/** Search flakes for packages satisfying a set of filters. */
-struct SearchCommand : public SearchParamsMixin
-{
+/** Provides a registry of @a PkgDb managers. */
+struct PkgDbRegistryMixin : virtual public NixState {
 
   protected:
 
-    bool force = false;  /**< Whether to force re-evaluation. */
+    bool force = false;  /**< Whether to force re-evaluation of flakes. */
 
     std::shared_ptr<Registry<pkgdb::PkgDbInputFactory>> registry;
 
@@ -83,6 +64,39 @@ struct SearchCommand : public SearchParamsMixin
      * those flakes and closed before returning from this function.
      */
     void scrapeIfNeeded();
+
+    /** @return A raw registry used to initialize. */
+    [[nodiscard]] virtual RegistryRaw getRegistryRaw() = 0;
+
+    /** @return A list of systems to be scraped. */
+    [[nodiscard]] virtual std::vector<std::string> & getSystems() = 0;
+
+};  /* End struct `PkgDbRegistryMixin' */
+
+
+/* -------------------------------------------------------------------------- */
+
+/** Search flakes for packages satisfying a set of filters. */
+class SearchCommand : public PkgDbRegistryMixin, public PkgQueryMixin {
+
+  private:
+
+    SearchParams params;
+
+    /** Add argument to any parser to construct a @a search::SearchParams. */
+      argparse::Argument &
+    addSearchParamArgs( argparse::ArgumentParser & parser );
+
+
+  protected:
+
+      [[nodiscard]]
+      virtual RegistryRaw
+    getRegistryRaw() override { return this->params.registry; }
+
+      [[nodiscard]]
+      virtual std::vector<std::string> &
+    getSystems() override { return this->params.systems; }
 
 
   public:

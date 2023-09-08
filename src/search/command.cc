@@ -55,8 +55,35 @@ PkgQueryMixin::queryDb( pkgdb::PkgDbReadOnly & pdb ) const
 
 /* ========================================================================== */
 
+  void
+PkgDbRegistryMixin::initRegistry()
+{
+  nix::ref<nix::Store> store = this->getStore();
+  pkgdb::PkgDbInputFactory factory( store );  // TODO: cacheDir
+  this->registry = std::make_shared<Registry<pkgdb::PkgDbInputFactory>>(
+    this->getRegistryRaw()
+  , factory
+  );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
+PkgDbRegistryMixin::scrapeIfNeeded()
+{
+  assert( this->registry != nullptr );
+  for ( auto & [name, input] : * this->registry )
+    {
+      input->scrapeSystems( this->getSystems() );
+    }
+}
+
+
+/* ========================================================================== */
+
   argparse::Argument &
-SearchParamsMixin::addSearchParamArgs( argparse::ArgumentParser & parser )
+SearchCommand::addSearchParamArgs( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "parameters" )
                .help( "search paramaters as inline JSON or a path to a file" )
@@ -72,7 +99,7 @@ SearchParamsMixin::addSearchParamArgs( argparse::ArgumentParser & parser )
 }
 
 
-/* ========================================================================== */
+/* -------------------------------------------------------------------------- */
 
 SearchCommand::SearchCommand() : parser( "search" )
 {
@@ -81,33 +108,6 @@ SearchCommand::SearchCommand() : parser( "search" )
     "`Packages.id' pairs"
   );
   this->addSearchParamArgs( this->parser );
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  void
-SearchCommand::initRegistry()
-{
-  nix::ref<nix::Store> store = this->getStore();
-  pkgdb::PkgDbInputFactory factory( store );  // TODO: cacheDir
-  this->registry = std::make_shared<Registry<pkgdb::PkgDbInputFactory>>(
-    this->params.registry
-  , factory
-  );
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  void
-SearchCommand::scrapeIfNeeded()
-{
-  assert( this->registry != nullptr );
-  for ( auto & [name, input] : * this->registry )
-    {
-      input->scrapeSystems( this->params.systems );
-    }
 }
 
 

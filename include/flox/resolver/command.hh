@@ -9,14 +9,8 @@
 
 #pragma once
 
-#include <vector>
-#include <functional>
-
-#include "flox/flox-flake.hh"
-#include "flox/pkgdb/command.hh"
-#include "flox/pkgdb/pkgdb-input.hh"
+#include "flox/search/command.hh"
 #include "flox/resolver/params.hh"
-#include "flox/registry.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -25,6 +19,9 @@ namespace flox::resolver {
 
 /* -------------------------------------------------------------------------- */
 
+struct ResolveCommand : public NixState, public PkgQueryMixin {
+
+};  /* End struct `ResolveCommand' */
 
 
 /* -------------------------------------------------------------------------- */
