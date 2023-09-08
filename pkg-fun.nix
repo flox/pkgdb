@@ -40,7 +40,7 @@
   nativeBuildInputs     = [pkg-config];
   buildInputs           = [sqlite.dev nlohmann_json argparse sqlite3pp];
   nix_INCDIR            = nix.dev.outPath + "/include";
-  boost_CFLAGS          = "-I" + boost.outPath + "/include";
+  boost_CFLAGS          = "-I" + boost.dev.outPath + "/include";
   libExt                = stdenv.hostPlatform.extensions.sharedLibrary;
   SEMVER_PATH           = semver.outPath + "/bin/semver";
   configurePhase        = ''

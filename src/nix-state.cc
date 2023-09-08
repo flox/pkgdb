@@ -7,11 +7,10 @@
  *
  * -------------------------------------------------------------------------- */
 
+#include <stddef.h>
+
 #include <nix/shared.hh>
 #include <nix/eval.hh>
-#include <nix/eval-cache.hh>
-#include <nix/store-api.hh>
-#include <nix/flake/flake.hh>
 
 #include "flox/core/nix-state.hh"
 
