@@ -62,6 +62,8 @@ struct SearchQuery : pkgdb::PkgDescriptorBase {
 };  /* End struct "SearchQuery' */
 
 
+/* -------------------------------------------------------------------------- */
+
 void from_json( const nlohmann::json & jfrom,       SearchQuery & qry );
 void to_json(         nlohmann::json & jto,   const SearchQuery & qry );
 
@@ -178,8 +180,8 @@ struct SearchParams {
 
 /* -------------------------------------------------------------------------- */
 
-void from_json( const nlohmann::json & jfrom,       SearchParams & prefs );
-void to_json(         nlohmann::json & jto,   const SearchParams & prefs );
+void from_json( const nlohmann::json & jfrom,       SearchParams & params );
+void to_json(         nlohmann::json & jto,   const SearchParams & params );
 
 
 /* -------------------------------------------------------------------------- */

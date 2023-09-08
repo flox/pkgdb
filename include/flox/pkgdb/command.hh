@@ -21,9 +21,7 @@ namespace flox::pkgdb {
 /* -------------------------------------------------------------------------- */
 
 /** Adds a single package database path to a state blob. */
-struct DbPathMixin
-  :         public command::CommandStateMixin
-  , virtual public flox::NixState
+struct DbPathMixin : virtual public flox::NixState
 {
 
   std::optional<std::filesystem::path> dbPath;
@@ -55,8 +53,6 @@ struct PkgDbMixin
    *        @a dbPath or @a flake value.
    */
   void openPkgDb();
-
-  inline void postProcessArgs() override { this->openPkgDb(); }
 
   /**
    * @brief Add `target` argument to any parser to read either a `flake-ref` or
@@ -91,12 +87,6 @@ struct ScrapeCommand
 
     /** @brief Initialize @a input from @a registryInput. */
     void initInput();
-
-    /**
-     * @brief Invoke "child" `preProcessArgs` for `AttrPathMixin`, and
-     *        @a initInput.
-     */
-    void postProcessArgs() override;
 
     /**
      * @brief Execute the `scrape` routine.
@@ -141,9 +131,6 @@ struct GetCommand
   row_id                 id     = 0;
 
   GetCommand();
-
-  /** Prevent "child" `postProcessArgs` routines from running */
-  void postProcessArgs() override {}
 
   /**
    * @brief Execute the `get id` routine.

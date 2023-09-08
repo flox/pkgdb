@@ -53,30 +53,8 @@ struct VerboseParser : public argparse::ArgumentParser {
 
 /* -------------------------------------------------------------------------- */
 
-/** Virtual class for _mixins_ which extend a command's state blob */
-struct CommandStateMixin {
-
-  constexpr CommandStateMixin()                             = default;
-  constexpr CommandStateMixin( const CommandStateMixin &  ) = default;
-  constexpr CommandStateMixin(       CommandStateMixin && ) = default;
-
-  virtual ~CommandStateMixin() = default;
-
-  CommandStateMixin & operator=( const CommandStateMixin &  ) = default;
-  CommandStateMixin & operator=(       CommandStateMixin && ) = default;
-
-  /** Hook run after parsing arguments and before running commands. */
-  virtual void postProcessArgs() {};
-
-};  /* End struct `CommandStateMixin' */
-
-
-/* -------------------------------------------------------------------------- */
-
 /** Extend a command's state blob with a single @a RegistryInput. */
-class InlineInputMixin
-  :         public CommandStateMixin
-  , virtual public NixState
+class InlineInputMixin : virtual public NixState
 {
 
   private:
@@ -117,7 +95,7 @@ class InlineInputMixin
 /* -------------------------------------------------------------------------- */
 
 /** Extend a command state blob with an attribute path to "target". */
-struct AttrPathMixin : public CommandStateMixin {
+struct AttrPathMixin {
 
   flox::AttrPath attrPath;
 
@@ -135,8 +113,6 @@ struct AttrPathMixin : public CommandStateMixin {
    * If `attrPath` is a catalog with no stability use `stable`.
    */
   void fixupAttrPath();
-
-  inline void postProcessArgs() override { this->fixupAttrPath(); }
 
 };  /* End struct `AttrPathMixin' */
 

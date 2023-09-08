@@ -22,15 +22,13 @@
 
 /* -------------------------------------------------------------------------- */
 
-namespace flox {
-
-  /** Interfaces used to search for packages in flakes. */
-  namespace search {
+/** Interfaces used to search for packages in flakes. */
+namespace flox::search {
 
 /* -------------------------------------------------------------------------- */
 
 /** Package query parser. */
-struct PkgQueryMixin : virtual public command::CommandStateMixin {
+struct PkgQueryMixin {
 
   pkgdb::PkgQuery query;
 
@@ -100,12 +98,6 @@ struct SearchCommand : public SearchParamsMixin
                 );
 
     /**
-     * Invoke "child" `preProcessArgs`, and trigger scraping if necessary.
-     * This may trigger scraping.
-     */
-    void postProcessArgs() override;
-
-    /**
      * Execute the `search` routine.
      * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
      */
@@ -116,8 +108,7 @@ struct SearchCommand : public SearchParamsMixin
 
 /* -------------------------------------------------------------------------- */
 
-  }  /* End namespaces `flox::search' */
-}  /* End namespaces `flox' */
+}  /* End namespaces `flox::search' */
 
 
 /* -------------------------------------------------------------------------- *

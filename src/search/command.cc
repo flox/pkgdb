@@ -114,19 +114,6 @@ SearchCommand::scrapeIfNeeded()
 /* -------------------------------------------------------------------------- */
 
   void
-SearchCommand::postProcessArgs()
-{
-  static bool didPost = false;
-  if ( didPost ) { return; }
-  this->initRegistry();
-  this->scrapeIfNeeded();
-  didPost = true;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  void
 SearchCommand::showRow(
   std::string_view    inputName
 , pkgdb::PkgDbInput & input
@@ -145,7 +132,8 @@ SearchCommand::showRow(
   int
 SearchCommand::run()
 {
-  this->postProcessArgs();
+  this->initRegistry();
+  this->scrapeIfNeeded();
   assert( this->registry != nullptr );
   pkgdb::PkgQueryArgs args;
   for ( const auto & [name, input] : * this->registry )

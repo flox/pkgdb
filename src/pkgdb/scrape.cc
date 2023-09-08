@@ -62,23 +62,11 @@ ScrapeCommand::initInput()
 
 /* -------------------------------------------------------------------------- */
 
-  void
-ScrapeCommand::postProcessArgs()
-{
-  static bool didPost = false;
-  if ( didPost ) { return; }
-  this->fixupAttrPath();
-  this->initInput();
-  didPost = true;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
   int
 ScrapeCommand::run()
 {
-  this->postProcessArgs();
+  this->fixupAttrPath();
+  this->initInput();
   assert( this->input.has_value() );
 
   /* If `--force' was given, clear the `done' fields for the prefix and its
