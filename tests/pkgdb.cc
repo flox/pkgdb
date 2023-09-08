@@ -83,7 +83,7 @@ test_addOrGetAttrSetId0( flox::pkgdb::PkgDb & db )
 
   /* Make sure `AttrSets` is empty. */
   row_id startId = getRowCount( db, "AttrSets" );
-  EXPECT_EQ( startId, (row_id) 0 );
+  EXPECT_EQ( startId, static_cast<row_id>( 0 ) );
 
   /* Add two `AttrSets` */
   row_id id = db.addOrGetAttrSetId( "legacyPackages" );
@@ -149,7 +149,7 @@ test_hasAttrSet0( flox::pkgdb::PkgDb & db )
   sqlite3pp::command cmd( db.db
                         , "DELETE FROM Packages WHERE ( parentId = :id )"
                         );
-  cmd.bind( ":id", (long long int) id );
+  cmd.bind( ":id", static_cast<long long int>( id ) );
   cmd.execute();
 
   EXPECT( db.hasAttrSet(
@@ -183,7 +183,7 @@ test_hasAttrSet1( flox::pkgdb::PkgDb & db )
       VALUES ( :id, 'phony', 'phony', '["out"]' )
     )SQL"
   );
-  cmd.bind( ":id", (long long int) id );
+  cmd.bind( ":id", static_cast<long long>( id ) );
   cmd.execute();
 
   EXPECT( db.hasAttrSet(
@@ -257,7 +257,7 @@ test_hasPackage0( flox::pkgdb::PkgDb & db )
       VALUES ( :id, 'phony', 'phony', '["out"]' )
     )SQL"
   );
-  cmd.bind( ":id", (long long) id );
+  cmd.bind( ":id", static_cast<long long>( id ) );
   cmd.execute();
 
   EXPECT(
@@ -288,38 +288,6 @@ test_descriptions0( flox::pkgdb::PkgDb & db )
 
 /* -------------------------------------------------------------------------- */
 
-  bool
-test_descendants0( flox::pkgdb::PkgDb & db )
-{
-  clearTables( db );
-
-  row_id linux =
-    db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-linux" } );
-  row_id python = db.addOrGetAttrSetId( "python3Packages", linux );
-  row_id node   = db.addOrGetAttrSetId( "nodePackages", linux );
-  row_id foo    = db.addOrGetAttrSetId( "fooPackages", linux );
-  row_id bar    = db.addOrGetAttrSetId( "bar", foo );
-  row_id baz    = db.addOrGetAttrSetId( "baz", foo );
-  /* Ensure `ORDER BY' works as expected.
-   * `quux' should go before `bar'.
-   * `karl' should go after `baz'. */
-  row_id quux = db.addOrGetAttrSetId( "quuxPackages", linux );
-  row_id karl = db.addOrGetAttrSetId( "karl", quux );
-  /* Make sure these don't appear */
-  db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-darwin" } );
-
-  std::vector<row_id> descendants = db.getDescendantAttrSets( linux );
-
-  EXPECT( descendants ==
-          ( std::vector<row_id> { python, node, foo, quux, bar, baz, karl } )
-        );
-
-  return true;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
 /* Tests `systems', `name', `pname', `version', and `subtree' filtering. */
   bool
 test_PkgQuery0( flox::pkgdb::PkgDb & db )
@@ -338,8 +306,8 @@ test_PkgQuery0( flox::pkgdb::PkgDb & db )
              , '["out"]', :descriptionId
              )
   )SQL" );
-  cmd.bind( ":parentId",      (long long) linux );
-  cmd.bind( ":descriptionId", (long long) desc  );
+  cmd.bind( ":parentId",      static_cast<long long>( linux ) );
+  cmd.bind( ":descriptionId", static_cast<long long>( desc  ) );
   if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
     {
       throw flox::pkgdb::PkgDbException(
@@ -431,8 +399,8 @@ test_PkgQuery1( flox::pkgdb::PkgDb & db )
       , '["out"]', NULL, TRUE, FALSE, :descriptionId
       )
   )SQL" );
-  cmd.bind( ":parentId",      (long long) linux );
-  cmd.bind( ":descriptionId", (long long) desc  );
+  cmd.bind( ":parentId",      static_cast<long long>( linux ) );
+  cmd.bind( ":descriptionId", static_cast<long long>( desc  ) );
   if ( flox::pkgdb::sql_rc rc = cmd.execute();
        flox::pkgdb::isSQLError( rc )
      )
@@ -451,7 +419,7 @@ test_PkgQuery1( flox::pkgdb::PkgDb & db )
   /* Run `allowBroken = false' query */
   {
     flox::pkgdb::PkgQuery qry( qargs );
-    EXPECT_EQ( qry.execute( db.db ).size(), (size_t) 3 );
+    EXPECT_EQ( qry.execute( db.db ).size(), static_cast<size_t>( 3 ) );
   }
 
   /* Run `allowBroken = true' query */
@@ -459,14 +427,14 @@ test_PkgQuery1( flox::pkgdb::PkgDb & db )
     qargs.allowBroken = true;
     flox::pkgdb::PkgQuery qry( qargs );
     qargs.allowBroken = false;
-    EXPECT_EQ( qry.execute( db.db ).size(), (size_t) 4 );
+    EXPECT_EQ( qry.execute( db.db ).size(), static_cast<size_t>( 4 ) );
   }
 
   /* Run `allowUnfree = true' query */
   {
     flox::pkgdb::PkgQuery qry( qargs );
     /* still omits broken */
-    EXPECT_EQ( qry.execute( db.db ).size(), (size_t) 3 );
+    EXPECT_EQ( qry.execute( db.db ).size(), static_cast<size_t>( 3 ) );
   }
 
   /* Run `allowUnfree = false' query */
@@ -475,7 +443,7 @@ test_PkgQuery1( flox::pkgdb::PkgDb & db )
     flox::pkgdb::PkgQuery qry( qargs );
     qargs.allowUnfree = true;
     /* still omits broken as well */
-    EXPECT_EQ( qry.execute( db.db ).size(), (size_t) 2 );
+    EXPECT_EQ( qry.execute( db.db ).size(), static_cast<size_t>( 2 ) );
   }
 
   /* Run `licenses = ["GPL-3.0-or-later", "BUSL-1.1", "MIT"]' query */
@@ -486,7 +454,7 @@ test_PkgQuery1( flox::pkgdb::PkgDb & db )
     flox::pkgdb::PkgQuery qry( qargs );
     qargs.licenses = std::nullopt;
     /* omits NULL licenses */
-    EXPECT_EQ( qry.execute( db.db ).size(), (size_t) 2 );
+    EXPECT_EQ( qry.execute( db.db ).size(), static_cast<size_t>( 2 ) );
   }
 
   /* Run `licenses = ["BUSL-1.1", "MIT"]' query */
@@ -495,7 +463,7 @@ test_PkgQuery1( flox::pkgdb::PkgDb & db )
     flox::pkgdb::PkgQuery qry( qargs );
     qargs.licenses = std::nullopt;
     /* omits NULL licenses */
-    EXPECT_EQ( qry.execute( db.db ).size(), (size_t) 1 );
+    EXPECT_EQ( qry.execute( db.db ).size(), static_cast<size_t>( 1 ) );
   }
 
   return true;
@@ -531,9 +499,9 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
     , ( :parentId, 'aCiao', 'ciao-2.12.1', 'ciao', '["out"]', :descFarewellId
       )
   )SQL" );
-  cmd.bind( ":parentId",        (long long) linux        );
-  cmd.bind( ":descGreetId",     (long long) descGreet    );
-  cmd.bind( ":descFarewellId",  (long long) descFarewell );
+  cmd.bind( ":parentId",       static_cast<long long>( linux )        );
+  cmd.bind( ":descGreetId",    static_cast<long long>( descGreet )    );
+  cmd.bind( ":descFarewellId", static_cast<long long>( descFarewell ) );
   if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
     {
       throw flox::pkgdb::PkgDbException(
@@ -560,7 +528,7 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
       {
         ++count;
         flox::pkgdb::match_strength strength =
-          (flox::pkgdb::match_strength) row.get<int>( 0 );
+          static_cast<flox::pkgdb::match_strength>( row.get<int>( 0 ) );
         if ( count == 1 )
           {
             EXPECT_EQ( strength, flox::pkgdb::MS_EXACT_PNAME );
@@ -570,7 +538,7 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
             EXPECT_EQ( strength, flox::pkgdb::MS_PARTIAL_DESC );
           }
       }
-    EXPECT_EQ( count, (size_t) 2 );
+    EXPECT_EQ( count, static_cast<size_t>( 2 ) );
   }
 
   /* Run `match = "farewell"' query */
@@ -587,7 +555,7 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
         ++count;
         EXPECT_EQ( row.get<int>( 0 ), flox::pkgdb::MS_PARTIAL_DESC );
       }
-    EXPECT_EQ( count, (size_t) 2 );
+    EXPECT_EQ( count, static_cast<size_t>( 2 ) );
   }
 
   /* Run `match = "hel"' query */
@@ -603,7 +571,7 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
       {
         ++count;
         flox::pkgdb::match_strength strength =
-          (flox::pkgdb::match_strength) row.get<int>( 0 );
+          static_cast<flox::pkgdb::match_strength>( row.get<int>( 0 ) );
         if ( count == 1 )
           {
             EXPECT_EQ( strength, flox::pkgdb::MS_PARTIAL_PNAME_DESC );
@@ -613,7 +581,7 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
             EXPECT_EQ( strength, flox::pkgdb::MS_PARTIAL_DESC );
           }
       }
-    EXPECT_EQ( count, (size_t) 2 );
+    EXPECT_EQ( count, static_cast<size_t>( 2 ) );
   }
 
   /* Run `match = "xxxxx"' query */
@@ -621,7 +589,7 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
     qargs.match = "xxxxx";
     flox::pkgdb::PkgQuery qry( qargs );
     qargs.match = std::nullopt;
-    EXPECT_EQ( qry.execute( db.db ).size(), (size_t) 0 );
+    EXPECT_EQ( qry.execute( db.db ).size(), static_cast<size_t>( 0 ) );
   }
 
   return true;
@@ -655,8 +623,8 @@ test_getPackages0( flox::pkgdb::PkgDb & db )
       , '["out"]', :descriptionId
       )
   )SQL" );
-  cmd.bind( ":parentId",      (long long) linux );
-  cmd.bind( ":descriptionId", (long long) desc  );
+  cmd.bind( ":parentId",      static_cast<long long>( linux ) );
+  cmd.bind( ":descriptionId", static_cast<long long>( desc )  );
   if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
     {
       throw flox::pkgdb::PkgDbException(
@@ -676,7 +644,7 @@ test_getPackages0( flox::pkgdb::PkgDb & db )
     qargs.semver = { "^2" };
     size_t count = db.getPackages( qargs ).size();
     qargs.semver = std::nullopt;
-    EXPECT_EQ( count, (size_t) 2 );
+    EXPECT_EQ( count, static_cast<size_t>( 2 ) );
   }
 
   /* Run `semver = "^3"' query */
@@ -684,7 +652,7 @@ test_getPackages0( flox::pkgdb::PkgDb & db )
     qargs.semver = { "^3" };
     size_t count = db.getPackages( qargs ).size();
     qargs.semver = std::nullopt;
-    EXPECT_EQ( count, (size_t) 1 );
+    EXPECT_EQ( count, static_cast<size_t>( 1 ) );
   }
 
   /* Run `semver = "^2.13"' query */
@@ -692,7 +660,7 @@ test_getPackages0( flox::pkgdb::PkgDb & db )
     qargs.semver = { "^2.13" };
     size_t count = db.getPackages( qargs ).size();
     qargs.semver = std::nullopt;
-    EXPECT_EQ( count, (size_t) 0 );
+    EXPECT_EQ( count, static_cast<size_t>( 0 ) );
   }
 
   return true;
@@ -736,12 +704,12 @@ test_getPackages1( flox::pkgdb::PkgDb & db )
     , ( 4, :legacyDarwinId,   'hello', 'hello', '["out"]', :descriptionId )
     , ( 5, :packagesDarwinId, 'hello', 'hello', '["out"]', :descriptionId )
   )SQL" );
-  cmd.bind( ":descriptionId",    (long long) desc  );
-  cmd.bind( ":stableLinuxId",    (long long) stableLinux );
-  cmd.bind( ":unstableLinuxId",  (long long) unstableLinux );
-  cmd.bind( ":packagesLinuxId",  (long long) packagesLinux );
-  cmd.bind( ":legacyDarwinId",   (long long) legacyDarwin );
-  cmd.bind( ":packagesDarwinId", (long long) packagesDarwin );
+  cmd.bind( ":descriptionId",    static_cast<long long>( desc )  );
+  cmd.bind( ":stableLinuxId",    static_cast<long long>( stableLinux ) );
+  cmd.bind( ":unstableLinuxId",  static_cast<long long>( unstableLinux ) );
+  cmd.bind( ":packagesLinuxId",  static_cast<long long>( packagesLinux ) );
+  cmd.bind( ":legacyDarwinId",   static_cast<long long>( legacyDarwin ) );
+  cmd.bind( ":packagesDarwinId", static_cast<long long>( packagesDarwin ) );
   if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
     {
       throw flox::pkgdb::PkgDbException(
@@ -835,7 +803,7 @@ test_getPackages2( flox::pkgdb::PkgDb & db )
     , ( 8, :parentId, 'hello7', 'hello-trunk', 'hello', 'trunk', NULL
       , '["out"]' )
   )SQL" );
-  cmd.bind( ":parentId",      (long long) linux );
+  cmd.bind( ":parentId", static_cast<long long>( linux ) );
   if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
     {
       throw flox::pkgdb::PkgDbException(
@@ -929,8 +897,6 @@ main( int argc, char * argv[] )
     RUN_TEST( hasPackage0, db );
 
     RUN_TEST( descriptions0, db );
-
-    RUN_TEST( descendants0, db );
 
     RUN_TEST( PkgQuery0, db );
     RUN_TEST( PkgQuery1, db );

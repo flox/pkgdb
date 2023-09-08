@@ -23,6 +23,14 @@ load setup_suite.bash;
 
 # ---------------------------------------------------------------------------- #
 
+@test "pkgdb search --help" {
+  run $PKGDB search --help;
+  assert_success;
+}
+
+
+# ---------------------------------------------------------------------------- #
+
 @test "pkgdb scrape --help" {
   run $PKGDB scrape --help;
   assert_success;
@@ -65,6 +73,14 @@ load setup_suite.bash;
 
 @test "pkgdb get db --help" {
   run $PKGDB get db --help;
+  assert_success;
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+@test "pkgdb get done --help" {
+  run $PKGDB get done --help;
   assert_success;
 }
 

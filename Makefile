@@ -59,20 +59,32 @@ INCLUDEDIR ?= $(PREFIX)/include
 
 # ---------------------------------------------------------------------------- #
 
+# rwildcard DIRS, PATTERNS
+# ------------------------
+# Recursive wildcard.
+#   Ex:  $(call rwildcard,src,*.cc *.hh)
+rwildcard = $(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2)        \
+                                             $(filter $(subst *,%,$2),$d))
+
+
+# ---------------------------------------------------------------------------- #
+
 LIBFLOXPKGDB = libflox-pkgdb$(libExt)
 
 LIBS           =  $(LIBFLOXPKGDB)
-COMMON_HEADERS =  $(wildcard include/*.hh include/**/*.hh)
-SRCS           =  $(wildcard src/*.cc) $(wildcard src/**/*.cc)
-bin_SRCS       =  $(addprefix src/,main.cc scrape.cc get.cc pkgdb/command.cc)
-bin_SRCS       += $(addprefix src/,search/command.cc)
+COMMON_HEADERS =  $(call rwildcard,include,*.hh)
+SRCS           =  $(call rwildcard,src,*.cc)
+bin_SRCS       =  src/main.cc
+bin_SRCS       += $(addprefix src/pkgdb/,scrape.cc get.cc command.cc)
+bin_SRCS       += $(addprefix src/search/,command.cc)
 lib_SRCS       =  $(filter-out $(bin_SRCS),$(SRCS))
 test_SRCS      =  $(wildcard tests/*.cc)
+ALL_SRCS       = $(SRCS) $(test_SRCS)
 BINS           =  pkgdb
-TEST_UTILS     =  tests/is_sqlite3
+TEST_UTILS     =  $(addprefix tests/,is_sqlite3 parse-preferences)
 TESTS          =  $(filter-out $(TEST_UTILS),$(test_SRCS:.cc=))
 CLEANDIRS      =
-CLEANFILES     =  $(SRCS:.cc=.o) $(test_SRCS:.cc=.o)
+CLEANFILES     =  $(ALL_SRCS:.cc=.o)
 CLEANFILES     += $(addprefix bin/,$(BINS)) $(addprefix lib/,$(LIBS))
 CLEANFILES     += $(TESTS) $(TEST_UTILS)
 
@@ -85,18 +97,26 @@ CXXFLAGS       ?= $(EXTRA_CFLAGS) $(EXTRA_CXXFLAGS)
 CXXFLAGS       += '-I$(MAKEFILE_DIR)/include'
 CXXFLAGS       += '-DFLOX_PKGDB_VERSION="$(VERSION)"'
 LDFLAGS        ?= $(EXTRA_LDFLAGS)
-lib_CXXFLAGS   ?= -shared -fPIC
 ifeq (Linux,$(OS))
+lib_CXXFLAGS ?= -shared -fPIC
 lib_LDFLAGS  ?= -shared -fPIC -Wl,--no-undefined
 else
+lib_CXXFLAGS ?= -fPIC
 lib_LDFLAGS  ?= -shared -fPIC -Wl,-undefined,error
 endif
 bin_CXXFLAGS ?=
 bin_LDFLAGS  ?=
 
+# Debug Mode
 ifneq ($(DEBUG),)
 CXXFLAGS += -ggdb3 -pg
 LDFLAGS  += -ggdb3 -pg
+endif
+
+# Coverage Mode
+ifneq ($(COV),)
+CXXFLAGS += -fprofile-arcs -ftest-coverage
+LDFLAGS  += -fprofile-arcs -ftest-coverage
 endif
 
 
@@ -185,39 +205,43 @@ clean: FORCE
 	-$(RM) $(CLEANFILES)
 	-$(RM) -r $(CLEANDIRS)
 	-$(RM) result
-	-$(RM) gmon.out *.log
+	-$(RM) **/gmon.out gmon.out **/*.log *.log
+	-$(RM) **/*.gcno *.gcno **/*.gcda *.gcda **/*.gcov *.gcov
 
 
 # ---------------------------------------------------------------------------- #
 
 %.o: %.cc $(COMMON_HEADERS)
-	$(CXX) $(CXXFLAGS) -c "$<" -o "$@"
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 
+lib/$(LIBFLOXPKGDB): $(COMMON_HEADERS)
 lib/$(LIBFLOXPKGDB): CXXFLAGS += $(lib_CXXFLAGS)
 lib/$(LIBFLOXPKGDB): LDFLAGS  += $(lib_LDFLAGS)
 lib/$(LIBFLOXPKGDB): $(lib_SRCS:.cc=.o)
 	$(MKDIR_P) $(@D)
-	$(CXX) $^ $(LDFLAGS) -o "$@"
+	$(CXX) $(filter %.o,$^) $(LDFLAGS) -o $@
 
 
 # ---------------------------------------------------------------------------- #
 
 src/pkgdb/write.o: src/pkgdb/schemas.hh
 
+bin/pkgdb: $(COMMON_HEADERS)
 bin/pkgdb: CXXFLAGS += $(bin_CXXFLAGS)
 bin/pkgdb: LDFLAGS  += $(bin_LDFLAGS)
 bin/pkgdb: $(bin_SRCS:.cc=.o) lib/$(LIBFLOXPKGDB)
 	$(MKDIR_P) $(@D)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(filter %.o,$^) -o "$@"
+	$(CXX) $(CXXFLAGS) $(filter %.o,$^) $(LDFLAGS) -o $@
 
 
 # ---------------------------------------------------------------------------- #
 
+$(TESTS) $(TEST_UTILS): $(COMMON_HEADERS)
 $(TESTS) $(TEST_UTILS): CXXFLAGS += $(bin_CXXFLAGS)
 $(TESTS) $(TEST_UTILS): LDFLAGS  += $(bin_LDFLAGS)
 $(TESTS) $(TEST_UTILS): tests/%: tests/%.cc lib/$(LIBFLOXPKGDB)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) "$<" -o "$@"
+	$(CXX) $(CXXFLAGS) $< $(LDFLAGS)  -o $@
 
 
 # ---------------------------------------------------------------------------- #
@@ -264,7 +288,7 @@ cdb: compile_commands.json
 
 compile_commands.json: flake.nix flake.lock pkg-fun.nix
 compile_commands.json: $(lastword $(MAKEFILE_LIST))
-compile_commands.json: $(COMMON_HEADERS) $(SRCS) $(test_SRCS)
+compile_commands.json: $(COMMON_HEADERS) $(ALL_SRCS)
 	-$(MAKE) -C $(MAKEFILE_DIR) clean;
 	$(BEAR) --output "$@" -- $(MAKE) -C $(MAKEFILE_DIR) -j all;
 
@@ -272,7 +296,7 @@ compile_commands.json: $(COMMON_HEADERS) $(SRCS) $(test_SRCS)
 # ---------------------------------------------------------------------------- #
 
 .PHONY: lint
-lint: compile_commands.json $(COMMON_HEADERS) $(SRCS) $(test_SRCS)
+lint: compile_commands.json $(COMMON_HEADERS) $(ALL_SRCS)
 	$(TIDY) $(filter-out compile_commands.json,$^)
 
 

@@ -10,7 +10,9 @@
 #pragma once
 
 #include "flox/pkgdb/write.hh"
+#include "flox/pkgdb/pkgdb-input.hh"
 #include "flox/core/command.hh"
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -18,7 +20,7 @@ namespace flox::pkgdb {
 
 /* -------------------------------------------------------------------------- */
 
-/** Adds a package database path to a state blob. */
+/** Adds a single package database path to a state blob. */
 struct DbPathMixin
   :         public command::CommandStateMixin
   , virtual public flox::NixState
@@ -35,31 +37,30 @@ struct DbPathMixin
 
 /* -------------------------------------------------------------------------- */
 
-  template <class T>
-concept PkgDbType = std::is_base_of<PkgDbReadOnly, T>::value;
-
 /**
- * Adds a package database and optionally an associated flake to a state blob.
+ * @brief Adds a single package database and optionally an associated flake to a
+ *        state blob.
  */
-  template <PkgDbType T>
+  template <pkgdb_typename T>
 struct PkgDbMixin
   : virtual public DbPathMixin
-  , virtual public command::FloxFlakeMixin
+  , virtual public command::InlineInputMixin
 {
 
-  std::shared_ptr<T> db;
+  std::shared_ptr<FloxFlake> flake;
+  std::shared_ptr<T>         db;
 
   /**
-   * Open a @a flox::pkgdb::PkgDb connection using the command state's
-   * @a dbPath or @a flake value.
+   * @brief Open a @a flox::pkgdb::PkgDb connection using the command state's
+   *        @a dbPath or @a flake value.
    */
   void openPkgDb();
 
   inline void postProcessArgs() override { this->openPkgDb(); }
 
   /**
-   * Add `target` argument to any parser to read either a `flake-ref` or
-   * path to an existing database.
+   * @brief Add `target` argument to any parser to read either a `flake-ref` or
+   *        path to an existing database.
    */
   argparse::Argument & addTargetArg( argparse::ArgumentParser & parser );
 
@@ -70,24 +71,38 @@ struct PkgDbMixin
 
 /** Scrape a flake prefix producing a SQLite3 database with package metadata. */
 struct ScrapeCommand
-  : public PkgDbMixin<PkgDb>
+  : public DbPathMixin
   , public command::AttrPathMixin
+  , public command::InlineInputMixin
 {
 
-  command::VerboseParser parser;
+  protected:
 
-  bool force = false;  /**< Whether to force re-evaluation. */
+    std::optional<PkgDbInput> input;
 
-  ScrapeCommand();
+    bool force = false;  /**< Whether to force re-evaluation. */
 
-  /** Invoke "child" `preProcessArgs` for `PkgDbMixin` and `AttrPathMixin`. */
-  void postProcessArgs() override;
 
-  /**
-   * Execute the `scrape` routine.
-   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
-   */
-  int run();
+  public:
+
+    command::VerboseParser parser;
+
+    ScrapeCommand();
+
+    /** @brief Initialize @a input from @a registryInput. */
+    void initInput();
+
+    /**
+     * @brief Invoke "child" `preProcessArgs` for `AttrPathMixin`, and
+     *        @a initInput.
+     */
+    void postProcessArgs() override;
+
+    /**
+     * @brief Execute the `scrape` routine.
+     * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+     */
+    int run();
 
 };  /* End struct `ScrapeCommand' */
 
@@ -95,8 +110,9 @@ struct ScrapeCommand
 /* -------------------------------------------------------------------------- */
 
 /**
- * Minimal set of DB queries, largely focused on looking up info that is
- * non-trivial to query with a "plain" SQLite statement.
+ * @brief Minimal set of DB queries, largely focused on looking up info that is
+ *        non-trivial to query with a "plain" SQLite statement.
+ *
  * This subcommand has additional subcommands:
  * - `pkgdb get id [--pkg] DB-PATH ATTR-PATH...`
  *   + Lookup `(AttrSet|Packages).id` for `ATTR-PATH`.
@@ -120,46 +136,53 @@ struct GetCommand
   command::VerboseParser pDone;           /**< `get done`  parser */
   command::VerboseParser pFlake;          /**< `get flake` parser */
   command::VerboseParser pDb;             /**< `get db`    parser */
+  command::VerboseParser pPkg;            /**< `get pkg`   parser */
   bool                   isPkg  = false;
   row_id                 id     = 0;
 
   GetCommand();
 
-  /** Prevent "child" `preProcessArgs` routines from running */
+  /** Prevent "child" `postProcessArgs` routines from running */
   void postProcessArgs() override {}
 
   /**
-   * Execute the `get id` routine.
+   * @brief Execute the `get id` routine.
    * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
    */
   int runId();
 
   /**
-   * Execute the `get done` routine.
+   * @brief Execute the `get done` routine.
    * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
    */
   int runDone();
 
   /**
-   * Execute the `get path` routine.
+   * @brief Execute the `get path` routine.
    * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
    */
   int runPath();
 
   /**
-   * Execute the `get flake` routine.
+   * @brief Execute the `get flake` routine.
    * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
    */
   int runFlake();
 
   /**
-   * Execute the `get db` routine.
+   * @brief Execute the `get db` routine.
    * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
    */
   int runDb();
 
   /**
-   * Execute the `get` routine.
+   * @brief Execute the `get pkg` routine.
+   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+   */
+  int runPkg();
+
+  /**
+   * @brief Execute the `get` routine.
    * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
    */
   int run();

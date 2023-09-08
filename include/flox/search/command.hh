@@ -15,6 +15,9 @@
 #include "flox/flox-flake.hh"
 #include "flox/pkgdb/write.hh"
 #include "flox/pkgdb/command.hh"
+#include "flox/pkgdb/pkgdb-input.hh"
+#include "flox/search/params.hh"
+#include "flox/registry.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -25,53 +28,6 @@ namespace flox {
   namespace search {
 
 /* -------------------------------------------------------------------------- */
-
-/** Parse a set of user's _inputs_, being flakes to search in. */
-struct InputsMixin
-  : virtual public command::CommandStateMixin
-  ,         public flox::FloxFlakeParserMixin
-{
-
-  /** A flake and its associated package database.  */
-  struct Input {
-    std::shared_ptr<flox::FloxFlake>      flake;
-    std::shared_ptr<pkgdb::PkgDbReadOnly> db;
-  };  /* End struct `InputsMixin::Input' */
-
-  /**
-   * Mapping of short name aliases to flakes/dbs.
-   * A vector of pairs is used to preserve the user's ordering which effects
-   * the order of search results.
-   */
-  std::vector<std::pair<std::string, Input>> inputs;
-
-  /**
-   * Parse inputs from an inline JSON string, or JSON file.
-   * @a Input::a members are initialized, but no databases are opened yet.
-   */
-  void parseInputs( const std::string & jsonOrFile );
-
-  /**
-   * Open read-only database handles forall inputs.
-   * After parsing query parameters those handles may be changed to read/write
-   * if scraping is required, but ownership of writable databases is not handled
-   * by this mixin.
-   */
-  void openDatabases();
-
-  inline void postProcessArgs() override { this->openDatabases(); }
-
-  /** Add `inputs` argument to parse flake inputs from. */
-  argparse::Argument & addInputsArg( argparse::ArgumentParser & parser );
-
-};  /* End struct `InputsMixin' */
-
-
-/* -------------------------------------------------------------------------- */
-
-// TODO: Preferences and Descriptors are completely different and you can't just
-// parse JSON for the "real" search.
-// This exists for testing/development.
 
 /** Package query parser. */
 struct PkgQueryMixin : virtual public command::CommandStateMixin {
@@ -92,36 +48,68 @@ struct PkgQueryMixin : virtual public command::CommandStateMixin {
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * @brief Search parameters _single JSON object_ parser.
+ *
+ * This uses the same _plumbin_ as @a InputsMixin and @a PkgQueryMixin for
+ * post-processing, but does not use their actual parsers.
+ */
+struct SearchParamsMixin : virtual public NixState, public PkgQueryMixin {
+
+  SearchParams params;
+
+  /** Add argument to any parser to construct a @a search::SearchParams. */
+  argparse::Argument & addSearchParamArgs( argparse::ArgumentParser & parser );
+
+};  /* End struct `SearchParamsMixin' */
+
+
+/* -------------------------------------------------------------------------- */
+
 /** Search flakes for packages satisfying a set of filters. */
-struct SearchCommand
-  : public InputsMixin
-  , public PkgQueryMixin
+struct SearchCommand : public SearchParamsMixin
 {
 
-  command::VerboseParser parser;
+  protected:
 
-  bool force = false;  /**< Whether to force re-evaluation. */
+    bool force = false;  /**< Whether to force re-evaluation. */
 
-  SearchCommand();
+    std::shared_ptr<Registry<pkgdb::PkgDbInputFactory>> registry;
 
-  /**
-   * Lazily perform scraping on input flakes.
-   * If scraping is necessary temprorary read/write handles are opened for those
-   * flakes and closed before returning from this function.
-   */
-  void scrapeIfNeeded();
+    /** Initialize @a registry member from @a params.registry. */
+    void initRegistry();
 
-  /**
-   * Invoke "child" `preProcessArgs`, and trigger scraping if necessary.
-   * This may trigger scraping.
-   */
-  void postProcessArgs() override;
+    /**
+     * Lazily perform scraping on input flakes.
+     * If scraping is necessary temprorary read/write handles are opened for
+     * those flakes and closed before returning from this function.
+     */
+    void scrapeIfNeeded();
 
-  /**
-   * Execute the `search` routine.
-   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
-   */
-  int run();
+
+  public:
+
+    command::VerboseParser parser;
+
+    SearchCommand();
+
+    /** Display a single row from the given @a input. */
+    void showRow( std::string_view    inputName
+                , pkgdb::PkgDbInput & input
+                , pkgdb::row_id       row
+                );
+
+    /**
+     * Invoke "child" `preProcessArgs`, and trigger scraping if necessary.
+     * This may trigger scraping.
+     */
+    void postProcessArgs() override;
+
+    /**
+     * Execute the `search` routine.
+     * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+     */
+    int run();
 
 };  /* End struct `ScrapeCommand' */
 

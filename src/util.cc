@@ -72,7 +72,7 @@ parseOrReadJSONObject( const std::string & jsonOrPath )
       return nlohmann::json::parse( jsonOrPath );
     }
   std::ifstream jfile( jsonOrPath );
-  return nlohmann::json::parse( jsonOrPath );
+  return nlohmann::json::parse( jfile );
 }
 
 

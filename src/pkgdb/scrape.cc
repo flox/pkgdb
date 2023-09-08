@@ -14,8 +14,7 @@
 
 /* -------------------------------------------------------------------------- */
 
-namespace flox {
-  namespace pkgdb {
+namespace flox::pkgdb {
 
 /* -------------------------------------------------------------------------- */
 
@@ -38,12 +37,38 @@ ScrapeCommand::ScrapeCommand() : parser( "scrape" )
 /* -------------------------------------------------------------------------- */
 
   void
+ScrapeCommand::initInput()
+{
+  nix::ref<nix::Store> store = this->getStore();
+  /* Change the database path if `--database' was given. */
+  if ( this->dbPath.has_value() )
+    {
+      this->input = std::make_optional<PkgDbInput>(
+        store
+      , this->getRegistryInput()
+      , * this->dbPath
+      , PkgDbInput::db_path_tag()
+      );
+    }
+  else
+    {
+      this->input = std::make_optional<PkgDbInput>(
+        store
+      , this->getRegistryInput()
+      );
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
 ScrapeCommand::postProcessArgs()
 {
   static bool didPost = false;
   if ( didPost ) { return; }
-  this->AttrPathMixin::postProcessArgs();
-  this->PkgDbMixin::postProcessArgs();
+  this->fixupAttrPath();
+  this->initInput();
   didPost = true;
 }
 
@@ -54,64 +79,27 @@ ScrapeCommand::postProcessArgs()
 ScrapeCommand::run()
 {
   this->postProcessArgs();
+  assert( this->input.has_value() );
 
   /* If `--force' was given, clear the `done' fields for the prefix and its
    * descendants to force them to re-evaluate. */
-  if ( this->force ) { this->db->setPrefixDone( this->attrPath, false ); }
-
-  /* If we haven't processed this prefix before or `--force' was given, open
-   * the eval cache and start scraping. */
-  if ( ! this->db->completedAttrSet( this->attrPath ) )
+  if ( this->force )
     {
-      flox::pkgdb::Todos todo;
-      if ( flox::MaybeCursor root =
-             this->flake->maybeOpenCursor( this->attrPath );
-           root != nullptr
-         )
-        {
-          todo.push(
-            std::make_pair( this->attrPath, (flox::Cursor) root )
-          );
-        }
-
-      /* Start a transaction */
-      sqlite3pp::transaction txn( this->db->db );
-      try
-        {
-          while ( ! todo.empty() )
-            {
-              auto & [prefix, cursor] = todo.front();
-              this->db->scrape(
-                this->state->symbols
-              , prefix
-              , cursor
-              , todo
-              );
-              todo.pop();
-            }
-
-          /* Mark the prefix and its descendants as "done" */
-          this->db->setPrefixDone( this->attrPath, true );
-        }
-      catch( const nix::EvalError & )
-        {
-          txn.rollback();
-          throw;
-        }
-      txn.commit();
-
+      this->input->getDbReadWrite()->setPrefixDone( this->attrPath, false );
     }
 
+  /* scrape it up! */
+  this->input->scrapePrefix( this->attrPath );
+
   /* Print path to database. */
-  std::cout << ( (std::string) * this->dbPath ) << std::endl;
+  std::cout << ( static_cast<std::string>( * this->dbPath ) ) << std::endl;
   return EXIT_SUCCESS;  /* GG, GG */
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-  }  /* End namespaces `flox::pkgdb' */
-}  /* End namespaces `flox' */
+}  /* End namespaces `flox::pkgdb' */
 
 
 /* -------------------------------------------------------------------------- *

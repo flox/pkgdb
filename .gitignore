@@ -36,3 +36,10 @@
 result
 result-*
 compile_commands.json
+
+# Logs, Debug Info, Etc
+*.gcno
+*.gcda
+*.gcov
+*.log
+gmon.out

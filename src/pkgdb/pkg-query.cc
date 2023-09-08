@@ -470,6 +470,8 @@ PkgQuery::initOrderBy()
   , v_PackagesSearch.version ASC NULLS LAST
   , brokenRank ASC
   , unfreeRank ASC
+  , depth ASC
+  , attrName ASC
   )SQL" );
 }
 
@@ -491,6 +493,13 @@ PkgQuery::init()
 
   /* Handle fuzzy matching filtering. */
   this->initMatch();
+
+  /* Handle `pname' filtering. */
+  if ( this->name.has_value() )
+    {
+      this->addWhere( "name = :name" );
+      this->binds.emplace( ":name", * this->name );
+    }
 
   /* Handle `pname' filtering. */
   if ( this->pname.has_value() )
@@ -650,6 +659,34 @@ PkgQuery::execute( sqlite3pp::database & pdb ) const
         }
     }
   return rsl;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
+from_json( const nlohmann::json & jfrom, PkgDescriptorBase & desc )
+{
+  desc.clear();
+  for ( const auto & [key, value] : jfrom.items() )
+    {
+      if ( key == "name" )         { value.get_to( desc.name );    }
+      else if ( key == "pname" )   { value.get_to( desc.pname );   }
+      else if ( key == "version" ) { value.get_to( desc.version ); }
+      else if ( key == "semver" )  { value.get_to( desc.semver );  }
+    }
+}
+
+
+  void
+to_json( nlohmann::json & jto, const PkgDescriptorBase & desc )
+{
+  jto = {
+    { "name",    desc.name    }
+  , { "pname",   desc.pname   }
+  , { "version", desc.version }
+  , { "semver",  desc.semver  }
+  };
 }
 
 

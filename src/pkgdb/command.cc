@@ -53,7 +53,7 @@ PkgDbMixin<PkgDb>::openPkgDb()
     {
       this->db = std::make_shared<PkgDb>(
         this->flake->lockedFlake
-      , (std::string) * this->dbPath
+      , static_cast<std::string>( * this->dbPath )
       );
     }
   else if ( this->flake != nullptr )
@@ -64,13 +64,15 @@ PkgDbMixin<PkgDb>::openPkgDb()
       std::filesystem::create_directories( this->dbPath->parent_path() );
       this->db = std::make_shared<PkgDb>(
         this->flake->lockedFlake
-      , (std::string) * this->dbPath
+      , static_cast<std::string>( * this->dbPath )
       );
     }
   else if ( this->dbPath.has_value() )
     {
       std::filesystem::create_directories( this->dbPath->parent_path() );
-      this->db = std::make_shared<PkgDb>( (std::string) * this->dbPath );
+      this->db = std::make_shared<PkgDb>(
+        static_cast<std::string>( * this->dbPath )
+      );
     }
   else
     {
@@ -109,7 +111,7 @@ PkgDbMixin<PkgDbReadOnly>::openPkgDb()
         {
           std::filesystem::create_directories( this->dbPath->parent_path() );
           flox::pkgdb::PkgDb pdb( this->flake->lockedFlake
-                                , (std::string) * this->dbPath
+                                , static_cast<std::string>( * this->dbPath )
                                 );
         }
     }
@@ -118,26 +120,27 @@ PkgDbMixin<PkgDbReadOnly>::openPkgDb()
     {
       this->db = std::make_shared<PkgDbReadOnly>(
         this->flake->lockedFlake.getFingerprint()
-      , (std::string) * this->dbPath
+      , static_cast<std::string>( * this->dbPath )
       );
     }
   else
     {
-      this->db =
-        std::make_shared<PkgDbReadOnly>( (std::string) * this->dbPath );
+      this->db = std::make_shared<PkgDbReadOnly>(
+        static_cast<std::string>( * this->dbPath )
+      );
     }
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-  template <PkgDbType T> argparse::Argument &
+  template <pkgdb_typename T> argparse::Argument &
 PkgDbMixin<T>::addTargetArg( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "target" )
                .help( "The source ( database path or flake-ref ) to read" )
                .required()
-               .metavar( "DB-OR-FLAKE-REF" )
+               .metavar( "<DB-PATH|FLAKE-REF>" )
                .action(
                  [&]( const std::string & target )
                  {
@@ -149,7 +152,15 @@ PkgDbMixin<T>::addTargetArg( argparse::ArgumentParser & parser )
                      {
                        try
                          {
-                           this->parseFloxFlake( target );
+                           this->parseFlakeRef( target );
+                           nix::ref<nix::Store> store = this->getStore();
+                           FloxFlakeInput input( store
+                                               , this->getRegistryInput()
+                                               );
+                           this->flake =
+                             static_cast<std::shared_ptr<FloxFlake>>(
+                               input.getFlake()
+                             );
                          }
                        catch( ... )
                          {
@@ -163,7 +174,6 @@ PkgDbMixin<T>::addTargetArg( argparse::ArgumentParser & parser )
                            throw;
                          }
                      }
-                   this->openPkgDb();
                  }
                );
 }

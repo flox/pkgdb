@@ -40,7 +40,7 @@
       argparse.overlays.default
     ];
     overlays.flox-pkgdb = final: prev: {
-      flox-pkgdb  = final.callPackage ./pkg-fun.nix {};
+      flox-pkgdb = final.callPackage ./pkg-fun.nix {};
     };
     overlays.default = nixpkgs.lib.composeExtensions overlays.deps
                                                      overlays.flox-pkgdb;
@@ -81,21 +81,21 @@
           pkgsFor.jq
           # For profiling
           pkgsFor.lcov
-          ( if pkgsFor.stdenv.cc.isGNU then pkgsFor.gdb else pkgsFor.lldb )
+          ( if pkgsFor.stdenv.cc.isGNU or false then pkgsFor.gdb else
+            pkgsFor.lldb
+          )
           # For doc
           pkgsFor.doxygen
           # For IDEs
           pkgsFor.ccls
           pkgsFor.bear
           # For lints/fmt
-          pkgsFor.clang-tools
-        ] ++ nixpkgs.lib.optionals pkgsFor.stdenv.isLinux [
+          pkgsFor.clang-tools_16
           # For debugging
-          pkgsFor.valgrind
-        ];
-        inherit (pkgsFor.flox-pkgdb)
-          nix_INCDIR boost_CFLAGS libExt SEMVER_PATH
-        ;
+        ] ++ (
+          if pkgsFor.stdenv.isLinux or false then [pkgsFor.valgrind] else []
+        );
+        inherit (pkgsFor.flox-pkgdb) nix_INCDIR boost_CFLAGS libExt SEMVER_PATH;
         shellHook = ''
           shopt -s autocd;
 
@@ -105,18 +105,20 @@
           alias gl='git pull';
           alias gp='git push';
 
-          {
-            echo "";
-            echo "Build with \`make' ( or \`make -j8' to go fast )";
-            echo "";
-            echo "Run with \`./bin/pkgdb --help'";
-            echo "";
-            echo "Test with \`make check'";
-            echo "";
-            echo "Read docs with: \`make docs && firefox ./docs/index.hml'";
-            echo "";
-            echo "See more tips in \`CONTRIBUTING.md'";
-          } >&2;
+          if [ -z "''${NO_WELCOME:-}" ]; then
+            {
+              echo "";
+              echo "Build with \`make' ( or \`make -j8' to go fast )";
+              echo "";
+              echo "Run with \`./bin/pkgdb --help'";
+              echo "";
+              echo "Test with \`make check'";
+              echo "";
+              echo "Read docs with: \`make docs && firefox ./docs/index.hml'";
+              echo "";
+              echo "See more tips in \`CONTRIBUTING.md'";
+            } >&2;
+          fi
         '';
       };
     in {

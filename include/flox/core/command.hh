@@ -19,6 +19,7 @@
 #include "flox/core/nix-state.hh"
 #include "flox/core/util.hh"
 #include "flox/flox-flake.hh"
+#include "flox/registry.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -72,24 +73,45 @@ struct CommandStateMixin {
 
 /* -------------------------------------------------------------------------- */
 
-/** Extend a command's state blob with a @a flox::FloxFlake. */
-struct FloxFlakeMixin
-  : public CommandStateMixin
-  , public FloxFlakeParserMixin
+/** Extend a command's state blob with a single @a RegistryInput. */
+class InlineInputMixin
+  :         public CommandStateMixin
+  , virtual public NixState
 {
 
-  std::shared_ptr<flox::FloxFlake> flake;
+  private:
 
-  /**
-   * Populate the command state's @a flake with the a flake reference.
-   * @param flakeRef A URI string or JSON representation of a flake reference.
-   */
-  void parseFloxFlake( const std::string & flakeRef );
+    RegistryInput registryInput;
 
-  /** Extend an argument parser to accept a `flake-ref` argument. */
-  argparse::Argument & addFlakeRefArg( argparse::ArgumentParser & parser );
+  protected:
 
-};  /* End struct `FloxFlakeMixin' */
+    /**
+     * @brief Fill @a registryInput by parsing a flake ref.
+     * @param flakeRef A flake reference as a URL string or JSON attribute set.
+     */
+      void
+    parseFlakeRef( const std::string & flakeRef )
+    {
+      this->registryInput.from = std::make_shared<nix::FlakeRef>(
+        flox::parseFlakeRef( flakeRef )
+      );
+    }
+
+
+  public:
+
+    argparse::Argument & addSubtreeArg(   argparse::ArgumentParser & parser );
+    argparse::Argument & addStabilityArg( argparse::ArgumentParser & parser );
+    argparse::Argument & addFlakeRefArg(  argparse::ArgumentParser & parser );
+
+    /**
+     * @brief Return the parsed @a RegistryInput.
+     * @return The parsed @a RegistryInput.
+     */
+    [[nodiscard]]
+    const RegistryInput & getRegistryInput() { return this->registryInput; }
+
+};  /* End struct `InlineInputMixin' */
 
 
 /* -------------------------------------------------------------------------- */
@@ -112,7 +134,9 @@ struct AttrPathMixin : public CommandStateMixin {
    * If `attrPath` is one element then add "current system" as `<SYSTEM>`.
    * If `attrPath` is a catalog with no stability use `stable`.
    */
-  void postProcessArgs() override;
+  void fixupAttrPath();
+
+  inline void postProcessArgs() override { this->fixupAttrPath(); }
 
 };  /* End struct `AttrPathMixin' */
 

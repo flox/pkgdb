@@ -27,64 +27,6 @@ namespace flox::search {
 
 /* -------------------------------------------------------------------------- */
 
-  void
-InputsMixin::parseInputs( const std::string & jsonOrFile )
-{
-  nlohmann::json inputsJSON = parseOrReadJSONObject( jsonOrFile );
-
-  for ( const auto & [name, flakeRef] :  inputsJSON.items() )
-    {
-      this->inputs.emplace_back( std::make_pair(
-        name
-      , Input { this->parseFloxFlakeJSON( flakeRef ), nullptr }
-      ) );
-    }
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  void
-InputsMixin::openDatabases()
-{
-  for ( auto & [name, input] : this->inputs )
-    {
-      std::filesystem::path dbPath = pkgdb::genPkgDbName(
-        input.flake->lockedFlake.getFingerprint()
-      );
-
-      /* Initialize DB if none exists. */
-      if ( ! std::filesystem::exists( dbPath ) )
-        {
-          std::filesystem::create_directories( dbPath.parent_path() );
-          pkgdb::PkgDb( input.flake->lockedFlake, (std::string) dbPath );
-        }
-
-      /* Open a read-only copy. */
-      input.db = std::make_shared<pkgdb::PkgDbReadOnly>( (std::string) dbPath );
-    }
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  argparse::Argument &
-InputsMixin::addInputsArg( argparse::ArgumentParser & parser )
-{
-  return parser.add_argument( "inputs" )
-               .help( "flakes to be searched" )
-               .required()
-               .metavar( "INPUTS" )
-               .action( [&]( const std::string & inputs )
-                        {
-                          this->parseInputs( inputs );
-                        }
-                      );
-}
-
-
-/* ========================================================================== */
-
   argparse::Argument &
 PkgQueryMixin::addQueryArgs( argparse::ArgumentParser & parser )
 {
@@ -94,9 +36,8 @@ PkgQueryMixin::addQueryArgs( argparse::ArgumentParser & parser )
                .metavar( "QUERY" )
                .action( [&]( const std::string & query )
                         {
-                          nlohmann::json jqry = nlohmann::json::parse( query );
                           pkgdb::PkgQueryArgs args;
-                          pkgdb::from_json( jqry, args );
+                          nlohmann::json::parse( query ).get_to( args );
                           this->query = pkgdb::PkgQuery( args );
                         }
                       );
@@ -114,14 +55,46 @@ PkgQueryMixin::queryDb( pkgdb::PkgDbReadOnly & pdb ) const
 
 /* ========================================================================== */
 
+  argparse::Argument &
+SearchParamsMixin::addSearchParamArgs( argparse::ArgumentParser & parser )
+{
+  return parser.add_argument( "parameters" )
+               .help( "search paramaters as inline JSON or a path to a file" )
+               .required()
+               .metavar( "PARAMS" )
+               .action( [&]( const std::string & params )
+                        {
+                          nlohmann::json paramsJSON =
+                            parseOrReadJSONObject( params );
+                          paramsJSON.get_to( this->params );
+                        }
+                      );
+}
+
+
+/* ========================================================================== */
+
 SearchCommand::SearchCommand() : parser( "search" )
 {
   this->parser.add_description(
     "Search a set of flakes and emit a list satisfactory DB + "
     "`Packages.id' pairs"
   );
-  this->addInputsArg( this->parser );
-  this->addQueryArgs( this->parser );
+  this->addSearchParamArgs( this->parser );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
+SearchCommand::initRegistry()
+{
+  nix::ref<nix::Store> store = this->getStore();
+  pkgdb::PkgDbInputFactory factory( store );  // TODO: cacheDir
+  this->registry = std::make_shared<Registry<pkgdb::PkgDbInputFactory>>(
+    this->params.registry
+  , factory
+  );
 }
 
 
@@ -130,75 +103,10 @@ SearchCommand::SearchCommand() : parser( "search" )
   void
 SearchCommand::scrapeIfNeeded()
 {
-  this->openDatabases();
-  std::vector<subtree_type> subtrees = this->query.subtrees.value_or(
-    std::vector<subtree_type> { ST_PACKAGES, ST_LEGACY, ST_CATALOG }
-  );
-  std::vector<std::string> stabilities = this->query.stabilities.value_or(
-    std::vector<std::string> { "stable" }
-  );
-
-  auto maybeScrape =
-    [&]( const flox::AttrPath & path, Input & input ) -> void
+  assert( this->registry != nullptr );
+  for ( auto & [name, input] : * this->registry )
     {
-      if ( input.db->completedAttrSet( path ) ) { return; }
-      pkgdb::ScrapeCommand cmd {};
-      cmd.store    = (std::shared_ptr<nix::Store>)     this->getStore();
-      cmd.state    = (std::shared_ptr<nix::EvalState>) this->getState();
-      cmd.dbPath   = { input.db->dbPath };
-      cmd.flake    = input.flake;
-      cmd.attrPath = path;
-      cmd.openPkgDb();
-      /* Push `STDOUT' fd. */
-      std::ofstream    out( "/dev/null" );
-      std::streambuf * coutbuf = std::cout.rdbuf();
-      std::cout.rdbuf( out.rdbuf() );
-      int rsl = cmd.run();
-      std::cout.rdbuf( coutbuf );  /* Restore `STDOUT' */
-      if ( rsl != EXIT_SUCCESS )
-        {
-          throw FloxException( nix::fmt(
-            "Encountered error scraping flake `%s' at prefix `%s'"
-          , input.flake->lockedFlake.flake.lockedRef.to_string()
-          , nix::concatStringsSep( ".", path )
-          ) );
-        }
-    };
-
-  auto scrapePrefix = [&]( const flox::AttrPath & prefix )
-    {
-      for ( auto & [name, input] : this->inputs )
-        {
-          maybeScrape( prefix, input );
-        }
-    };
-
-  for ( const auto & subtree : subtrees )
-    {
-      flox::AttrPath prefix;
-      switch ( subtree )
-        {
-          case ST_PACKAGES: prefix = { "packages" };         break;
-          case ST_LEGACY:   prefix = { "legacyPackages" };   break;
-          case ST_CATALOG:  prefix = { "catalog" };          break;
-          default: throw FloxException( "Invalid subtree" ); break;
-        }
-      for ( const auto & system : this->query.systems )
-        {
-          prefix.emplace_back( system );
-          if ( subtree != ST_CATALOG )
-            {
-              scrapePrefix( prefix );
-            }
-          else
-            {
-              for ( const auto & stability : stabilities )
-                {
-                  prefix.emplace_back( stability );
-                  scrapePrefix( prefix );
-                }
-            }
-        }
+      input->scrapeSystems( this->params.systems );
     }
 }
 
@@ -210,9 +118,25 @@ SearchCommand::postProcessArgs()
 {
   static bool didPost = false;
   if ( didPost ) { return; }
-  this->openDatabases();
+  this->initRegistry();
   this->scrapeIfNeeded();
   didPost = true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
+SearchCommand::showRow(
+  std::string_view    inputName
+, pkgdb::PkgDbInput & input
+, pkgdb::row_id       row
+)
+{
+  nlohmann::json rsl = input.getDbReadOnly()->getPackage( row );
+  rsl.emplace( "input", inputName );
+  rsl.emplace( "path",  input.getDbReadOnly()->getPackagePath( row ) );
+  std::cout << rsl.dump() << std::endl;
 }
 
 
@@ -222,11 +146,15 @@ SearchCommand::postProcessArgs()
 SearchCommand::run()
 {
   this->postProcessArgs();
-  for ( const auto & [name, input] : this->inputs )
+  assert( this->registry != nullptr );
+  pkgdb::PkgQueryArgs args;
+  for ( const auto & [name, input] : * this->registry )
     {
-      for ( const auto & row : this->queryDb( * input.db ) )
+      this->query =
+        pkgdb::PkgQuery( this->params.fillPkgQueryArgs( name, args ) );
+      for ( const auto & row : this->queryDb( * input->getDbReadOnly() ) )
         {
-          std::cout << input.db->dbPath.string() << " " << row << std::endl;
+          this->showRow( name, * input, row );
         }
     }
   return EXIT_SUCCESS;

@@ -33,7 +33,7 @@
 #ifndef FLOX_PKGDB_VERSION
 #  define FLOX_PKGDB_VERSION  "NO.VERSION"
 #endif
-#define FLOX_PKGDB_SCHEMA_VERSION  "0.1.0"
+#define FLOX_PKGDB_SCHEMA_VERSION  "1.0.0"
 
 
 /* -------------------------------------------------------------------------- */
@@ -46,7 +46,7 @@ namespace flox::pkgdb {
 /** A unique hash associated with a locked flake. */
 using Fingerprint = nix::flake::Fingerprint;
 using SQLiteDb    = sqlite3pp::database;
-using sql_rc      = int;       /**< `SQLITE_*` result code. */
+using sql_rc      = int;                      /**< `SQLITE_*` result code. */
 
 
 /* -------------------------------------------------------------------------- */
@@ -61,15 +61,27 @@ struct PkgDbException : public FloxException {
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * @brief Get the default pkgdb cache directory to save databases.
+ *
+ * The environment variable `PKGDB_CACHEDIR` is respected if it is set,
+ * otherwise we use
+ * `${XDG_CACHE_HOME:-$HOME/.cache}/flox/pkgdb-v<SCHEMA-MAJOR>`.
+ */
+std::filesystem::path getPkgDbCachedir();
+
 /** Get an absolute path to the `PkgDb' for a given fingerprint hash. */
-std::string genPkgDbName( const Fingerprint & fingerprint );
+std::filesystem::path genPkgDbName(
+  const Fingerprint           & fingerprint
+, const std::filesystem::path & cacheDir = getPkgDbCachedir()
+);
 
 
 /* -------------------------------------------------------------------------- */
 
 /**
- * A SQLite3 database used to cache derivation/package information about a
- * single locked flake.
+ * @brief A SQLite3 database used to cache derivation/package information about
+ *        a single locked flake.
  */
 class PkgDbReadOnly {
 
@@ -120,7 +132,8 @@ class PkgDbReadOnly {
   private:
 
     /**
-     * Open SQLite3 db connection at @a dbPath.
+     * @brief Open SQLite3 db connection at @a dbPath.
+     *
      * Throw an error if no database exists.
      */
     void init();
@@ -133,8 +146,9 @@ class PkgDbReadOnly {
   protected:
 
     /**
-     * Dummy constructor required for child classes so that they can open
-     * databases in read-only mode.
+     * @brief Dummy constructor required for child classes so that they can open
+     *        databases in read-only mode.
+     *
      * Does NOT attempt to create a database if one does not exist.
      */
     PkgDbReadOnly() : fingerprint( nix::htSHA256 ) {}
@@ -143,7 +157,8 @@ class PkgDbReadOnly {
   public:
 
     /**
-     * Opens an existing database.
+     * @brief Opens an existing database.
+     *
      * Does NOT attempt to create a database if one does not exist.
      * @param dbPath Absolute path to database file.
      */
@@ -155,7 +170,8 @@ class PkgDbReadOnly {
     }
 
     /**
-     * Opens a DB directly by its fingerprint hash.
+     * @brief Opens a DB directly by its fingerprint hash.
+     *
      * Does NOT attempt to create a database if one does not exist.
      * @param fingerprint Unique hash associated with locked flake.
      * @param dbPath Absolute path to database file.
@@ -170,12 +186,13 @@ class PkgDbReadOnly {
     }
 
     /**
-     * Opens a DB directly by its fingerprint hash.
+     * @brief Opens a DB directly by its fingerprint hash.
+     *
      * Does NOT attempt to create a database if one does not exist.
      * @param fingerprint Unique hash associated with locked flake.
      */
     explicit PkgDbReadOnly( const Fingerprint & fingerprint )
-      : PkgDbReadOnly( fingerprint, genPkgDbName( fingerprint ) )
+      : PkgDbReadOnly( fingerprint, genPkgDbName( fingerprint ).string() )
     {}
 
 
@@ -189,7 +206,7 @@ class PkgDbReadOnly {
     std::string getDbVersion();
 
     /**
-     * Get the `AttrSet.id` for a given path.
+     * @brief Get the `AttrSet.id` for a given path.
      * @param path An attribute path prefix such as `packages.x86_64-linux` or
      *             `legacyPackages.aarch64-darwin.python3Packages`.
      * @return A unique `row_id` ( unsigned 64bit int ) associated with @a path.
@@ -197,7 +214,7 @@ class PkgDbReadOnly {
     row_id getAttrSetId( const flox::AttrPath & path );
 
     /**
-     * Check to see if database has and attribute set at @a path.
+     * @brief Check to see if database has and attribute set at @a path.
      * @param path An attribute path prefix such as `packages.x86_64-linux` or
      *             `legacyPackages.aarch64-darwin.python3Packages`.
      * @return `true` iff the database has an `AttrSet` at @a path.
@@ -205,8 +222,17 @@ class PkgDbReadOnly {
     bool hasAttrSet( const flox::AttrPath & path );
 
     /**
-     * Check to see if database has a complete list of packages under the
-     * prefix @a path.
+     * @brief Check to see if database has a complete list of packages under the
+     *        prefix @a path.
+     * @param row The `AttrSets.id` to lookup.
+     * @return `true` iff the database has completely scraped the `AttrSet` at
+     *          @a path.
+     */
+    bool completedAttrSet( row_id row );
+
+    /**
+     * @brief Check to see if database has a complete list of packages under the
+     *        prefix @a path.
      * @param path An attribute path prefix such as `packages.x86_64-linux` or
      *             `legacyPackages.aarch64-darwin.python3Packages`.
      * @return `true` iff the database has completely scraped the `AttrSet` at
@@ -215,7 +241,7 @@ class PkgDbReadOnly {
     bool completedAttrSet( const flox::AttrPath & path );
 
     /**
-     * Get the attribute path for a given `AttrSet.id`.
+     * @brief Get the attribute path for a given `AttrSet.id`.
      * @param row A unique `row_id` ( unsigned 64bit int ).
      * @return An attribute path prefix such as `packages.x86_64-linux` or
      *         `legacyPackages.aarch64-darwin.python3Packages`.
@@ -223,7 +249,7 @@ class PkgDbReadOnly {
     flox::AttrPath getAttrSetPath( row_id row );
 
     /**
-     * Get the `Packages.id` for a given path.
+     * @brief Get the `Packages.id` for a given path.
      * @param path An attribute path prefix such as
      *             `packages.x86_64-linux.hello` or
      *             `legacyPackages.aarch64-darwin.python3Packages.pip`.
@@ -232,7 +258,7 @@ class PkgDbReadOnly {
     row_id getPackageId( const flox::AttrPath & path );
 
     /**
-     * Get the attribute path for a given `Packages.id`.
+     * @brief Get the attribute path for a given `Packages.id`.
      * @param row A unique `row_id` ( unsigned 64bit int ).
      * @return An attribute path such as `packages.x86_64-linux.hello` or
      *         `legacyPackages.aarch64-darwin.python3Packages.pip`.
@@ -240,7 +266,8 @@ class PkgDbReadOnly {
     flox::AttrPath getPackagePath( row_id row );
 
     /**
-     * Check to see if database has a package at the attribute path @a path.
+     * @brief Check to see if database has a package at the attribute path
+     *        @a path.
      * @param path An attribute path such as `packages.x86_64-linux.hello` or
      *             `legacyPackages.aarch64-darwin.python3Packages.pip`.
      * @return `true` iff the database has a rows in the `Packages`
@@ -250,28 +277,43 @@ class PkgDbReadOnly {
 
 
     /**
-     * Get the `Description.description` for a given `Description.id`.
+     * @brief Get the `Description.description` for a given `Description.id`.
      * @param descriptionId The row id to lookup.
      * @return A string describing a package.
      */
     std::string getDescription( row_id descriptionId );
 
-    /**
-     * Enumerate all `AttrSets.id`s which are descendants ( recursively ) of
-     * the `AttrSets.id` @a root.
-     * @param root The `AttrSets.id` to target.
-     * @return All `AttrSets.id`s which are descendants of @a root.
-     */
-    std::vector<row_id> getDescendantAttrSets( row_id root );
-
 
     /**
-     * Return a list of `Packages.id`s for packages which satisfy a given
-     * set of requirements.
+     * @brief Return a list of `Packages.id`s for packages which satisfy a given
+     *        set of requirements.
+     *
      * These results may be ordered flexibly based on various query parameters.
      * TODO: document parameters effected by ordering.
      */
      std::vector<row_id> getPackages( const PkgQueryArgs & params );
+
+
+    /**
+     * @brief Get metadata about a single package.
+     *
+     * Returns `pname`, `version`, `description`, `broken`, `unfree`,
+     * and `license` columns.
+     * @param row A `Packages.id` to lookup.
+     * @return A JSON object containing information about a package.
+     */
+     nlohmann::json getPackage( row_id row );
+
+
+    /**
+     * @brief Get metadata about a single package.
+     *
+     * Returns `pname`, `version`, `description`, `broken`, `unfree`,
+     * and `license` columns.
+     * @param row An attribute path to a package.
+     * @return A JSON object containing information about a package.
+     */
+    nlohmann::json getPackage( const flox::AttrPath & path );
 
 
 /* -------------------------------------------------------------------------- */
@@ -281,27 +323,15 @@ class PkgDbReadOnly {
 
 /* -------------------------------------------------------------------------- */
 
-/**
- * Measures a "strength" ranking that can be used to order packages by how
- * closely they a match string.
- * - 0 :: Case-insensitive exact match with `pname`
- * - 1 :: Case-insensitive substring match with `pname` and `description`.
- * - 2 :: Case-insensitive substring match with `pname`.
- * - 3 :: Case insensitive substring match with `description`.
- * - 4 :: No match.
- */
-enum match_strength {
-  MS_EXACT_PNAME        = 0
-, MS_PARTIAL_PNAME_DESC = 1
-, MS_PARTIAL_PNAME      = 2
-, MS_PARTIAL_DESC       = 3
-, MS_NONE               = 4  /* Ensure this is always the highest. */
-};
+/** Restricts template parameters to classes that extend @a PkgDbReadOnly. */
+  template <typename T>
+concept pkgdb_typename = std::is_base_of<PkgDbReadOnly, T>::value;
+
 
 /* -------------------------------------------------------------------------- */
 
 /**
- * Predicate to detect failing SQLite3 return codes.
+ * @brief Predicate to detect failing SQLite3 return codes.
  * @param rcode A SQLite3 _return code_.
  * @return `true` iff @a rc is a SQLite3 error.
  */

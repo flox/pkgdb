@@ -106,28 +106,6 @@ class FloxFlake : public std::enable_shared_from_this<FloxFlake> {
 
 /* -------------------------------------------------------------------------- */
 
-/** A mixin that uses @a NixState members to parse and open flakes. */
-struct FloxFlakeParserMixin : virtual public NixState {
-
-  /**
-   * Open a flake with a reference string or attrset flake reference.
-   * @param flakeRef A URI string or JSON representation of a flake reference.
-   */
-  std::shared_ptr<FloxFlake> parseFloxFlake( const std::string & flakeRef );
-
-  /**
-   * Open a flake with a reference string or attrset flake reference.
-   * @param flakeRef A URI string or JSON representation of a flake reference.
-   */
-  std::shared_ptr<FloxFlake> parseFloxFlakeJSON(
-    const nlohmann::json & flakeRef
-  );
-
-};  /* End struct `FloxFlakeParserMixin' */
-
-
-/* -------------------------------------------------------------------------- */
-
 }  /* End Namespace `flox' */
 
 

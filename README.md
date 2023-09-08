@@ -210,3 +210,28 @@ erDiagram
     json attrs
   }
 ```
+
+
+### Databases
+
+Each locked flake has its own database keyed using a unique _fingerprint_.
+The separation between these databases simplifies change detection and handling
+of overridden inputs to flakes.
+These fingerprints are identical to those used by `nix` to create its own
+_eval caches_.
+
+
+#### Cache Directory
+
+Some commands allow database paths to be explicitly set with `--database`,
+while those which act on multiple databases will place databases under
+the environment variable `PKGDB_CACHEDIR` if it is set, otherwise the directory
+ `${XDG_CACHE_HOME:-$HOME/.cache}/flox/pkgdb-v<SCHEMA-MAJOR>` is used.
+
+
+#### Garbage Collection
+
+Because each unique locked flake has its own database, over time these databases
+will accumulate and require garbage collection.
+At this time there is no automated garbage collection mechanism, but simply
+deleting you cache directory will suffice.

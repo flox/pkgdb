@@ -70,13 +70,13 @@ runTest( std::string_view name, F f, Args && ... args )
  * "must specify at least one argument for '...' parameter of variadic macro"
  * https://github.com/llvm/llvm-project/issues/50951
  */
-#define _RUN_TEST( _EC, _NAME, ... )                      \
-  {                                                       \
-    int __ec = runTest(             ( # _NAME )           \
-                      ,             ( test_ ## _NAME )    \
-          __VA_OPT__( , ) __VA_ARGS__                     \
-                      );                                  \
-    if ( __ec != EXIT_SUCCESS ) { _EC = __ec; }           \
+#define _RUN_TEST( _EXIT_CODE, _NAME, ... )                     \
+  {                                                             \
+    int exitCode = runTest(             ( # _NAME )             \
+                      ,             ( test_ ## _NAME )          \
+          __VA_OPT__( , ) __VA_ARGS__                           \
+                      );                                        \
+    if ( exitCode != EXIT_SUCCESS ) { _EXIT_CODE = exitCode; }  \
   }
 
 
@@ -103,15 +103,16 @@ runTest( std::string_view name, F f, Args && ... args )
  */
 #define EXPECT_EQ( EXPR_A, EXPR_B )                                            \
   {                                                                            \
-    auto _a = ( EXPR_A );                                                      \
-    auto _b = ( EXPR_B );                                                      \
-    if ( _a != _b )                                                            \
+    auto valA = ( EXPR_A );                                                    \
+    auto valB = ( EXPR_B );                                                    \
+    if ( valA != valB )                                                        \
       {                                                                        \
         std::cerr << "Expectation failed: ( ";                                 \
         std::cerr << ( # EXPR_A );                                             \
         std::cerr << " ) == ( ";                                               \
         std::cerr << ( # EXPR_B );                                             \
-        std::cerr << " ). Got '" << _a << "' != '" << _b << "'" << std::endl;  \
+        std::cerr << " ). Got '" << valA << "' != '" << valB << "'"            \
+                  << std::endl;                                                \
         return false;                                                          \
       }                                                                        \
   }

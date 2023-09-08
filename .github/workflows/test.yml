@@ -41,22 +41,6 @@ jobs:
             stalled-download-timeout = 90
             timeout = 0
 
-      - name: Setup
-        run: |
-          echo "# ============================================================================ #" >&2;
-          { printf '    bash   version: '; bash   --version|head -n1; } >&2;
-          { printf '    nix    version: '; nix    --version; } >&2;
-          echo "# ---------------------------------------------------------------------------- #" >&2;
-
-      - name: Nix Flake Check
-        run: nix flake check
-
-      - name: Run Build
-        run: nix develop --no-update-lock-file --command make -j4
-
-      - name: Run Help
-        run: ./bin/pkgdb --help
-
       # This is performed to reduce cpu/memory overhead in tests later.
       # NOTE: Ensure this `rev' is aligned with `<pkgdb>/tests/setup_suite.bats'
       - name: Warm Nix Eval Caches
@@ -70,6 +54,27 @@ jobs:
           )";
           nix flake show --legacy "github:NixOS/nixpkgs/$rev"  \
                          --system "$NIX_SYSTEM" >/dev/null;
+
+      - name: Nix Flake Check
+        run: nix flake check
+
+      - name: Setup
+        run: |
+          echo "# ============================================================================ #" >&2;
+          echo 'Runner Version' >&2;
+          { printf '    bash   version: '; bash   --version|head -n1; } >&2;
+          { printf '    nix    version: '; nix    --version; } >&2;
+          echo "# ---------------------------------------------------------------------------- #" >&2;
+          NO_WELCOME=: nix develop --no-update-lock-file --command sh -c '
+            echo "";
+            echo "Development Environment Versions";
+            printf "    nix    version: "; nix    --version;
+            printf "    CXX    version: "; $CXX --version|head -n1;
+          ' >&2;
+          echo "# ============================================================================ #" >&2;
+
+      - name: Run Build
+        run: nix develop --no-update-lock-file --command make -j4
 
       - name: Build Tests
         run: nix develop --no-update-lock-file --command make tests -j4

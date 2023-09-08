@@ -39,26 +39,68 @@ using row_id = uint64_t;  /**< A _row_ index in a SQLite3 table. */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Collection of query parameters used to lookup packages in a database.
- * These use a combination of SQL statements and post processing with
- * `node-semver` to produce a list of satisfactory packages.
+ * Measures a "strength" ranking that can be used to order packages by how
+ * closely they a match string.
+ * - 0 :: Case-insensitive exact match with `pname`
+ * - 1 :: Case-insensitive substring match with `pname` and `description`.
+ * - 2 :: Case-insensitive substring match with `pname`.
+ * - 3 :: Case insensitive substring match with `description`.
+ * - 4 :: No match.
  */
-struct PkgQueryArgs {
+enum match_strength {
+  MS_EXACT_PNAME        = 0
+, MS_PARTIAL_PNAME_DESC = 1
+, MS_PARTIAL_PNAME      = 2
+, MS_PARTIAL_DESC       = 3
+, MS_NONE               = 4  /* Ensure this is always the highest. */
+};
 
-  /** Filter results by partial name/description match. */
-  std::optional<std::string> match;
+/* -------------------------------------------------------------------------- */
+
+/** Minimal set of query parameters related to a single package. */
+struct PkgDescriptorBase {
   std::optional<std::string> name;    /**< Filter results by exact `name`. */
   std::optional<std::string> pname;   /**< Filter results by exact `pname`. */
   std::optional<std::string> version; /**< Filter results by exact version. */
   std::optional<std::string> semver;  /**< Filter results by version range. */
+
+  /** Reset to default state. */
+    inline void
+  clear()
+  {
+    this->name    = std::nullopt;
+    this->pname   = std::nullopt;
+    this->version = std::nullopt;
+    this->semver  = std::nullopt;
+  }
+};
+
+
+void from_json( const nlohmann::json & jfrom,       PkgDescriptorBase & desc );
+void to_json(         nlohmann::json & jto,   const PkgDescriptorBase & desc );
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Collection of query parameters used to lookup packages in a database.
+ * These use a combination of SQL statements and post processing with
+ * `node-semver` to produce a list of satisfactory packages.
+ */
+struct PkgQueryArgs : public PkgDescriptorBase {
+
+  /** Filter results by partial name/description match. */
+  std::optional<std::string> match;
 
   /** Filter results to those explicitly marked with the given licenses. */
   std::optional<std::vector<std::string>> licenses;
 
   /** Whether to include packages which are explicitly marked `broken`. */
   bool allowBroken = false;
+
   /** Whether to include packages which are explicitly marked `unfree`. */
   bool allowUnfree = true;
+
   /** Whether pre-release versions should be ordered before releases. */
   bool preferPreReleases = false;
 
@@ -203,6 +245,7 @@ class PkgQuery : public PkgQueryArgs {
      * @a semvers member variable.
      * If @a semvers is unset, return the original set _as is_.
      */
+      [[nodiscard]]
       std::unordered_set<std::string>
     filterSemvers( const std::unordered_set<std::string> & versions ) const;
 
@@ -254,6 +297,7 @@ class PkgQuery : public PkgQueryArgs {
      * from @a binds before being executed.
      * @return An unbound SQL query string.
      */
+    [[nodiscard]]
     std::string str() const;
 
     /**
@@ -262,6 +306,7 @@ class PkgQuery : public PkgQueryArgs {
      * post-processing step.
      * Unlike @a execute() this routine allows the caller to iterate over rows.
      */
+    [[nodiscard]]
     std::shared_ptr<sqlite3pp::query> bind( sqlite3pp::database & pdb ) const;
 
     /**
@@ -269,6 +314,7 @@ class PkgQuery : public PkgQueryArgs {
      * satisfactory `Packages.id`s.
      * This performs `semver` filtering.
      */
+    [[nodiscard]]
     std::vector<row_id> execute( sqlite3pp::database & pdb ) const;
 
 };

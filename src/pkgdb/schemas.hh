@@ -43,10 +43,10 @@ CREATE TABLE IF NOT EXISTS AttrSets (
 , parent    INTEGER
 , attrName  VARCHAR( 255) NOT NULL
 , done      BOOL          NOT NULL DEFAULT FALSE
-, CONSTRAINT  UC_AttrSets UNIQUE ( id, parent )
+, CONSTRAINT  UC_AttrSets UNIQUE ( parent, attrName )
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_AttrSets ON AttrSets ( id, parent );
+CREATE UNIQUE INDEX IF NOT EXISTS idx_AttrSets ON AttrSets ( parent, attrName );
 
 CREATE TRIGGER IF NOT EXISTS IT_AttrSets AFTER INSERT ON AttrSets
   WHEN
@@ -114,7 +114,9 @@ CREATE VIEW IF NOT EXISTS v_AttrPaths AS
                    , Parent.subtree
                    , iif( ( Parent.system IS NULL ), O.attrName, Parent.system )
                      AS system
-                   , iif( ( Parent.subtree = 'catalog' )
+                   , iif( ( ( Parent.subtree IS NOT NULL ) AND
+                            ( Parent.subtree = 'catalog' )
+                          )
                         , iif( ( ( Parent.stability IS NULL ) AND
                                  ( Parent.system IS NOT NULL )
                                )
@@ -162,7 +164,9 @@ CREATE VIEW IF NOT EXISTS v_PackagesSearch AS SELECT
 , v_AttrPaths.system
 , v_AttrPaths.stability
 , json_insert( v_AttrPaths.path, '$[#]', Packages.attrName ) AS path
+, ( json_extract( v_AttrPaths.path, '$[#]' ) + 1 ) AS depth
 , Packages.name
+, Packages.attrName
 , Packages.pname
 , Packages.version
 , iif( ( Packages.version IS NULL ), NULL

@@ -38,7 +38,8 @@ VerboseParser::VerboseParser( const std::string & name
         {
           nix::verbosity =
             ( nix::verbosity <= nix::lvlError )
-              ? nix::lvlError : (nix::Verbosity) ( nix::verbosity - 1 );
+            ? nix::lvlError
+            : static_cast<nix::Verbosity>( nix::verbosity - 1 );
         }
       ).default_value( false ).implicit_value( true )
       .append();
@@ -50,7 +51,8 @@ VerboseParser::VerboseParser( const std::string & name
         {
           nix::verbosity =
             ( nix::lvlVomit <= nix::verbosity )
-              ? nix::lvlVomit : (nix::Verbosity) ( nix::verbosity + 1 );
+            ? nix::lvlVomit
+            : static_cast<nix::Verbosity>( nix::verbosity + 1 );
         }
       ).default_value( false ).implicit_value( true )
       .append();
@@ -59,38 +61,8 @@ VerboseParser::VerboseParser( const std::string & name
 
 /* -------------------------------------------------------------------------- */
 
-  void
-FloxFlakeMixin::parseFloxFlake( const std::string & flakeRef )
-{
-  {
-    nix::FlakeRef ref = flox::parseFlakeRef( flakeRef );
-    nix::Activity act(
-      * nix::logger
-    , nix::lvlInfo
-    , nix::actUnknown
-    , nix::fmt( "fetching flake '%s'", ref.to_string() )
-    );
-    this->flake = std::make_shared<flox::FloxFlake>( this->getState(), ref );
-  }
-
-  this->flake = this->FloxFlakeParserMixin::parseFloxFlake( flakeRef );
-
-  if ( ! this->flake->lockedFlake.flake.lockedRef.input.hasAllInfo()
-     )
-    {
-      if ( nix::lvlWarn <= nix::verbosity )
-        {
-          nix::logger->warn(
-            "flake-reference is unlocked/dirty - "
-            "resulting DB may not be cached."
-          );
-        }
-    }
-}
-
-
   argparse::Argument &
-FloxFlakeMixin::addFlakeRefArg( argparse::ArgumentParser & parser )
+InlineInputMixin::addFlakeRefArg( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "flake-ref" )
                .help(
@@ -98,9 +70,94 @@ FloxFlakeMixin::addFlakeRefArg( argparse::ArgumentParser & parser )
                )
                .required()
                .metavar( "FLAKE-REF" )
-               .action( [&]( const std::string & ref )
+               .action( [&]( const std::string & flakeRef )
                         {
-                          this->parseFloxFlake( ref );
+                          this->parseFlakeRef( flakeRef );
+                        }
+                      );
+}
+
+
+  argparse::Argument &
+InlineInputMixin::addSubtreeArg( argparse::ArgumentParser & parser )
+{
+  return parser.add_argument( "--subtree" )
+               .help(
+                 "A subtree name, being one of `packages`, `legacyPackages`, "
+                 "or `catalog', that should be processed. "
+                 "May be used multiple times."
+               )
+               .required()
+               .metavar( "SUBTREE" )
+               .action( [&]( const std::string & subtree )
+                        {
+                          /* Parse the subtree type to an enum. */
+                          subtree_type stype;
+                          from_json( nlohmann::json( subtree ), stype );
+                          /* Create or append the `subtrees' list. */
+                          if ( this->registryInput.subtrees.has_value() )
+                            {
+                              if ( auto has =
+                                     std::find(
+                                       this->registryInput.subtrees->begin()
+                                     , this->registryInput.subtrees->end()
+                                     , stype
+                                     );
+                                   has == this->registryInput.subtrees->end()
+                                 )
+                                {
+                                  this->registryInput.subtrees->emplace_back(
+                                    stype
+                                  );
+                                }
+                            }
+                          else
+                            {
+                              this->registryInput.subtrees = {
+                                std::vector<subtree_type> { stype }
+                              };
+                            }
+                        }
+                      );
+}
+
+
+  argparse::Argument &
+InlineInputMixin::addStabilityArg( argparse::ArgumentParser & parser )
+{
+  return parser.add_argument( "--stability" )
+               .help(
+                 "A stability name, being one of `stable`, `staging`, "
+                 "or `unstable', that should be processed. "
+                 "May be used multiple times."
+               )
+               .required()
+               .metavar( "STABILITY" )
+               .action( [&]( const std::string & stability )
+                        {
+                          /* Create or append the `stabilities' list. */
+                          if ( this->registryInput.stabilities.has_value() )
+                            {
+                              if ( auto has =
+                                     std::find(
+                                       this->registryInput.stabilities->begin()
+                                     , this->registryInput.stabilities->end()
+                                     , stability
+                                     );
+                                   has == this->registryInput.stabilities->end()
+                                 )
+                                {
+                                  this->registryInput.stabilities->emplace_back(
+                                    stability
+                                  );
+                                }
+                            }
+                          else
+                            {
+                              this->registryInput.stabilities = {
+                                std::vector<std::string> { stability }
+                              };
+                            }
                         }
                       );
 }
@@ -124,7 +181,7 @@ AttrPathMixin::addAttrPathArgs( argparse::ArgumentParser & parser )
 
 
   void
-AttrPathMixin::postProcessArgs()
+AttrPathMixin::fixupAttrPath()
 {
   if ( this->attrPath.empty() ) { this->attrPath.push_back( "packages" ); }
   if ( this->attrPath.size() < 2 )
