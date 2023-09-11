@@ -33,6 +33,36 @@ PkgDescriptorBase::clear()
 
 /* -------------------------------------------------------------------------- */
 
+  void
+from_json( const nlohmann::json & jfrom, PkgDescriptorBase & desc )
+{
+  desc.clear();
+  for ( const auto & [key, value] : jfrom.items() )
+    {
+      if ( key == "name" )         { value.get_to( desc.name );    }
+      else if ( key == "pname" )   { value.get_to( desc.pname );   }
+      else if ( key == "version" ) { value.get_to( desc.version ); }
+      else if ( key == "semver" )  { value.get_to( desc.semver );  }
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
+to_json( nlohmann::json & jto, const PkgDescriptorBase & desc )
+{
+  jto = {
+    { "name",    desc.name    }
+  , { "pname",   desc.pname   }
+  , { "version", desc.version }
+  , { "semver",  desc.semver  }
+  };
+}
+
+
+/* -------------------------------------------------------------------------- */
+
   std::string
 PkgQueryArgs::PkgQueryInvalidArgException::errorMessage(
   const PkgQueryArgs::PkgQueryInvalidArgException::error_code & ecode
@@ -678,34 +708,6 @@ PkgQuery::execute( sqlite3pp::database & pdb ) const
         }
     }
   return rsl;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  void
-from_json( const nlohmann::json & jfrom, PkgDescriptorBase & desc )
-{
-  desc.clear();
-  for ( const auto & [key, value] : jfrom.items() )
-    {
-      if ( key == "name" )         { value.get_to( desc.name );    }
-      else if ( key == "pname" )   { value.get_to( desc.pname );   }
-      else if ( key == "version" ) { value.get_to( desc.version ); }
-      else if ( key == "semver" )  { value.get_to( desc.semver );  }
-    }
-}
-
-
-  void
-to_json( nlohmann::json & jto, const PkgDescriptorBase & desc )
-{
-  jto = {
-    { "name",    desc.name    }
-  , { "pname",   desc.pname   }
-  , { "version", desc.version }
-  , { "semver",  desc.semver  }
-  };
 }
 
 

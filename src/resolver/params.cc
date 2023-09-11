@@ -37,7 +37,6 @@ PkgDescriptorRaw::clear()
   void
 from_json( const nlohmann::json & jfrom, PkgDescriptorRaw & desc )
 {
-  desc.clear();
   pkgdb::from_json( jfrom, dynamic_cast<pkgdb::PkgDescriptorBase &>( desc ) );
   try { jfrom.at( "preferPreReleases" ).get_to( desc.preferPreReleases ); }
   catch( const nlohmann::json::out_of_range & ) {}
