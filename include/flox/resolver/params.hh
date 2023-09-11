@@ -3,7 +3,7 @@
  * @file flox/resolver/params.hh
  *
  * @brief A set of user inputs used to set input preferences and query
- * parameters during resolution.
+ *        parameters during resolution.
  *
  *
  * -------------------------------------------------------------------------- */
@@ -17,6 +17,7 @@
 #include <nlohmann/json.hpp>
 
 #include "flox/pkgdb/pkg-query.hh"
+#include "flox/pkgdb/params.hh"
 #include "flox/registry.hh"
 
 
@@ -108,63 +109,6 @@ void to_json( nlohmann::json & jto, const PkgDescriptorRaw & desc );
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief Global preferences used for resolution. */
-struct Preferences {
-
-  /**
-   * Ordered list of systems to be searched.
-   * Results will be grouped by system in the order they appear here.
-   */
-  std::vector<std::string> systems = { nix::settings.thisSystem.get() };
-
-
-  /** @brief Allow/disallow packages with certain metadata. */
-  struct Allows {
-
-    /** Whether to include packages which are explicitly marked `unfree`. */
-    bool unfree = true;
-
-    /** Whether to include packages which are explicitly marked `broken`. */
-    bool broken = false;
-
-    /** Filter results to those explicitly marked with the given licenses. */
-    std::optional<std::vector<std::string>> licenses;
-
-  };  /* End struct `ResolveOneParams::Allows' */
-
-  Allows allow; /**< Allow/disallow packages with certain metadata. */
-
-
-  /**
-   * @brief Settings associated with semantic version processing.
-   *
-   * These act as the _global_ default, but may be overridden by
-   * individual descriptors.
-   */
-  struct Semver {
-    /** Whether pre-release versions should be ordered before releases. */
-    bool preferPreReleases = false;
-  };  /* End struct `ResolveOneParams::Semver' */
-
-  Semver semver;  /**< Settings associated with semantic version processing. */
-
-
-  /** @brief Reset to default/empty state. */
-  void clear();
-
-  /**
-   * @brief Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to
-   *        lookup packages.
-   *
-   * This clears @a pqa before filling it.
-   */
-  pkgdb::PkgQueryArgs & fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
-
-};  /* End struct `Preferences' */
-
-
-/* -------------------------------------------------------------------------- */
-
 /**
  * @brief A set of resolution parameters for resolving a single descriptor.
  *
@@ -174,7 +118,19 @@ struct Preferences {
  * This is essentially a reorganized form of @a flox::pkgdb::PkgQueryArgs
  * that is suited for JSON input.
  */
-struct ResolveOneParams : public Preferences {
+struct ResolveOneParams : public pkgdb::QueryPreferences {
+
+  /* QueryPreferences provides:
+   *   std::vector<std::string> systems;
+   *   struct Allows {
+   *     bool unfree = true;
+   *     bool broken = false;
+   *     std::optional<std::vector<std::string>> licenses;
+   *   } allow;
+   *   struct Semver {
+   *     preferPreReleases = false;
+   *   } semver;
+   */
 
   /** Settings and fetcher information associated with inputs. */
   RegistryRaw registry;

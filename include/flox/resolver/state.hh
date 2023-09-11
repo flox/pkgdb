@@ -14,6 +14,7 @@
 
 
 #include "flox/pkgdb/input.hh"
+#include "flox/pkgdb/params.hh"
 #include "flox/resolver/params.hh"
 
 
@@ -35,7 +36,7 @@ class ResolverState : protected pkgdb::PkgDbRegistryMixin {
 
     RegistryRaw registryRaw;
 
-    Preferences preferences;
+    pkgdb::QueryPreferences preferences;
 
 
   protected:
@@ -75,7 +76,7 @@ class ResolverState : protected pkgdb::PkgDbRegistryMixin {
      */
     explicit ResolverState( const ResolveOneParams & params )
       : registryRaw( params.registry )
-      , preferences( dynamic_cast<const Preferences &>( params ) )
+      , preferences( dynamic_cast<const pkgdb::QueryPreferences &>( params ) )
     {}
 
 

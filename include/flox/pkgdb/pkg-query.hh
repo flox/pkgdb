@@ -41,11 +41,11 @@ using row_id = uint64_t;  /**< A _row_ index in a SQLite3 table. */
 /**
  * Measures a "strength" ranking that can be used to order packages by how
  * closely they a match string.
- * - 0 :: Case-insensitive exact match with `pname`
- * - 1 :: Case-insensitive substring match with `pname` and `description`.
- * - 2 :: Case-insensitive substring match with `pname`.
- * - 3 :: Case insensitive substring match with `description`.
- * - 4 :: No match.
+ * - 0 : Case-insensitive exact match with `pname`
+ * - 1 : Case-insensitive substring match with `pname` and `description`.
+ * - 2 : Case-insensitive substring match with `pname`.
+ * - 3 : Case insensitive substring match with `description`.
+ * - 4 : No match.
  */
 enum match_strength {
   MS_EXACT_PNAME        = 0
@@ -57,14 +57,14 @@ enum match_strength {
 
 /* -------------------------------------------------------------------------- */
 
-/** Minimal set of query parameters related to a single package. */
+/** @brief Minimal set of query parameters related to a single package. */
 struct PkgDescriptorBase {
   std::optional<std::string> name;    /**< Filter results by exact `name`. */
   std::optional<std::string> pname;   /**< Filter results by exact `pname`. */
   std::optional<std::string> version; /**< Filter results by exact version. */
   std::optional<std::string> semver;  /**< Filter results by version range. */
 
-  /** Reset to default state. */
+  /** @brief Reset to default state. */
     inline void
   clear()
   {
@@ -76,14 +76,20 @@ struct PkgDescriptorBase {
 };
 
 
-void from_json( const nlohmann::json & jfrom,       PkgDescriptorBase & desc );
-void to_json(         nlohmann::json & jto,   const PkgDescriptorBase & desc );
+/* -------------------------------------------------------------------------- */
+
+/** @brief Convert a JSON object to a @a flox::pkgdb::PkgDescriptorBase. */
+void from_json( const nlohmann::json & jfrom, PkgDescriptorBase & desc );
+
+/** @brief Convert a @a flox::pkgdb::PkgDescriptorBase to a JSON object. */
+void to_json( nlohmann::json & jto, const PkgDescriptorBase & desc );
 
 
 /* -------------------------------------------------------------------------- */
 
 /**
- * Collection of query parameters used to lookup packages in a database.
+ * @brief Collection of query parameters used to lookup packages in a database.
+ *
  * These use a combination of SQL statements and post processing with
  * `node-semver` to produce a list of satisfactory packages.
  */

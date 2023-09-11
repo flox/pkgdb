@@ -20,7 +20,6 @@ namespace flox::search {
   void
 from_json( const nlohmann::json & jfrom, SearchQuery & qry )
 {
-  qry.clear();
   pkgdb::from_json( jfrom, dynamic_cast<pkgdb::PkgDescriptorBase &>( qry ) );
   try { jfrom.at( "match" ).get_to( qry.match ); }
   catch( const nlohmann::json::out_of_range & ) {}
@@ -39,7 +38,6 @@ to_json( nlohmann::json & jto, const SearchQuery & qry )
   pkgdb::PkgQueryArgs &
 SearchQuery::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 {
-  pqa.clear();
   pqa.name    = this->name;
   pqa.pname   = this->pname;
   pqa.version = this->version;
@@ -54,13 +52,9 @@ SearchQuery::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
   void
 SearchParams::clear()
 {
+  this->pkgdb::QueryPreferences::clear();
   this->registry.clear();
   this->query.clear();
-  this->systems                  = {};
-  this->allow.unfree             = true;
-  this->allow.broken             = false;
-  this->allow.licenses           = std::nullopt;
-  this->semver.preferPreReleases = false;
 }
 
 
@@ -71,8 +65,13 @@ SearchParams::fillPkgQueryArgs( const std::string         & input
                               ,       pkgdb::PkgQueryArgs & pqa
                               ) const
 {
-  pqa.clear();
+  /* Fill from global preferences */
+  this->pkgdb::QueryPreferences::fillPkgQueryArgs( pqa );
+
+  /* Fill from query */
   this->query.fillPkgQueryArgs( pqa );
+
+  /* Fill from input */
 
   /* Look for the named input and our fallbacks/default in the inputs list.
    * then fill input specific settings. */
@@ -92,11 +91,6 @@ SearchParams::fillPkgQueryArgs( const std::string         & input
       pqa.stabilities = this->registry.defaults.stabilities;
     }
 
-  pqa.systems           = this->systems;
-  pqa.allowUnfree       = this->allow.unfree;
-  pqa.allowBroken       = this->allow.broken;
-  pqa.licenses          = this->allow.licenses;
-  pqa.preferPreReleases = this->semver.preferPreReleases;
   return pqa;
 }
 
@@ -106,7 +100,7 @@ SearchParams::fillPkgQueryArgs( const std::string         & input
   void
 from_json( const nlohmann::json & jfrom, SearchParams & params )
 {
-  params.clear();
+  pkgdb::from_json( jfrom, dynamic_cast<pkgdb::QueryPreferences &>( params ) );
   for ( const auto & [key, value] : jfrom.items() )
     {
       if ( key == "registry" )
@@ -117,49 +111,13 @@ from_json( const nlohmann::json & jfrom, SearchParams & params )
         {
           value.get_to( params.query );
         }
-      else if ( key == "systems" )
+      else if ( ( key == "systems" ) ||
+                ( key == "allow" )   ||
+                ( key == "semver" )
+              )
         {
-          value.get_to( params.systems );
-        }
-      else if ( key == "allow" )
-        {
-          for ( const auto & [akey, avalue] : value.items() )
-            {
-              if ( akey == "unfree" )
-                {
-                  avalue.get_to( params.allow.unfree );
-                }
-              else if ( akey == "broken" )
-                {
-                  avalue.get_to( params.allow.broken );
-                }
-              else if ( akey == "licenses" )
-                {
-                  avalue.get_to( params.allow.licenses );
-                }
-              else
-                {
-                  throw FloxException(
-                    "Unexpected preferences field 'allow." + key + '\''
-                  );
-                }
-            }
-        }
-      else if ( key == "semver" )
-        {
-          for ( const auto & [skey, svalue] : value.items() )
-            {
-              if ( skey == "preferPreReleases" )
-                {
-                  svalue.get_to( params.semver.preferPreReleases );
-                }
-              else
-                {
-                  throw FloxException(
-                    "Unexpected preferences field 'semver." + key + '\''
-                  );
-                }
-            }
+          /* Handled by `QueryPreferences::from_json' */
+          continue;
         }
       else
         {
@@ -172,18 +130,11 @@ from_json( const nlohmann::json & jfrom, SearchParams & params )
   void
 to_json( nlohmann::json & jto, const SearchParams & params )
 {
-  jto = {
-    { "registry", params.registry }
-  , { "systems",  params.systems  }
-  , { "allow", {
-        { "unfree",   params.allow.unfree   }
-      , { "broken",   params.allow.broken   }
-      , { "licenses", params.allow.licenses }
-      }
-    }
-  , { "semver", { { "preferPreReleases", params.semver.preferPreReleases } } }
-  , { "query", params.query }
-  };
+  pkgdb::to_json( jto
+                , dynamic_cast<const pkgdb::QueryPreferences &>( params )
+                );
+  jto["registry"] = params.registry;
+  jto["query"]    = params.query;
 }
 
 

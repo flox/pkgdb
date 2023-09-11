@@ -3,7 +3,7 @@
  * @file resolve/params.cc
  *
  * @brief A set of user inputs used to set input preferences and query
- * parameters during resolution.
+ *        parameters during resolution.
  *
  *
  * -------------------------------------------------------------------------- */
@@ -30,7 +30,6 @@ PkgDescriptorRaw::clear()
   this->stability         = std::nullopt;
   this->preferPreReleases = std::nullopt;
 }
-
 
 
 /* -------------------------------------------------------------------------- */
@@ -136,37 +135,9 @@ PkgDescriptorRaw::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 /* -------------------------------------------------------------------------- */
 
   void
-Preferences::clear()
-{
-  this->systems                  = { nix::settings.thisSystem.get() };
-  this->allow.unfree             = true;
-  this->allow.broken             = false;
-  this->allow.licenses           = std::nullopt;
-  this->semver.preferPreReleases = false;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  pkgdb::PkgQueryArgs &
-Preferences::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
-{
-  pqa.clear();
-  pqa.systems           = this->systems;
-  pqa.allowUnfree       = this->allow.unfree;
-  pqa.allowBroken       = this->allow.broken;
-  pqa.licenses          = this->allow.licenses;
-  pqa.preferPreReleases = this->semver.preferPreReleases;
-  return pqa;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  void
 ResolveOneParams::clear()
 {
-  this->Preferences::clear();
+  this->pkgdb::QueryPreferences::clear();
   this->registry.clear();
   this->query.clear();
 }
@@ -185,7 +156,7 @@ ResolveOneParams::fillPkgQueryArgs( const std::string         & input
     }
 
   /* Fill from globals */
-  this->Preferences::fillPkgQueryArgs( pqa );
+  this->pkgdb::QueryPreferences::fillPkgQueryArgs( pqa );
 
   /* Fill from query */
   this->query.fillPkgQueryArgs( pqa );
@@ -255,7 +226,7 @@ ResolveOneParams::fillPkgQueryArgs( const std::string         & input
   void
 from_json( const nlohmann::json & jfrom, ResolveOneParams & params )
 {
-  params.clear();
+  pkgdb::from_json( jfrom, dynamic_cast<pkgdb::QueryPreferences &>( params ) );
   for ( const auto & [key, value] : jfrom.items() )
     {
       if ( key == "registry" )
@@ -266,49 +237,13 @@ from_json( const nlohmann::json & jfrom, ResolveOneParams & params )
         {
           value.get_to( params.query );
         }
-      else if ( key == "systems" )
+      else if ( ( key == "systems" ) ||
+                ( key == "allow" )   ||
+                ( key == "semver" )
+              )
         {
-          value.get_to( params.systems );
-        }
-      else if ( key == "allow" )
-        {
-          for ( const auto & [akey, avalue] : value.items() )
-            {
-              if ( akey == "unfree" )
-                {
-                  avalue.get_to( params.allow.unfree );
-                }
-              else if ( akey == "broken" )
-                {
-                  avalue.get_to( params.allow.broken );
-                }
-              else if ( akey == "licenses" )
-                {
-                  avalue.get_to( params.allow.licenses );
-                }
-              else
-                {
-                  throw FloxException(
-                    "Unexpected preferences field 'allow." + key + '\''
-                  );
-                }
-            }
-        }
-      else if ( key == "semver" )
-        {
-          for ( const auto & [skey, svalue] : value.items() )
-            {
-              if ( skey == "preferPreReleases" )
-                {
-                  svalue.get_to( params.semver.preferPreReleases );
-                }
-              else
-                {
-                  throw FloxException(
-                    "Unexpected preferences field 'semver." + key + '\''
-                  );
-                }
-            }
+          /* Handled by `QueryPreferences::from_json' */
+          continue;
         }
       else
         {
@@ -321,18 +256,11 @@ from_json( const nlohmann::json & jfrom, ResolveOneParams & params )
   void
 to_json( nlohmann::json & jto, const ResolveOneParams & params )
 {
-  jto = {
-    { "registry", params.registry }
-  , { "systems",  params.systems  }
-  , { "allow", {
-        { "unfree",   params.allow.unfree   }
-      , { "broken",   params.allow.broken   }
-      , { "licenses", params.allow.licenses }
-      }
-    }
-  , { "semver", { { "preferPreReleases", params.semver.preferPreReleases } } }
-  , { "query", params.query }
-  };
+  pkgdb::to_json( jto
+                , dynamic_cast<const pkgdb::QueryPreferences &>( params )
+                );
+  jto["registry"] = params.registry;
+  jto["query"]    = params.query;
 }
 
 

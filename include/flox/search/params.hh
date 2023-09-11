@@ -22,6 +22,7 @@
 #include "flox/core/types.hh"
 #include "flox/core/util.hh"
 #include "flox/pkgdb/pkg-query.hh"
+#include "flox/pkgdb/params.hh"
 #include "flox/registry.hh"
 
 
@@ -41,7 +42,7 @@ struct SearchQuery : pkgdb::PkgDescriptorBase {
   /** Filter results by partial name/description match. */
   std::optional<std::string> match;
 
-  /** Reset to default state. */
+  /** @brief Reset to default state. */
     inline void
   clear()
   {
@@ -51,8 +52,8 @@ struct SearchQuery : pkgdb::PkgDescriptorBase {
 
 
   /**
-   * Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to lookup
-   * packages filtered by @a SearchQuery requirements.
+   * @brief Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to
+   *        lookup packages filtered by @a SearchQuery requirements.
    * @param pqa   A set of query args to _fill_ with preferences.
    * @return A reference to the modified query args.
    */
@@ -64,8 +65,11 @@ struct SearchQuery : pkgdb::PkgDescriptorBase {
 
 /* -------------------------------------------------------------------------- */
 
-void from_json( const nlohmann::json & jfrom,       SearchQuery & qry );
-void to_json(         nlohmann::json & jto,   const SearchQuery & qry );
+/** Convert a JSON object to a @a flox::search::SearchQuery. */
+void from_json( const nlohmann::json & jfrom, SearchQuery & qry );
+
+/** Convert a @a flox::search::SearchQuery to a JSON object. */
+void to_json( nlohmann::json & jto, const SearchQuery & qry );
 
 
 /* -------------------------------------------------------------------------- */
@@ -117,55 +121,25 @@ void to_json(         nlohmann::json & jto,   const SearchQuery & qry );
  * }
  * ```
  */
-struct SearchParams {
+struct SearchParams : pkgdb::QueryPreferences {
 
 /* -------------------------------------------------------------------------- */
 
-  /** @brief Settings and fetcher information associated with inputs. */
+  /** Settings and fetcher information associated with inputs. */
   RegistryRaw registry;
 
-  /**
-   * Ordered list of systems to be searched.
-   * Results will be grouped by system in the order they appear here.
-   */
-  std::vector<std::string> systems;
-
-
-  /** @brief Allow/disallow packages with certain metadata. */
-  struct Allows {
-
-    /** Whether to include packages which are explicitly marked `unfree`. */
-    bool unfree = true;
-
-    /** Whether to include packages which are explicitly marked `broken`. */
-    bool broken = false;
-
-    /** Filter results to those explicitly marked with the given licenses. */
-    std::optional<std::vector<std::string>> licenses;
-
-  } allow;
-
-
-  /** @brief Settings associated with semantic version processing. */
-  struct Semver {
-
-    /** Whether pre-release versions should be ordered before releases. */
-    bool preferPreReleases = false;
-
-  } semver;
-
-
+  /** The query to be used to search for packages. */
   SearchQuery query;
 
 
 /* -------------------------------------------------------------------------- */
 
-  /** Reset preferences to default/empty state. */
+  /** @brief Reset preferences to default/empty state. */
   void clear();
 
   /**
-   * Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to lookup
-   * packages in a particular input.
+   * @brief Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to
+   *        lookup packages in a particular input.
    * @param input The input name to be searched.
    * @param pqa   A set of query args to _fill_ with preferences.
    * @return A reference to the modified query args.
@@ -180,8 +154,11 @@ struct SearchParams {
 
 /* -------------------------------------------------------------------------- */
 
-void from_json( const nlohmann::json & jfrom,       SearchParams & params );
-void to_json(         nlohmann::json & jto,   const SearchParams & params );
+/** @brief Convert a JSON object to a @a flox::search::SearchParams. */
+void from_json( const nlohmann::json & jfrom, SearchParams & params );
+
+/** @brief Convert a @a flox::search::SearchParams to a JSON object. */
+void to_json( nlohmann::json & jto, const SearchParams & params );
 
 
 /* -------------------------------------------------------------------------- */
