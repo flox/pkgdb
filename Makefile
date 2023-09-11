@@ -83,7 +83,7 @@ lib_SRCS       =  $(filter-out $(bin_SRCS),$(SRCS))
 test_SRCS      =  $(wildcard tests/*.cc)
 ALL_SRCS       = $(SRCS) $(test_SRCS)
 BINS           =  pkgdb
-TEST_UTILS     =  $(addprefix tests/,is_sqlite3 parse-preferences)
+TEST_UTILS     =  $(addprefix tests/,is_sqlite3 resolver-params search-params)
 TESTS          =  $(filter-out $(TEST_UTILS),$(test_SRCS:.cc=))
 CLEANDIRS      =
 CLEANFILES     =  $(ALL_SRCS:.cc=.o)

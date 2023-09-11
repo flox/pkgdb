@@ -8,6 +8,9 @@
  *
  * -------------------------------------------------------------------------- */
 
+#include <nix/globals.hh>
+
+#include "flox/core/util.hh"
 #include "flox/resolver/params.hh"
 
 
@@ -18,12 +21,29 @@ namespace flox::resolver {
 /* -------------------------------------------------------------------------- */
 
   void
+PkgDescriptorRaw::clear()
+{
+  this->pkgdb::PkgDescriptorBase::clear();
+  this->input             = std::nullopt;
+  this->path              = std::nullopt;
+  this->subtree           = std::nullopt;
+  this->stability         = std::nullopt;
+  this->preferPreReleases = std::nullopt;
+}
+
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
 from_json( const nlohmann::json & jfrom, PkgDescriptorRaw & desc )
 {
   desc.clear();
   pkgdb::from_json( jfrom, dynamic_cast<pkgdb::PkgDescriptorBase &>( desc ) );
   try { jfrom.at( "preferPreReleases" ).get_to( desc.preferPreReleases ); }
-  catch( const std::out_of_range & ) {}
+  catch( const nlohmann::json::out_of_range & ) {}
+  try { jfrom.at( "path" ).get_to( desc.path ); }
+  catch( const nlohmann::json::out_of_range & ) {}
 }
 
 
@@ -32,6 +52,112 @@ to_json( nlohmann::json & jto, const PkgDescriptorRaw & desc )
 {
   pkgdb::to_json( jto, dynamic_cast<const pkgdb::PkgDescriptorBase &>( desc ) );
   jto["preferPreReleases"] = desc.preferPreReleases;
+  jto["path"] = desc.path;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  pkgdb::PkgQueryArgs &
+PkgDescriptorRaw::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
+{
+  /* XXX: DOES NOT CLEAR FIRST! */
+  pqa.name    = this->name;
+  pqa.pname   = this->pname;
+  pqa.version = this->version;
+  pqa.semver  = this->semver;
+
+  if ( this->preferPreReleases.has_value() )
+    {
+      pqa.preferPreReleases = * this->preferPreReleases;
+    }
+
+  if ( this->path.has_value() && ( ! this->path->empty() ) )
+    {
+      flox::AttrPath relPath;
+      auto fillRelPath = [&]( int start )
+        {
+          std::transform( this->path->begin() + start
+                        , this->path->end()
+                        , std::back_inserter( relPath )
+                        , []( const auto & s ) { return * s; }
+                        );
+        };
+      /* If path is absolute set `subtree', `systems', and `stabilities'. */
+      if ( std::find( getDefaultSubtrees().begin()
+                    , getDefaultSubtrees().end()
+                    , this->path->front()
+                    ) != getDefaultSubtrees().end()
+         )
+        {
+          if ( this->path->size() < 3 )
+            {
+              throw FloxException(
+                "Absolute attribute paths must have at least three elements"
+              );
+            }
+          subtree_type subtree;
+          from_json( * this->path->front(), subtree );
+          if ( this->path->at( 1 ).has_value() )
+            {
+              pqa.systems = std::vector<std::string> { * this->path->at( 1 ) };
+            }
+
+          if ( subtree == ST_CATALOG )
+            {
+              if ( this->path->size() < 4 )
+                {
+                  throw FloxException(
+                    "Absolute attribute paths in catalogs must have at "
+                    "least four elements"
+                  );
+                }
+              pqa.stabilities =
+                std::vector<std::string> { * this->path->at( 2 ) };
+              fillRelPath( 3 );
+            }
+          else
+            {
+              fillRelPath( 2 );
+            }
+          pqa.subtrees = std::vector<subtree_type> { std::move( subtree ) };
+        }
+      else
+        {
+          fillRelPath( 0 );
+        }
+      pqa.relPath = std::move( relPath );
+    }
+
+  return pqa;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
+Preferences::clear()
+{
+  this->systems                  = { nix::settings.thisSystem.get() };
+  this->allow.unfree             = true;
+  this->allow.broken             = false;
+  this->allow.licenses           = std::nullopt;
+  this->semver.preferPreReleases = false;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  pkgdb::PkgQueryArgs &
+Preferences::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
+{
+  pqa.clear();
+  pqa.systems           = this->systems;
+  pqa.allowUnfree       = this->allow.unfree;
+  pqa.allowBroken       = this->allow.broken;
+  pqa.licenses          = this->allow.licenses;
+  pqa.preferPreReleases = this->semver.preferPreReleases;
+  return pqa;
 }
 
 
@@ -40,12 +166,9 @@ to_json( nlohmann::json & jto, const PkgDescriptorRaw & desc )
   void
 ResolveOneParams::clear()
 {
+  this->Preferences::clear();
   this->registry.clear();
   this->query.clear();
-  this->allow.unfree             = true;
-  this->allow.broken             = false;
-  this->allow.licenses           = std::nullopt;
-  this->semver.preferPreReleases = false;
 }
 
 
@@ -56,15 +179,18 @@ ResolveOneParams::fillPkgQueryArgs( const std::string         & input
                                   ,       pkgdb::PkgQueryArgs & pqa
                                   ) const
 {
-  pqa.clear();
-
   if ( this->query.input.has_value() && ( input != ( * this->query.input ) ) )
     {
       return false;
     }
 
-  // TODO:
-  //this->query.fillPkgQueryArgs( pqa );
+  /* Fill from globals */
+  this->Preferences::fillPkgQueryArgs( pqa );
+
+  /* Fill from query */
+  this->query.fillPkgQueryArgs( pqa );
+
+  /* Fill from input */
 
   /* Look for the named input and our fallbacks/default in the inputs list.
    * then fill input specific settings. */
@@ -118,13 +244,6 @@ ResolveOneParams::fillPkgQueryArgs( const std::string         & input
           return false;
         }
     }
-
-  pqa.systems           = this->systems;
-  pqa.allowUnfree       = this->allow.unfree;
-  pqa.allowBroken       = this->allow.broken;
-  pqa.licenses          = this->allow.licenses;
-  pqa.preferPreReleases =
-    this->query.preferPreReleases.value_or( this->semver.preferPreReleases );
 
   return true;
 }

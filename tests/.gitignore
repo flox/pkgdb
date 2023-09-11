@@ -1,5 +1,6 @@
 is_sqlite3
-parse-preferences
 pkgdb
 registry
+resolver-params
+search-params
 versions

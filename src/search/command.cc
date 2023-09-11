@@ -52,7 +52,7 @@ PkgQueryMixin::queryDb( pkgdb::PkgDbReadOnly & pdb ) const
 }
 
 
-/* ========================================================================== */
+/* -------------------------------------------------------------------------- */
 
   void
 PkgDbRegistryMixin::initRegistry()
@@ -111,22 +111,6 @@ SearchCommand::SearchCommand() : parser( "search" )
 
 /* -------------------------------------------------------------------------- */
 
-  void
-SearchCommand::showRow(
-  std::string_view    inputName
-, pkgdb::PkgDbInput & input
-, pkgdb::row_id       row
-)
-{
-  nlohmann::json rsl = input.getDbReadOnly()->getPackage( row );
-  rsl.emplace( "input", inputName );
-  rsl.emplace( "path",  input.getDbReadOnly()->getPackagePath( row ) );
-  std::cout << rsl.dump() << std::endl;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
   int
 SearchCommand::run()
 {
@@ -140,7 +124,7 @@ SearchCommand::run()
         pkgdb::PkgQuery( this->params.fillPkgQueryArgs( name, args ) );
       for ( const auto & row : this->queryDb( * input->getDbReadOnly() ) )
         {
-          this->showRow( name, * input, row );
+          this->showRow( * input, row );
         }
     }
   return EXIT_SUCCESS;

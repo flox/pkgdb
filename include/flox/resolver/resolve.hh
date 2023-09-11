@@ -1,5 +1,8 @@
 /* ========================================================================== *
  *
+ * @file flox/resolver/resolve.hh
+ *
+ * @brief Resolve package descriptors in flakes.
  *
  *
  * -------------------------------------------------------------------------- */
@@ -12,41 +15,44 @@
 
 #include <nlohmann/json.hpp>
 
-#include "flox/resolver/params.hh"
+#include "flox/resolver/state.hh"
 
 
 /* -------------------------------------------------------------------------- */
 
-/** Resolve package descriptors in flakes. */
+/** @brief Resolve package descriptors in flakes. */
 namespace flox::resolver {
 
 /* -------------------------------------------------------------------------- */
 
-/** A _resolved_ installable resulting from resolution. */
+/** @brief A _resolved_ installable resulting from resolution. */
 struct Resolved {
 
+  /** @brief A registry input. */
   struct Input {
     std::string    name;    /**< Registry input name/id. */
     nlohmann::json locked;  /**< Locked flake ref attributes. */
   };  /* End struct `Resolved::Input' */
 
-  Input          input;    /**< Registry input. */
-  AttrPathGlob   path;     /**< Attribute path to the package. */
-  nlohmann::json info;     /**< Package information. */
+  Input          input;  /**< Registry input. */
+  AttrPathGlob   path;   /**< Attribute path to the package. */
+  nlohmann::json info;   /**< Package information. */
 
 };  /* End struct `Resolved' */
 
 
 /* -------------------------------------------------------------------------- */
 
-void from_json( const nlohmann::json & jfrom,       Resolved & resolved );
-void to_json(         nlohmann::json & jto,   const Resolved & resolved );
+/** @brief Convert a JSON object to a @a flox::resolver::Resolved. */
+void from_json( const nlohmann::json & jfrom, Resolved & resolved );
+
+/** @brief Convert a @a flox::resolver::Resolved to a JSON object. */
+void to_json( nlohmann::json & jto, const Resolved & resolved );
 
 
 /* -------------------------------------------------------------------------- */
 
-class ResolverState;  // TODO
-class Descriptor;     // TODO
+class Descriptor;  // TODO
 
 
 /* -------------------------------------------------------------------------- */

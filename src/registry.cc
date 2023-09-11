@@ -11,7 +11,7 @@
 
 #include "flox/core/util.hh"
 #include "flox/registry.hh"
-#include "flox/pkgdb/pkgdb-input.hh"
+#include "flox/pkgdb/input.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -123,6 +123,73 @@ to_json( nlohmann::json & jto, const RegistryRaw & reg )
   jto.emplace( "inputs",   reg.inputs   );
   jto.emplace( "defaults", reg.defaults );
   jto.emplace( "priority", reg.priority );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  template <registry_input_factory FactoryType>
+Registry<FactoryType>::Registry( RegistryRaw registry, FactoryType & factory )
+  : registryRaw( std::move( registry ) )
+{
+  for ( const std::reference_wrapper<const std::string> & _name :
+          this->registryRaw.getOrder()
+      )
+    {
+      const auto & pair = std::find_if(
+        this->registryRaw.inputs.begin()
+      , this->registryRaw.inputs.end()
+      , [&]( const auto & pair ) { return pair.first == _name.get(); }
+      );
+
+      /* Fill default/fallback values if none are defined. */
+      RegistryInput input = pair->second;
+      if ( ! input.subtrees.has_value() )
+        {
+          input.subtrees = this->registryRaw.defaults.subtrees;
+        }
+      if ( ! input.stabilities.has_value() )
+        {
+          input.stabilities = this->registryRaw.defaults.stabilities;
+        }
+
+      /* Construct the input */
+      this->inputs.emplace_back(
+        std::make_pair( pair->first, factory.mkInput( pair->first, input ) )
+      );
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  template<registry_input_factory FactoryType>
+  std::shared_ptr<typename FactoryType::input_type>
+Registry<FactoryType>::get( const std::string & name ) const noexcept
+{
+  const auto maybeInput = std::find_if(
+    this->inputs.begin()
+  , this->inputs.end()
+  , [&]( const auto & pair ) { return pair.first == name; }
+  );
+  if ( maybeInput == this->inputs.end() ) { return nullptr; }
+  return maybeInput->second;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  template<registry_input_factory FactoryType>
+  std::shared_ptr<typename FactoryType::input_type>
+Registry<FactoryType>::at( const std::string & name ) const
+{
+  const std::shared_ptr<typename FactoryType::input_type> maybeInput =
+    this->get( name );
+  if ( maybeInput == nullptr )
+    {
+      throw std::out_of_range( "No such input '" + name + "'" );
+    }
+  return maybeInput;
 }
 
 

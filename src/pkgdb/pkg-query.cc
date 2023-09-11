@@ -148,6 +148,7 @@ PkgQueryArgs::clear()
   this->subtrees          = std::nullopt;
   this->systems           = { nix::settings.thisSystem.get() };
   this->stabilities       = std::nullopt;
+  this->relPath           = std::nullopt;
 }
 
 
@@ -169,6 +170,7 @@ from_json( const nlohmann::json & jqa, PkgQueryArgs & pqa )
       else if ( key == "preferPreReleases" ) { pqa.preferPreReleases = value; }
       else if ( key == "systems" )           { pqa.systems           = value; }
       else if ( key == "stabilities" )       { pqa.stabilities       = value; }
+      else if ( key == "relPath" )           { pqa.relPath           = value; }
       else if ( key == "subtrees" )
         {
           pqa.subtrees = std::vector<flox::subtree_type> {};
@@ -540,6 +542,14 @@ PkgQuery::init()
   if ( ! this->allowUnfree )
     {
       this->addWhere( "( unfree IS NULL ) OR ( unfree = FALSE )" );
+    }
+
+  /* Handle `relPath' filtering */
+  if ( this->relPath.has_value() )
+    {
+      this->addWhere( "relPath = :relPath" );
+      nlohmann::json relPath = * this->relPath;
+      this->binds.emplace( ":relPath", relPath.dump() );
     }
 
   this->initSubtrees();

@@ -42,20 +42,15 @@ genParamsNixpkgsFlox() {
 # ---------------------------------------------------------------------------- #
 
 # bats test_tags=search:opt
-#
-# FIXME: You need to add `--databases DIR' to this in order to really make this
-# work, currently it's running off the user's homedir database which is
-# convenient for development, but we can't assume that the developer hasn't
-# tried to scrape that prefix in the past.
 
-#@test "'pkgdb search' scrapes only named subtrees" {
-#  DBPATH="$( $PKGDB get db "$NIXPKGS_REF"; )";
-#  run $PKGDB search "$TDATA/params0.json";
-#  assert_success;
-#  run $PKGDB get id "$DBPATH" x86_64-linux packages;
-#  assert_failure;
-#  assert_output "ERROR: No such AttrSet 'x86_64-linux.packages'.";
-#}
+@test "'pkgdb search' scrapes only named subtrees" {
+  DBPATH="$( $PKGDB get db "$NIXPKGS_REF"; )";
+  run $PKGDB search "$TDATA/params0.json";
+  assert_success;
+  run $PKGDB get id "$DBPATH" x86_64-linux packages;
+  assert_failure;
+  assert_output "ERROR: No such AttrSet 'x86_64-linux.packages'.";
+}
 
 
 # ---------------------------------------------------------------------------- #
@@ -210,14 +205,10 @@ genParamsNixpkgsFlox() {
 
 # ---------------------------------------------------------------------------- #
 
-# TODO: Scanning catalogs takes _for fucking ever_.
-#       Make it faster or else make a mini-catalog for testing against.
-
 # bats test_tags=search:stabilities, search:pname
 
 # `stabilities' ordering
 @test "'pkgdb search' stabilities order" {
-  skip "This is way too slow but it works. TODO: make small catalog for tests";
   run sh -c "$PKGDB search -q '$( genParamsNixpkgsFlox                         \
     '.registry.inputs["nixpkgs-flox"].stabilities+=["unstable"]
     |.query.pname|="hello"

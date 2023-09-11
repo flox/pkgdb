@@ -24,7 +24,7 @@
 
 /* -------------------------------------------------------------------------- */
 
-/** Executable command helpers, argument parsers, etc. */
+/** @brief Executable command helpers, argument parsers, etc. */
 namespace flox::command {
 
 /* -------------------------------------------------------------------------- */
@@ -53,7 +53,7 @@ struct VerboseParser : public argparse::ArgumentParser {
 
 /* -------------------------------------------------------------------------- */
 
-/** Extend a command's state blob with a single @a RegistryInput. */
+/** @brief Extend a command's state blob with a single @a RegistryInput. */
 class InlineInputMixin : virtual public NixState
 {
 
@@ -94,20 +94,22 @@ class InlineInputMixin : virtual public NixState
 
 /* -------------------------------------------------------------------------- */
 
-/** Extend a command state blob with an attribute path to "target". */
+/** @brief Extend a command state blob with an attribute path to "target". */
 struct AttrPathMixin {
 
   flox::AttrPath attrPath;
 
   /**
-   * Sets the attribute path to be scraped.
+   * @brief Sets the attribute path to be scraped.
+   *
    * If no system is given use the current system.
    * If we're searching a catalog and no stability is given, use "stable".
    */
   argparse::Argument & addAttrPathArgs( argparse::ArgumentParser & parser );
 
   /**
-   * Sets fallback `attrPath` to a package set.
+   * @brief Sets fallback `attrPath` to a package set.
+   *
    * If `attrPath` is empty use, `packages.<SYTEM>`.
    * If `attrPath` is one element then add "current system" as `<SYSTEM>`.
    * If `attrPath` is a catalog with no stability use `stable`.

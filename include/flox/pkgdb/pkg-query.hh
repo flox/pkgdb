@@ -117,6 +117,13 @@ struct PkgQueryArgs : public PkgDescriptorBase {
   /** Stabilities to search ( if any ) */
   std::optional<std::vector<std::string>> stabilities;
 
+  /**
+   * Relative attribute path to package from its prefix.
+   * For catalogs this is the part following `stability`, and for regular flakes
+   * it is the part following `system`.
+   */
+  std::optional<flox::AttrPath> relPath;
+
 
   /** Errors concerning validity of package query parameters. */
   struct PkgQueryInvalidArgException : public flox::FloxException {

@@ -15,60 +15,64 @@
 #include "flox/flox-flake.hh"
 #include "flox/pkgdb/write.hh"
 #include "flox/pkgdb/command.hh"
-#include "flox/pkgdb/pkgdb-input.hh"
+#include "flox/pkgdb/input.hh"
 #include "flox/search/params.hh"
 #include "flox/registry.hh"
 
 
 /* -------------------------------------------------------------------------- */
 
-/** Interfaces used to search for packages in flakes. */
+/** @brief Interfaces used to search for packages in flakes. */
 namespace flox::search {
 
 /* -------------------------------------------------------------------------- */
 
-/** Package query parser. */
+/** @brief Package query parser. */
 struct PkgQueryMixin {
 
   pkgdb::PkgQuery query;
 
-  /** Add `query` argument to any parser to construct a @a pkgdb::PkgQuery. */
+  /** @brief Add `query` argument to any parser to construct
+   *         a @a flox::pkgdb::PkgQuery.
+   */
   argparse::Argument & addQueryArgs( argparse::ArgumentParser & parser );
 
   /**
-   * Run query on a @a pkgdb::PkgDbReadOnly database.
+   * @brief Run query on a @a flox::pkgdb::PkgDbReadOnly database.
+   *
    * Any scraping should be performed before invoking this function.
    */
   std::vector<pkgdb::row_id> queryDb( pkgdb::PkgDbReadOnly & pdb ) const;
 
-};  /* End struct `RegistryMixin' */
+};  /* End struct `PkgQueryMixin' */
 
 
 /* -------------------------------------------------------------------------- */
 
-/**
- * @brief Provides a registry of @a PkgDb managers.
- *
- * Derived classes must provide their own @a getRegistryRaw and @a getSystems
- * implementations to support @a initRegistry and @a scrapeIfNeeded.
- */
-struct PkgDbRegistryMixin : virtual public NixState {
+/** @brief Search flakes for packages satisfying a set of filters. */
+class SearchCommand : public pkgdb::PkgDbRegistryMixin, public PkgQueryMixin {
+
+  private:
+
+    SearchParams params;
+
+    /**
+     * @brief Add argument to any parser to construct
+     *        a @a flox::search::SearchParams.
+     */
+      argparse::Argument &
+    addSearchParamArgs( argparse::ArgumentParser & parser );
+
 
   protected:
 
-    bool force = false;  /**< Whether to force re-evaluation of flakes. */
+      [[nodiscard]]
+      virtual RegistryRaw
+    getRegistryRaw() override { return this->params.registry; }
 
-    std::shared_ptr<Registry<pkgdb::PkgDbInputFactory>> registry;
-
-    /** Initialize @a registry member from @a params.registry. */
-    void initRegistry();
-
-    /**
-     * Lazily perform scraping on input flakes.
-     * If scraping is necessary temprorary read/write handles are opened for
-     * those flakes and closed before returning from this function.
-     */
-    void scrapeIfNeeded();
+      [[nodiscard]]
+      virtual std::vector<std::string> &
+    getSystems() override { return this->params.systems; }
 
     /** @return A raw registry used to initialize. */
     [[nodiscard]] virtual RegistryRaw getRegistryRaw() = 0;
@@ -81,14 +85,14 @@ struct PkgDbRegistryMixin : virtual public NixState {
 
 /* -------------------------------------------------------------------------- */
 
-/** Search flakes for packages satisfying a set of filters. */
+/** @brief Search flakes for packages satisfying a set of filters. */
 class SearchCommand : public PkgDbRegistryMixin, public PkgQueryMixin {
 
   private:
 
     SearchParams params;
 
-    /** Add argument to any parser to construct a @a SearchParams. */
+    /** @brief Add argument to any parser to construct a @a SearchParams. */
       argparse::Argument &
     addSearchParamArgs( argparse::ArgumentParser & parser );
 
@@ -110,14 +114,16 @@ class SearchCommand : public PkgDbRegistryMixin, public PkgQueryMixin {
 
     SearchCommand();
 
-    /** Display a single row from the given @a input. */
-    void showRow( std::string_view    inputName
-                , pkgdb::PkgDbInput & input
-                , pkgdb::row_id       row
-                );
+    /** @brief Display a single row from the given @a input. */
+      void
+    showRow( pkgdb::PkgDbInput & input, pkgdb::row_id row )
+    {
+      std::cout << input.getRowJSON( row ).dump() << std::endl;
+    }
 
     /**
-     * Execute the `search` routine.
+     * @brief Execute the `search` routine.
+     *
      * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
      */
     int run();

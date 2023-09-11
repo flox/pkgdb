@@ -41,22 +41,27 @@ isSQLError( int rcode )
 
 /* -------------------------------------------------------------------------- */
 
+  std::ostream &
+operator<<( std::ostream & oss, const SqlVersions & versions )
+{
+  return oss << "tables: " << versions.tables << ", views: " << versions.views;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
   std::filesystem::path
 getPkgDbCachedir()
 {
-  /* Take the major version number on the first run for the directory name */
-  static std::string schemaMajor;
-  if ( schemaMajor.empty() )
+  /* Generate a dirname from the SQL tables version number. Only run once. */
+  static bool known = false;
+  static std::stringstream dirname;
+  if ( ! known )
     {
-      schemaMajor = FLOX_PKGDB_SCHEMA_VERSION;
-      schemaMajor = std::string(
-        schemaMajor.begin()
-      , schemaMajor.begin() + schemaMajor.find( '.' )
-      );
+      dirname << nix::getCacheDir() << "/flox/pkgdb-v" << sqlVersions.tables;
+      known = true;
     }
-
-  static const std::filesystem::path cacheDir =
-    nix::getCacheDir() + "/flox/pkgdb-v" + schemaMajor;
+  static const std::filesystem::path cacheDir = dirname.str();
 
   std::optional<std::string> fromEnv = nix::getEnv( "PKGDB_CACHEDIR" );
 
@@ -129,14 +134,23 @@ PkgDbReadOnly::loadLockedFlake()
 
 /* -------------------------------------------------------------------------- */
 
-  std::string
+  SqlVersions
 PkgDbReadOnly::getDbVersion()
 {
   sqlite3pp::query qry(
     this->db
-  , "SELECT version FROM DbVersions WHERE name = 'pkgdb_schema' LIMIT 1"
+  , "SELECT version FROM DbVersions "
+    "WHERE name IN ( 'pkgdb_tables_schema', 'pkgdb_views_schema' ) LIMIT 2"
   );
-  return ( * qry.begin() ).get<std::string>( 0 );
+  auto itr = qry.begin();
+  std::string tables = ( * itr ).get<std::string>( 0 );
+  std::string views  = ( * ++itr ).get<std::string>( 0 );
+  char * end = nullptr;
+  return SqlVersions {
+    .tables =
+      static_cast<unsigned>( std::strtoul( tables.c_str(), & end, 10 ) )
+  , .views = static_cast<unsigned>( std::strtoul( views.c_str(), & end, 10 ) )
+  };
 }
 
 
@@ -154,7 +168,6 @@ PkgDbReadOnly::completedAttrSet( row_id row )
   auto itr = qryId.begin();
   return ( itr != qryId.end() ) && ( * itr ).get<bool>( 0 );
 }
-
 
 
 /* -------------------------------------------------------------------------- */

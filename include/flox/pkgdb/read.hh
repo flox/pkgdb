@@ -33,24 +33,70 @@
 #ifndef FLOX_PKGDB_VERSION
 #  define FLOX_PKGDB_VERSION  "NO.VERSION"
 #endif
-#define FLOX_PKGDB_SCHEMA_VERSION  "1.0.0"
 
 
 /* -------------------------------------------------------------------------- */
 
-/** Interfaces for caching package metadata in SQLite3 databases. */
+/** @brief Interfaces for caching package metadata in SQLite3 databases. */
 namespace flox::pkgdb {
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief SQLite3 schema versions. */
+struct SqlVersions {
+
+  /**
+   * The SQLite3 tables schema version for the package database.
+   * Changing this value will cause the database to be recreated.
+   */
+  unsigned tables;
+
+  /**
+   * The SQLite3 views schema version for the package database.
+   * Changing this value will cause the database's views definitions to be
+   * updated, but no existing data will be invalidated.
+   */
+  unsigned views;
+
+  /** @return Whether two version sets are equal. */
+    constexpr bool
+  operator==( const SqlVersions & other ) const
+  {
+    return ( this->tables == other.tables ) && ( this->views == other.views );
+  }
+
+  /** @return Whether two version sets are NOT equal. */
+    constexpr bool
+  operator!=( const SqlVersions & other ) const
+  {
+    return ! ( ( * this ) == other );
+  }
+
+  friend std::ostream & operator<<(       std::ostream & oss
+                                  , const SqlVersions  & versions
+                                  );
+
+};  /* End struct `SqlVersions' */
+
+/** @brief Emit version information to an output stream. */
+std::ostream & operator<<( std::ostream & oss, const SqlVersions & versions );
+
+
+/** The current SQLite3 schema versions. */
+constexpr SqlVersions sqlVersions = { .tables = 2, .views  = 1 };
+
 
 /* -------------------------------------------------------------------------- */
 
 /** A unique hash associated with a locked flake. */
 using Fingerprint = nix::flake::Fingerprint;
-using SQLiteDb    = sqlite3pp::database;
+using SQLiteDb    = sqlite3pp::database;      /** < SQLite3 database handle. */
 using sql_rc      = int;                      /**< `SQLITE_*` result code. */
 
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief A generic exception thrown by `flox::pkgdb::*` classes. */
 struct PkgDbException : public FloxException {
   std::filesystem::path dbPath;
   PkgDbException( std::filesystem::path dbPath, std::string_view msg )
@@ -70,7 +116,7 @@ struct PkgDbException : public FloxException {
  */
 std::filesystem::path getPkgDbCachedir();
 
-/** Get an absolute path to the `PkgDb' for a given fingerprint hash. */
+/** @brief Get an absolute path to the `PkgDb' for a given fingerprint hash. */
 std::filesystem::path genPkgDbName(
   const Fingerprint           & fingerprint
 , const std::filesystem::path & cacheDir = getPkgDbCachedir()
@@ -95,7 +141,7 @@ class PkgDbReadOnly {
     std::filesystem::path dbPath;       /**< Absolute path to database. */
     SQLiteDb              db;           /**< SQLite3 database handle. */
 
-    /** Locked _flake reference_ for database's flake. */
+    /** @brief Locked _flake reference_ for database's flake. */
     struct LockedFlakeRef {
       std::string string;  /**< Locked URI string.  */
       /** Exploded form of URI as an attr-set. */
@@ -109,6 +155,7 @@ class PkgDbReadOnly {
 
   // public:
 
+    /** @brief Thrown when a database is not found. */
     struct NoSuchDatabase : PkgDbException {
       explicit NoSuchDatabase( const PkgDbReadOnly & pdb )
         : PkgDbException(
@@ -203,7 +250,7 @@ class PkgDbReadOnly {
   // public:
 
     /** @return The Package Database schema version. */
-    std::string getDbVersion();
+    SqlVersions getDbVersion();
 
     /**
      * @brief Get the `AttrSet.id` for a given path.
@@ -323,7 +370,10 @@ class PkgDbReadOnly {
 
 /* -------------------------------------------------------------------------- */
 
-/** Restricts template parameters to classes that extend @a PkgDbReadOnly. */
+/**
+ * @brief Restricts template parameters to classes that
+ *        extend @a flox::pkgdb::PkgDbReadOnly.
+ */
   template <typename T>
 concept pkgdb_typename = std::is_base_of<PkgDbReadOnly, T>::value;
 

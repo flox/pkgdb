@@ -126,7 +126,7 @@ test_addOrGetAttrSetId1( flox::pkgdb::PkgDb & db )
   bool
 test_getDbVersion0( flox::pkgdb::PkgDb & db )
 {
-  EXPECT_EQ( db.getDbVersion(), FLOX_PKGDB_SCHEMA_VERSION );
+  EXPECT_EQ( db.getDbVersion(), flox::pkgdb::sqlVersions );
   return true;
 }
 

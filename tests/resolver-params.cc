@@ -1,8 +1,9 @@
 /* ========================================================================== *
  *
- * @file tests/parse-preferences.cc
+ * @file tests/resolver-params.cc
  *
- * @brief Minimal executable that parses a `flox::search::Preferences` struct.
+ * @brief Minimal executable that parses a
+ *        @a flox::resolver::ResolveOneParams struct.
  *
  *
  * -------------------------------------------------------------------------- */
@@ -13,7 +14,8 @@
 
 #include <nlohmann/json.hpp>
 
-#include "flox/search/params.hh"
+#include "flox/resolver/params.hh"
+#include "flox/resolver/state.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -42,7 +44,7 @@ printInput( const auto & pair )
   int
 main( int argc, char * argv[] )
 {
-  flox::search::SearchParams params;
+  flox::resolver::ResolveOneParams params;
 
   if ( argc < 2 )
     {
@@ -65,26 +67,23 @@ main( int argc, char * argv[] )
               }
             , "subtrees": ["packages"]
             }
-          , "floxpkgs": {
+          , "nixpkgs-flox": {
               "from": {
                 "type": "github"
               , "owner": "flox"
-              , "repo": "floxpkgs"
+              , "repo": "nixpkgs-flox"
               }
             , "subtrees": ["catalog"]
-            , "stabilities": ["stable"]
+            , "stabilities": ["stable", "staging", "unstable"]
             }
           }
-        , "defaults": {
-            "subtrees": null
-          , "stabilities": ["stable"]
-          }
-        , "priority": ["nixpkgs", "floco", "floxpkgs"]
+        , "priority": ["nixpkgs", "floco", "nixpkgs-flox"]
         }
       , "systems": ["x86_64-linux"]
-      , "allow":   { "unfree": true, "broken": false, "licenses": ["MIT"] }
-      , "semver":  { "preferPreReleases": false }
-      , "query":   { "match": "hello" }
+      , "query":   {
+          "pname": "hello"
+        , "semver": ">=2"
+        }
       } )" ).get_to( params );
     }
   else
@@ -92,8 +91,23 @@ main( int argc, char * argv[] )
       nlohmann::json::parse( argv[1] ).get_to( params );
     }
 
-  std::cout << nlohmann::json( params ).dump() << std::endl;
+  //std::cout << nlohmann::json( params ).dump() << std::endl;
 
+  flox::resolver::ResolverState state( params );
+
+  flox::pkgdb::PkgQueryArgs args;
+  for ( const auto & [name, input] : * state.getPkgDbRegistry() )
+    {
+      /* We will get `false` if we should skip this input entirely. */
+      bool shouldSearch = params.fillPkgQueryArgs( name, args );
+      if ( ! shouldSearch ) { continue; }
+      auto query = flox::pkgdb::PkgQuery( args );
+      auto dbRO  = input->getDbReadOnly();
+      for ( const auto & row : query.execute( dbRO->db ) )
+        {
+          std::cout << input->getRowJSON( row ).dump() << std::endl;
+        }
+    }
 
   return EXIT_SUCCESS;
 }

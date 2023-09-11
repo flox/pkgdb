@@ -103,14 +103,25 @@ These readers could care less if `pkgdb` is at version 3.2.1 or 30000.2.1!
 
 
 ### SQL Schema Version
-Changes to the `pkgdb` SQL schema should be indicated by semantic version
-numbers in the file
-[<pkgdb>/include/flox/pkgdb/read.hh](./include/flox/pkgdb/read.hh) using the
-variable `FLOX_PKGDB_SCHEMA_VERSION` which is used to populate newly created DBs
+Changes to the `pkgdb` SQL schema should be indicated by version numbers in the
+file [<pkgdb>/include/flox/pkgdb/read.hh](./include/flox/pkgdb/read.hh) using the
+variable `sqlVersions` which is used to populate newly created DBs
 and to detect old schemas in existing DBs.
 
 Any changes to the schema version number should also trigger an equivalent
 increment to the `pkgdb` version number.
+
+When changes are made to table schemas you must bump the `tables` version, while
+additions or changes to any `VIEW` can be reflected using the `views` version.
+Increments to the `views` version do not require existing databases on a user's
+
+system to become invalidated, they are simply upgraded with new `VIEW`
+definitions and their `DbVersions` row for `pkgdb_views_schema` is updated.
+
+Increments to the `tables` version require all databases on a user's system to
+be recreated _from scratch_.
+A future extension might migrate existing data; but because the scraping
+operation is rather quick, we simply recreate them.
 
 
 ### `pkgdb` Software Versioning

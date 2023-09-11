@@ -47,22 +47,6 @@ ResolveCommand::ResolveCommand() : parser( "resolve" )
 
 /* -------------------------------------------------------------------------- */
 
-  void
-ResolveCommand::showRow(
-  std::string_view    inputName
-, pkgdb::PkgDbInput & input
-, pkgdb::row_id       row
-)
-{
-  nlohmann::json rsl = input.getDbReadOnly()->getPackage( row );
-  rsl.emplace( "input", inputName );
-  rsl.emplace( "path",  input.getDbReadOnly()->getPackagePath( row ) );
-  std::cout << rsl.dump() << std::endl;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
   int
 ResolveCommand::run()
 {
@@ -78,7 +62,7 @@ ResolveCommand::run()
       this->query = pkgdb::PkgQuery( args );
       for ( const auto & row : this->queryDb( * input->getDbReadOnly() ) )
         {
-          this->showRow( name, * input, row );
+          this->showRow( * input, row );
         }
     }
   return EXIT_SUCCESS;

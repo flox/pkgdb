@@ -34,7 +34,7 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
-/** Preferences associated with a registry input. */
+/** @brief Preferences associated with a registry input. */
 struct InputPreferences {
 
   /**
@@ -52,24 +52,37 @@ struct InputPreferences {
 
 };  /* End struct `InputPreferences' */
 
-void from_json( const nlohmann::json & jfrom,       InputPreferences & prefs );
-void to_json(         nlohmann::json & jto,   const InputPreferences & prefs );
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Convert a JSON object to an @a flox::InputPreferences. */
+void from_json( const nlohmann::json & jfrom, InputPreferences & prefs );
+
+/**  @brief Convert an @a flox::InputPreferences to a JSON object. */
+void to_json( nlohmann::json & jto, const InputPreferences & prefs );
 
 
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief Restricts types to those which are derived from
+ *        @a flox::InputPreferences.
+ */
   template <typename T>
 concept input_preferences_typename =
-    std::is_base_of<InputPreferences, T>::value && requires( T ref ) {
-      { ref.getFlakeRef() } -> std::convertible_to<nix::ref<nix::FlakeRef>>;
+    std::is_base_of<InputPreferences, T>::value && requires( T obj ) {
+      { obj.getFlakeRef() } -> std::convertible_to<nix::ref<nix::FlakeRef>>;
     };
 
 
 /* -------------------------------------------------------------------------- */
 
-/** Preferences associated with a named registry input. */
+/** @brief Preferences associated with a named registry input. */
 struct RegistryInput : public InputPreferences {
 
-  std::shared_ptr<nix::FlakeRef> from;
+  std::shared_ptr<nix::FlakeRef> from;  /**< A parsed flake reference. */
 
+  /** @brief Get the flake reference associated with this input. */
     [[nodiscard]]
     nix::ref<nix::FlakeRef>
   getFlakeRef() const
@@ -79,17 +92,42 @@ struct RegistryInput : public InputPreferences {
 
 };  /* End struct `RegistryInput' */
 
-void from_json( const nlohmann::json & jfrom,       RegistryInput & rip );
-void to_json(         nlohmann::json & jto,   const RegistryInput & rip );
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Convert a JSON object to a @a flox::RegistryInput. */
+void from_json( const nlohmann::json & jfrom, RegistryInput & rip );
+
+/** @brief Convert a @a flox::RegistryInput to a JSON object. */
+void to_json( nlohmann::json & jto, const RegistryInput & rip );
 
 
 /* -------------------------------------------------------------------------- */
 
-/** Restricts types to those which can construct @a RegistryInput values. */
+/**
+ * @brief Restricts types to those which can construct
+ *        @a flox::RegistryInput values.
+ *
+ * A @a flox::registry_input_factory is a type that can construct
+ * @a flox::input_preferences_typename instances.
+ *
+ * A @a flox::registry_input_factory must provide a
+ * `using input_type = <TYPENAME>;` declaration to indicate the type of
+ * @a flox::input_preferences_typename it produces.
+ * It must also provide a `mkInput` function that constructs an instance of the
+ * declared @a input_type from a name and a @a flox::RegistryInput.
+ *
+ * @see flox::RegistryInputFactory
+ * @see flox::FloxFlakeInputFactory
+ * @see flox::pkgdb::PkgDbInputFactory
+ */
   template <typename T>
 concept registry_input_factory =
+  /* Must have a `using input_type = <TYPENAME>;' definition. */
   requires { typename T::input_type; } &&
+  /* `input_type' must satisfy `input_preferences_typesname' concept. */
   input_preferences_typename<typename T::input_type> &&
+  /* Must provide a function, `mkInput' that constructs an `input_type'. */
   requires( T ref, const std::string & name, const RegistryInput & rip ) {
     { ref.mkInput( name, rip ) } ->
       std::convertible_to<std::shared_ptr<typename T::input_type>>;
@@ -98,13 +136,16 @@ concept registry_input_factory =
 
 /* -------------------------------------------------------------------------- */
 
-/** The simplest @a RegistryInput _factory_ which just copies inputs. */
+/**
+ * @brief The simplest @a flox::RegistryInput _factory_ which just
+ *        copies inputs.
+ */
 class RegistryInputFactory {
 
   public:
     using input_type = RegistryInput;
 
-    /** Construct an input from a @a RegistryInput. */
+    /** @brief Construct an input from a @a flox::RegistryInput. */
       [[nodiscard]]
       static std::shared_ptr<RegistryInput>
     mkInput( const std::string & /* unused */, const RegistryInput & input )
@@ -123,7 +164,7 @@ static_assert( registry_input_factory<RegistryInputFactory> );
  * @brief A set of user inputs used to set input preferences during search
  *        and resolution.
  *
- * @example
+ * Example Registry:
  * ```
  * {
  *   "inputs": {
@@ -163,15 +204,6 @@ static_assert( registry_input_factory<RegistryInputFactory> );
  */
 struct RegistryRaw {
 
-  virtual ~RegistryRaw()                       = default;
-           RegistryRaw()                       = default;
-           RegistryRaw( const RegistryRaw &  ) = default;
-           RegistryRaw(       RegistryRaw && ) = default;
-
-  RegistryRaw & operator=( const RegistryRaw &  ) = default;
-  RegistryRaw & operator=(       RegistryRaw && ) = default;
-
-
   /** Settings and fetcher information associated with named inputs. */
   std::map<std::string, RegistryInput> inputs;
 
@@ -185,8 +217,18 @@ struct RegistryRaw {
    */
   std::vector<std::string> priority;
 
+
+  virtual ~RegistryRaw()                       = default;
+           RegistryRaw()                       = default;
+           RegistryRaw( const RegistryRaw &  ) = default;
+           RegistryRaw(       RegistryRaw && ) = default;
+
+  RegistryRaw & operator=( const RegistryRaw &  ) = default;
+  RegistryRaw & operator=(       RegistryRaw && ) = default;
+
+
   /**
-   * @a brief Return an ordered list of input names.
+   * @abrief Return an ordered list of input names.
    *
    * This appends @a priority with any missing @a inputs in
    * lexicographical order.
@@ -194,7 +236,7 @@ struct RegistryRaw {
    * The resulting list contains wrapped references and need to be accessed
    * using @a std::reference_wrapper<T>::get().
    *
-   * @example
+   * Example:
    * ```
    * Registry reg = R"( {
    *   "inputs": {
@@ -224,7 +266,7 @@ struct RegistryRaw {
     virtual std::vector<std::reference_wrapper<const std::string>>
   getOrder() const;
 
-  /** Reset to default state. */
+  /** @brief Reset to default state. */
     inline void
   clear()
   {
@@ -235,8 +277,13 @@ struct RegistryRaw {
 };  /* End struct `RegistryRaw' */
 
 
-void from_json( const nlohmann::json & jfrom,       RegistryRaw & reg );
-void to_json(         nlohmann::json & jto,   const RegistryRaw & reg );
+/* -------------------------------------------------------------------------- */
+
+/** @brief Convert a JSON object to a @a flox::RegistryRaw. */
+void from_json( const nlohmann::json & jfrom, RegistryRaw & reg );
+
+/** @brief Convert a @a flox::RegistryRaw to a JSON object. */
+void to_json( nlohmann::json & jto, const RegistryRaw & reg );
 
 
 /* -------------------------------------------------------------------------- */
@@ -244,12 +291,12 @@ void to_json(         nlohmann::json & jto,   const RegistryRaw & reg );
 /**
  * @brief An input registry that may hold arbitrary types of inputs.
  *
- * Unlike @a RegistryRaw, inputs are held in order, and any default settings
- * have been applied to inputs.
+ * Unlike @a flox::RegistryRaw, inputs are held in order, and any default
+ * settings have been applied to inputs.
  *
- * Any type that is constructible from a @a RegistryInput and (optional) a
- * `nix::ref<nix::EvalState>`, and is derived from @a InputPreferences may be a
- * value type in a registry.
+ * Any type that is constructible from a @a flox::RegistryInput and (optional) a
+ * `nix::ref<nix::EvalState>`, and is derived from @a flox::InputPreferences may
+ * be a value type in a registry.
  */
   template<registry_input_factory FactoryType>
 class Registry {
@@ -257,7 +304,7 @@ class Registry {
   private:
 
     /**
-     * @brief Orginal raw registry.
+     * Orginal raw registry.
      * This is saved to allow the raw user input to be recorded in lockfiles.
      */
     RegistryRaw registryRaw;
@@ -268,48 +315,17 @@ class Registry {
                > inputs;
 
 
-/* -------------------------------------------------------------------------- */
-
   public:
 
     using input_type = typename FactoryType::input_type;
 
 
-/* -------------------------------------------------------------------------- */
+    /**
+     * @brief Construct a registry from a @a flox::RegistryRaw and
+     *        a _factory_.
+     */
+    explicit Registry( RegistryRaw registry, FactoryType & factory );
 
-    explicit Registry( RegistryRaw registry, FactoryType & factory )
-      : registryRaw( std::move( registry ) )
-    {
-      for ( const std::reference_wrapper<const std::string> & _name :
-              this->registryRaw.getOrder()
-          )
-        {
-          const auto & pair = std::find_if(
-            this->registryRaw.inputs.begin()
-          , this->registryRaw.inputs.end()
-          , [&]( const auto & pair ) { return pair.first == _name.get(); }
-          );
-
-          /* Fill default/fallback values if none are defined. */
-          RegistryInput input = pair->second;
-          if ( ! input.subtrees.has_value() )
-            {
-              input.subtrees = this->registryRaw.defaults.subtrees;
-            }
-          if ( ! input.stabilities.has_value() )
-            {
-              input.stabilities = this->registryRaw.defaults.stabilities;
-            }
-
-          /* Construct the input */
-          this->inputs.emplace_back(
-            std::make_pair( pair->first, factory.mkInput( pair->first, input ) )
-          );
-        }
-    }
-
-
-/* -------------------------------------------------------------------------- */
 
     /**
      * @brief Get an input by name.
@@ -319,19 +335,8 @@ class Registry {
      */
       [[nodiscard]]
       std::shared_ptr<typename FactoryType::input_type>
-    get( const std::string & name ) const noexcept
-    {
-      const auto maybeInput = std::find_if(
-        this->inputs.begin()
-      , this->inputs.end()
-      , [&]( const auto & pair ) { return pair.first == name; }
-      );
-      if ( maybeInput == this->inputs.end() ) { return nullptr; }
-      return maybeInput->second;
-    }
+    get( const std::string & name ) const noexcept;
 
-
-/* -------------------------------------------------------------------------- */
 
     /**
      * @brief Get an input by name, or throw an error if no such input exists.
@@ -340,48 +345,70 @@ class Registry {
      */
       [[nodiscard]]
       std::shared_ptr<typename FactoryType::input_type>
-    at( const std::string & name ) const
-    {
-      const std::shared_ptr<typename FactoryType::input_type> maybeInput =
-        this->get( name );
-      if ( maybeInput == nullptr )
-        {
-          throw std::out_of_range( "No such input '" + name + "'" );
-        }
-      return maybeInput;
-    }
+    at( const std::string & name ) const;
 
 
-/* -------------------------------------------------------------------------- */
-
+    /** @brief Get the raw registry read from the user. */
     [[nodiscard]]
     const RegistryRaw & getRaw() const { return this->registryRaw; }
 
     /* Forwarded container functions. */
-    [[nodiscard]] auto begin()        { return this->inputs.begin();  }
-    [[nodiscard]] auto end()          { return this->inputs.end();    }
+
+    /** @brief Get the number of inputs in the registry. */
+    [[nodiscard]] auto size() const { return this->inputs.size(); }
+
+    /** @brief Whether the registry is empty. */
+    [[nodiscard]] auto empty() const { return this->inputs.empty(); }
+
+
+    /** @brief Iterate registry members in priority order. */
+    [[nodiscard]] auto begin() { return this->inputs.begin();  }
+
+    /** @brief Get an iterator _sentinel_ used to identify an iterator's end. */
+    [[nodiscard]] auto end() { return this->inputs.end(); }
+
+
+    /** @brief Iterate read-only registry members in priority order. */
     [[nodiscard]] auto begin()  const { return this->inputs.cbegin(); }
-    [[nodiscard]] auto end()    const { return this->inputs.cend();   }
-    [[nodiscard]] auto cbegin()       { return this->inputs.cbegin(); }
-    [[nodiscard]] auto cend()         { return this->inputs.cend();   }
-    [[nodiscard]] auto size()   const { return this->inputs.size();   }
-    [[nodiscard]] auto empty()  const { return this->inputs.empty();  }
+
+    /**
+     * @brief Get an iterator _sentinel_ used to identify a read-only
+     *        iterator's end.
+     */
+    [[nodiscard]] auto end() const { return this->inputs.cend(); }
+
+
+    /** @brief Iterate read-only registry members in priority order. */
+    [[nodiscard]] auto cbegin() const { return this->inputs.cbegin(); }
+
+    /**
+     * @brief Get an iterator _sentinel_ used to identify a read-only
+     *        iterator's end.
+     */
+    [[nodiscard]] auto cend() const { return this->inputs.cend(); }
 
 };  /* End class `Registry' */
 
 
 /* -------------------------------------------------------------------------- */
 
-/** A simple @a RegistryInput that opens a `nix` evaluator for a flake. */
+/**
+ * @brief A simple @a flox::RegistryInput that opens a `nix` evaluator for
+ *        a flake.
+ */
 class FloxFlakeInput : public InputPreferences {
 
   private:
-    nix::ref<nix::FlakeRef>    flakeRef;
-    nix::ref<nix::Store>       store;
-    std::shared_ptr<FloxFlake> flake;
+    nix::ref<nix::FlakeRef>    flakeRef;  /**< A parsed flake reference. */
+    nix::ref<nix::Store>       store;     /**< A `nix` store connection. */
+    std::shared_ptr<FloxFlake> flake;     /**< A flake with an evaluator. */
 
   public:
 
+    /**
+     * @brief Construct a @a flox::FloxFlakeInput from a `nix` store connection
+     *        and @a flox::RegistryInput.
+     */
     FloxFlakeInput(       nix::ref<nix::Store> & store
                   , const RegistryInput        & input
                   )
@@ -392,6 +419,8 @@ class FloxFlakeInput : public InputPreferences {
       this->stabilities = input.stabilities;
     }
 
+
+    /** @brief Get the flake reference associated with this input. */
       [[nodiscard]]
       nix::ref<nix::FlakeRef>
     getFlakeRef() const
@@ -399,6 +428,8 @@ class FloxFlakeInput : public InputPreferences {
       return this->flakeRef;
     }
 
+
+    /** @brief Get a handle for a flake with a `nix` evaluator. */
       [[nodiscard]]
       nix::ref<FloxFlake>
     getFlake()
@@ -416,7 +447,7 @@ class FloxFlakeInput : public InputPreferences {
 };  /* End struct `FloxFlakeInput' */
 
 
-/** A factory for @a FloxFlakeInput objects. */
+/** @brief A factory for @a flox::FloxFlakeInput objects. */
 class FloxFlakeInputFactory {
 
   private:
@@ -425,14 +456,15 @@ class FloxFlakeInputFactory {
   public:
     using input_type = FloxFlakeInput;
 
+    /** @brief Construct a factory using a new `nix` store connection. */
     FloxFlakeInputFactory() : store( NixState().getStore() ) {}
 
-    /** Construct a factory using a `nix` store connection. */
+    /** @brief Construct a factory using a `nix` store connection. */
     explicit FloxFlakeInputFactory( nix::ref<nix::Store> & store )
       : store( store )
     {}
 
-    /** Construct an input from a @a RegistryInput. */
+    /** @brief Construct an input from a @a flox::RegistryInput. */
       [[nodiscard]]
       std::shared_ptr<FloxFlakeInput>
     mkInput( const std::string & /* unused */, const RegistryInput & input )

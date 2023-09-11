@@ -7,9 +7,15 @@
  *
  * -------------------------------------------------------------------------- */
 
+#pragma once
+
+/* -------------------------------------------------------------------------- */
+
+namespace flox::pkgdb {
+
+/* -------------------------------------------------------------------------- */
+
 /* Holds metadata information about schema versions. */
-
-
 static const char * sql_versions = R"SQL(
 CREATE TABLE IF NOT EXISTS DbVersions (
   name     TEXT NOT NULL PRIMARY KEY
@@ -99,6 +105,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_Packages
 
 /* -------------------------------------------------------------------------- */
 
+/* XXX: Keep in sync with `<pkgdb>/src/pkgdb/write.cc:PkgDb::initTables()' */
 static const char * sql_views = R"SQL(
 CREATE VIEW IF NOT EXISTS v_AttrPaths AS
   WITH Tree ( id, parent, attrName, subtree, system, stability, path ) AS
@@ -164,6 +171,13 @@ CREATE VIEW IF NOT EXISTS v_PackagesSearch AS SELECT
 , v_AttrPaths.system
 , v_AttrPaths.stability
 , json_insert( v_AttrPaths.path, '$[#]', Packages.attrName ) AS path
+, json_insert( iif( ( v_AttrPaths.subtree = 'catalog' )
+                  , json_remove( v_AttrPaths.path, '$[2]', '$[1]', '$[0]' )
+                  , json_remove( v_AttrPaths.path, '$[1]', '$[0]' )
+                  )
+             , '$[#]'
+             , Packages.attrName
+             ) AS relPath
 , ( json_extract( v_AttrPaths.path, '$[#]' ) + 1 ) AS depth
 , Packages.name
 , Packages.attrName
@@ -182,16 +196,16 @@ CREATE VIEW IF NOT EXISTS v_PackagesSearch AS SELECT
 , v_Semvers.minor
 , v_Semvers.patch
 , v_Semvers.preTag
-, ( iif( ( Packages.version IS NULL ), 3
-       , iif( ( Packages.semver IS NOT NULL ), 0
-         , iif( ( ( SELECT Packages.version = date( Packages.version ) )
-                  IS NOT NULL )
-              , 1
-              , 3
-              )
-         )
+, iif( ( Packages.version IS NULL ), 3
+     , iif( ( Packages.semver IS NOT NULL ), 0
+       , iif( ( ( SELECT Packages.version = date( Packages.version ) )
+                IS NOT NULL )
+            , 1
+            , 3
+            )
        )
-  ) AS versionType
+     )
+  AS versionType
 , Packages.license
 , Packages.broken
 , iif( ( broken IS NULL ), 1, iif( broken, 2, 0 ) ) AS brokenRank
@@ -204,6 +218,10 @@ LEFT OUTER JOIN v_Semvers    ON ( Packages.semver        = v_Semvers.semver )
      INNER JOIN v_AttrPaths  ON ( Packages.parentId      = v_AttrPaths.id   )
 )SQL";
 
+
+/* -------------------------------------------------------------------------- */
+
+}  /* End namespace `flox::pkgdb' */
 
 /* -------------------------------------------------------------------------- *
  *

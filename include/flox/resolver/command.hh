@@ -19,8 +19,12 @@ namespace flox::resolver {
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * @brief Resolve a set of package requirements to a set of
+ *        satisfactory installables.
+ */
 struct ResolveCommand
-  : public search::PkgDbRegistryMixin
+  : public pkgdb::PkgDbRegistryMixin
   , public search::PkgQueryMixin
 {
 
@@ -28,7 +32,10 @@ struct ResolveCommand
 
     ResolveOneParams params;
 
-  /** Add argument to any parser to construct a @a ResolveOneParams. */
+  /**
+   * @brief Add argument to any parser to construct
+   *        a @a flox::resolver::ResolveOneParams.
+   */
     argparse::Argument &
   addResolveParamArgs( argparse::ArgumentParser & parser );
 
@@ -50,14 +57,16 @@ struct ResolveCommand
 
     ResolveCommand();
 
-    /** Display a single row from the given @a input. */
-    void showRow( std::string_view    inputName
-                , pkgdb::PkgDbInput & input
-                , pkgdb::row_id       row
-                );
+    /** @brief Display a single row from the given @a input. */
+      void
+    showRow( pkgdb::PkgDbInput & input, pkgdb::row_id row )
+    {
+      std::cout << input.getRowJSON( row ).dump() << std::endl;
+    }
 
     /**
-     * Execute the `resolve` routine.
+     * @brief Execute the `resolve` routine.
+     *
      * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
      */
     int run();

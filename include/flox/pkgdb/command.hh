@@ -10,7 +10,7 @@
 #pragma once
 
 #include "flox/pkgdb/write.hh"
-#include "flox/pkgdb/pkgdb-input.hh"
+#include "flox/pkgdb/input.hh"
 #include "flox/core/command.hh"
 
 
@@ -20,7 +20,7 @@ namespace flox::pkgdb {
 
 /* -------------------------------------------------------------------------- */
 
-/** Adds a single package database path to a state blob. */
+/** @brief Adds a single package database path to a state blob. */
 struct DbPathMixin : virtual public flox::NixState
 {
 
@@ -65,7 +65,10 @@ struct PkgDbMixin
 
 /* -------------------------------------------------------------------------- */
 
-/** Scrape a flake prefix producing a SQLite3 database with package metadata. */
+/**
+ * @brief Scrape a flake prefix producing a SQLite3 database with
+ *        package metadata.
+ */
 struct ScrapeCommand
   : public DbPathMixin
   , public command::AttrPathMixin

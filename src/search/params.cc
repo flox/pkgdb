@@ -23,7 +23,7 @@ from_json( const nlohmann::json & jfrom, SearchQuery & qry )
   qry.clear();
   pkgdb::from_json( jfrom, dynamic_cast<pkgdb::PkgDescriptorBase &>( qry ) );
   try { jfrom.at( "match" ).get_to( qry.match ); }
-  catch( const std::out_of_range & ) {}
+  catch( const nlohmann::json::out_of_range & ) {}
 }
 
   void

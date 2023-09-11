@@ -55,7 +55,7 @@ struct PkgDescriptorRaw : pkgdb::PkgDescriptorBase {
   std::optional<std::string> input;
 
   /**
-   * @brief An absolute or relative attribut path to a package.
+   * An absolute or relative attribut path to a package.
    *
    * May contain `std::nullopt` as its second member to indicate that any system
    * is acceptable.
@@ -63,7 +63,8 @@ struct PkgDescriptorRaw : pkgdb::PkgDescriptorBase {
   std::optional<AttrPathGlob> path;
 
   /**
-   * @brief Restricts resolution to a given subtree.
+   * Restricts resolution to a given subtree.
+   * Restricts resolution to a given subtree.
    *
    * This field must not conflict with the @a path field.
    */
@@ -73,32 +74,93 @@ struct PkgDescriptorRaw : pkgdb::PkgDescriptorBase {
   std::optional<std::string> stability;
 
   /**
-   * @brief Whether pre-releases should be preferred over releases.
+   * Whether pre-releases should be preferred over releases.
    *
    * Takes priority over `semver.preferPreReleases` "global" setting.
    */
   std::optional<bool> preferPreReleases = false;
 
 
-  /** Reset to default state. */
-    inline void
-  clear()
-  {
-    this->pkgdb::PkgDescriptorBase::clear();
-    this->input             = std::nullopt;
-    this->path              = std::nullopt;
-    this->subtree           = std::nullopt;
-    this->stability         = std::nullopt;
-    this->preferPreReleases = std::nullopt;
-  }
+  /** @brief Reset to default state. */
+  void clear();
+
+  /**
+   * @brief Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to
+   *        lookup packages.
+   *
+   * This DOES NOT clear @a pqa before filling it.
+   * This is intended to be used after filling @a pqa with global preferences.
+   */
+  pkgdb::PkgQueryArgs & fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
+
 
 };  /* End struct `PkgDescriptorRaw' */
 
 
 /* -------------------------------------------------------------------------- */
 
-void from_json( const nlohmann::json & jfrom,       PkgDescriptorRaw & desc );
-void to_json(         nlohmann::json & jto,   const PkgDescriptorRaw & desc );
+/** @brief Convert a JSON object to a @a flox::resolver::PkgDescriptorRaw. */
+void from_json( const nlohmann::json & jfrom, PkgDescriptorRaw & desc );
+
+/** @brief Convert a @a flox::resolver::PkgDescriptorRaw to a a JSON object. */
+void to_json( nlohmann::json & jto, const PkgDescriptorRaw & desc );
+
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Global preferences used for resolution. */
+struct Preferences {
+
+  /**
+   * Ordered list of systems to be searched.
+   * Results will be grouped by system in the order they appear here.
+   */
+  std::vector<std::string> systems = { nix::settings.thisSystem.get() };
+
+
+  /** @brief Allow/disallow packages with certain metadata. */
+  struct Allows {
+
+    /** Whether to include packages which are explicitly marked `unfree`. */
+    bool unfree = true;
+
+    /** Whether to include packages which are explicitly marked `broken`. */
+    bool broken = false;
+
+    /** Filter results to those explicitly marked with the given licenses. */
+    std::optional<std::vector<std::string>> licenses;
+
+  };  /* End struct `ResolveOneParams::Allows' */
+
+  Allows allow; /**< Allow/disallow packages with certain metadata. */
+
+
+  /**
+   * @brief Settings associated with semantic version processing.
+   *
+   * These act as the _global_ default, but may be overridden by
+   * individual descriptors.
+   */
+  struct Semver {
+    /** Whether pre-release versions should be ordered before releases. */
+    bool preferPreReleases = false;
+  };  /* End struct `ResolveOneParams::Semver' */
+
+  Semver semver;  /**< Settings associated with semantic version processing. */
+
+
+  /** @brief Reset to default/empty state. */
+  void clear();
+
+  /**
+   * @brief Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to
+   *        lookup packages.
+   *
+   * This clears @a pqa before filling it.
+   */
+  pkgdb::PkgQueryArgs & fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
+
+};  /* End struct `Preferences' */
 
 
 /* -------------------------------------------------------------------------- */
@@ -112,41 +174,10 @@ void to_json(         nlohmann::json & jto,   const PkgDescriptorRaw & desc );
  * This is essentially a reorganized form of @a flox::pkgdb::PkgQueryArgs
  * that is suited for JSON input.
  */
-struct ResolveOneParams {
+struct ResolveOneParams : public Preferences {
 
   /** Settings and fetcher information associated with inputs. */
   RegistryRaw registry;
-
-  /**
-   * Ordered list of systems to be searched.
-   * Results will be grouped by system in the order they appear here.
-   */
-  std::vector<std::string> systems;
-
-
-  /** Allow/disallow packages with certain metadata. */
-  struct Allows {
-
-    /** Whether to include packages which are explicitly marked `unfree`. */
-    bool unfree = true;
-
-    /** Whether to include packages which are explicitly marked `broken`. */
-    bool broken = false;
-
-    /** Filter results to those explicitly marked with the given licenses. */
-    std::optional<std::vector<std::string>> licenses;
-
-  } allow;
-
-
-  /** Settings associated with semantic version processing. */
-  struct Semver {
-
-    /** Whether pre-release versions should be ordered before releases. */
-    bool preferPreReleases = false;
-
-  } semver;
-
 
   /**
    * @brief A single package descriptor in _raw_ form.
@@ -157,12 +188,12 @@ struct ResolveOneParams {
   PkgDescriptorRaw query;
 
 
-  /** Reset preferences to default/empty state. */
+  /** @brief Reset to default/empty state. */
   void clear();
 
   /**
-   * Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to lookup
-   * packages in a particular input.
+   * @brief Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to
+   *        lookup packages in a particular input.
    * @param input The input name to be searched.
    * @param pqa   A set of query args to _fill_ with preferences.
    * @return `true` if @a pqa was modified, indicating that the input should be
@@ -172,14 +203,16 @@ struct ResolveOneParams {
                        ,       pkgdb::PkgQueryArgs & pqa
                        ) const;
 
-
 };  /* End struct `ResolveOneParams' */
 
 
 /* -------------------------------------------------------------------------- */
 
-void from_json( const nlohmann::json & jfrom,       ResolveOneParams & params );
-void to_json(         nlohmann::json & jto,   const ResolveOneParams & params );
+/** @brief Convert a JSON object to a @a flox::resolver::ResolveOneParams. */
+void from_json( const nlohmann::json & jfrom, ResolveOneParams & params );
+
+/** @brief Convert a @a flox::resolver::ResolveOneParams to a a JSON object. */
+void to_json( nlohmann::json & jto, const ResolveOneParams & params );
 
 
 /* -------------------------------------------------------------------------- */
