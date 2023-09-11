@@ -65,7 +65,7 @@ struct PkgDescriptorBase {
   std::optional<std::string> semver;  /**< Filter results by version range. */
 
   /** @brief Reset to default state. */
-    inline void
+    virtual void
   clear()
   {
     this->name    = std::nullopt;

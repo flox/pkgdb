@@ -43,8 +43,8 @@ struct SearchQuery : pkgdb::PkgDescriptorBase {
   std::optional<std::string> match;
 
   /** @brief Reset to default state. */
-    inline void
-  clear()
+    virtual void
+  clear() override
   {
     this->pkgdb::PkgDescriptorBase::clear();
     this->match = std::nullopt;

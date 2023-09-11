@@ -83,7 +83,7 @@ struct PkgDescriptorRaw : pkgdb::PkgDescriptorBase {
 
 
   /** @brief Reset to default state. */
-  void clear();
+  virtual void clear() override;
 
   /**
    * @brief Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to
