@@ -3,7 +3,7 @@
  * @file search/params.cc
  *
  * @brief A set of user inputs used to set input preferences and query
- * parameters during search.
+ *        parameters during search.
  *
  *
  * -------------------------------------------------------------------------- */
@@ -14,6 +14,16 @@
 /* -------------------------------------------------------------------------- */
 
 namespace flox::search {
+
+/* -------------------------------------------------------------------------- */
+
+  void
+SearchQuery::clear()
+{
+  this->pkgdb::PkgDescriptorBase::clear();
+  this->match = std::nullopt;
+}
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -38,6 +48,7 @@ to_json( nlohmann::json & jto, const SearchQuery & qry )
   pkgdb::PkgQueryArgs &
 SearchQuery::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 {
+  /* XXX: DOES NOT CLEAR FIRST! We are called after global preferences. */
   pqa.name    = this->name;
   pqa.pname   = this->pname;
   pqa.version = this->version;

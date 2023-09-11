@@ -59,17 +59,19 @@ to_json( nlohmann::json & jto, const PkgDescriptorRaw & desc )
   pkgdb::PkgQueryArgs &
 PkgDescriptorRaw::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 {
-  /* XXX: DOES NOT CLEAR FIRST! */
+  /* XXX: DOES NOT CLEAR FIRST! We are called after global preferences. */
   pqa.name    = this->name;
   pqa.pname   = this->pname;
   pqa.version = this->version;
   pqa.semver  = this->semver;
 
+  /* Set pre-release preference. We get priority over _global_ preferences. */
   if ( this->preferPreReleases.has_value() )
     {
       pqa.preferPreReleases = * this->preferPreReleases;
     }
 
+  /* Handle `path' parameter. */
   if ( this->path.has_value() && ( ! this->path->empty() ) )
     {
       flox::AttrPath relPath;

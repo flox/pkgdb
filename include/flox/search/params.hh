@@ -3,7 +3,7 @@
  * @file flox/search/params.hh
  *
  * @brief A set of user inputs used to set input preferences and query
- * parameters during search.
+ *        parameters during search.
  *
  *
  * -------------------------------------------------------------------------- */
@@ -34,31 +34,36 @@ namespace flox::search {
 
 /**
  * @brief A set of query parameters.
+ *
  * This is essentially a reorganized form of @a flox::pkgdb::PkgQueryArgs
  * that is suited for JSON input.
  */
-struct SearchQuery : pkgdb::PkgDescriptorBase {
+struct SearchQuery : public pkgdb::PkgDescriptorBase {
+
+  /* From `pkgdb::PkgDescriptorBase`:
+   *   std::optional<std::string> name;
+   *   std::optional<std::string> pname;
+   *   std::optional<std::string> version;
+   *   std::optional<std::string> semver;
+   */
 
   /** Filter results by partial name/description match. */
   std::optional<std::string> match;
 
-  /** @brief Reset to default state. */
-    virtual void
-  clear() override
-  {
-    this->pkgdb::PkgDescriptorBase::clear();
-    this->match = std::nullopt;
-  }
 
+  /** @brief Reset to default state. */
+  virtual void clear() override;
 
   /**
    * @brief Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to
    *        lookup packages filtered by @a SearchQuery requirements.
-   * @param pqa   A set of query args to _fill_ with preferences.
+   *
+   * NOTE: This DOES NOT clear @a pqa before filling it.
+   * This is intended to be used after filling @a pqa with global preferences.
+   * @param pqa A set of query args to _fill_ with preferences.
    * @return A reference to the modified query args.
    */
-    pkgdb::PkgQueryArgs &
-  fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
+  pkgdb::PkgQueryArgs & fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
 
 };  /* End struct "SearchQuery' */
 
@@ -121,7 +126,7 @@ void to_json( nlohmann::json & jto, const SearchQuery & qry );
  * }
  * ```
  */
-struct SearchParams : pkgdb::QueryPreferences {
+struct SearchParams : public pkgdb::QueryPreferences {
 
 /* -------------------------------------------------------------------------- */
 
@@ -135,7 +140,7 @@ struct SearchParams : pkgdb::QueryPreferences {
 /* -------------------------------------------------------------------------- */
 
   /** @brief Reset preferences to default/empty state. */
-  void clear();
+  virtual void clear() override;
 
   /**
    * @brief Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to

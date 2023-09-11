@@ -20,7 +20,6 @@ namespace flox::pkgdb {
 
 /* -------------------------------------------------------------------------- */
 
-
 /**
  * @brief Global preferences used for resolution/search with multiple queries.
  */
@@ -65,13 +64,13 @@ struct QueryPreferences {
 
 
   /** @brief Reset to default/empty state. */
-  void clear();
+  virtual void clear();
 
   /**
    * @brief Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to
    *        lookup packages.
    *
-   * This clears @a pqa before filling it.
+ * NOTE: This DOES clear @a pqa before filling it.
    */
   pkgdb::PkgQueryArgs & fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
 

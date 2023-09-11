@@ -39,11 +39,11 @@ using AttrPathGlob = std::vector<std::optional<std::string>>;
 /**
  * @brief A set of query parameters describing _requirements_ for a package.
  *
- * In its _raw_ form, we do not expect that "global" filters have been pushed
+ * In its _raw_ form, we DO NOT expect that "global" filters have been pushed
  * down into the descriptor, and do not attempt to distinguish from relative or
  * absolute attribute paths in the @a path field.
  */
-struct PkgDescriptorRaw : pkgdb::PkgDescriptorBase {
+struct PkgDescriptorRaw : public pkgdb::PkgDescriptorBase {
 
   /* From `pkgdb::PkgDescriptorBase`:
    *   std::optional<std::string> name;
@@ -89,8 +89,10 @@ struct PkgDescriptorRaw : pkgdb::PkgDescriptorBase {
    * @brief Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to
    *        lookup packages.
    *
-   * This DOES NOT clear @a pqa before filling it.
+   * NOTE: This DOES NOT clear @a pqa before filling it.
    * This is intended to be used after filling @a pqa with global preferences.
+   * @param pqa A set of query args to _fill_ with preferences.
+   * @return A reference to the modified query args.
    */
   pkgdb::PkgQueryArgs & fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
 
@@ -145,7 +147,7 @@ struct ResolveOneParams : public pkgdb::QueryPreferences {
 
 
   /** @brief Reset to default/empty state. */
-  void clear();
+  virtual void clear() override;
 
   /**
    * @brief Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to

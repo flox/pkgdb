@@ -91,7 +91,6 @@ class SearchCommand : public pkgdb::PkgDbRegistryMixin, public PkgQueryMixin {
 
     /**
      * @brief Execute the `search` routine.
-     *
      * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
      */
     int run();
