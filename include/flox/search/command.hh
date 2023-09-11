@@ -32,13 +32,14 @@ struct PkgQueryMixin {
 
   pkgdb::PkgQuery query;
 
-  /** @brief Add `query` argument to any parser to construct
-   *         a @a flox::pkgdb::PkgQuery.
+  /**
+   * @brief Add `query` argument to any parser to construct a
+   *        @a flox::pkgdb::PkgQuery.
    */
   argparse::Argument & addQueryArgs( argparse::ArgumentParser & parser );
 
   /**
-   * @brief Run query on a @a flox::pkgdb::PkgDbReadOnly database.
+   * @brief Run query on a @a pkgdb::PkgDbReadOnly database.
    *
    * Any scraping should be performed before invoking this function.
    */
@@ -60,39 +61,6 @@ class SearchCommand : public pkgdb::PkgDbRegistryMixin, public PkgQueryMixin {
      * @brief Add argument to any parser to construct
      *        a @a flox::search::SearchParams.
      */
-      argparse::Argument &
-    addSearchParamArgs( argparse::ArgumentParser & parser );
-
-
-  protected:
-
-      [[nodiscard]]
-      virtual RegistryRaw
-    getRegistryRaw() override { return this->params.registry; }
-
-      [[nodiscard]]
-      virtual std::vector<std::string> &
-    getSystems() override { return this->params.systems; }
-
-    /** @return A raw registry used to initialize. */
-    [[nodiscard]] virtual RegistryRaw getRegistryRaw() = 0;
-
-    /** @return A list of systems to be scraped. */
-    [[nodiscard]] virtual std::vector<std::string> & getSystems() = 0;
-
-};  /* End struct `PkgDbRegistryMixin' */
-
-
-/* -------------------------------------------------------------------------- */
-
-/** @brief Search flakes for packages satisfying a set of filters. */
-class SearchCommand : public PkgDbRegistryMixin, public PkgQueryMixin {
-
-  private:
-
-    SearchParams params;
-
-    /** @brief Add argument to any parser to construct a @a SearchParams. */
       argparse::Argument &
     addSearchParamArgs( argparse::ArgumentParser & parser );
 
