@@ -21,6 +21,18 @@ namespace flox::pkgdb {
 
 /* -------------------------------------------------------------------------- */
 
+  void
+PkgDescriptorBase::clear()
+{
+  this->name    = std::nullopt;
+  this->pname   = std::nullopt;
+  this->version = std::nullopt;
+  this->semver  = std::nullopt;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
   std::string
 PkgQueryArgs::PkgQueryInvalidArgException::errorMessage(
   const PkgQueryArgs::PkgQueryInvalidArgException::error_code & ecode
@@ -136,11 +148,8 @@ PkgQueryArgs::validate() const
   void
 PkgQueryArgs::clear()
 {
+  this->PkgDescriptorBase::clear();
   this->match             = std::nullopt;
-  this->name              = std::nullopt;
-  this->pname             = std::nullopt;
-  this->version           = std::nullopt;
-  this->semver            = std::nullopt;
   this->licenses          = std::nullopt;
   this->allowBroken       = false;
   this->allowUnfree       = true;
