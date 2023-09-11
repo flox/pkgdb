@@ -7,11 +7,10 @@
  *
  * -------------------------------------------------------------------------- */
 
+#include <stddef.h>
+
 #include <nix/shared.hh>
 #include <nix/eval.hh>
-#include <nix/eval-cache.hh>
-#include <nix/store-api.hh>
-#include <nix/flake/flake.hh>
 
 #include "flox/core/nix-state.hh"
 
@@ -22,18 +21,13 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
-/**
- * Perform one time `nix` runtime setup.
- * You may safely call this function multiple times, after the first invocation
- * it is effectively a no-op.
- */
   void
 initNix()
 {
   static bool didNixInit = false;
   if ( didNixInit ) { return; }
 
-  nix::setStackSize( ( ( (size_t) 64 ) * 1024 ) * 1024 );  // NOLINT
+  nix::setStackSize( ( ( static_cast<size_t>( 64 ) ) * 1024 ) * 1024 );  // NOLINT
   nix::initNix();
   nix::initGC();
   /* Suppress benign warnings about `nix.conf'. */
