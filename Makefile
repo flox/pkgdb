@@ -17,6 +17,7 @@ MAKEFILE_DIR ?= $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 CXX        ?= c++
 RM         ?= rm -f
 CAT        ?= cat
+GREP       ?= grep
 PKG_CONFIG ?= pkg-config
 NIX        ?= nix
 UNAME      ?= uname
@@ -287,11 +288,16 @@ cdb: compile_commands.json
 	}|$(TR) ' ' '\n'|$(SED) 's/-std=/%cpp -std=/' >> "$@";
 
 
+# Get system include paths from `nix' C++ compiler.
+CXX_SYSTEM_INCDIRS := $(shell                                                \
+  $(CXX) -E -Wp,-v -xc++ /dev/null 2>&1 1>/dev/null|$(GREP) '^ /nix/store')
+
 compile_commands.json: flake.nix flake.lock pkg-fun.nix
 compile_commands.json: $(lastword $(MAKEFILE_LIST))
 compile_commands.json: $(COMMON_HEADERS) $(ALL_SRCS)
 	-$(MAKE) -C $(MAKEFILE_DIR) clean;
-	$(BEAR) --output "$@" -- $(MAKE) -C $(MAKEFILE_DIR) -j all;
+	EXTRA_CXXFLAGS='$(patsubst %,-isystem %,$(CXX_SYSTEM_INCDIRS))'  \
+	  $(BEAR) --output "$@" -- $(MAKE) -C $(MAKEFILE_DIR) -j all;
 
 
 # ---------------------------------------------------------------------------- #
