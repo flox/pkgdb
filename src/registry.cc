@@ -20,6 +20,36 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
+  void
+InputPreferences::clear()
+{
+  this->subtrees    = std::nullopt;
+  this->stabilities = std::nullopt;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  pkgdb::PkgQueryArgs &
+InputPreferences::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
+{
+  pqa.subtrees    = this->subtrees;
+  pqa.stabilities = this->stabilities;
+  return pqa;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
+RegistryRaw::clear()
+{
+  this->inputs.clear();
+  this->priority.clear();
+}
+
+/* -------------------------------------------------------------------------- */
+
   std::vector<std::reference_wrapper<const std::string>>
 RegistryRaw::getOrder() const
 {
@@ -123,6 +153,34 @@ to_json( nlohmann::json & jto, const RegistryRaw & reg )
   jto.emplace( "inputs",   reg.inputs   );
   jto.emplace( "defaults", reg.defaults );
   jto.emplace( "priority", reg.priority );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  pkgdb::PkgQueryArgs &
+RegistryRaw::fillPkgQueryArgs( const std::string         & input
+                             ,       pkgdb::PkgQueryArgs & pqa
+                             ) const
+{
+  /* Look for the named input and our fallbacks/default in the inputs list.
+   * then fill input specific settings. */
+  try
+    {
+      const RegistryInput & minput = this->inputs.at( input );
+      pqa.subtrees = minput.subtrees.has_value()
+                     ? minput.subtrees
+                     : this->defaults.subtrees;
+      pqa.stabilities = minput.stabilities.has_value()
+                        ? minput.stabilities
+                        : this->defaults.stabilities;
+    }
+  catch ( ... )
+    {
+      pqa.subtrees    = this->defaults.subtrees;
+      pqa.stabilities = this->defaults.stabilities;
+    }
+  return pqa;
 }
 
 

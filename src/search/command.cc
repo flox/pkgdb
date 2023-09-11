@@ -93,8 +93,8 @@ SearchCommand::run()
   pkgdb::PkgQueryArgs args;
   for ( const auto & [name, input] : * this->registry )
     {
-      this->query =
-        pkgdb::PkgQuery( this->params.fillPkgQueryArgs( name, args ) );
+      this->params.fillPkgQueryArgs( name, args );
+      this->query = pkgdb::PkgQuery( args );
       for ( const auto & row : this->queryDb( * input->getDbReadOnly() ) )
         {
           this->showRow( * input, row );

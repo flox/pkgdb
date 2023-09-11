@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <concepts>
 #include <string>
 #include <sstream>
 #include <optional>
@@ -22,6 +23,7 @@
 #include <nix/shared.hh>
 #include <sqlite3pp.hh>
 
+#include "compat/concepts.hh"
 #include "flox/core/exceptions.hh"
 #include "flox/core/types.hh"
 #include "flox/core/util.hh"
@@ -67,6 +69,9 @@ struct PkgDescriptorBase {
   /** @brief Reset to default state. */
   virtual void clear();
 };
+
+  template <typename T>
+concept pkg_descriptor_typename = std::derived_from<T, PkgDescriptorBase>;
 
 
 /* -------------------------------------------------------------------------- */

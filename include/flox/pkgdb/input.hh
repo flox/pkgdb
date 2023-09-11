@@ -193,8 +193,6 @@ class PkgDbInput : public FloxFlakeInput {
     nlohmann::json getRowJSON( row_id row );
 
 
-/* -------------------------------------------------------------------------- */
-
 };  /* End struct `PkgDbInput' */
 
 

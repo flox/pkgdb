@@ -50,6 +50,20 @@ struct InputPreferences {
    */
   std::optional<std::vector<std::string>> stabilities;
 
+  /** @brief Reset to default state. */
+  virtual void clear();
+
+  /**
+   * @brief Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to
+   *        lookup packages filtered by @a InputPreferences requirements.
+   *
+   * NOTE: This DOES NOT clear @a pqa before filling it.
+   * This is intended to be used after filling @a pqa with global preferences.
+   * @param pqa A set of query args to _fill_ with preferences.
+   * @return A reference to the modified query args.
+   */
+  pkgdb::PkgQueryArgs & fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
+
 };  /* End struct `InputPreferences' */
 
 
@@ -267,12 +281,18 @@ struct RegistryRaw {
   getOrder() const;
 
   /** @brief Reset to default state. */
-    inline void
-  clear()
-  {
-    this->inputs.clear();
-    this->priority.clear();
-  }
+  virtual void clear();
+
+  /**
+   * @brief Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to
+   *        lookup packages in a particular input.
+   * @param input The input name to be searched.
+   * @param pqa   A set of query args to _fill_ with preferences.
+   * @return A reference to the modified query args.
+   */
+  pkgdb::PkgQueryArgs & fillPkgQueryArgs( const std::string         & input
+                                        ,       pkgdb::PkgQueryArgs & pqa
+                                        ) const;
 
 };  /* End struct `RegistryRaw' */
 

@@ -135,17 +135,6 @@ PkgDescriptorRaw::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 
 /* -------------------------------------------------------------------------- */
 
-  void
-ResolveOneParams::clear()
-{
-  this->pkgdb::QueryPreferences::clear();
-  this->registry.clear();
-  this->query.clear();
-}
-
-
-/* -------------------------------------------------------------------------- */
-
   bool
 ResolveOneParams::fillPkgQueryArgs( const std::string         & input
                                   ,       pkgdb::PkgQueryArgs & pqa
@@ -158,31 +147,11 @@ ResolveOneParams::fillPkgQueryArgs( const std::string         & input
 
   /* Fill from globals */
   this->pkgdb::QueryPreferences::fillPkgQueryArgs( pqa );
-
-  /* Fill from query */
-  this->query.fillPkgQueryArgs( pqa );
-
   /* Fill from input */
+  this->registry.fillPkgQueryArgs( input, pqa );
 
-  /* Look for the named input and our fallbacks/default in the inputs list.
-   * then fill input specific settings. */
-  try
-    {
-      const RegistryInput & minput = this->registry.inputs.at( input );
-      pqa.subtrees = minput.subtrees.has_value()
-                     ? minput.subtrees
-                     : this->registry.defaults.subtrees;
-      pqa.stabilities = minput.stabilities.has_value()
-                        ? minput.stabilities
-                        : this->registry.defaults.stabilities;
-    }
-  catch ( ... )
-    {
-      pqa.subtrees    = this->registry.defaults.subtrees;
-      pqa.stabilities = this->registry.defaults.stabilities;
-    }
-
-  /* If there's a stability specified by the query we have extra work to do.  */
+  /* If there's a stability specified by the query we have extra work
+   * to do. */
   if ( this->query.stability.has_value() )
     {
       /* If the input lacks this stability, skip. */
@@ -217,57 +186,42 @@ ResolveOneParams::fillPkgQueryArgs( const std::string         & input
         }
     }
 
+  /* Fill from query */
+  this->query.fillPkgQueryArgs( pqa );
+
   return true;
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-
   void
 from_json( const nlohmann::json & jfrom, ResolveOneParams & params )
 {
-  pkgdb::from_json( jfrom, dynamic_cast<pkgdb::QueryPreferences &>( params ) );
-  for ( const auto & [key, value] : jfrom.items() )
-    {
-      if ( key == "registry" )
-        {
-          value.get_to( params.registry );
-        }
-      else if ( key == "query" )
-        {
-          value.get_to( params.query );
-        }
-      else if ( ( key == "systems" ) ||
-                ( key == "allow" )   ||
-                ( key == "semver" )
-              )
-        {
-          /* Handled by `QueryPreferences::from_json' */
-          continue;
-        }
-      else
-        {
-          throw FloxException( "Unexpected preferences field '" + key + '\'' );
-        }
-    }
+  from_json( jfrom
+           , dynamic_cast<pkgdb::QueryParams<PkgDescriptorRaw> &>( params )
+           );
 }
-
 
   void
 to_json( nlohmann::json & jto, const ResolveOneParams & params )
 {
-  pkgdb::to_json( jto
-                , dynamic_cast<const pkgdb::QueryPreferences &>( params )
-                );
-  jto["registry"] = params.registry;
-  jto["query"]    = params.query;
+  to_json( jto
+         , dynamic_cast<const pkgdb::QueryParams<PkgDescriptorRaw> &>( params )
+         );
 }
 
 
 /* -------------------------------------------------------------------------- */
 
 }  /* End namespaces `flox::resolver' */
+
+/* -------------------------------------------------------------------------- */
+
+/* Instantiate templates. */
+namespace flox::pkgdb {
+  template struct QueryParams<resolver::PkgDescriptorRaw>;
+}  /* End namespaces `flox::pkgdb' */
 
 
 /* -------------------------------------------------------------------------- *

@@ -120,47 +120,10 @@ void to_json( nlohmann::json & jto, const PkgDescriptorRaw & desc );
  * This is essentially a reorganized form of @a flox::pkgdb::PkgQueryArgs
  * that is suited for JSON input.
  */
-struct ResolveOneParams : public pkgdb::QueryPreferences {
-
-  /* QueryPreferences provides:
-   *   std::vector<std::string> systems;
-   *   struct Allows {
-   *     bool unfree = true;
-   *     bool broken = false;
-   *     std::optional<std::vector<std::string>> licenses;
-   *   } allow;
-   *   struct Semver {
-   *     preferPreReleases = false;
-   *   } semver;
-   */
-
-  /** Settings and fetcher information associated with inputs. */
-  RegistryRaw registry;
-
-  /**
-   * @brief A single package descriptor in _raw_ form.
-   *
-   * This requires additional post-processing, such as "pushing down" global
-   * settings, before it can be used to perform resolution.
-   */
-  PkgDescriptorRaw query;
-
-
-  /** @brief Reset to default/empty state. */
-  virtual void clear() override;
-
-  /**
-   * @brief Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to
-   *        lookup packages in a particular input.
-   * @param input The input name to be searched.
-   * @param pqa   A set of query args to _fill_ with preferences.
-   * @return `true` if @a pqa was modified, indicating that the input should be
-   *         searched, `false` otherwise.
-   */
-  bool fillPkgQueryArgs( const std::string         & input
-                       ,       pkgdb::PkgQueryArgs & pqa
-                       ) const;
-
+struct ResolveOneParams : public pkgdb::QueryParams<PkgDescriptorRaw> {
+  virtual bool fillPkgQueryArgs( const std::string         & input
+                               ,       pkgdb::PkgQueryArgs & pqa
+                               ) const override;
 };  /* End struct `ResolveOneParams' */
 
 

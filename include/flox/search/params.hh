@@ -126,44 +126,7 @@ void to_json( nlohmann::json & jto, const SearchQuery & qry );
  * }
  * ```
  */
-struct SearchParams : public pkgdb::QueryPreferences {
-
-/* -------------------------------------------------------------------------- */
-
-  /** Settings and fetcher information associated with inputs. */
-  RegistryRaw registry;
-
-  /** The query to be used to search for packages. */
-  SearchQuery query;
-
-
-/* -------------------------------------------------------------------------- */
-
-  /** @brief Reset preferences to default/empty state. */
-  virtual void clear() override;
-
-  /**
-   * @brief Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to
-   *        lookup packages in a particular input.
-   * @param input The input name to be searched.
-   * @param pqa   A set of query args to _fill_ with preferences.
-   * @return A reference to the modified query args.
-   */
-  pkgdb::PkgQueryArgs & fillPkgQueryArgs( const std::string         & input
-                                        ,       pkgdb::PkgQueryArgs & pqa
-                                        ) const;
-
-
-};  /* End struct `SearchParams' */
-
-
-/* -------------------------------------------------------------------------- */
-
-/** @brief Convert a JSON object to a @a flox::search::SearchParams. */
-void from_json( const nlohmann::json & jfrom, SearchParams & params );
-
-/** @brief Convert a @a flox::search::SearchParams to a JSON object. */
-void to_json( nlohmann::json & jto, const SearchParams & params );
+using SearchParams = pkgdb::QueryParams<SearchQuery>;
 
 
 /* -------------------------------------------------------------------------- */

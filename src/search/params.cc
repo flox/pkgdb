@@ -60,98 +60,21 @@ SearchQuery::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 
 /* -------------------------------------------------------------------------- */
 
-  void
-SearchParams::clear()
-{
-  this->pkgdb::QueryPreferences::clear();
-  this->registry.clear();
-  this->query.clear();
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  pkgdb::PkgQueryArgs &
-SearchParams::fillPkgQueryArgs( const std::string         & input
-                              ,       pkgdb::PkgQueryArgs & pqa
-                              ) const
-{
-  /* Fill from global preferences */
-  this->pkgdb::QueryPreferences::fillPkgQueryArgs( pqa );
-
-  /* Fill from query */
-  this->query.fillPkgQueryArgs( pqa );
-
-  /* Fill from input */
-
-  /* Look for the named input and our fallbacks/default in the inputs list.
-   * then fill input specific settings. */
-  try
-    {
-      const RegistryInput & minput = this->registry.inputs.at( input );
-      pqa.subtrees = minput.subtrees.has_value()
-                     ? minput.subtrees
-                     : this->registry.defaults.subtrees;
-      pqa.stabilities = minput.stabilities.has_value()
-                        ? minput.stabilities
-                        : this->registry.defaults.stabilities;
-    }
-  catch ( ... )
-    {
-      pqa.subtrees    = this->registry.defaults.subtrees;
-      pqa.stabilities = this->registry.defaults.stabilities;
-    }
-
-  return pqa;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  void
-from_json( const nlohmann::json & jfrom, SearchParams & params )
-{
-  pkgdb::from_json( jfrom, dynamic_cast<pkgdb::QueryPreferences &>( params ) );
-  for ( const auto & [key, value] : jfrom.items() )
-    {
-      if ( key == "registry" )
-        {
-          value.get_to( params.registry );
-        }
-      else if ( key == "query" )
-        {
-          value.get_to( params.query );
-        }
-      else if ( ( key == "systems" ) ||
-                ( key == "allow" )   ||
-                ( key == "semver" )
-              )
-        {
-          /* Handled by `QueryPreferences::from_json' */
-          continue;
-        }
-      else
-        {
-          throw FloxException( "Unexpected preferences field '" + key + '\'' );
-        }
-    }
-}
-
-
-  void
-to_json( nlohmann::json & jto, const SearchParams & params )
-{
-  pkgdb::to_json( jto
-                , dynamic_cast<const pkgdb::QueryPreferences &>( params )
-                );
-  jto["registry"] = params.registry;
-  jto["query"]    = params.query;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
 }  /* End namespaces `flox::search' */
+
+
+/* -------------------------------------------------------------------------- */
+
+/* Instantiate templates. */
+namespace flox::pkgdb {
+  template struct QueryParams<search::SearchQuery>;
+  template void from_json( const nlohmann::json                   &
+                         ,       QueryParams<search::SearchQuery> &
+                         );
+  template void to_json(       nlohmann::json                   &
+                       , const QueryParams<search::SearchQuery> &
+                       );
+}  /* End namespaces `flox::pkgdb' */
 
 
 /* -------------------------------------------------------------------------- *
