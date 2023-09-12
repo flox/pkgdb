@@ -71,7 +71,7 @@ struct QueryPreferences {
    * @brief Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to
    *        lookup packages.
    *
- * NOTE: This DOES clear @a pqa before filling it.
+   * NOTE: This DOES clear @a pqa before filling it.
    */
   pkgdb::PkgQueryArgs & fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
 
