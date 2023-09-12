@@ -97,8 +97,7 @@ class Package {
       virtual Subtree
     getSubtreeType() const
     {
-      AttrPath pathS = this->getPathStrs();
-      return Subtree( pathS.front() );
+      return Subtree( this->getPathStrs().front() );
     }
 
     /**
@@ -124,22 +123,6 @@ class Package {
     }
 
     /**
-     * @return The attribute name assocaited with @a this package.
-     *         For `catalog` packages this is the second to last member of
-     *         @a this package's attribute path, for other flake subtrees.
-     */
-      virtual std::string
-    getPkgAttrName() const
-    {
-      AttrPath pathS = this->getPathStrs();
-      if ( this->getSubtreeType() == ST_CATALOG )
-        {
-          return pathS.at( pathS.size() - 2 );
-        }
-      return pathS.at( pathS.size() - 1 );
-    }
-
-    /**
      * @return `std::nullopt` iff @a this package does not use semantic
      *         versioning, otherwise a normalized semantic version number
      *         coerces from @a this package's `version` information.
@@ -162,16 +145,15 @@ class Package {
       virtual std::string
     toURIString( const nix::FlakeRef & ref ) const
     {
-      std::string uri                = ref.to_string() + "#";
+      std::stringstream uri;
+      uri << ref.to_string() << "#";
       AttrPath pathS = this->getPathStrs();
       for ( size_t i = 0; i < pathS.size(); ++i )
         {
-          uri += '"';
-          uri += pathS.at( i );
-          uri += '"';
-          if ( ( i + 1 ) < pathS.size() ) uri += ".";
+          uri << '"' << pathS.at( i );
+          if ( ( i + 1 ) < pathS.size() ) { uri << "."; }
         }
-      return uri;
+      return uri.str();
     }
 
     /**
