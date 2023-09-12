@@ -8,6 +8,7 @@
 
 #include <nlohmann/json.hpp>
 #include <nix/flake/flake.hh>
+#include "flox/core/types.hh"
 #include "flox/package.hh"
 
 
@@ -24,7 +25,7 @@ namespace flox {
 class RawPackage : public Package {
 
   protected:
-    std::vector<std::string>    _pathS;
+    AttrPath                    _pathS;
     std::string                 _fullname;
     std::string                 _pname;
     std::optional<std::string>  _version;
@@ -43,7 +44,7 @@ class RawPackage : public Package {
     RawPackage( const nlohmann::json &  drvInfo );
     RawPackage(       nlohmann::json && drvInfo );
     RawPackage(
-      const std::vector<std::string>   & pathS            = {}
+      const AttrPath                   & pathS            = {}
     ,       std::string_view             fullname         = {}
     ,       std::string_view             pname            = {}
     ,       std::optional<std::string>   version          = std::nullopt
@@ -71,7 +72,7 @@ class RawPackage : public Package {
 
 /* -------------------------------------------------------------------------- */
 
-      std::vector<std::string>
+      AttrPath
     getPathStrs() const override
     {
       return this->_pathS;

@@ -92,17 +92,11 @@ class Package {
      * @return The flake `outputs` subtree the package resides in, being one of
      *         `legacyPackages`, `packages`, or `catalog`.
      */
-      virtual subtree_type
+      virtual Subtree
     getSubtreeType() const
     {
       AttrPath pathS = this->getPathStrs();
-      if ( pathS.front() == "legacyPackages" ) { return ST_LEGACY;   }
-      if ( pathS.front() == "packages" )       { return ST_PACKAGES; }
-      if ( pathS.front() == "catalog" )        { return ST_CATALOG;  }
-      throw FloxException(
-        std::string( __func__ ) + ": Unrecognized subtree '" +
-        pathS.front() + "'."
-      );
+      return Subtree( pathS.front() );
     }
 
     /**
