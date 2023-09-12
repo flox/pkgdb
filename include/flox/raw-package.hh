@@ -1,5 +1,8 @@
 /* ========================================================================== *
  *
+ * @file flox/raw-package.hh
+ *
+ * @brief The simplest `Package' implementation comprised of raw values.
  *
  *
  * -------------------------------------------------------------------------- */
@@ -19,12 +22,14 @@ namespace flox {
 /* -------------------------------------------------------------------------- */
 
 /**
- * The simplest `Package' implementation comprised of raw values.
+ * @brief The simplest `Package' implementation comprised of raw values.
+ *
  * This form largely exists for testing purposes.
  */
 class RawPackage : public Package {
 
   protected:
+
     AttrPath                    _pathS;
     std::string                 _fullname;
     std::string                 _pname;
@@ -41,6 +46,7 @@ class RawPackage : public Package {
 /* -------------------------------------------------------------------------- */
 
   public:
+
     RawPackage( const nlohmann::json &  drvInfo );
     RawPackage(       nlohmann::json && drvInfo );
     RawPackage(

@@ -34,7 +34,9 @@ namespace flox {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Abstract representation of a "package", analogous to a Nix `derivation'.
+ * @brief Abstract representation of a "package", analogous to a
+ *        Nix `derivation'.
+ *
  * This abstraction provides a common base for various backends that store,
  * evaluate, and communicate package definitions.
  */
@@ -151,8 +153,8 @@ class Package {
     }
 
     /**
-     * Create an installable URI string associated with this package using
-     * @a ref as its _input_ part.
+     * @brief Create an installable URI string associated with this package
+     *        using @a ref as its _input_ part.
      * @param ref Input flake reference associated with @a this package.
      *            This is used to construct the URI on the left side of `#`.
      * @return An installable URI string associated with this package using.
@@ -173,7 +175,8 @@ class Package {
     }
 
     /**
-     * Serialize notable package metadata as a JSON object.
+     * @brief Serialize notable package metadata as a JSON object.
+     *
      * This may only contains a subset of all available information.
      * @param withDescription Whether to include `description` strings.
      * @return A JSON object with notable package metadata.

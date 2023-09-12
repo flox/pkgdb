@@ -23,7 +23,8 @@ namespace flox {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Perform one time `nix` global runtime setup.
+ * @brief Perform one time `nix` global runtime setup.
+ *
  * You may safely call this function multiple times, after the first invocation
  * it is effectively a no-op.
  */
@@ -33,7 +34,8 @@ void initNix();
 /* -------------------------------------------------------------------------- */
 
 /**
- * Runtime state containing a `nix` store connection and a `nix` evaluator.
+ * @brief Runtime state containing a `nix` store connection and a
+ *        `nix` evaluator.
  */
 struct NixState {
 
@@ -50,7 +52,8 @@ struct NixState {
   // public:
 
     /**
-     * Construct `NixState` from an existing store connection.
+     * @brief Construct `NixState` from an existing store connection.
+     *
      * This may be useful if you wish to avoid a non-default store.
      * @param store An open `nix` store connection.
      * @param verbosity Verbosity level setting used throughout `nix` and
@@ -66,7 +69,8 @@ struct NixState {
     }
 
     /**
-     * Construct `NixState` using the systems default `nix` store.
+     * @brief Construct `NixState` using the systems default `nix` store.
+     *
      * @param verbosity Verbosity level setting used throughout `nix` and
      *                  `flox`/`pkgdb` operations.
      */
@@ -82,7 +86,8 @@ struct NixState {
   // public:
 
     /**
-     * Lazily open a `nix` store connection.
+     * @brief Lazily open a `nix` store connection.
+     *
      * Connection remains open for lifetime of object.
      */
       nix::ref<nix::Store>
@@ -97,7 +102,8 @@ struct NixState {
 
 
     /**
-     * Lazily open a `nix` evaluator.
+     * @brief Lazily open a `nix` evaluator.
+     *
      * Evaluator remains open for lifetime of object.
      */
       nix::ref<nix::EvalState>
