@@ -136,7 +136,7 @@ from_json( const nlohmann::json & jfrom, Subtree & subtree )
   inline void
 to_json( nlohmann::json & jto, const Subtree & subtree )
 {
-  jto = to_string( subtree );
+  to_json( jto, subtree.subtree );
 }
 
 
