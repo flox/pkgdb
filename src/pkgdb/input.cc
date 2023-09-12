@@ -149,8 +149,8 @@ PkgDbInput::scrapePrefix( const flox::AttrPath & prefix )
 PkgDbInput::scrapeSystems( const std::vector<std::string> & systems )
 {
   /* Set fallbacks */
-  std::vector<subtree_type> subtrees = this->subtrees.value_or(
-    std::vector<subtree_type> { ST_PACKAGES, ST_LEGACY, ST_CATALOG }
+  std::vector<Subtree> subtrees = this->subtrees.value_or(
+    std::vector<Subtree> { ST_PACKAGES, ST_LEGACY, ST_CATALOG }
   );
   std::vector<std::string> stabilities =
     this->stabilities.value_or( std::vector<std::string> { "stable" } );

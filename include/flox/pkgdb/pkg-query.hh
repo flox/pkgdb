@@ -9,7 +9,6 @@
 
 #pragma once
 
-#include <concepts>
 #include <string>
 #include <sstream>
 #include <optional>
@@ -113,7 +112,7 @@ struct PkgQueryArgs : public PkgDescriptorBase {
    * TODO: Default to first of `catalog`, `packages`, or `legacyPackages`.
    *       Requires `db` to be read.
    */
-  std::optional<std::vector<subtree_type>> subtrees;
+  std::optional<std::vector<Subtree>> subtrees;
 
   /** Systems to search */
   std::vector<std::string> systems = { nix::settings.thisSystem.get() };

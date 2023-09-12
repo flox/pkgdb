@@ -10,35 +10,19 @@
 
 #pragma once
 
-#if defined( __clang__ ) && ( __clang_major__ < 15 )
+#include <concepts>
+
 
 /* -------------------------------------------------------------------------- */
 
-#include <concepts>
-
+/* Only provide these definitions for older versions of Clang. */
+#if defined( __clang__ ) && ( __clang_major__ < 15 )
 
 /* -------------------------------------------------------------------------- */
 
 /* Yeah, I know: "iT's IlLeGaL tO eXtEnD `std::*'".
  * This backports definitions exactly as written, so it's fine. */
 namespace std {
-
-/* -------------------------------------------------------------------------- */
-
-#if 0
-namespace detail {
-  template<class T, class U> concept SameHelper = std::is_same_v<T, U>;
-}  /* End namespace `std::detail' */
-
-/**
- * The concept `same_as<T, U>` is satisfied if and only if @a T and @a U denote
- * the same type.
- * `std::same_as<T, U>` subsumes `std::same_as<U, T>` and vice versa.
- */
-  template<class T, class U>
-concept same_as = detail::SameHelper<T, U> && detail::SameHelper<U, T>;
-#endif
-
 
 /* -------------------------------------------------------------------------- */
 

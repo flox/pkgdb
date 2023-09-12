@@ -10,7 +10,6 @@
 
 #pragma once
 
-#include <concepts>
 #include <algorithm>
 #include <functional>
 #include <vector>
@@ -41,7 +40,7 @@ struct InputPreferences {
    * Ordered list of subtrees to be searched.
    * Results will be grouped by subtree in the order they appear here.
    */
-  std::optional<std::vector<subtree_type>> subtrees;
+  std::optional<std::vector<Subtree>> subtrees;
 
   /**
    * Ordered list of stabilities to be searched.

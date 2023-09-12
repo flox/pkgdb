@@ -357,7 +357,7 @@ test_PkgQuery0( flox::pkgdb::PkgDb & db )
 
   /* Run `subtrees' query */
   {
-    qargs.subtrees = std::vector<flox::subtree_type> { flox::ST_LEGACY };
+    qargs.subtrees = std::vector<flox::Subtree> { flox::ST_LEGACY };
     flox::pkgdb::PkgQuery query( qargs );
     qargs.subtrees = std::nullopt;
     std::vector<flox::pkgdb::row_id> rsl = query.execute( db.db );
@@ -727,11 +727,11 @@ test_getPackages1( flox::pkgdb::PkgDb & db )
   /* Test `subtrees` ordering */
   {
     qargs.systems  = std::vector<std::string> { "x86_64-darwin" };
-    qargs.subtrees = std::vector<flox::subtree_type> {
+    qargs.subtrees = std::vector<flox::Subtree> {
       flox::ST_PACKAGES, flox::ST_LEGACY
     };
     EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 5, 4 } ) );
-    qargs.subtrees = std::vector<flox::subtree_type> {
+    qargs.subtrees = std::vector<flox::Subtree> {
       flox::ST_LEGACY, flox::ST_PACKAGES
     };
     EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 4, 5 } ) );
@@ -741,7 +741,7 @@ test_getPackages1( flox::pkgdb::PkgDb & db )
 
   /* Test `systems` ordering */
   {
-    qargs.subtrees = std::vector<flox::subtree_type> { flox::ST_PACKAGES };
+    qargs.subtrees = std::vector<flox::Subtree> { flox::ST_PACKAGES };
     qargs.systems  = std::vector<std::string> {
       "x86_64-linux", "x86_64-darwin"
     };
@@ -756,7 +756,7 @@ test_getPackages1( flox::pkgdb::PkgDb & db )
 
   /* Test `stabilities` ordering */
   {
-    qargs.subtrees    = std::vector<flox::subtree_type> { flox::ST_CATALOG };
+    qargs.subtrees    = std::vector<flox::Subtree> { flox::ST_CATALOG };
     qargs.systems     = std::vector<std::string> { "x86_64-linux" };
     qargs.stabilities = std::vector<std::string> { "stable", "unstable" };
     EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 1, 2 } ) );
@@ -816,7 +816,7 @@ test_getPackages2( flox::pkgdb::PkgDb & db )
     }
 
   flox::pkgdb::PkgQueryArgs qargs;
-  qargs.subtrees = std::vector<flox::subtree_type> { flox::ST_PACKAGES };
+  qargs.subtrees = std::vector<flox::Subtree> { flox::ST_PACKAGES };
   qargs.systems  = std::vector<std::string> { "x86_64-linux" };
 
   /* Test `preferPreReleases = false' ordering */

@@ -96,8 +96,7 @@ PkgDescriptorRaw::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
                 "Absolute attribute paths must have at least three elements"
               );
             }
-          subtree_type subtree;
-          from_json( * this->path->front(), subtree );
+          Subtree subtree = Subtree::parseSubtree( * this->path->at( 0 ) );
           if ( this->path->at( 1 ).has_value() )
             {
               pqa.systems = std::vector<std::string> { * this->path->at( 1 ) };
@@ -120,7 +119,7 @@ PkgDescriptorRaw::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
             {
               fillRelPath( 2 );
             }
-          pqa.subtrees = std::vector<subtree_type> { std::move( subtree ) };
+          pqa.subtrees = std::vector<Subtree> { subtree };
         }
       else
         {
@@ -167,7 +166,7 @@ ResolveOneParams::fillPkgQueryArgs( const std::string         & input
           return false;
         }
       /* Otherwise, force catalog resolution. */
-      pqa.subtrees = std::vector<subtree_type> { ST_CATALOG };
+      pqa.subtrees = std::vector<Subtree> { ST_CATALOG };
     }
 
   /* If the input lacks the subtree we need then skip. */

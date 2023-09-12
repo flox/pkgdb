@@ -212,26 +212,9 @@ from_json( const nlohmann::json & jqa, PkgQueryArgs & pqa )
       else if ( key == "relPath" )           { pqa.relPath           = value; }
       else if ( key == "subtrees" )
         {
-          pqa.subtrees = std::vector<flox::subtree_type> {};
-          for ( const auto & subtree : value )
-            {
-              if ( subtree == "packages" )
-                {
-                  pqa.subtrees->emplace_back( flox::ST_PACKAGES );
-                }
-              else if ( subtree == "legacyPackages" )
-                {
-                  pqa.subtrees->emplace_back( flox::ST_LEGACY );
-                }
-              else if ( subtree == "catalog" )
-                {
-                  pqa.subtrees->emplace_back( flox::ST_CATALOG );
-                }
-              else /* Error is caught by `validate' later. */
-                {
-                  pqa.subtrees->emplace_back( flox::ST_NONE );
-                }
-            }
+          pqa.subtrees = std::make_optional(
+            static_cast<std::vector<Subtree>>( value )
+          );
         }
     }
 }
