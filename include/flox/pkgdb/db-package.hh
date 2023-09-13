@@ -1,0 +1,81 @@
+/* ========================================================================== *
+ *
+ * @file flox/pkgdb/db-package.hh
+ *
+ * @brief Package metadata loaded from a `PkgDb' cache.
+ *
+ *
+ * -------------------------------------------------------------------------- */
+
+#pragma once
+
+
+#include "flox/pkgdb/read.hh"
+#include "flox/package.hh"
+#include "flox/raw-package.hh"
+
+
+/* -------------------------------------------------------------------------- */
+
+namespace flox::pkgdb {
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Package metadata loaded from a `PkgDb' cache. */
+class DbPackage : public RawPackage {
+
+  protected:
+
+  /* From `RawPackage':
+   *   AttrPath                    path;
+   *   std::string                 name;
+   *   std::string                 pname;
+   *   std::optional<std::string>  version;
+   *   std::optional<std::string>  semver;
+   *   std::optional<std::string>  license;
+   *   std::vector<std::string>    outputs;
+   *   std::vector<std::string>    outputsToInstall;
+   *   std::optional<bool>         broken;
+   *   std::optional<bool>         unfree;
+   *   std::optional<std::string>  description;
+   */
+
+    row_id pkgId;
+
+
+  private:
+
+    void init( PkgDbReadOnly & pkgdb );
+
+
+  public:
+
+    DbPackage( PkgDbReadOnly & pkgdb, row_id pkgId )
+      : pkgId( pkgId )
+    {
+      this->path = pkgdb.getPackagePath( pkgId );
+      this->init( pkgdb );
+    }
+
+    DbPackage( PkgDbReadOnly & pkgdb, const AttrPath & path )
+      : pkgId( pkgdb.getPackageId( path ) )
+    {
+      this->path = path;
+      this->init( pkgdb );
+    }
+
+    row_id getPackageId() const { return this->pkgId; }
+
+};  /* End class `DbPackage' */
+
+
+/* -------------------------------------------------------------------------- */
+
+}  /* End Namespace `flox::pkgdb' */
+
+
+/* -------------------------------------------------------------------------- *
+ *
+ *
+ *
+ * ========================================================================== */

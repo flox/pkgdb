@@ -37,6 +37,7 @@
 #include "flox/core/types.hh"
 #include "flox/pkgdb/write.hh"
 #include "flox/pkgdb/pkg-query.hh"
+#include "flox/pkgdb/db-package.hh"
 #include "test.hh"
 
 
@@ -837,6 +838,63 @@ test_getPackages2( flox::pkgdb::PkgDb & db )
 
 /* -------------------------------------------------------------------------- */
 
+  bool
+test_DbPackage0( flox::pkgdb::PkgDb & db )
+{
+  clearTables( db );
+
+  /* Make a package */
+  row_id linux =
+    db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-linux" } );
+  row_id desc =
+    db.addOrGetDescriptionId( "A program with a friendly greeting/farewell" );
+  sqlite3pp::command cmd( db.db, R"SQL(
+    INSERT INTO Packages (
+      parentId, attrName, name, pname, version, semver, license, outputs
+    , outputsToInstall, broken, unfree, descriptionId
+    ) VALUES
+      ( :parentId, 'hello', 'hello-2.12', 'hello', '2.12', '2.12.0'
+      , 'GPL-3.0-or-later', '["out"]', '["out"]', false, false, :descriptionId
+      )
+  )SQL" );
+  cmd.bind( ":parentId",      static_cast<long long>( linux ) );
+  cmd.bind( ":descriptionId", static_cast<long long>( desc )  );
+  if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
+    {
+      throw flox::pkgdb::PkgDbException(
+        db.dbPath
+      , nix::fmt( "Failed to write Packages:(%d) %s"
+                , rc
+                , db.db.error_msg()
+                )
+      );
+    }
+  row_id pkgId = db.db.last_insert_rowid();
+  auto   pkg   = flox::pkgdb::DbPackage(
+                   static_cast<flox::pkgdb::PkgDbReadOnly &>( db )
+                 , pkgId
+                 );
+  EXPECT( pkg.getPathStrs() ==
+          ( flox::AttrPath { "legacyPackages", "x86_64-linux", "hello" } )
+        );
+  EXPECT_EQ( pkg.getFullName(), "hello-2.12" );
+  EXPECT_EQ( pkg.getPname(), "hello" );
+  EXPECT_EQ( * pkg.getVersion(), "2.12" );
+  EXPECT_EQ( * pkg.getSemver(), "2.12.0" );
+  EXPECT_EQ( * pkg.getLicense(), "GPL-3.0-or-later" );
+  EXPECT( pkg.getOutputs() == ( std::vector<std::string> { "out" } ) );
+  EXPECT( pkg.getOutputsToInstall() == ( std::vector<std::string> { "out" } ) );
+  EXPECT_EQ( * pkg.isBroken(), false );
+  EXPECT_EQ( * pkg.isUnfree(), false );
+  EXPECT_EQ( * pkg.getDescription()
+           , "A program with a friendly greeting/farewell"
+           );
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
   int
 main( int argc, char * argv[] )
 {
@@ -905,6 +963,10 @@ main( int argc, char * argv[] )
     RUN_TEST( getPackages0, db );
     RUN_TEST( getPackages1, db );
     RUN_TEST( getPackages2, db );
+
+    RUN_TEST( DbPackage0, db );
+
+    test_DbPackage0( db );
 
   }
 
