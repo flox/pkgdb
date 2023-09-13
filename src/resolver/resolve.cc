@@ -92,15 +92,14 @@ resolve_v0( ResolverState & state, const Descriptor & descriptor, bool one )
           locked.erase( "lastModified" );
           locked.erase( "revCount" );
 
-          auto resolved = Resolved {
+          rsl.emplace_back( Resolved {
             .input = Resolved::Input {
               .name   = name
             , .locked = std::move( locked )
             }
           , .path = dbRO->getPackagePath( row )
           , .info = dbRO->getPackage( row )
-          };
-          rsl.push_back( resolved );
+          } );
           if ( one ) { return rsl; }
         }
     }
