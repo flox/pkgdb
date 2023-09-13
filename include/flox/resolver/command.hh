@@ -11,6 +11,7 @@
 
 #include "flox/search/command.hh"
 #include "flox/resolver/params.hh"
+#include "flox/resolver/state.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -23,32 +24,40 @@ namespace flox::resolver {
  * @brief Resolve a set of package requirements to a set of
  *        satisfactory installables.
  */
-struct ResolveCommand
-  : public pkgdb::PkgDbRegistryMixin
-  , public search::PkgQueryMixin
-{
+struct ResolveCommand : public pkgdb::PkgDbRegistryMixin {
 
   private:
 
     ResolveOneParams params;
 
-  /**
-   * @brief Add argument to any parser to construct
-   *        a @a flox::resolver::ResolveOneParams.
-   */
-    argparse::Argument &
-  addResolveParamArgs( argparse::ArgumentParser & parser );
+    /**
+     * @brief Add argument to any parser to construct
+     *        a @a flox::resolver::ResolveOneParams.
+     */
+      argparse::Argument &
+    addResolveParamArgs( argparse::ArgumentParser & parser );
+
+    [[nodiscard]] ResolverState getResolverState() const;
+
+    [[nodiscard]]
+    PkgDescriptorRaw getQuery() const { return this->params.query; }
 
 
   protected:
 
       [[nodiscard]]
       virtual RegistryRaw
-    getRegistryRaw() override { return this->params.registry; }
+    getRegistryRaw() override
+    {
+      return this->params.registry;
+    }
 
       [[nodiscard]]
       virtual std::vector<std::string> &
-    getSystems() override { return this->params.systems; }
+    getSystems() override
+    {
+      return this->params.systems;
+    }
 
 
   public:
@@ -56,13 +65,6 @@ struct ResolveCommand
     command::VerboseParser parser;
 
     ResolveCommand();
-
-    /** @brief Display a single row from the given @a input. */
-      void
-    showRow( pkgdb::PkgDbInput & input, pkgdb::row_id row )
-    {
-      std::cout << input.getRowJSON( row ).dump() << std::endl;
-    }
 
     /**
      * @brief Execute the `resolve` routine.

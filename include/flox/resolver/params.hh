@@ -122,20 +122,7 @@ void to_json( nlohmann::json & jto, const PkgDescriptorRaw & desc );
  * This is essentially a reorganized form of @a flox::pkgdb::PkgQueryArgs
  * that is suited for JSON input.
  */
-struct ResolveOneParams : public pkgdb::QueryParams<PkgDescriptorRaw> {
-  virtual bool fillPkgQueryArgs( const std::string         & input
-                               ,       pkgdb::PkgQueryArgs & pqa
-                               ) const override;
-};  /* End struct `ResolveOneParams' */
-
-
-/* -------------------------------------------------------------------------- */
-
-/** @brief Convert a JSON object to a @a flox::resolver::ResolveOneParams. */
-void from_json( const nlohmann::json & jfrom, ResolveOneParams & params );
-
-/** @brief Convert a @a flox::resolver::ResolveOneParams to a a JSON object. */
-void to_json( nlohmann::json & jto, const ResolveOneParams & params );
+using ResolveOneParams = pkgdb::QueryParams<PkgDescriptorRaw>;
 
 
 /* -------------------------------------------------------------------------- */

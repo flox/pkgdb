@@ -76,15 +76,11 @@ class ResolverState : protected pkgdb::PkgDbRegistryMixin {
 
   public:
 
-    /**
-     * @brief Construct a new @a ResolverState from a set of
-     *        @a flox::resolver::ResolveOneParams.
-     *
-     * The descriptor member of these preferences is ignored.
-     */
-    explicit ResolverState( const ResolveOneParams & params )
-      : registryRaw( params.registry )
-      , preferences( dynamic_cast<const pkgdb::QueryPreferences &>( params ) )
+    ResolverState( const RegistryRaw & registry
+                 , const pkgdb::QueryPreferences & preferences
+                 )
+      : registryRaw( registry )
+      , preferences( preferences )
     {}
 
 

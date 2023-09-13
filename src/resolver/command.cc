@@ -8,6 +8,7 @@
  * -------------------------------------------------------------------------- */
 
 #include "flox/resolver/command.hh"
+#include "flox/resolver/resolve.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -27,7 +28,6 @@ ResolveCommand::addResolveParamArgs( argparse::ArgumentParser & parser )
                         {
                           pkgdb::PkgQueryArgs args;
                           nlohmann::json::parse( query ).get_to( args );
-                          this->query = pkgdb::PkgQuery( args );
                         }
                       );
 }
@@ -47,23 +47,30 @@ ResolveCommand::ResolveCommand() : parser( "resolve" )
 
 /* -------------------------------------------------------------------------- */
 
+   ResolverState
+ ResolveCommand::getResolverState() const
+ {
+   return ResolverState(
+     this->params.registry
+   , dynamic_cast<const pkgdb::QueryPreferences &>( this->params )
+   );
+ }
+
+
+
+/* -------------------------------------------------------------------------- */
+
   int
 ResolveCommand::run()
 {
   this->initRegistry();
   this->scrapeIfNeeded();
   assert( this->registry != nullptr );
-  pkgdb::PkgQueryArgs args;
-  for ( const auto & [name, input] : * this->registry )
+  for ( const auto & resolved :
+          resolve( this->getResolverState(), this->getQuery() )
+      )
     {
-      /* We will get `false` if we should skip this input entirely. */
-      bool shouldSearch = this->params.fillPkgQueryArgs( name, args );
-      if ( ! shouldSearch ) { continue; }
-      this->query = pkgdb::PkgQuery( args );
-      for ( const auto & row : this->queryDb( * input->getDbReadOnly() ) )
-        {
-          this->showRow( * input, row );
-        }
+      std::cout << resolved << std::endl;
     }
   return EXIT_SUCCESS;
 }

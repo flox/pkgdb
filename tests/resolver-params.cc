@@ -92,7 +92,10 @@ main( int argc, char * argv[] )
       nlohmann::json::parse( argv[1] ).get_to( params );
     }
 
-  auto state = flox::resolver::ResolverState( params );
+  auto state = flox::resolver::ResolverState(
+                 params.registry
+               , dynamic_cast<const flox::pkgdb::QueryPreferences &>( params )
+               );
 
   auto descriptor = params.query;
 
