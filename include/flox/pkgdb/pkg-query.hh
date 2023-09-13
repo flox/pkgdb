@@ -196,8 +196,29 @@ struct PkgQueryArgs : public PkgDescriptorBase {
 };  /* End struct `PkgQueryArgs' */
 
 
-/** @brief Convert a JSON object to a @a flox::pkgdb::PkgQueryArgs. */
-void from_json( const nlohmann::json & jqa, PkgQueryArgs & pqa );
+/**
+ * @fn void from_json( const nlohmann::json & j, PkgQueryArgs & pdb )
+ * @brief Convert a JSON object to a @a flox::pkgdb::PkgQueryArgs.
+ *
+ * @fn void to_json( nlohmann::json & j, const PkgQueryArgs & pdb )
+ * @brief Convert a @a flox::pkgdb::PkgQueryArgs to a JSON object.
+ */
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
+  PkgQueryArgs
+, name
+, pname
+, version
+, semver
+, match
+, licenses
+, allowBroken
+, allowUnfree
+, preferPreReleases
+, subtrees
+, systems
+, stabilities
+, relPath
+)
 
 
 /* -------------------------------------------------------------------------- */

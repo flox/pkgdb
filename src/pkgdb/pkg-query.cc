@@ -164,55 +164,6 @@ PkgQueryArgs::clear()
 /* -------------------------------------------------------------------------- */
 
   void
-from_json( const nlohmann::json & jqa, PkgQueryArgs & pqa )
-{
-  pqa.clear();
-  from_json( jqa, dynamic_cast<PkgDescriptorBase &>( pqa ) );
-  for ( const auto & [key, value] : jqa.items() )
-    {
-      if ( key == "match" )
-        {
-          value.get_to( pqa.match );
-        }
-      else if ( key == "licenses" )
-        {
-          value.get_to( pqa.licenses );
-        }
-      else if ( key == "allowBroken" )
-        {
-          value.get_to( pqa.allowBroken );
-        }
-      else if ( key == "allowUnfree" )
-        {
-          value.get_to( pqa.allowUnfree );
-        }
-      else if ( key == "preferPreReleases" )
-        {
-          value.get_to( pqa.preferPreReleases );
-        }
-      else if ( key == "systems" )
-        {
-          value.get_to( pqa.systems );
-        }
-      else if ( key == "stabilities" )
-        {
-          value.get_to( pqa.stabilities );
-        }
-      else if ( key == "relPath" )
-        {
-          value.get_to( pqa.relPath );
-        }
-      else if ( key == "subtrees" )
-        {
-          value.get_to( pqa.subtrees );
-        }
-    }
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  void
 PkgQuery::addSelection( std::string_view column )
 {
   if ( this->firstSelect ) { this->firstSelect = false; }
@@ -327,15 +278,7 @@ PkgQuery::initSubtrees()
       std::stringstream        rank;
       for ( const auto subtree : * this->subtrees )
         {
-          switch ( subtree )
-            {
-              case ST_LEGACY:   lst.emplace_back( "legacyPackages" ); break;
-              case ST_PACKAGES: lst.emplace_back( "packages" );       break;
-              case ST_CATALOG:  lst.emplace_back( "catalog" );        break;
-              default:
-                throw PkgQueryArgs::PkgQueryInvalidArgException();
-                break;
-            }
+          lst.emplace_back( to_string( subtree ) );
           rank << "iif( ( subtree = '" << lst.back() << "' ), " << idx << ", ";
           ++idx;
         }

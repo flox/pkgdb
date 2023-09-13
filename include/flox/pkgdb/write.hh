@@ -311,7 +311,6 @@ class PkgDb : public PkgDbReadOnly {
 
 /* -------------------------------------------------------------------------- */
 
-
 }  /* End Namespace `flox::pkgdb' */
 
 
