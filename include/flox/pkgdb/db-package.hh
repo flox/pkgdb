@@ -43,11 +43,12 @@ class DbPackage : public RawPackage {
    *   std::optional<std::string>  description;
    */
 
-    row_id                pkgId;        /**< `Packages.id' in the database. */
-    std::filesystem::path dbPath;       /**< Path to the database. */
+    row_id                pkgId;   /**< `Packages.id' in the database. */
+    std::filesystem::path dbPath;  /**< Path to the database. */
 
   private:
 
+    /** @brief Fill @a flox::RawPackage fields by reading them from @a pkgdb. */
     void initRawPackage( PkgDbReadOnly & pkgdb );
 
 
@@ -69,10 +70,13 @@ class DbPackage : public RawPackage {
       this->initRawPackage( pkgdb );
     }
 
+    /** @return The `Packages.id` of the package. */
     row_id getPackageId() const { return this->pkgId; }
 
+    /** @return The path to the database. */
     std::filesystem::path getDbPath() const { return this->dbPath; }
 
+    /** @return The locked _flake reference_ where the package is defined. */
       nix::FlakeRef
     getLockedFlakeRef() const
     {
