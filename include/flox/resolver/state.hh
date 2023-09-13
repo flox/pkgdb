@@ -34,20 +34,28 @@ class ResolverState : protected pkgdb::PkgDbRegistryMixin {
 
   private:
 
-    RegistryRaw registryRaw;
+    RegistryRaw registryRaw;  /**< Flake inputs to resolve in. */
 
-    pkgdb::QueryPreferences preferences;
+    pkgdb::QueryPreferences preferences;  /**< _Global_ resolution settings. */
 
 
   protected:
 
       [[nodiscard]]
       virtual RegistryRaw
-    getRegistryRaw() override { return this->registryRaw; }
+    getRegistryRaw() override
+    {
+      return this->registryRaw;
+    }
+
 
       [[nodiscard]]
       virtual std::vector<std::string> &
-    getSystems() override { return this->preferences.systems; }
+    getSystems() override
+    {
+      return this->preferences.systems;
+    }
+
 
     /**
      * @brief Initializes `PkgDbRegistryMixin::registry` and scrapes inputs

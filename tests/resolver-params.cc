@@ -14,8 +14,8 @@
 
 #include <nlohmann/json.hpp>
 
-#include "flox/resolver/params.hh"
-#include "flox/resolver/state.hh"
+#include "test.hh"
+#include "flox/resolver/resolve.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -56,6 +56,7 @@ main( int argc, char * argv[] )
                 "type": "github"
               , "owner": "NixOS"
               , "repo": "nixpkgs"
+              , "rev":  "e8039594435c68eb4f780f3e9bf3972a7399c4b1"
               }
             , "subtrees": ["legacyPackages"]
             }
@@ -93,9 +94,9 @@ main( int argc, char * argv[] )
 
   //std::cout << nlohmann::json( params ).dump() << std::endl;
 
-  flox::resolver::ResolverState state( params );
+  auto state = flox::resolver::ResolverState( params );
 
-  flox::pkgdb::PkgQueryArgs args;
+  auto args = flox::pkgdb::PkgQueryArgs();
   for ( const auto & [name, input] : * state.getPkgDbRegistry() )
     {
       /* We will get `false` if we should skip this input entirely. */
@@ -108,6 +109,32 @@ main( int argc, char * argv[] )
           std::cout << input->getRowJSON( row ).dump() << std::endl;
         }
     }
+
+  std::cout << std::endl;
+
+  auto resolved = flox::resolver::Resolved {
+    .input = {
+      .name = "nixpkgs"
+    , .locked = nlohmann::json {
+        { "type",  "github" }
+      , { "owner", "NixOS" }
+      , { "repo",  "nixpkgs" }
+      , { "rev",   "e8039594435c68eb4f780f3e9bf3972a7399c4b1" }
+      }
+    }
+  , .path = flox::resolver::AttrPathGlob {
+       { "legacyPackages" }, { "x86_64-linux" }, { "hello" }
+     }
+  , .info = nlohmann::json::object()
+  };
+
+  auto resolvedJSON = nlohmann::json( resolved );
+  std::cout << resolvedJSON.dump() << std::endl;
+
+  /* Adding junk fields does NOT throw an error. */
+  resolvedJSON.emplace( "phony", 1 );
+  auto resolved2 = resolvedJSON.get<flox::resolver::Resolved>();
+  std::cout << nlohmann::json( resolved2 ).dump() << std::endl;
 
   return EXIT_SUCCESS;
 }

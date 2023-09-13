@@ -69,17 +69,16 @@ struct PkgDescriptorBase {
   virtual void clear();
 };
 
+/* Generate `to_json' and `from_json' functions. */
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( PkgDescriptorBase
+                                  , name
+                                  , pname
+                                  , version
+                                  , semver
+                                  )
+
   template <typename T>
 concept pkg_descriptor_typename = std::derived_from<T, PkgDescriptorBase>;
-
-
-/* -------------------------------------------------------------------------- */
-
-/** @brief Convert a JSON object to a @a flox::pkgdb::PkgDescriptorBase. */
-void from_json( const nlohmann::json & jfrom, PkgDescriptorBase & desc );
-
-/** @brief Convert a @a flox::pkgdb::PkgDescriptorBase to a JSON object. */
-void to_json( nlohmann::json & jto, const PkgDescriptorBase & desc );
 
 
 /* -------------------------------------------------------------------------- */

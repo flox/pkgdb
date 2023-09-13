@@ -33,36 +33,6 @@ PkgDescriptorBase::clear()
 
 /* -------------------------------------------------------------------------- */
 
-  void
-from_json( const nlohmann::json & jfrom, PkgDescriptorBase & desc )
-{
-  desc.clear();
-  for ( const auto & [key, value] : jfrom.items() )
-    {
-      if ( key == "name" )         { value.get_to( desc.name );    }
-      else if ( key == "pname" )   { value.get_to( desc.pname );   }
-      else if ( key == "version" ) { value.get_to( desc.version ); }
-      else if ( key == "semver" )  { value.get_to( desc.semver );  }
-    }
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  void
-to_json( nlohmann::json & jto, const PkgDescriptorBase & desc )
-{
-  jto = {
-    { "name",    desc.name    }
-  , { "pname",   desc.pname   }
-  , { "version", desc.version }
-  , { "semver",  desc.semver  }
-  };
-}
-
-
-/* -------------------------------------------------------------------------- */
-
   std::string
 PkgQueryArgs::PkgQueryInvalidArgException::errorMessage(
   const PkgQueryArgs::PkgQueryInvalidArgException::error_code & ecode
@@ -197,24 +167,44 @@ PkgQueryArgs::clear()
 from_json( const nlohmann::json & jqa, PkgQueryArgs & pqa )
 {
   pqa.clear();
+  from_json( jqa, dynamic_cast<PkgDescriptorBase &>( pqa ) );
   for ( const auto & [key, value] : jqa.items() )
     {
-      if ( key == "match" )                  { pqa.match             = value; }
-      else if ( key == "name" )              { pqa.name              = value; }
-      else if ( key == "version" )           { pqa.version           = value; }
-      else if ( key == "semver" )            { pqa.semver            = value; }
-      else if ( key == "licenses" )          { pqa.licenses          = value; }
-      else if ( key == "allowBroken" )       { pqa.allowBroken       = value; }
-      else if ( key == "allowUnfree" )       { pqa.allowUnfree       = value; }
-      else if ( key == "preferPreReleases" ) { pqa.preferPreReleases = value; }
-      else if ( key == "systems" )           { pqa.systems           = value; }
-      else if ( key == "stabilities" )       { pqa.stabilities       = value; }
-      else if ( key == "relPath" )           { pqa.relPath           = value; }
+      if ( key == "match" )
+        {
+          value.get_to( pqa.match );
+        }
+      else if ( key == "licenses" )
+        {
+          value.get_to( pqa.licenses );
+        }
+      else if ( key == "allowBroken" )
+        {
+          value.get_to( pqa.allowBroken );
+        }
+      else if ( key == "allowUnfree" )
+        {
+          value.get_to( pqa.allowUnfree );
+        }
+      else if ( key == "preferPreReleases" )
+        {
+          value.get_to( pqa.preferPreReleases );
+        }
+      else if ( key == "systems" )
+        {
+          value.get_to( pqa.systems );
+        }
+      else if ( key == "stabilities" )
+        {
+          value.get_to( pqa.stabilities );
+        }
+      else if ( key == "relPath" )
+        {
+          value.get_to( pqa.relPath );
+        }
       else if ( key == "subtrees" )
         {
-          pqa.subtrees = std::make_optional(
-            static_cast<std::vector<Subtree>>( value )
-          );
+          value.get_to( pqa.subtrees );
         }
     }
 }

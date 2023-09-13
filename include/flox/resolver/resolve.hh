@@ -38,21 +38,19 @@ struct Resolved {
   AttrPathGlob   path;   /**< Attribute path to the package. */
   nlohmann::json info;   /**< Package information. */
 
+  /**@brief Reset to default/empty state. */
+  void clear();
+
 };  /* End struct `Resolved' */
 
-
-/* -------------------------------------------------------------------------- */
-
-/** @brief Convert a JSON object to a @a flox::resolver::Resolved. */
-void from_json( const nlohmann::json & jfrom, Resolved & resolved );
-
-/** @brief Convert a @a flox::resolver::Resolved to a JSON object. */
-void to_json( nlohmann::json & jto, const Resolved & resolved );
+/* Generate `to_json' and `from_json' functions. */
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( Resolved::Input, name, locked )
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( Resolved, input, path, info )
 
 
 /* -------------------------------------------------------------------------- */
 
-class Descriptor;  // TODO
+using Descriptor = PkgDescriptorRaw;
 
 
 /* -------------------------------------------------------------------------- */

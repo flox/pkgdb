@@ -41,7 +41,9 @@ namespace flox {
  * evaluate, and communicate package definitions.
  */
 class Package {
+
   public:
+
     /** @return attribute path where package is defined */
     virtual AttrPath getPathStrs() const = 0;
 
@@ -69,14 +71,14 @@ class Package {
     virtual std::optional<std::string> getLicense() const = 0;
 
     /** @return The derivation `outputs` list. */
-    virtual AttrPath getOutputs() const = 0;
+    virtual std::vector<std::string> getOutputs() const = 0;
 
     /**
      * @return The `meta.outputsToInstall` field if defined, otherwise the
      *         derivation `outputs` members to the left of and
      *         including `out`.
      */
-    virtual AttrPath getOutputsToInstall() const = 0;
+    virtual std::vector<std::string> getOutputsToInstall() const = 0;
 
     /** @return The `meta.broken` field if defined, otherwise `std::nullopt`. */
     virtual std::optional<bool> isBroken() const = 0;

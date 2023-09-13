@@ -25,35 +25,6 @@
 
 /* -------------------------------------------------------------------------- */
 
-  template<>
-struct std::hash<std::list<std::string_view>>
-{
-  /**
-   * Generate a unique hash for a list of strings.
-   * @see flox::resolve::RawPackageMap
-   * @param lst a list of strings.
-   * @return a unique hash based on the contents of `lst` members.
-   */
-    std::size_t
-  operator()( const std::list<std::string_view> & lst ) const noexcept
-  {
-    if ( lst.empty() ) { return 0; }
-    auto itr = lst.begin();
-    std::size_t   hash = std::hash<std::string_view>{}( * itr );
-    for ( ; itr != lst.cend(); ++itr )
-      {
-        hash = ( hash >> ( static_cast<unsigned char>( 1 ) ) ) ^
-               ( std::hash<std::string_view>{}( * itr ) <<
-                 ( static_cast<unsigned char>( 1 ) )
-               );
-      }
-    return hash;
-  }
-};
-
-
-/* -------------------------------------------------------------------------- */
-
 /* Extension to the `nlohmann::json' serializer to support addition STLs. */
 namespace nlohmann {
 
@@ -64,18 +35,52 @@ namespace nlohmann {
       static void
     to_json( json & jto, const std::optional<T> & opt )
     {
-      if ( opt.has_value() ) { jto = * opt;   }
+      if ( opt.has_value() ) { jto = * opt; }
       else                   { jto = nullptr; }
     }
 
       static void
     from_json( const json & jfrom, std::optional<T> & opt )
     {
-      if ( jfrom.is_null() ) { opt = std::nullopt;   }
-      else                   { opt = jfrom.get<T>(); }
+      if ( jfrom.is_null() ) { opt = std::nullopt; }
+      else { opt = std::make_optional( jfrom.template get<T>() ); }
     }
 
   };  /* End struct `adl_serializer<std::optional<T>>' */
+
+
+    template <typename T>
+  struct adl_serializer<std::vector<std::optional<T>>> {
+
+      static void
+    to_json( json & jto, const std::vector<std::optional<T>> & vec )
+    {
+      jto = json::array();
+      for ( const auto & opt : vec )
+        {
+          if ( opt.has_value() ) { jto.push_back( * opt ); }
+          else                   { jto.push_back( nullptr ); }
+        }
+    }
+
+      static void
+    from_json( const json & jfrom, std::vector<std::optional<T>> & vec )
+    {
+      vec.clear();
+      for ( const auto & value : jfrom )
+        {
+          if ( value.is_null() )
+            {
+              vec.push_back( std::nullopt );
+            }
+          else
+            {
+              vec.push_back( std::make_optional( value.template get<T>() ) );
+            }
+        }
+    }
+
+  };  /* End struct `adl_serializer<std::vector<std::optional<T>>>' */
 
 
   /* Flake Refs */
@@ -165,7 +170,7 @@ bool isSQLiteDb( const std::string & dbPath );
  * @param flakeRef JSON or URI string representing a `nix` flake reference.
  * @return Parsed flake reference object.
  */
-  inline static nix::FlakeRef
+  static inline nix::FlakeRef
 parseFlakeRef( const std::string & flakeRef )
 {
   return ( flakeRef.find( '{' ) == std::string::npos )
