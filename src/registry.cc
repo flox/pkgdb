@@ -73,43 +73,9 @@ RegistryRaw::getOrder() const
 /* -------------------------------------------------------------------------- */
 
   void
-from_json( const nlohmann::json & jfrom, InputPreferences & prefs )
-{
-  for ( const auto & [key, value] : jfrom.items() )
-    {
-      if ( ( key == "subtrees" ) && ( ! value.is_null() ) )
-        {
-          value.get_to( prefs.subtrees );
-        }
-      else if ( key == "stabilities" )
-        {
-          value.get_to( prefs.stabilities );
-        }
-    }
-}
-
-
-  void
-to_json( nlohmann::json & jto, const InputPreferences & prefs )
-{
-  if ( prefs.subtrees.has_value() )
-    {
-      jto.emplace( "subtrees", * prefs.subtrees );
-    }
-  else
-    {
-      jto.emplace( "subtrees", nullptr );
-    }
-  jto.emplace( "stabilities", prefs.stabilities );
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  void
 from_json( const nlohmann::json & jfrom, RegistryInput & rip )
 {
-  from_json( jfrom, (InputPreferences &) rip );
+  from_json( jfrom, dynamic_cast<InputPreferences &>( rip ) );
   rip.from = std::make_shared<nix::FlakeRef>(
     jfrom.at( "from" ).get<nix::FlakeRef>()
   );
@@ -119,7 +85,7 @@ from_json( const nlohmann::json & jfrom, RegistryInput & rip )
   void
 to_json( nlohmann::json & jto, const RegistryInput & rip )
 {
-  to_json( jto, (InputPreferences &) rip );
+  to_json( jto, dynamic_cast<const InputPreferences &>( rip ) );
   if ( rip.from == nullptr )
     {
       jto.emplace( "from", nullptr );
@@ -130,29 +96,6 @@ to_json( nlohmann::json & jto, const RegistryInput & rip )
                    , nix::fetchers::attrsToJSON( rip.from->toAttrs() )
                    );
     }
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  void
-from_json( const nlohmann::json & jfrom, RegistryRaw & reg )
-{
-  for ( const auto & [key, value] : jfrom.items() )
-    {
-      if ( key == "inputs" )        { value.get_to( reg.inputs );   }
-      else if ( key == "defaults" ) { value.get_to( reg.defaults ); }
-      else if ( key == "priority" ) { value.get_to( reg.priority ); }
-    }
-}
-
-
-  void
-to_json( nlohmann::json & jto, const RegistryRaw & reg )
-{
-  jto.emplace( "inputs",   reg.inputs   );
-  jto.emplace( "defaults", reg.defaults );
-  jto.emplace( "priority", reg.priority );
 }
 
 

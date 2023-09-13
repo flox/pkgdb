@@ -131,10 +131,16 @@ main( int argc, char * argv[] )
   auto resolvedJSON = nlohmann::json( resolved );
   std::cout << resolvedJSON.dump() << std::endl;
 
-  /* Adding junk fields does NOT throw an error. */
   resolvedJSON.emplace( "phony", 1 );
+  std::cout << resolvedJSON.dump() << std::endl;
+
+  /* Adding junk fields does NOT throw an error, but they are stripped. */
   auto resolved2 = resolvedJSON.get<flox::resolver::Resolved>();
   std::cout << nlohmann::json( resolved2 ).dump() << std::endl;
+
+  /* Assignment completely resets the object, stripping extra fields. */
+  resolvedJSON = resolved2;
+  std::cout << resolvedJSON.dump() << std::endl;
 
   return EXIT_SUCCESS;
 }

@@ -79,12 +79,12 @@ struct PkgDescriptorBase {
  * @brief Convert a @a flox::pkgdb::PkgDescriptorBase to a JSON object.
  */
 /* Generate `to_json' and `from_json' functions. */
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( PkgDescriptorBase
-                                  , name
-                                  , pname
-                                  , version
-                                  , semver
-                                  )
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT( PkgDescriptorBase
+                                               , name
+                                               , pname
+                                               , version
+                                               , semver
+                                               )
 
 
 /**
