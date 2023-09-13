@@ -46,6 +46,7 @@ RegistryRaw::clear()
 {
   this->inputs.clear();
   this->priority.clear();
+  this->defaults.clear();
 }
 
 /* -------------------------------------------------------------------------- */
