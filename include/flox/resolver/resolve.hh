@@ -43,6 +43,19 @@ struct Resolved {
 
 };  /* End struct `Resolved' */
 
+/**
+ * @fn void from_json( const nlohmann::json & j, Resolved::Input & pdb )
+ * @brief Convert a JSON object to a @a flox::resolver::Resolved::Input.
+ *
+ * @fn void to_json( nlohmann::json & j, const Resolved::Input & pdb )
+ * @brief Convert a @a flox::resolver::Resolved::Input to a JSON object.
+ *
+ * @fn void from_json( const nlohmann::json & j, Resolved & pdb )
+ * @brief Convert a JSON object to a @a flox::resolver::Resolved.
+ *
+ * @fn void to_json( nlohmann::json & j, const Resolved & pdb )
+ * @brief Convert a @a flox::resolver::Resolved to a JSON object.
+ */
 /* Generate `to_json' and `from_json' functions. */
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( Resolved::Input, name, locked )
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( Resolved, input, path, info )

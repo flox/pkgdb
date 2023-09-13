@@ -20,8 +20,11 @@ namespace flox::pkgdb {
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief A set of arguments used by @a flox::pkgdb::PkgDb::scrape. */
 using Target = std::tuple<flox::AttrPath, flox::Cursor, row_id>;
-using Todos  = std::queue<Target, std::list<Target>>;
+
+/** @brief A queue of @a flox::pkgdb::Target to be completed. */
+using Todos = std::queue<Target, std::list<Target>>;
 
 
 /* -------------------------------------------------------------------------- */

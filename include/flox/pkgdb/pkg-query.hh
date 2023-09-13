@@ -40,8 +40,9 @@ using row_id = uint64_t;  /**< A _row_ index in a SQLite3 table. */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Measures a "strength" ranking that can be used to order packages by how
- * closely they a match string.
+ * @brief Measures a "strength" ranking that can be used to order packages by
+ *        how closely they a match string.
+ *
  * - 0 : Case-insensitive exact match with `pname`
  * - 1 : Case-insensitive substring match with `pname` and `description`.
  * - 2 : Case-insensitive substring match with `pname`.
@@ -56,6 +57,7 @@ enum match_strength {
 , MS_NONE               = 4  /* Ensure this is always the highest. */
 };
 
+
 /* -------------------------------------------------------------------------- */
 
 /** @brief Minimal set of query parameters related to a single package. */
@@ -69,6 +71,13 @@ struct PkgDescriptorBase {
   virtual void clear();
 };
 
+/**
+ * @fn void from_json( const nlohmann::json & j, PkgDescriptorBase & pdb )
+ * @brief Convert a JSON object to a @a flox::pkgdb::PkgDescriptorBase.
+ *
+ * @fn void to_json( nlohmann::json & j, const PkgDescriptorBase & pdb )
+ * @brief Convert a @a flox::pkgdb::PkgDescriptorBase to a JSON object.
+ */
 /* Generate `to_json' and `from_json' functions. */
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( PkgDescriptorBase
                                   , name
@@ -77,6 +86,11 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( PkgDescriptorBase
                                   , semver
                                   )
 
+
+/**
+ * @brief A concept that checks if a typename is derived
+ *        from @a flox::pkgdb::PkgDescriptorBase.
+ */
   template <typename T>
 concept pkg_descriptor_typename = std::derived_from<T, PkgDescriptorBase>;
 
@@ -127,7 +141,7 @@ struct PkgQueryArgs : public PkgDescriptorBase {
   std::optional<flox::AttrPath> relPath;
 
 
-  /** Errors concerning validity of package query parameters. */
+  /** @brief Errors concerning validity of package query parameters. */
   struct PkgQueryInvalidArgException : public flox::FloxException {
 
     public:
@@ -163,12 +177,12 @@ struct PkgQueryArgs : public PkgDescriptorBase {
   };  /* End struct `PkgDbQueryInvalidArgException' */
 
 
-  /** Reset argset to its _default_ state. */
+  /** @brief Reset argset to its _default_ state. */
   virtual void clear() override;
 
-
   /**
-   * Sanity check parameters.
+   * @brief Sanity check parameters.
+   *
    * Make sure `systems` are valid systems.
    * Make sure `stabilities` are valid stabilities.
    * Make sure `name` is not set when `pname`, `version`, or `semver` are set.
@@ -182,13 +196,15 @@ struct PkgQueryArgs : public PkgDescriptorBase {
 };  /* End struct `PkgQueryArgs' */
 
 
+/** @brief Convert a JSON object to a @a flox::pkgdb::PkgQueryArgs. */
 void from_json( const nlohmann::json & jqa, PkgQueryArgs & pqa );
 
 
 /* -------------------------------------------------------------------------- */
 
 /**
- * A query used to lookup packages in a database.
+ * @brief A query used to lookup packages in a database.
+ *
  * This uses a combination of SQL statements and post processing with
  * `node-semver` to produce a list of satisfactory packages.
  */
@@ -229,14 +245,17 @@ class PkgQuery : public PkgQueryArgs {
     /* Member Functions */
 
     /**
-     * Clear member @a PkgQuery member variables of any state from past
-     * initialization runs.
-     * This is called by @a init before translating @a PkgQueryArgs members.
+     * @brief Clear member @a PkgQuery member variables of any state from past
+     *        initialization runs.
+     *
+     * This is called by @a init before translating
+     * @a flox::pkgdb::PkgQueryArgs members.
      */
     void clearBuilt();
 
     /**
-     * Add a new column to the _inner_ `SELECT` statement.
+     * @brief Add a new column to the _inner_ `SELECT` statement.
+     *
      * These selections may be used internally for filtering and ordering rows,
      * and are only _exported_ in the final result if they are also listed
      * in @a exportedColumns.
@@ -244,40 +263,53 @@ class PkgQuery : public PkgQueryArgs {
      *               or `0 AS foo`.
      */
     void addSelection( std::string_view column );
-    /** Appends the `ORDER BY` block. */
+
+    /** @brief Appends the `ORDER BY` block. */
     void addOrderBy( std::string_view order );
-    /** Appends the `WHERE` block with a new `AND ( <COND> )` statement. */
+
+    /**
+     * @brief Appends the `WHERE` block with a new `AND ( <COND> )` statement.
+     */
     void addWhere( std::string_view cond );
 
     /**
-     * Filter a set of semantic version numbers by the range indicated in the
-     * @a semvers member variable.
+     * @brief Filter a set of semantic version numbers by the range indicated in
+     *        the @a semvers member variable.
+     *
      * If @a semvers is unset, return the original set _as is_.
      */
       [[nodiscard]]
       std::unordered_set<std::string>
     filterSemvers( const std::unordered_set<std::string> & versions ) const;
 
-    /** A helper of @a init() which handles `match` filtering/ranking. */
+    /** @brief A helper of @a init() which handles `match` filtering/ranking. */
     void initMatch();
 
-    /** A helper of @a init() which handles `subtrees` filtering/ranking. */
+    /**
+     * @brief A helper of @a init() which handles `subtrees` filtering/ranking.
+     */
     void initSubtrees();
 
-    /** A helper of @a init() which handles `systems` filtering/ranking. */
+    /**
+     * @brief A helper of @a init() which handles `systems` filtering/ranking.
+     */
     void initSystems();
 
-    /** A helper of @a init() which handles `stabilities` filtering/ranking. */
+    /**
+     * @brief A helper of @a init() which handles
+     *        `stabilities` filtering/ranking.
+     */
     void initStabilities();
 
-    /** A helper of @a init() which constructs the `ORDER BY` block. */
+    /** @brief A helper of @a init() which constructs the `ORDER BY` block. */
     void initOrderBy();
 
     /**
-     * Translate @a PkgQueryArgs parameters to a _built_ SQL statement held in
-     * `std::stringstream` member variables.
+     * @brief Translate @a floco::pkgdb::PkgQueryArgs parameters to a _built_
+     *        SQL statement held in `std::stringstream` member variables.
+     *
      * This is called by constructors, and should be called manually if any
-     * @a PkgQueryArgs members are manually edited.
+     * @a flox::pkgdb::PkgQueryArgs members are manually edited.
      */
     void init();
 
@@ -300,7 +332,8 @@ class PkgQuery : public PkgQueryArgs {
     }
 
     /**
-     * Produce an unbound SQL statement from various member variables.
+     * @brief Produce an unbound SQL statement from various member variables.
+     *
      * This must be run after @a init().
      * The returned string still needs to be processed to _bind_ host parameters
      * from @a binds before being executed.
@@ -310,7 +343,8 @@ class PkgQuery : public PkgQueryArgs {
     std::string str() const;
 
     /**
-     * Create a bound SQLite query ready for execution.
+     * @brief Create a bound SQLite query ready for execution.
+     *
      * This does NOT perform filtering by `semver` which must be performed as a
      * post-processing step.
      * Unlike @a execute() this routine allows the caller to iterate over rows.
@@ -319,14 +353,15 @@ class PkgQuery : public PkgQueryArgs {
     std::shared_ptr<sqlite3pp::query> bind( sqlite3pp::database & pdb ) const;
 
     /**
-     * Query a given database returning an ordered list of
-     * satisfactory `Packages.id`s.
+     * @brief Query a given database returning an ordered list of
+     *        satisfactory `Packages.id`s.
+     *
      * This performs `semver` filtering.
      */
     [[nodiscard]]
     std::vector<row_id> execute( sqlite3pp::database & pdb ) const;
 
-};
+};  /* End class `PkgQuery' */
 
 
 /* -------------------------------------------------------------------------- */

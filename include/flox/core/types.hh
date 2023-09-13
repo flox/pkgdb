@@ -21,24 +21,30 @@
 
 /* -------------------------------------------------------------------------- */
 
-/** Interfaces for use by `flox`. */
+/** @brief Interfaces for use by `flox`. */
 namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
-/** A list of key names addressing a location in a nested JSON-like object. */
+/**
+ * @brief A list of key names addressing a location in a nested
+ *        JSON-like object.
+ */
 using AttrPath = std::vector<std::string>;
 
-/** A `std::shared_ptr<nix::eval_cache::AttrCursor>` which may be `nullptr`. */
+/**
+ * @brief A `std::shared_ptr<nix::eval_cache::AttrCursor>` which may
+ *        be `nullptr`.
+ */
 using MaybeCursor = std::shared_ptr<nix::eval_cache::AttrCursor>;
 
-/** A non-`nullptr` `std::shared_ptr<nix::eval_cache::AttrCursor>`. */
+/** @brief A non-`nullptr` `std::shared_ptr<nix::eval_cache::AttrCursor>`. */
 using Cursor = nix::ref<nix::eval_cache::AttrCursor>;
 
 
 /* -------------------------------------------------------------------------- */
 
-/** A _top level_ key in a `nix` flake */
+/** @brief A _top level_ key in a `nix` flake */
 enum subtree_type {
   ST_NONE     = 0
 , ST_LEGACY   = 1
@@ -46,6 +52,13 @@ enum subtree_type {
 , ST_CATALOG  = 3
 };
 
+/**
+ * @fn void from_json( const nlohmann::json & j, subtree_type & pdb )
+ * @brief Convert a JSON string to a @a flox::subtree_type.
+ *
+ * @fn void to_json( nlohmann::json & j, const subtree_type & pdb )
+ * @brief Convert a @a flox::subtree_type to a JSON string.
+ */
 /* Generate `to_json' and `from_json' for enum. */
 NLOHMANN_JSON_SERIALIZE_ENUM( subtree_type, {
   { ST_NONE,     nullptr          }
@@ -127,12 +140,14 @@ struct Subtree {
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief Convert a JSON string to a @a flox::Subtree. */
   inline void
 from_json( const nlohmann::json & jfrom, Subtree & subtree )
 {
   jfrom.get_to( subtree.subtree );
 }
 
+/** @brief Convert a @a flox::Subtree to a JSON string. */
   inline void
 to_json( nlohmann::json & jto, const Subtree & subtree )
 {

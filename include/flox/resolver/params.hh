@@ -28,7 +28,9 @@ namespace flox::resolver {
 /* -------------------------------------------------------------------------- */
 
 /**
- * An attribute path which may contain `null` members to represent _globs_.
+ * @brief An attribute path which may contain `null` members to
+ *        represent _globs_.
+ *
  * Globs may only appear as the second element representing `system`.
  */
 using AttrPathGlob = std::vector<std::optional<std::string>>;
