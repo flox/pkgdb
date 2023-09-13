@@ -81,7 +81,14 @@ std::vector<Resolved> resolve_v0(       ResolverState & state
                                 );
 
 
-constexpr auto resolve = resolve_v0;
+/**
+ * @brief Resolve a package descriptor.
+ * @param state The resolver state.
+ * @param descriptor The package descriptor.
+ * @param one If `true`, return only the first result.
+ * @return A list of resolved packages.
+ */
+#define resolve( ... )  resolve_v0( __VA_ARGS__ )
 
 
 /* -------------------------------------------------------------------------- */
@@ -103,7 +110,13 @@ resolveOne_v0(       ResolverState & state
 }
 
 
-constexpr auto resolveOne = resolveOne_v0;
+/**
+ * @brief Resolve a package descriptor to its best candidate ( if any ).
+ * @param state The resolver state.
+ * @param descriptor The package descriptor.
+ * @return The best resolved installable or `std:nullopt` if resolution failed.
+ */
+#define resolveOne( ... )  resolveOne_v0( __VA_ARGS__ )
 
 
 /* -------------------------------------------------------------------------- */

@@ -7,6 +7,8 @@
  *
  * -------------------------------------------------------------------------- */
 
+#include <nlohmann/json.hpp>
+
 #include "flox/resolver/command.hh"
 #include "flox/resolver/resolve.hh"
 
@@ -20,14 +22,17 @@ namespace flox::resolver {
   argparse::Argument &
 ResolveCommand::addResolveParamArgs( argparse::ArgumentParser & parser )
 {
-  return parser.add_argument( "query" )
-               .help( "query parameters" )
+  return parser.add_argument( "parameters" )
+               .help(
+                 "resolution paramaters as inline JSON or a path to a file"
+               )
                .required()
-               .metavar( "QUERY" )
-               .action( [&]( const std::string & query )
+               .metavar( "PARAMS" )
+               .action( [&]( const std::string & params )
                         {
-                          pkgdb::PkgQueryArgs args;
-                          nlohmann::json::parse( query ).get_to( args );
+                          nlohmann::json paramsJSON =
+                            parseOrReadJSONObject( params );
+                          paramsJSON.get_to( this->params );
                         }
                       );
 }
@@ -66,11 +71,10 @@ ResolveCommand::run()
   this->initRegistry();
   this->scrapeIfNeeded();
   assert( this->registry != nullptr );
-  for ( const auto & resolved :
-          resolve( this->getResolverState(), this->getQuery() )
-      )
+  auto state = this->getResolverState();
+  for ( const auto & resolved : resolve( state, this->getQuery() ) )
     {
-      std::cout << resolved << std::endl;
+      std::cout << nlohmann::json( resolved ).dump() << std::endl;
     }
   return EXIT_SUCCESS;
 }
