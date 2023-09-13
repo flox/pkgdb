@@ -72,10 +72,8 @@ ResolveCommand::run()
   this->scrapeIfNeeded();
   assert( this->registry != nullptr );
   auto state = this->getResolverState();
-  for ( const auto & resolved : resolve( state, this->getQuery() ) )
-    {
-      std::cout << nlohmann::json( resolved ).dump() << std::endl;
-    }
+  auto rsl   = resolve( state, this->getQuery() );
+  std::cout << nlohmann::json( rsl ) .dump() << std::endl;
   return EXIT_SUCCESS;
 }
 

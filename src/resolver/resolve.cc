@@ -83,10 +83,19 @@ resolve_v0( ResolverState & state, const Descriptor & descriptor, bool one )
       /* Fill `rsl' with resolutions. */
       for ( const auto & row : rows )
         {
+          /* Strip some fields from the locked _flake ref_. */
+          auto locked = dbRO->lockedRef.attrs;
+          if ( locked.at( "type" ).get<std::string>() != "path" )
+            {
+              locked.erase( "narHash" );
+            }
+          locked.erase( "lastModified" );
+          locked.erase( "revCount" );
+
           auto resolved = Resolved {
             .input = Resolved::Input {
               .name   = name
-            , .locked = dbRO->lockedRef.attrs
+            , .locked = std::move( locked )
             }
           , .path = dbRO->getPackagePath( row )
           , .info = dbRO->getPackage( row )
