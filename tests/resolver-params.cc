@@ -92,23 +92,17 @@ main( int argc, char * argv[] )
       nlohmann::json::parse( argv[1] ).get_to( params );
     }
 
-  //std::cout << nlohmann::json( params ).dump() << std::endl;
-
   auto state = flox::resolver::ResolverState( params );
 
-  auto args = flox::pkgdb::PkgQueryArgs();
-  for ( const auto & [name, input] : * state.getPkgDbRegistry() )
+  auto descriptor = params.query;
+
+  for ( const auto & resolved :
+          flox::resolver::resolve_v0( state, descriptor )
+      )
     {
-      /* We will get `false` if we should skip this input entirely. */
-      bool shouldSearch = params.fillPkgQueryArgs( name, args );
-      if ( ! shouldSearch ) { continue; }
-      auto query = flox::pkgdb::PkgQuery( args );
-      auto dbRO  = input->getDbReadOnly();
-      for ( const auto & row : query.execute( dbRO->db ) )
-        {
-          std::cout << input->getRowJSON( row ).dump() << std::endl;
-        }
+      std::cout << nlohmann::json( resolved ).dump() << std::endl;
     }
+
 
   std::cout << std::endl;
 
@@ -122,9 +116,7 @@ main( int argc, char * argv[] )
       , { "rev",   "e8039594435c68eb4f780f3e9bf3972a7399c4b1" }
       }
     }
-  , .path = flox::resolver::AttrPathGlob {
-       { "legacyPackages" }, { "x86_64-linux" }, { "hello" }
-     }
+  , .path = flox::AttrPath { "legacyPackages", "x86_64-linux", "hello" }
   , .info = nlohmann::json::object()
   };
 

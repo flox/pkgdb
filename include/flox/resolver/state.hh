@@ -98,6 +98,14 @@ class ResolverState : protected pkgdb::PkgDbRegistryMixin {
       );
     }
 
+      pkgdb::PkgQueryArgs
+    getPkgQueryArgs( const std::string & name )
+    {
+      this->initResolverState();
+      pkgdb::PkgQueryArgs args;
+      this->registry->at( name )->fillPkgQueryArgs( args );
+      return this->preferences.fillPkgQueryArgs( args );
+    }
 
 };  /* End class `ResolverState' */
 

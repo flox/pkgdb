@@ -35,7 +35,7 @@ struct Resolved {
   };  /* End struct `Resolved::Input' */
 
   Input          input;  /**< Registry input. */
-  AttrPathGlob   path;   /**< Attribute path to the package. */
+  AttrPath       path;   /**< Attribute path to the package. */
   nlohmann::json info;   /**< Package information. */
 
   /**@brief Reset to default/empty state. */
@@ -75,13 +75,13 @@ using Descriptor = PkgDescriptorRaw;
  * @param one If `true`, return only the first result.
  * @return A list of resolved packages.
  */
-std::vector<Resolved> resolve_V0(       ResolverState & state
+std::vector<Resolved> resolve_v0(       ResolverState & state
                                 , const Descriptor    & descriptor
                                 ,       bool            one        = false
                                 );
 
 
-constexpr auto resolve = resolve_V0;
+constexpr auto resolve = resolve_v0;
 
 
 /* -------------------------------------------------------------------------- */
@@ -92,12 +92,18 @@ constexpr auto resolve = resolve_V0;
  * @param descriptor The package descriptor.
  * @return The best resolved installable or `std:nullopt` if resolution failed.
  */
-std::optional<Resolved> resolveOne_V0(       ResolverState & state
-                                     , const Descriptor    & descriptor
-                                     );
+  std::optional<Resolved>
+resolveOne_v0(       ResolverState & state
+             , const Descriptor    & descriptor
+             )
+{
+  auto resolved = resolve( state, descriptor, true );
+  if ( resolved.empty() ) { return std::nullopt; }
+  return resolved[0];
+}
 
 
-constexpr auto resolveOne = resolveOne_V0;
+constexpr auto resolveOne = resolveOne_v0;
 
 
 /* -------------------------------------------------------------------------- */
