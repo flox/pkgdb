@@ -889,6 +889,11 @@ test_DbPackage0( flox::pkgdb::PkgDb & db )
   EXPECT_EQ( * pkg.getDescription()
            , "A program with a friendly greeting/farewell"
            );
+  EXPECT_EQ( pkgId, pkg.getPackageId() );
+  EXPECT_EQ( pkg.getDbPath(), db.dbPath );
+  EXPECT_EQ( nix::parseFlakeRef( nixpkgsRef ).to_string()
+           , pkg.getLockedFlakeRef().to_string()
+           );
   return true;
 }
 
@@ -965,8 +970,6 @@ main( int argc, char * argv[] )
     RUN_TEST( getPackages2, db );
 
     RUN_TEST( DbPackage0, db );
-
-    test_DbPackage0( db );
 
   }
 

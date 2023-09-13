@@ -9,6 +9,9 @@
 
 #pragma once
 
+#include <filesystem>
+
+#include <nlohmann/json.hpp>
 
 #include "flox/pkgdb/read.hh"
 #include "flox/package.hh"
@@ -40,31 +43,41 @@ class DbPackage : public RawPackage {
    *   std::optional<std::string>  description;
    */
 
-    row_id pkgId;
-
+    row_id                pkgId;        /**< `Packages.id' in the database. */
+    std::filesystem::path dbPath;       /**< Path to the database. */
 
   private:
 
-    void init( PkgDbReadOnly & pkgdb );
+    void initRawPackage( PkgDbReadOnly & pkgdb );
 
 
   public:
 
     DbPackage( PkgDbReadOnly & pkgdb, row_id pkgId )
       : pkgId( pkgId )
+      , dbPath( pkgdb.dbPath )
     {
       this->path = pkgdb.getPackagePath( pkgId );
-      this->init( pkgdb );
+      this->initRawPackage( pkgdb );
     }
 
     DbPackage( PkgDbReadOnly & pkgdb, const AttrPath & path )
       : pkgId( pkgdb.getPackageId( path ) )
+      , dbPath( pkgdb.dbPath )
     {
       this->path = path;
-      this->init( pkgdb );
+      this->initRawPackage( pkgdb );
     }
 
     row_id getPackageId() const { return this->pkgId; }
+
+    std::filesystem::path getDbPath() const { return this->dbPath; }
+
+      nix::FlakeRef
+    getLockedFlakeRef() const
+    {
+      return PkgDbReadOnly( this->dbPath.string() ).getLockedFlakeRef();
+    }
 
 };  /* End class `DbPackage' */
 

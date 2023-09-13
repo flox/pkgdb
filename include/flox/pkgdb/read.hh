@@ -146,7 +146,8 @@ class PkgDbReadOnly {
       std::string string;  /**< Locked URI string.  */
       /** Exploded form of URI as an attr-set. */
       nlohmann::json attrs = nlohmann::json::object();
-    } lockedRef;
+    };
+    struct LockedFlakeRef lockedRef;  /**< Locked _flake reference_. */
 
 
 /* -------------------------------------------------------------------------- */
@@ -362,6 +363,14 @@ class PkgDbReadOnly {
      */
     nlohmann::json getPackage( const flox::AttrPath & path );
 
+
+      nix::FlakeRef
+    getLockedFlakeRef() const
+    {
+      return nix::FlakeRef::fromAttrs(
+        nix::fetchers::jsonToAttrs( this->lockedRef.attrs )
+      );
+    }
 
 /* -------------------------------------------------------------------------- */
 
