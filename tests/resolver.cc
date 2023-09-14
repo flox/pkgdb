@@ -25,22 +25,101 @@ using namespace nlohmann::literals;
 /* -------------------------------------------------------------------------- */
 
 /* Initialized in `main' */
-static flox::RegistryRaw             commonRegistry;     // NOLINT
-static flox::pkgdb::QueryPreferences commonPreferences;  // NOLINT
+static const nlohmann::json commonRegistry = R"( {
+  "inputs": {
+    "nixpkgs": {
+      "from": {
+        "type": "github"
+      , "owner": "NixOS"
+      , "repo": "nixpkgs"
+      , "rev": "e8039594435c68eb4f780f3e9bf3972a7399c4b1"
+      }
+    , "subtrees": ["legacyPackages"]
+    }
+  , "floco": {
+      "from": {
+        "type": "github"
+      , "owner": "aakropotkin"
+      , "repo": "floco"
+      , "rev": "1e84b4b16bba5746e1195fa3a4d8addaaf2d9ef4"
+      }
+    , "subtrees": ["packages"]
+    }
+  , "nixpkgs-flox": {
+      "from": {
+        "type": "github"
+      , "owner": "flox"
+      , "repo": "nixpkgs-flox"
+      , "rev": "feb593b6844a96dd4e17497edaabac009be05709"
+      }
+    , "subtrees": ["catalog"]
+    , "stabilities": ["stable"]
+    }
+  }
+  , "defaults": {
+    "subtrees": null
+  , "stabilities": ["stable"]
+  }
+, "priority": ["nixpkgs", "floco", "nixpkgs-flox"]
+} )"_json;
+
+static const nlohmann::json commonPreferences = R"( {
+  "systems": ["x86_64-linux"]
+, "allow": {
+    "unfree": true
+  , "broken": false
+  , "licenses": null
+  }
+, "semver": {
+    "preferPreReleases": false
+  }
+} )"_json;
 
 
 /* -------------------------------------------------------------------------- */
 
 /** @brief Test basic resolution for `hello`. */
   bool
-test_resolve0( flox::resolver::ResolverState & state )
+test_resolve0()
 {
+  flox::RegistryRaw             registry    = commonRegistry;
+  flox::pkgdb::QueryPreferences preferences = commonPreferences;
+
+  auto state = flox::resolver::ResolverState( registry, preferences );
+
   flox::resolver::Descriptor descriptor;
   descriptor.pname = "hello";
 
   auto rsl = flox::resolver::resolve_v0( state, descriptor );
 
   EXPECT_EQ( rsl.size(), static_cast<std::size_t>( 5 ) );
+
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Expand number of stabilites and ensure `nixpkgs` is still scanned. */
+  bool
+test_resolve1()
+{
+  nlohmann::json registryJSON = commonRegistry;
+  registryJSON["inputs"]["nixpkgs-flox"]["stabilities"] = {
+    "stable", "staging", "unstable"
+  };
+  flox::RegistryRaw registry = registryJSON;
+
+  flox::pkgdb::QueryPreferences preferences = commonPreferences;
+
+  auto state = flox::resolver::ResolverState( registry, preferences );
+
+  flox::resolver::Descriptor descriptor;
+  descriptor.pname = "hello";
+
+  auto rsl = flox::resolver::resolve_v0( state, descriptor );
+
+  EXPECT_EQ( rsl.size(), static_cast<std::size_t>( 13 ) );
 
   return true;
 }
@@ -68,82 +147,23 @@ main( int argc, char * argv[] )
 
 /* -------------------------------------------------------------------------- */
 
-  /* Initialize common registry. */
-  flox::from_json( R"( {
-      "inputs": {
-        "nixpkgs": {
-          "from": {
-            "type": "github"
-          , "owner": "NixOS"
-          , "repo": "nixpkgs"
-          , "rev": "e8039594435c68eb4f780f3e9bf3972a7399c4b1"
-          }
-        , "subtrees": ["legacyPackages"]
-        }
-      , "floco": {
-          "from": {
-            "type": "github"
-          , "owner": "aakropotkin"
-          , "repo": "floco"
-          , "rev": "2afd962bbd6745d4d101c2924de34c5326042928"
-          }
-        , "subtrees": ["packages"]
-        }
-      , "nixpkgs-flox": {
-          "from": {
-            "type": "github"
-          , "owner": "flox"
-          , "repo": "nixpkgs-flox"
-          , "rev": "feb593b6844a96dd4e17497edaabac009be05709"
-          }
-        , "subtrees": ["catalog"]
-        , "stabilities": ["stable"]
-        }
-      }
-    , "defaults": {
-        "subtrees": null
-      , "stabilities": ["stable"]
-      }
-    , "priority": ["nixpkgs", "floco", "nixpkgs-flox"]
-    } )"_json
-  , commonRegistry
-  );
-
-
-/* -------------------------------------------------------------------------- */
-
-  /* Initialize common preferences. */
-  flox::pkgdb::from_json( R"( {
-      "systems": ["x86_64-linux"]
-    , "allow": {
-        "unfree": true
-      , "broken": false
-      , "licenses": null
-      }
-    , "semver": {
-        "preferPreReleases": false
-      }
-    } )"_json
-  , commonPreferences
-  );
-
-
-/* -------------------------------------------------------------------------- */
-
-  /* Scrape common registry members. */
-  auto state = flox::resolver::ResolverState( commonRegistry
-                                            , commonPreferences
-                                            );
+  /* Make a temporary directory for cache DBs to ensure tests
+   * are reproducible. */
+  std::string cacheDir = nix::createTempDir();
+  setenv( "PKGDB_CACHEDIR", cacheDir.c_str(), 1 );
 
 
 /* -------------------------------------------------------------------------- */
 
   {
 
-    RUN_TEST( resolve0, state );
+    RUN_TEST( resolve0 );
+    RUN_TEST( resolve1 );
 
   }
 
+  /* Cleanup the temporary directory. */
+  nix::deletePath( cacheDir );
 
   return exitCode;
 

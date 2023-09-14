@@ -54,6 +54,7 @@ main( int argc, char * argv[] )
                 "type": "github"
               , "owner": "NixOS"
               , "repo": "nixpkgs"
+              , "rev": "e8039594435c68eb4f780f3e9bf3972a7399c4b1"
               }
             , "subtrees": ["legacyPackages"]
             }
@@ -62,6 +63,7 @@ main( int argc, char * argv[] )
                 "type": "github"
               , "owner": "aakropotkin"
               , "repo": "floco"
+              , "rev": "1e84b4b16bba5746e1195fa3a4d8addaaf2d9ef4"
               }
             , "subtrees": ["packages"]
             }

@@ -121,18 +121,14 @@ CREATE VIEW IF NOT EXISTS v_AttrPaths AS
                    , Parent.subtree
                    , iif( ( Parent.system IS NULL ), O.attrName, Parent.system )
                      AS system
-                   , iif( ( ( Parent.subtree IS NOT NULL ) AND
-                            ( Parent.subtree = 'catalog' )
-                          )
-                        , iif( ( ( Parent.stability IS NULL ) AND
-                                 ( Parent.system IS NOT NULL )
-                               )
-                             , O.attrName
+                   , iif( ( Parent.stability IS NOT NULL )
+                        , Parent.stability
+                        , iif( ( Parent.system IS NULL ) OR
+                               ( Parent.subtree != 'catalog' )
                              , NULL
+                             , O.attrName
                              )
-                        , NULL
-                        )
-                     AS stability
+                        ) AS stability
                    , json_insert( Parent.path, '$[#]', O.attrName ) AS path
     FROM AttrSets O INNER JOIN Tree as Parent ON ( Parent.id = O.parent )
   ) SELECT * FROM Tree;

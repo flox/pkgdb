@@ -89,7 +89,7 @@ main( int argc, char * argv[] )
             "type": "github"
           , "owner": "aakropotkin"
           , "repo": "floco"
-          , "rev": "2afd962bbd6745d4d101c2924de34c5326042928"
+          , "rev": "1e84b4b16bba5746e1195fa3a4d8addaaf2d9ef4"
           }
         , "subtrees": ["packages"]
         }

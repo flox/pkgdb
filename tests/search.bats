@@ -14,6 +14,12 @@ setup_file() {
   export TDATA="$TESTS_DIR/data/search";
   export PKGDB_CACHEDIR="$BATS_FILE_TMPDIR/pkgdbs";
   echo "PKGDB_CACHEDIR: $PKGDB_CACHEDIR" >&3;
+  # We don't parallelize these to avoid DB sync headaches and to recycle the
+  # cache between tests.
+  # Nonetheless this file makes an effort to avoid depending on past state in
+  # such a way that would make it difficult to eventually parallelize in
+  # the future.
+  export BATS_NO_PARALLELIZE_WITHIN_FILE=true;
 }
 
 # Dump parameters for a query on `nixpkgs'.
@@ -209,7 +215,7 @@ genParamsNixpkgsFlox() {
 
 # `stabilities' ordering
 @test "'pkgdb search' stabilities order" {
-  run sh -c "$PKGDB search -q '$( genParamsNixpkgsFlox                         \
+  run sh -c "$PKGDB search -qq '$( genParamsNixpkgsFlox                        \
     '.registry.inputs["nixpkgs-flox"].stabilities+=["unstable"]
     |.query.pname|="hello"
     |.query.version|="2.12.1"';
@@ -217,10 +223,10 @@ genParamsNixpkgsFlox() {
   assert_success;
   # catalog.x86_64-linux.stable.hello.2_12_1
   assert_output --partial '0 stable';
-  # catalog.x86_64-linux.unstable.hello.2_12_1
-  assert_output --partial '1 unstable';
   # catalog.x86_64-linux.stable.hello.latest
-  assert_output --partial '2 stable';
+  assert_output --partial '1 stable';
+  # catalog.x86_64-linux.unstable.hello.2_12_1
+  assert_output --partial '2 unstable';
   # catalog.x86_64-linux.unstable.hello.latest
   assert_output --partial '3 unstable';
   refute_output --partial '4 ';

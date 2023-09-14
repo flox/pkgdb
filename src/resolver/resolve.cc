@@ -34,7 +34,7 @@ resolve_v0( ResolverState & state, const Descriptor & descriptor, bool one )
   std::vector<Resolved> rsl;
   for ( auto & [name, input] : * state.getPkgDbRegistry() )
     {
-      if ( descriptor.input.has_value() && name != descriptor.input.value() )
+      if ( descriptor.input.has_value() && ( name != ( * descriptor.input ) ) )
         {
           continue;
         }

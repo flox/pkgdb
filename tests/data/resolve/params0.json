@@ -15,6 +15,7 @@
           "type": "github"
         , "owner": "aakropotkin"
         , "repo": "floco"
+        , "rev": "1e84b4b16bba5746e1195fa3a4d8addaaf2d9ef4"
         }
       , "subtrees": ["packages"]
       }
@@ -23,6 +24,7 @@
           "type": "github"
         , "owner": "flox"
         , "repo": "nixpkgs-flox"
+        , "rev": "feb593b6844a96dd4e17497edaabac009be05709"
         }
       , "subtrees": ["catalog"]
       , "stabilities": ["stable", "staging", "unstable"]

@@ -205,12 +205,15 @@ PkgDbInput::getRowJSON( row_id row )
   void
 PkgDbRegistryMixin::initRegistry()
 {
-  nix::ref<nix::Store> store = this->getStore();
-  pkgdb::PkgDbInputFactory factory( store );  // TODO: cacheDir
-  this->registry = std::make_shared<Registry<PkgDbInputFactory>>(
-    this->getRegistryRaw()
-  , factory
-  );
+  if ( this->registry == nullptr )
+    {
+      nix::ref<nix::Store> store = this->getStore();
+      pkgdb::PkgDbInputFactory factory( store );  // TODO: cacheDir
+      this->registry = std::make_shared<Registry<PkgDbInputFactory>>(
+        this->getRegistryRaw()
+      , factory
+      );
+    }
 }
 
 

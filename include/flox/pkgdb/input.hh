@@ -245,11 +245,18 @@ static_assert( registry_input_factory<PkgDbInputFactory> );
  */
 struct PkgDbRegistryMixin : virtual public NixState {
 
+  /* From `NixState':
+   *   public:
+   *     std::shared_ptr<nix::Store>     store
+   *     std::shared_ptr<nix::EvalState> state
+   */
+
   protected:
 
     bool force = false;  /**< Whether to force re-evaluation of flakes. */
 
     std::shared_ptr<Registry<pkgdb::PkgDbInputFactory>> registry;
+
 
     /** Initialize @a registry member from @a params.registry. */
     void initRegistry();
