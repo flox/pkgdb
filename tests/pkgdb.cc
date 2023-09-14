@@ -908,18 +908,14 @@ main( int argc, char * argv[] )
 
 /* -------------------------------------------------------------------------- */
 
-  nix::Verbosity verbosity;
+    nix::verbosity = nix::lvlWarn;
   if ( ( 1 < argc ) && ( std::string_view( argv[1] ) == "-v" ) )
     {
-      verbosity = nix::lvlDebug;
-    }
-  else
-    {
-      verbosity = nix::lvlWarn;
+      nix::verbosity = nix::lvlDebug;
     }
 
   /* Initialize `nix' */
-  flox::NixState nstate( verbosity );
+  flox::NixState nstate;
 
 
 /* -------------------------------------------------------------------------- */
@@ -929,14 +925,7 @@ main( int argc, char * argv[] )
 
   nix::FlakeRef ref = nix::parseFlakeRef( nixpkgsRef );
 
-  nix::Activity act(
-    * nix::logger
-  , nix::lvlInfo
-  , nix::actUnknown
-  , nix::fmt( "fetching flake '%s'", ref.to_string() )
-  );
   flox::FloxFlake flake( nstate.getState(), ref );
-  nix::logger->stopActivity( act.id );
 
 
 /* -------------------------------------------------------------------------- */

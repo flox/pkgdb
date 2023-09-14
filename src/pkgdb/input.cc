@@ -96,12 +96,11 @@ PkgDbInput::scrapePrefix( const flox::AttrPath & prefix )
 {
   if ( this->getDbReadOnly()->completedAttrSet( prefix ) ) { return; }
 
-  Todos todo;
+  Todos       todo;
+  bool        wasRW = this->dbRW != nullptr;
+  MaybeCursor root  = this->getFlake()->maybeOpenCursor( prefix );
 
-  bool        wasRW    = this->dbRW != nullptr;
-  MaybeCursor root     = this->getFlake()->maybeOpenCursor( prefix );
-
-  if (root == nullptr ) { return; }
+  if ( root == nullptr ) { return; }
 
   auto   db  = this->getDbReadWrite();
   row_id row = db->addOrGetAttrSetId( prefix );

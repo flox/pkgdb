@@ -74,6 +74,7 @@ ScrapeCommand::run()
   if ( this->force )
     {
       this->input->getDbReadWrite()->setPrefixDone( this->attrPath, false );
+      this->input->closeDbReadWrite();
     }
 
   /* scrape it up! */

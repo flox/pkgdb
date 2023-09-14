@@ -56,29 +56,17 @@ struct NixState {
      *
      * This may be useful if you wish to avoid a non-default store.
      * @param store An open `nix` store connection.
-     * @param verbosity Verbosity level setting used throughout `nix` and
-     *                  `flox`/`pkgdb` operations.
      */
-    explicit NixState( nix::ref<nix::Store> & store
-                     , nix::Verbosity         verbosity = nix::lvlInfo
-                     )
+    explicit NixState( nix::ref<nix::Store> & store )
       : store( static_cast<std::shared_ptr<nix::Store>>( store ) )
     {
-      nix::verbosity = verbosity;
       initNix();
     }
 
     /**
      * @brief Construct `NixState` using the systems default `nix` store.
-     *
-     * @param verbosity Verbosity level setting used throughout `nix` and
-     *                  `flox`/`pkgdb` operations.
      */
-    explicit NixState( nix::Verbosity verbosity = nix::lvlInfo )
-    {
-      nix::verbosity = verbosity;
-      initNix();
-    }
+    NixState() { initNix(); }
 
 
 /* -------------------------------------------------------------------------- */

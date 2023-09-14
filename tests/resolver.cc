@@ -102,7 +102,7 @@ test_resolve0()
 
 /** @brief Expand number of stabilites and ensure `nixpkgs` is still scanned. */
   bool
-test_resolve1()
+test_resolveStabilities()
 {
   nlohmann::json registryJSON = commonRegistry;
   registryJSON["inputs"]["nixpkgs-flox"]["stabilities"] = {
@@ -127,6 +127,30 @@ test_resolve1()
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief Limit resolution to a single input. */
+  bool
+test_resolveInput()
+{
+  flox::RegistryRaw             registry    = commonRegistry;
+  flox::pkgdb::QueryPreferences preferences = commonPreferences;
+
+  auto state = flox::resolver::ResolverState( registry, preferences );
+
+  flox::resolver::Descriptor descriptor;
+  descriptor.pname = "hello";
+  descriptor.input = "nixpkgs";
+
+  auto rsl = flox::resolver::resolve_v0( state, descriptor );
+
+  EXPECT_EQ( rsl.size(), static_cast<std::size_t>( 1 ) );
+  EXPECT_EQ( rsl.front().input.name, "nixpkgs" );
+
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
   int
 main( int argc, char * argv[] )
 {
@@ -135,14 +159,11 @@ main( int argc, char * argv[] )
 
 /* -------------------------------------------------------------------------- */
 
-  nix::Verbosity verbosity = nix::lvlWarn;
+  nix::verbosity = nix::lvlWarn;
   if ( ( 1 < argc ) && ( std::string_view( argv[1] ) == "-v" ) ) // NOLINT
     {
-      verbosity = nix::lvlDebug;
+      nix::verbosity = nix::lvlDebug;
     }
-
-  /* Initialize `nix' */
-  flox::NixState nstate( verbosity );
 
 
 /* -------------------------------------------------------------------------- */
@@ -158,7 +179,8 @@ main( int argc, char * argv[] )
   {
 
     RUN_TEST( resolve0 );
-    RUN_TEST( resolve1 );
+    RUN_TEST( resolveStabilities );
+    RUN_TEST( resolveInput );
 
   }
 

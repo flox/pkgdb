@@ -60,14 +60,14 @@ main( int argc, char * argv[] )
 
 /* -------------------------------------------------------------------------- */
 
-  nix::Verbosity verbosity = nix::lvlWarn;
+  nix::verbosity = nix::lvlWarn;
   if ( ( 1 < argc ) && ( std::string_view( argv[1] ) == "-v" ) ) // NOLINT
     {
-      verbosity = nix::lvlDebug;
+      nix::verbosity = nix::lvlDebug;
     }
 
   /* Initialize `nix' */
-  flox::NixState nstate( verbosity );
+  flox::NixState nstate;
 
 
 /* -------------------------------------------------------------------------- */
