@@ -76,7 +76,7 @@ class ResolverState : protected pkgdb::PkgDbRegistryMixin {
 
   public:
 
-    ResolverState( const RegistryRaw & registry
+    ResolverState( const RegistryRaw             & registry
                  , const pkgdb::QueryPreferences & preferences
                  )
       : registryRaw( registry )

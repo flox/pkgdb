@@ -47,7 +47,7 @@ using AttrPathGlob = std::vector<std::optional<std::string>>;
  */
 struct PkgDescriptorRaw : public pkgdb::PkgDescriptorBase {
 
-  /* From `pkgdb::PkgDescriptorBase`:
+  /* From `pkgdb::PkgDescriptorBase':
    *   std::optional<std::string> name;
    *   std::optional<std::string> pname;
    *   std::optional<std::string> version;

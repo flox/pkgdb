@@ -45,7 +45,7 @@ struct QueryPreferences {
     /** Filter results to those explicitly marked with the given licenses. */
     std::optional<std::vector<std::string>> licenses;
 
-  };  /* End struct `ResolveOneParams::Allows' */
+  };  /* End struct `QueryPreferences::Allows' */
 
   Allows allow; /**< Allow/disallow packages with certain metadata. */
 
@@ -59,7 +59,7 @@ struct QueryPreferences {
   struct Semver {
     /** Whether pre-release versions should be ordered before releases. */
     bool preferPreReleases = false;
-  };  /* End struct `ResolveOneParams::Semver' */
+  };  /* End struct `QueryPreferences::Semver' */
 
   Semver semver;  /**< Settings associated with semantic version processing. */
 

@@ -219,6 +219,7 @@ PkgDbRegistryMixin::initRegistry()
   void
 PkgDbRegistryMixin::scrapeIfNeeded()
 {
+  this->initRegistry();
   assert( this->registry != nullptr );
   for ( auto & [name, input] : * this->registry )
     {

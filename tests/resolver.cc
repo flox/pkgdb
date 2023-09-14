@@ -1,8 +1,8 @@
 /* ========================================================================== *
  *
- * @file registry.cc
+ * @file resolver.cc
  *
- * @brief Tests for `flox::Registry` interfaces.
+ * @brief Tests for `flox::resolver` interfaces.
  *
  *
  *
@@ -13,8 +13,8 @@
 
 #include <nlohmann/json.hpp>
 
-#include "flox/registry.hh"
 #include "test.hh"
+#include "flox/resolver/resolve.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -25,26 +25,22 @@ using namespace nlohmann::literals;
 /* -------------------------------------------------------------------------- */
 
 /* Initialized in `main' */
-static flox::RegistryRaw commonRegistry;  // NOLINT
+static flox::RegistryRaw             commonRegistry;     // NOLINT
+static flox::pkgdb::QueryPreferences commonPreferences;  // NOLINT
 
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief Test basic resolution for `hello`. */
   bool
-test_FloxFlakeInputRegistry0()
+test_resolve0( flox::resolver::ResolverState & state )
 {
-  using namespace flox;
+  flox::resolver::Descriptor descriptor;
+  descriptor.pname = "hello";
 
-  FloxFlakeInputFactory           factory;
-  Registry<FloxFlakeInputFactory> registry( commonRegistry, factory );
-  size_t count = 0;
-  for ( const auto & [name, flake] : registry )
-    {
-      (void) flake->getFlakeRef();
-      ++count;
-    }
+  auto rsl = flox::resolver::resolve_v0( state, descriptor );
 
-  EXPECT_EQ( count, static_cast<size_t>( 3 ) );
+  EXPECT_EQ( rsl.size(), static_cast<std::size_t>( 5 ) );
 
   return true;
 }
@@ -116,9 +112,35 @@ main( int argc, char * argv[] )
 
 /* -------------------------------------------------------------------------- */
 
+  /* Initialize common preferences. */
+  flox::pkgdb::from_json( R"( {
+      "systems": ["x86_64-linux"]
+    , "allow": {
+        "unfree": true
+      , "broken": false
+      , "licenses": null
+      }
+    , "semver": {
+        "preferPreReleases": false
+      }
+    } )"_json
+  , commonPreferences
+  );
+
+
+/* -------------------------------------------------------------------------- */
+
+  /* Scrape common registry members. */
+  auto state = flox::resolver::ResolverState( commonRegistry
+                                            , commonPreferences
+                                            );
+
+
+/* -------------------------------------------------------------------------- */
+
   {
 
-    RUN_TEST( FloxFlakeInputRegistry0 );
+    RUN_TEST( resolve0, state );
 
   }
 

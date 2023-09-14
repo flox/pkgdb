@@ -58,16 +58,15 @@ resolve_v0( ResolverState & state, const Descriptor & descriptor, bool one )
         }
 
       /* If the input lacks the subtree we need then skip. */
-      if ( args.subtrees.has_value() && ( descriptor.subtree.has_value() ) )
+      if ( args.subtrees.has_value() && ( descriptor.subtree.has_value() ) &&
+           ( std::find( args.subtrees->begin()
+                      , args.subtrees->end()
+                      , Subtree( * descriptor.subtree )
+                      ) == args.subtrees->end()
+           )
+         )
         {
-          if ( std::find( args.subtrees->begin()
-                        , args.subtrees->end()
-                        , Subtree( * descriptor.subtree )
-                        ) == args.subtrees->end()
-             )
-            {
-              continue;
-            }
+          continue;
         }
 
       /* Fill remaining args from descriptor. */
