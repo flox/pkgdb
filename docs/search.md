@@ -247,6 +247,10 @@ Result ::= {
 }
 ```
 
+Note that because the `input` field only prints the short-name of its input,
+it is **strongly recommended** that the caller use _locked flake references_.
+
+
 ### Example Output
 
 For the example query parameters given above, we get the following results:
