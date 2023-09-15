@@ -83,6 +83,8 @@ SearchParams ::= {
     builds, which may not be what users actually want to install/search for.
   + This setting only effects packages who have `<DRV>.version` strings which
     can be interpreted as semantic version strings.
+- The `systems` field controls which systems will appear in results.
+  + If omitted or `null`, only the _current_ system will be searched.
 
 
 Full details about the registry field may be found [here](./registry.md).
