@@ -219,3 +219,46 @@ applied to `inputs` by showing the _explicit_ form of the same params:
   + in this case _lexicographical_ is _alphabetical_ because there are no
     numbers or symbols in the names.
 - Missing `query.*` fields were filled with `null`.
+
+
+## Output
+
+Search results are printed as JSON objects with one result per line ordered
+such that _high ranking_ results appear **before** _low ranking_ results.
+
+This single result per line format is printed in chunks as each input is
+processed, and is suitable for _streaming_ across a pipe.
+Tools such as `jq` or `sed` may be used in combination with `pkgdb search` so
+that results are displayed to users _as they are processed_.
+
+
+Each output line has the following format:
+
+```
+Result ::= {
+, input       = <INPUT-NAME>
+, path        = [<STRING>...]
+, pname       = <STRING>
+, version     = null | <STRING>
+, description = null | <STRING>
+, license     = null | License
+  broken      = true | false
+, unfree      = true | false
+}
+```
+
+### Example Output
+
+For the example query parameters given above, we get the following results:
+
+```
+{"broken":false,"description":"A program that produces a familiar, friendly greeting","input":"nixpkgs","license":"GPL-3.0-or-later","path":["legacyPackages","x86_64-linux","hello"],"pname":"hello","unfree":false,"version":"2.12.1"}
+{"broken":false,"description":"A program that produces a familiar, friendly greeting","input":"nixpkgs-flox","license":null,"path":["catalog","x86_64-linux","stable","hello","2_12_1"],"pname":"hello","unfree":false,"version":"2.12.1"}
+{"broken":false,"description":"A program that produces a familiar, friendly greeting","input":"nixpkgs-flox","license":null,"path":["catalog","x86_64-linux","stable","hello","latest"],"pname":"hello","unfree":false,"version":"2.12.1"}
+{"broken":false,"description":"A program that produces a familiar, friendly greeting","input":"nixpkgs-flox","license":null,"path":["catalog","x86_64-linux","stable","hello","2_12"],"pname":"hello","unfree":false,"version":"2.12"}
+{"broken":false,"description":"A program that produces a familiar, friendly greeting","input":"nixpkgs-flox","license":null,"path":["catalog","x86_64-linux","stable","hello","2_10"],"pname":"hello","unfree":false,"version":"2.10"}
+{"broken":false,"description":"A program that produces a familiar, friendly greeting","input":"nixpkgs-flox","license":null,"path":["catalog","x86_64-linux","staging","hello","2_12_1"],"pname":"hello","unfree":false,"version":"2.12.1"}
+{"broken":false,"description":"A program that produces a familiar, friendly greeting","input":"nixpkgs-flox","license":null,"path":["catalog","x86_64-linux","staging","hello","latest"],"pname":"hello","unfree":false,"version":"2.12.1"}
+{"broken":false,"description":"A program that produces a familiar, friendly greeting","input":"nixpkgs-flox","license":null,"path":["catalog","x86_64-linux","staging","hello","2_12"],"pname":"hello","unfree":false,"version":"2.12"}
+{"broken":false,"description":"A program that produces a familiar, friendly greeting","input":"nixpkgs-flox","license":null,"path":["catalog","x86_64-linux","staging","hello","2_10"],"pname":"hello","unfree":false,"version":"2.10"}
+```
