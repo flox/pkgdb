@@ -81,7 +81,7 @@ $ sqlite3 flakedb.sqlite '.mode json' 'SELECT name, version FROM Packages LIMIT 
 This utility is expected to be run multiple times if a client wishes to
 "fully scrape all the things" in a flake.
 This utility is a plumbing command used by a client application, we aren't
-particuarly concerned with the repetitive strain injury a user would suffer if
+particularly concerned with the repetitive strain injury a user would suffer if
 they tried to scrape everything in a flake interactively; rather we aim to do
 less in a single run and avoid scraping info the caller might not need for their
 use case.
@@ -97,7 +97,9 @@ $ for subtree in packages legacyPackages catalog; do
       if [[ "$subtree" = 'catalog' ]]; then
         for stability in unstable staging stable; do
           if [[ -z "$dbPath" ]]; then  # get the DB name
-            dbPath="$( pkgdb scrape "$lockedRef" "$subtree" "$system" "$stability"; )";
+            dbPath="$(
+              pkgdb scrape "$lockedRef" "$subtree" "$system" "$stability";
+            )";
           else
             pkgdb scrape "$lockedRef" "$subtree" "$system" "$stability";
           fi
@@ -132,7 +134,7 @@ $ pkgdb scrape "$lockedRef" packages aarch64-linux;
 ```
 
 
-#### `pkdb get`
+#### pkdb get
 
 The `pkgdb get {db,done,flake,id,path}` subcommands expose a handful of special
 queries for package databases that may be useful for simple scripts.
