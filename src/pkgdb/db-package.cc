@@ -39,7 +39,6 @@ DbPackage::initRawPackage( PkgDbReadOnly & pkgdb )
       LEFT OUTER JOIN Descriptions
         ON ( Packages.descriptionId = Descriptions.id  )
       WHERE ( Packages.id = ? )
-      LIMIT 1
     )SQL"
   );
   qry.bind( 1, static_cast<long long>( this->pkgId ) );
