@@ -88,3 +88,134 @@ SearchParams ::= {
 
 
 Full details about the registry field may be found [here](./registry.md).
+
+
+### Example Query
+
+Below is an example query that searches four flakes for
+_any package matching the string "hello"_ with _major version 2_ , usable
+on `x86_64-linux`.
+
+```json
+{
+  "registry": {
+    "inputs": {
+      "nixpkgs": {
+        "from": {
+          "type": "github"
+        , "owner": "NixOS"
+        , "repo": "nixpkgs"
+        , "rev": "e8039594435c68eb4f780f3e9bf3972a7399c4b1"
+        }
+      , "subtrees": ["legacyPackages"]
+      }
+    , "nixpkgs-flox": {
+        "from": {
+          "type": "github"
+        , "owner": "flox"
+        , "repo": "nixpkgs-flox"
+        , "rev": "feb593b6844a96dd4e17497edaabac009be05709"
+        }
+      , "subtrees": ["catalog"]
+      , "stabilities": ["stable", "staging"]
+      }
+    , "floco": { "from": "github:aakropotkin/floco" }
+    , "floxpkgs": {
+        "from": "github:flox/floxpkgs"
+      , "subtrees": ["catalog"]
+      }
+    }
+  , "defaults": {
+      "subtrees": ["packages"]
+    , "stabilities": ["stable"]
+    }
+  , "priority": ["nixpkgs", "nixpkgs-flox"]
+  }
+, "systems": ["x86_64-linux"]
+, "query": { "match": "hello", "semver": "2" }
+}
+```
+
+In the example above we'll make a few observations to clarify how defaults are
+applied to `inputs` by showing the _explicit_ form of the same params:
+
+```json
+{
+  "registry": {
+    "inputs": {
+      "nixpkgs": {
+        "from": {
+          "type": "github"
+        , "owner": "NixOS"
+        , "repo": "nixpkgs"
+        , "rev": "e8039594435c68eb4f780f3e9bf3972a7399c4b1"
+        }
+      , "subtrees": ["legacyPackages"]
+      , "stabilities": ["stable"]
+      }
+    , "nixpkgs-flox": {
+        "from": {
+          "type": "github"
+        , "owner": "flox"
+        , "repo": "nixpkgs-flox"
+        , "rev": "feb593b6844a96dd4e17497edaabac009be05709"
+        }
+      , "subtrees": ["catalog"]
+      , "stabilities": ["stable", "staging"]
+      }
+    , "floco": {
+        "from": {
+          "type": "github"
+        , "owner": "aakropotkin"
+        , "repo": "floco"
+        , "rev": "1e84b4b16bba5746e1195fa3a4d8addaaf2d9ef4"
+        }
+        , "subtrees": ["packages"]
+        , "stabilities": ["stable"]
+      }
+    , "floxpkgs": {
+        "from": {
+          "type": "github"
+        , "owner": "flox"
+        , "repo": "floxpkgs"
+        , "rev": "bce319c5b00e7b6bbe795bdd53f050ce63e01ad2"
+        }
+      , "subtrees": ["catalog"]
+      , "stabilities": ["stable"]
+      }
+    }
+  , "defaults": {
+      "subtrees": ["packages"]
+    , "stabilities": ["stable"]
+    }
+  , "priority": ["nixpkgs", "nixpkgs-flox", "floco", "floxpkgs"]
+  }
+, "systems": ["x86_64-linux"]
+, "allow": {
+    "unfree": true
+  , "broken": false
+  , "licenses": null
+  }
+, "semver": {
+    "preferPreReleases": false
+  }
+, "query": {
+    "name": null
+  , "pname": null
+  , "version": null
+  , "semver": "2"
+  , "match": "hello"
+  }
+}
+```
+
+- `inputs.<NAME>stabilities` was applied to all inputs which didn't explicitly
+   specify them.
+- `inputs.<NAME>.subtrees` was applied to all inputs which didn't explicitly
+   specify them.
+- `inputs.<NAME>.from` _flake references_ were parsed and locked.
+- `allow` and `semver` fields were added with their default values.
+- `priority` list added _missing_ inputs in lexicographical order.
+  + in this case _lexicographical_ is _alphabetical_ because there are no
+    numbers or symbols in the names.
+- Missing `query.*` fields were filled with `null`.
