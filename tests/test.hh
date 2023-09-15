@@ -30,12 +30,6 @@ static const size_t fullPkgCount     = 64040;
 
 /* -------------------------------------------------------------------------- */
 
-static const std::string flocoPkgsRef =
-  "github:aakropotkin/flocoPackages/2afd962bbd6745d4d101c2924de34c5326042928";
-
-
-/* -------------------------------------------------------------------------- */
-
 /** Wrap a test function pretty printing its name on failure. */
 template <typename F, typename ... Args>
   static int

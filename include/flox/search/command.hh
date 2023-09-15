@@ -15,76 +15,65 @@
 #include "flox/flox-flake.hh"
 #include "flox/pkgdb/write.hh"
 #include "flox/pkgdb/command.hh"
-#include "flox/pkgdb/pkgdb-input.hh"
+#include "flox/pkgdb/input.hh"
 #include "flox/search/params.hh"
 #include "flox/registry.hh"
 
 
 /* -------------------------------------------------------------------------- */
 
-namespace flox {
-
-  /** Interfaces used to search for packages in flakes. */
-  namespace search {
+/** @brief Interfaces used to search for packages in flakes. */
+namespace flox::search {
 
 /* -------------------------------------------------------------------------- */
 
-/** Package query parser. */
-struct PkgQueryMixin : virtual public command::CommandStateMixin {
+/** @brief Package query parser. */
+struct PkgQueryMixin {
 
   pkgdb::PkgQuery query;
 
-  /** Add `query` argument to any parser to construct a @a pkgdb::PkgQuery. */
+  /**
+   * @brief Add `query` argument to any parser to construct a
+   *        @a flox::pkgdb::PkgQuery.
+   */
   argparse::Argument & addQueryArgs( argparse::ArgumentParser & parser );
 
   /**
-   * Run query on a @a pkgdb::PkgDbReadOnly database.
+   * @brief Run query on a @a pkgdb::PkgDbReadOnly database.
+   *
    * Any scraping should be performed before invoking this function.
    */
   std::vector<pkgdb::row_id> queryDb( pkgdb::PkgDbReadOnly & pdb ) const;
 
-};  /* End struct `RegistryMixin' */
+};  /* End struct `PkgQueryMixin' */
 
 
 /* -------------------------------------------------------------------------- */
 
-/**
- * @brief Search parameters _single JSON object_ parser.
- *
- * This uses the same _plumbin_ as @a InputsMixin and @a PkgQueryMixin for
- * post-processing, but does not use their actual parsers.
- */
-struct SearchParamsMixin : virtual public NixState, public PkgQueryMixin {
+/** @brief Search flakes for packages satisfying a set of filters. */
+class SearchCommand : public pkgdb::PkgDbRegistryMixin, public PkgQueryMixin {
 
-  SearchParams params;
+  private:
 
-  /** Add argument to any parser to construct a @a search::SearchParams. */
-  argparse::Argument & addSearchParamArgs( argparse::ArgumentParser & parser );
+    SearchParams params;
 
-};  /* End struct `SearchParamsMixin' */
+    /**
+     * @brief Add argument to any parser to construct
+     *        a @a flox::search::SearchParams.
+     */
+      argparse::Argument &
+    addSearchParamArgs( argparse::ArgumentParser & parser );
 
-
-/* -------------------------------------------------------------------------- */
-
-/** Search flakes for packages satisfying a set of filters. */
-struct SearchCommand : public SearchParamsMixin
-{
 
   protected:
 
-    bool force = false;  /**< Whether to force re-evaluation. */
+      [[nodiscard]]
+      virtual RegistryRaw
+    getRegistryRaw() override { return this->params.registry; }
 
-    std::shared_ptr<Registry<pkgdb::PkgDbInputFactory>> registry;
-
-    /** Initialize @a registry member from @a params.registry. */
-    void initRegistry();
-
-    /**
-     * Lazily perform scraping on input flakes.
-     * If scraping is necessary temprorary read/write handles are opened for
-     * those flakes and closed before returning from this function.
-     */
-    void scrapeIfNeeded();
+      [[nodiscard]]
+      virtual std::vector<std::string> &
+    getSystems() override { return this->params.systems; }
 
 
   public:
@@ -93,20 +82,15 @@ struct SearchCommand : public SearchParamsMixin
 
     SearchCommand();
 
-    /** Display a single row from the given @a input. */
-    void showRow( std::string_view    inputName
-                , pkgdb::PkgDbInput & input
-                , pkgdb::row_id       row
-                );
+    /** @brief Display a single row from the given @a input. */
+      void
+    showRow( pkgdb::PkgDbInput & input, pkgdb::row_id row )
+    {
+      std::cout << input.getRowJSON( row ).dump() << std::endl;
+    }
 
     /**
-     * Invoke "child" `preProcessArgs`, and trigger scraping if necessary.
-     * This may trigger scraping.
-     */
-    void postProcessArgs() override;
-
-    /**
-     * Execute the `search` routine.
+     * @brief Execute the `search` routine.
      * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
      */
     int run();
@@ -116,8 +100,7 @@ struct SearchCommand : public SearchParamsMixin
 
 /* -------------------------------------------------------------------------- */
 
-  }  /* End namespaces `flox::search' */
-}  /* End namespaces `flox' */
+}  /* End namespaces `flox::search' */
 
 
 /* -------------------------------------------------------------------------- *

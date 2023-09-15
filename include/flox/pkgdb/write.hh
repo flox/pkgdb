@@ -20,8 +20,11 @@ namespace flox::pkgdb {
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief A set of arguments used by @a flox::pkgdb::PkgDb::scrape. */
 using Target = std::tuple<flox::AttrPath, flox::Cursor, row_id>;
-using Todos  = std::queue<Target, std::list<Target>>;
+
+/** @brief A queue of @a flox::pkgdb::Target to be completed. */
+using Todos = std::queue<Target, std::list<Target>>;
 
 
 /* -------------------------------------------------------------------------- */
@@ -38,8 +41,34 @@ class PkgDb : public PkgDbReadOnly {
 
   protected:
 
-    /** Create tables in database if they do not exist. */
+    /** @brief Create tables in database if they do not exist. */
     void initTables();
+
+
+    /** @brief Create views in database if they do not exist. */
+    void initViews();
+
+    /**
+     * @brief Update the database's `VIEW`s schemas.
+     *
+     * This deletes any existing `VIEW`s and recreates them, and updates the
+     * `DbVersions` row for `pkgdb_views_schema`.
+     */
+    void updateViews();
+
+
+    /** @brief Create `DbVersions` rows if they do not exist. */
+    void initVersions();
+
+
+    /**
+     * @brief Create/update tables/views schema in database.
+     * Create tables if they do not exist.
+     * Create views in database if they do not exist or update them.
+     * Create `DbVersions` rows if they do not exist.
+     */
+    void init();
+
 
     /**
      * @brief Write @a this `PkgDb` `lockedRef` and `fingerprint` fields to
@@ -71,7 +100,7 @@ class PkgDb : public PkgDbReadOnly {
       this->db.connect( this->dbPath.c_str()
                       , SQLITE_OPEN_READWRITE|SQLITE_OPEN_CREATE
                       );
-      this->initTables();
+      this->init();
       this->loadLockedFlake();
     }
 
@@ -97,7 +126,7 @@ class PkgDb : public PkgDbReadOnly {
       this->db.connect( this->dbPath.c_str()
                       , SQLITE_OPEN_READWRITE|SQLITE_OPEN_CREATE
                       );
-      this->initTables();
+      this->init();
       this->loadLockedFlake();
     }
 
@@ -127,7 +156,7 @@ class PkgDb : public PkgDbReadOnly {
       this->db.connect( this->dbPath.c_str()
                       , SQLITE_OPEN_READWRITE|SQLITE_OPEN_CREATE
                       );
-      initTables();
+      init();
       this->lockedRef = {
         flake.flake.lockedRef.to_string()
       , nix::fetchers::attrsToJSON( flake.flake.lockedRef.toAttrs() )
@@ -281,7 +310,6 @@ class PkgDb : public PkgDbReadOnly {
 
 
 /* -------------------------------------------------------------------------- */
-
 
 }  /* End Namespace `flox::pkgdb' */
 

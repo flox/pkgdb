@@ -21,6 +21,7 @@
 #include <nix/eval-cache.hh>
 #include <nix/names.hh>
 
+#include "flox/core/types.hh"
 #include "flox/package.hh"
 
 
@@ -35,9 +36,9 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
-/** /
- * A @a flox::Package implementation which are pulled from evaluation of a
- * `nix` flake.
+/**
+ * @brief A @a flox::Package implementation which are pulled from evaluation of
+ *        a `nix` flake.
  */
 class FlakePackage : public Package {
 
@@ -45,8 +46,8 @@ class FlakePackage : public Package {
     friend class pkgdb::PkgDb;
 
   private:
-    Cursor                   _cursor;
-    std::vector<std::string> _pathS;
+    Cursor   _cursor;
+    AttrPath _pathS;
 
     bool _hasMetaAttr    = false;
     bool _hasPnameAttr   = false;
@@ -57,8 +58,9 @@ class FlakePackage : public Package {
     std::string                _version;
     std::optional<std::string> _semver;
     std::string                _system;
-    subtree_type               _subtree;
+    Subtree                    _subtree;
     std::optional<std::string> _license;
+
 
     void init( bool checkDrv = true );
 
@@ -67,9 +69,9 @@ class FlakePackage : public Package {
 
   public:
 
-    FlakePackage(       Cursor                     cursor
-                , const std::vector<std::string> & path
-                ,       bool                       checkDrv = true
+    FlakePackage(       Cursor     cursor
+                , const AttrPath & path
+                ,       bool       checkDrv = true
                 )
       : _cursor( cursor )
       , _pathS( path )
@@ -110,17 +112,11 @@ class FlakePackage : public Package {
     std::optional<bool>      isBroken()            const override;
     std::optional<bool>      isUnfree()            const override;
 
-      std::vector<std::string>
-    getPathStrs() const override
-    {
-      return this->_pathS;
-    }
-
-    std::string getFullName() const override { return this->_fullName; }
-    std::string getPname()    const override { return this->_pname;    }
-
-    Cursor       getCursor()      const          { return this->_cursor;  }
-    subtree_type getSubtreeType() const override { return this->_subtree; }
+    AttrPath    getPathStrs()    const override { return this->_pathS;    }
+    std::string getFullName()    const override { return this->_fullName; }
+    std::string getPname()       const override { return this->_pname;    }
+    Cursor      getCursor()      const          { return this->_cursor;   }
+    Subtree     getSubtreeType() const override { return this->_subtree;  }
 
       nix::DrvName
     getParsedDrvName() const override

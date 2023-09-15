@@ -11,12 +11,43 @@
 
 #include "flox/core/util.hh"
 #include "flox/registry.hh"
-#include "flox/pkgdb/pkgdb-input.hh"
+#include "flox/pkgdb/input.hh"
 
 
 /* -------------------------------------------------------------------------- */
 
 namespace flox {
+
+/* -------------------------------------------------------------------------- */
+
+  void
+InputPreferences::clear()
+{
+  this->subtrees    = std::nullopt;
+  this->stabilities = std::nullopt;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  pkgdb::PkgQueryArgs &
+InputPreferences::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
+{
+  pqa.subtrees    = this->subtrees;
+  pqa.stabilities = this->stabilities;
+  return pqa;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
+RegistryRaw::clear()
+{
+  this->inputs.clear();
+  this->priority.clear();
+  this->defaults.clear();
+}
 
 /* -------------------------------------------------------------------------- */
 
@@ -43,43 +74,9 @@ RegistryRaw::getOrder() const
 /* -------------------------------------------------------------------------- */
 
   void
-from_json( const nlohmann::json & jfrom, InputPreferences & prefs )
-{
-  for ( const auto & [key, value] : jfrom.items() )
-    {
-      if ( ( key == "subtrees" ) && ( ! value.is_null() ) )
-        {
-          value.get_to( prefs.subtrees );
-        }
-      else if ( key == "stabilities" )
-        {
-          value.get_to( prefs.stabilities );
-        }
-    }
-}
-
-
-  void
-to_json( nlohmann::json & jto, const InputPreferences & prefs )
-{
-  if ( prefs.subtrees.has_value() )
-    {
-      jto.emplace( "subtrees", * prefs.subtrees );
-    }
-  else
-    {
-      jto.emplace( "subtrees", nullptr );
-    }
-  jto.emplace( "stabilities", prefs.stabilities );
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  void
 from_json( const nlohmann::json & jfrom, RegistryInput & rip )
 {
-  from_json( jfrom, (InputPreferences &) rip );
+  from_json( jfrom, dynamic_cast<InputPreferences &>( rip ) );
   rip.from = std::make_shared<nix::FlakeRef>(
     jfrom.at( "from" ).get<nix::FlakeRef>()
   );
@@ -89,7 +86,7 @@ from_json( const nlohmann::json & jfrom, RegistryInput & rip )
   void
 to_json( nlohmann::json & jto, const RegistryInput & rip )
 {
-  to_json( jto, (InputPreferences &) rip );
+  to_json( jto, dynamic_cast<const InputPreferences &>( rip ) );
   if ( rip.from == nullptr )
     {
       jto.emplace( "from", nullptr );
@@ -105,24 +102,96 @@ to_json( nlohmann::json & jto, const RegistryInput & rip )
 
 /* -------------------------------------------------------------------------- */
 
-  void
-from_json( const nlohmann::json & jfrom, RegistryRaw & reg )
+  pkgdb::PkgQueryArgs &
+RegistryRaw::fillPkgQueryArgs( const std::string         & input
+                             ,       pkgdb::PkgQueryArgs & pqa
+                             ) const
 {
-  for ( const auto & [key, value] : jfrom.items() )
+  /* Look for the named input and our fallbacks/default in the inputs list.
+   * then fill input specific settings. */
+  try
     {
-      if ( key == "inputs" )        { value.get_to( reg.inputs );   }
-      else if ( key == "defaults" ) { value.get_to( reg.defaults ); }
-      else if ( key == "priority" ) { value.get_to( reg.priority ); }
+      const RegistryInput & minput = this->inputs.at( input );
+      pqa.subtrees = minput.subtrees.has_value()
+                     ? minput.subtrees
+                     : this->defaults.subtrees;
+      pqa.stabilities = minput.stabilities.has_value()
+                        ? minput.stabilities
+                        : this->defaults.stabilities;
+    }
+  catch ( ... )
+    {
+      pqa.subtrees    = this->defaults.subtrees;
+      pqa.stabilities = this->defaults.stabilities;
+    }
+  return pqa;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  template <registry_input_factory FactoryType>
+Registry<FactoryType>::Registry( RegistryRaw registry, FactoryType & factory )
+  : registryRaw( std::move( registry ) )
+{
+  for ( const std::reference_wrapper<const std::string> & _name :
+          this->registryRaw.getOrder()
+      )
+    {
+      const auto & pair = std::find_if(
+        this->registryRaw.inputs.begin()
+      , this->registryRaw.inputs.end()
+      , [&]( const auto & pair ) { return pair.first == _name.get(); }
+      );
+
+      /* Fill default/fallback values if none are defined. */
+      RegistryInput input = pair->second;
+      if ( ! input.subtrees.has_value() )
+        {
+          input.subtrees = this->registryRaw.defaults.subtrees;
+        }
+      if ( ! input.stabilities.has_value() )
+        {
+          input.stabilities = this->registryRaw.defaults.stabilities;
+        }
+
+      /* Construct the input */
+      this->inputs.emplace_back(
+        std::make_pair( pair->first, factory.mkInput( pair->first, input ) )
+      );
     }
 }
 
 
-  void
-to_json( nlohmann::json & jto, const RegistryRaw & reg )
+/* -------------------------------------------------------------------------- */
+
+  template<registry_input_factory FactoryType>
+  std::shared_ptr<typename FactoryType::input_type>
+Registry<FactoryType>::get( const std::string & name ) const noexcept
 {
-  jto.emplace( "inputs",   reg.inputs   );
-  jto.emplace( "defaults", reg.defaults );
-  jto.emplace( "priority", reg.priority );
+  const auto maybeInput = std::find_if(
+    this->inputs.begin()
+  , this->inputs.end()
+  , [&]( const auto & pair ) { return pair.first == name; }
+  );
+  if ( maybeInput == this->inputs.end() ) { return nullptr; }
+  return maybeInput->second;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  template<registry_input_factory FactoryType>
+  std::shared_ptr<typename FactoryType::input_type>
+Registry<FactoryType>::at( const std::string & name ) const
+{
+  const std::shared_ptr<typename FactoryType::input_type> maybeInput =
+    this->get( name );
+  if ( maybeInput == nullptr )
+    {
+      throw std::out_of_range( "No such input '" + name + "'" );
+    }
+  return maybeInput;
 }
 
 

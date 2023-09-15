@@ -4,6 +4,13 @@ CRUD operations on `nix` package metadata.
 
 [Documentation](https://flox.github.io/pkgdb/index.html)
 
+Additional documentation may be found in the `<pkgdb>/docs` directory.
+This includes JSON input/output schemas used by commands such as `pkgdb search`
+and `pkgdb resolve`.
+
+Links to additional documentation may be found at the bottom of this file.
+
+
 ### Purpose
 
 Evaluating nix expressions for an entire flake is expensive but necessary for 
@@ -30,7 +37,7 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for more information.
 
 ### Usage
 
-#### `pkgdb scrape`
+#### pkgdb scrape
 
 Build the database with the `scrape` subcommand:
 
@@ -74,7 +81,7 @@ $ sqlite3 flakedb.sqlite '.mode json' 'SELECT name, version FROM Packages LIMIT 
 This utility is expected to be run multiple times if a client wishes to
 "fully scrape all the things" in a flake.
 This utility is a plumbing command used by a client application, we aren't
-particuarly concerned with the repetitive strain injury a user would suffer if
+particularly concerned with the repetitive strain injury a user would suffer if
 they tried to scrape everything in a flake interactively; rather we aim to do
 less in a single run and avoid scraping info the caller might not need for their
 use case.
@@ -90,7 +97,9 @@ $ for subtree in packages legacyPackages catalog; do
       if [[ "$subtree" = 'catalog' ]]; then
         for stability in unstable staging stable; do
           if [[ -z "$dbPath" ]]; then  # get the DB name
-            dbPath="$( pkgdb scrape "$lockedRef" "$subtree" "$system" "$stability"; )";
+            dbPath="$(
+              pkgdb scrape "$lockedRef" "$subtree" "$system" "$stability";
+            )";
           else
             pkgdb scrape "$lockedRef" "$subtree" "$system" "$stability";
           fi
@@ -125,7 +134,7 @@ $ pkgdb scrape "$lockedRef" packages aarch64-linux;
 ```
 
 
-#### `pkdb get`
+#### pkdb get
 
 The `pkgdb get {db,done,flake,id,path}` subcommands expose a handful of special
 queries for package databases that may be useful for simple scripts.
@@ -226,12 +235,18 @@ _eval caches_.
 Some commands allow database paths to be explicitly set with `--database`,
 while those which act on multiple databases will place databases under
 the environment variable `PKGDB_CACHEDIR` if it is set, otherwise the directory
- `${XDG_CACHE_HOME:-$HOME/.cache}/flox/pkgdb-v<SCHEMA-MAJOR>` is used.
+`${XDG_CACHE_HOME:-$HOME/.cache}/flox/pkgdb-v<SCHEMA-MAJOR>` is used.
 
 
 #### Garbage Collection
 
 Because each unique locked flake has its own database, over time these databases
 will accumulate and require garbage collection.
+
 At this time there is no automated garbage collection mechanism, but simply
 deleting you cache directory will suffice.
+
+
+## More Documentation
+- [Registry Schema](./docs/registry.md)
+- [Search Parameters](./docs/search.md)

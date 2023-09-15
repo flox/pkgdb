@@ -37,6 +37,7 @@
 #include "flox/core/types.hh"
 #include "flox/pkgdb/write.hh"
 #include "flox/pkgdb/pkg-query.hh"
+#include "flox/pkgdb/db-package.hh"
 #include "test.hh"
 
 
@@ -126,7 +127,7 @@ test_addOrGetAttrSetId1( flox::pkgdb::PkgDb & db )
   bool
 test_getDbVersion0( flox::pkgdb::PkgDb & db )
 {
-  EXPECT_EQ( db.getDbVersion(), FLOX_PKGDB_SCHEMA_VERSION );
+  EXPECT_EQ( db.getDbVersion(), flox::pkgdb::sqlVersions );
   return true;
 }
 
@@ -357,7 +358,7 @@ test_PkgQuery0( flox::pkgdb::PkgDb & db )
 
   /* Run `subtrees' query */
   {
-    qargs.subtrees = std::vector<flox::subtree_type> { flox::ST_LEGACY };
+    qargs.subtrees = std::vector<flox::Subtree> { flox::ST_LEGACY };
     flox::pkgdb::PkgQuery query( qargs );
     qargs.subtrees = std::nullopt;
     std::vector<flox::pkgdb::row_id> rsl = query.execute( db.db );
@@ -727,11 +728,11 @@ test_getPackages1( flox::pkgdb::PkgDb & db )
   /* Test `subtrees` ordering */
   {
     qargs.systems  = std::vector<std::string> { "x86_64-darwin" };
-    qargs.subtrees = std::vector<flox::subtree_type> {
+    qargs.subtrees = std::vector<flox::Subtree> {
       flox::ST_PACKAGES, flox::ST_LEGACY
     };
     EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 5, 4 } ) );
-    qargs.subtrees = std::vector<flox::subtree_type> {
+    qargs.subtrees = std::vector<flox::Subtree> {
       flox::ST_LEGACY, flox::ST_PACKAGES
     };
     EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 4, 5 } ) );
@@ -741,7 +742,7 @@ test_getPackages1( flox::pkgdb::PkgDb & db )
 
   /* Test `systems` ordering */
   {
-    qargs.subtrees = std::vector<flox::subtree_type> { flox::ST_PACKAGES };
+    qargs.subtrees = std::vector<flox::Subtree> { flox::ST_PACKAGES };
     qargs.systems  = std::vector<std::string> {
       "x86_64-linux", "x86_64-darwin"
     };
@@ -756,7 +757,7 @@ test_getPackages1( flox::pkgdb::PkgDb & db )
 
   /* Test `stabilities` ordering */
   {
-    qargs.subtrees    = std::vector<flox::subtree_type> { flox::ST_CATALOG };
+    qargs.subtrees    = std::vector<flox::Subtree> { flox::ST_CATALOG };
     qargs.systems     = std::vector<std::string> { "x86_64-linux" };
     qargs.stabilities = std::vector<std::string> { "stable", "unstable" };
     EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 1, 2 } ) );
@@ -816,7 +817,7 @@ test_getPackages2( flox::pkgdb::PkgDb & db )
     }
 
   flox::pkgdb::PkgQueryArgs qargs;
-  qargs.subtrees = std::vector<flox::subtree_type> { flox::ST_PACKAGES };
+  qargs.subtrees = std::vector<flox::Subtree> { flox::ST_PACKAGES };
   qargs.systems  = std::vector<std::string> { "x86_64-linux" };
 
   /* Test `preferPreReleases = false' ordering */
@@ -835,7 +836,69 @@ test_getPackages2( flox::pkgdb::PkgDb & db )
 }
 
 
-/* ========================================================================== */
+/* -------------------------------------------------------------------------- */
+
+  bool
+test_DbPackage0( flox::pkgdb::PkgDb & db )
+{
+  clearTables( db );
+
+  /* Make a package */
+  row_id linux =
+    db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-linux" } );
+  row_id desc =
+    db.addOrGetDescriptionId( "A program with a friendly greeting/farewell" );
+  sqlite3pp::command cmd( db.db, R"SQL(
+    INSERT INTO Packages (
+      parentId, attrName, name, pname, version, semver, license, outputs
+    , outputsToInstall, broken, unfree, descriptionId
+    ) VALUES
+      ( :parentId, 'hello', 'hello-2.12', 'hello', '2.12', '2.12.0'
+      , 'GPL-3.0-or-later', '["out"]', '["out"]', false, false, :descriptionId
+      )
+  )SQL" );
+  cmd.bind( ":parentId",      static_cast<long long>( linux ) );
+  cmd.bind( ":descriptionId", static_cast<long long>( desc )  );
+  if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
+    {
+      throw flox::pkgdb::PkgDbException(
+        db.dbPath
+      , nix::fmt( "Failed to write Packages:(%d) %s"
+                , rc
+                , db.db.error_msg()
+                )
+      );
+    }
+  row_id pkgId = db.db.last_insert_rowid();
+  auto   pkg   = flox::pkgdb::DbPackage(
+                   static_cast<flox::pkgdb::PkgDbReadOnly &>( db )
+                 , pkgId
+                 );
+  EXPECT( pkg.getPathStrs() ==
+          ( flox::AttrPath { "legacyPackages", "x86_64-linux", "hello" } )
+        );
+  EXPECT_EQ( pkg.getFullName(), "hello-2.12" );
+  EXPECT_EQ( pkg.getPname(), "hello" );
+  EXPECT_EQ( * pkg.getVersion(), "2.12" );
+  EXPECT_EQ( * pkg.getSemver(), "2.12.0" );
+  EXPECT_EQ( * pkg.getLicense(), "GPL-3.0-or-later" );
+  EXPECT( pkg.getOutputs() == ( std::vector<std::string> { "out" } ) );
+  EXPECT( pkg.getOutputsToInstall() == ( std::vector<std::string> { "out" } ) );
+  EXPECT_EQ( * pkg.isBroken(), false );
+  EXPECT_EQ( * pkg.isUnfree(), false );
+  EXPECT_EQ( * pkg.getDescription()
+           , "A program with a friendly greeting/farewell"
+           );
+  EXPECT_EQ( pkgId, pkg.getPackageId() );
+  EXPECT_EQ( pkg.getDbPath(), db.dbPath );
+  EXPECT_EQ( nix::parseFlakeRef( nixpkgsRef ).to_string()
+           , pkg.getLockedFlakeRef().to_string()
+           );
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
 
   int
 main( int argc, char * argv[] )
@@ -845,18 +908,14 @@ main( int argc, char * argv[] )
 
 /* -------------------------------------------------------------------------- */
 
-  nix::Verbosity verbosity;
+    nix::verbosity = nix::lvlWarn;
   if ( ( 1 < argc ) && ( std::string_view( argv[1] ) == "-v" ) )
     {
-      verbosity = nix::lvlDebug;
-    }
-  else
-    {
-      verbosity = nix::lvlWarn;
+      nix::verbosity = nix::lvlDebug;
     }
 
   /* Initialize `nix' */
-  flox::NixState nstate( verbosity );
+  flox::NixState nstate;
 
 
 /* -------------------------------------------------------------------------- */
@@ -866,14 +925,7 @@ main( int argc, char * argv[] )
 
   nix::FlakeRef ref = nix::parseFlakeRef( nixpkgsRef );
 
-  nix::Activity act(
-    * nix::logger
-  , nix::lvlInfo
-  , nix::actUnknown
-  , nix::fmt( "fetching flake '%s'", ref.to_string() )
-  );
   flox::FloxFlake flake( nstate.getState(), ref );
-  nix::logger->stopActivity( act.id );
 
 
 /* -------------------------------------------------------------------------- */
@@ -905,6 +957,8 @@ main( int argc, char * argv[] )
     RUN_TEST( getPackages0, db );
     RUN_TEST( getPackages1, db );
     RUN_TEST( getPackages2, db );
+
+    RUN_TEST( DbPackage0, db );
 
   }
 

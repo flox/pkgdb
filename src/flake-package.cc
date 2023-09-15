@@ -37,19 +37,11 @@ FlakePackage::init( bool checkDrv )
     }
 
   /* Subtree type */
-  if ( this->_pathS[0] == "packages" )
+  try
     {
-      this->_subtree = ST_PACKAGES;
+      this->_subtree = Subtree::parseSubtree( this->_pathS[0] );
     }
-  else if ( this->_pathS[0] == "catalog" )
-    {
-      this->_subtree = ST_CATALOG;
-    }
-  else if ( this->_pathS[0] == "legacyPackages" )
-    {
-      this->_subtree = ST_LEGACY;
-    }
-  else
+  catch( const std::invalid_argument & /* unused */ )
     {
       throw FloxException(
         "FlakePackage::init(): Invalid subtree name '" + this->_pathS[0] +

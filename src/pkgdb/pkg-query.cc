@@ -21,6 +21,18 @@ namespace flox::pkgdb {
 
 /* -------------------------------------------------------------------------- */
 
+  void
+PkgDescriptorBase::clear()
+{
+  this->name    = std::nullopt;
+  this->pname   = std::nullopt;
+  this->version = std::nullopt;
+  this->semver  = std::nullopt;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
   std::string
 PkgQueryArgs::PkgQueryInvalidArgException::errorMessage(
   const PkgQueryArgs::PkgQueryInvalidArgException::error_code & ecode
@@ -136,11 +148,8 @@ PkgQueryArgs::validate() const
   void
 PkgQueryArgs::clear()
 {
+  this->PkgDescriptorBase::clear();
   this->match             = std::nullopt;
-  this->name              = std::nullopt;
-  this->pname             = std::nullopt;
-  this->version           = std::nullopt;
-  this->semver            = std::nullopt;
   this->licenses          = std::nullopt;
   this->allowBroken       = false;
   this->allowUnfree       = true;
@@ -148,51 +157,7 @@ PkgQueryArgs::clear()
   this->subtrees          = std::nullopt;
   this->systems           = { nix::settings.thisSystem.get() };
   this->stabilities       = std::nullopt;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  void
-from_json( const nlohmann::json & jqa, PkgQueryArgs & pqa )
-{
-  pqa.clear();
-  for ( const auto & [key, value] : jqa.items() )
-    {
-      if ( key == "match" )                  { pqa.match             = value; }
-      else if ( key == "name" )              { pqa.name              = value; }
-      else if ( key == "version" )           { pqa.version           = value; }
-      else if ( key == "semver" )            { pqa.semver            = value; }
-      else if ( key == "licenses" )          { pqa.licenses          = value; }
-      else if ( key == "allowBroken" )       { pqa.allowBroken       = value; }
-      else if ( key == "allowUnfree" )       { pqa.allowUnfree       = value; }
-      else if ( key == "preferPreReleases" ) { pqa.preferPreReleases = value; }
-      else if ( key == "systems" )           { pqa.systems           = value; }
-      else if ( key == "stabilities" )       { pqa.stabilities       = value; }
-      else if ( key == "subtrees" )
-        {
-          pqa.subtrees = std::vector<flox::subtree_type> {};
-          for ( const auto & subtree : value )
-            {
-              if ( subtree == "packages" )
-                {
-                  pqa.subtrees->emplace_back( flox::ST_PACKAGES );
-                }
-              else if ( subtree == "legacyPackages" )
-                {
-                  pqa.subtrees->emplace_back( flox::ST_LEGACY );
-                }
-              else if ( subtree == "catalog" )
-                {
-                  pqa.subtrees->emplace_back( flox::ST_CATALOG );
-                }
-              else /* Error is caught by `validate' later. */
-                {
-                  pqa.subtrees->emplace_back( flox::ST_NONE );
-                }
-            }
-        }
-    }
+  this->relPath           = std::nullopt;
 }
 
 
@@ -313,15 +278,7 @@ PkgQuery::initSubtrees()
       std::stringstream        rank;
       for ( const auto subtree : * this->subtrees )
         {
-          switch ( subtree )
-            {
-              case ST_LEGACY:   lst.emplace_back( "legacyPackages" ); break;
-              case ST_PACKAGES: lst.emplace_back( "packages" );       break;
-              case ST_CATALOG:  lst.emplace_back( "catalog" );        break;
-              default:
-                throw PkgQueryArgs::PkgQueryInvalidArgException();
-                break;
-            }
+          lst.emplace_back( to_string( subtree ) );
           rank << "iif( ( subtree = '" << lst.back() << "' ), " << idx << ", ";
           ++idx;
         }
@@ -542,6 +499,14 @@ PkgQuery::init()
       this->addWhere( "( unfree IS NULL ) OR ( unfree = FALSE )" );
     }
 
+  /* Handle `relPath' filtering */
+  if ( this->relPath.has_value() )
+    {
+      this->addWhere( "relPath = :relPath" );
+      nlohmann::json relPath = * this->relPath;
+      this->binds.emplace( ":relPath", relPath.dump() );
+    }
+
   this->initSubtrees();
   this->initSystems();
   this->initStabilities();
@@ -659,34 +624,6 @@ PkgQuery::execute( sqlite3pp::database & pdb ) const
         }
     }
   return rsl;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  void
-from_json( const nlohmann::json & jfrom, PkgDescriptorBase & desc )
-{
-  desc.clear();
-  for ( const auto & [key, value] : jfrom.items() )
-    {
-      if ( key == "name" )         { value.get_to( desc.name );    }
-      else if ( key == "pname" )   { value.get_to( desc.pname );   }
-      else if ( key == "version" ) { value.get_to( desc.version ); }
-      else if ( key == "semver" )  { value.get_to( desc.semver );  }
-    }
-}
-
-
-  void
-to_json( nlohmann::json & jto, const PkgDescriptorBase & desc )
-{
-  jto = {
-    { "name",    desc.name    }
-  , { "pname",   desc.pname   }
-  , { "version", desc.version }
-  , { "semver",  desc.semver  }
-  };
 }
 
 

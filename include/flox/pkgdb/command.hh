@@ -10,7 +10,7 @@
 #pragma once
 
 #include "flox/pkgdb/write.hh"
-#include "flox/pkgdb/pkgdb-input.hh"
+#include "flox/pkgdb/input.hh"
 #include "flox/core/command.hh"
 
 
@@ -20,10 +20,8 @@ namespace flox::pkgdb {
 
 /* -------------------------------------------------------------------------- */
 
-/** Adds a single package database path to a state blob. */
-struct DbPathMixin
-  :         public command::CommandStateMixin
-  , virtual public flox::NixState
+/** @brief Adds a single package database path to a state blob. */
+struct DbPathMixin : virtual public flox::NixState
 {
 
   std::optional<std::filesystem::path> dbPath;
@@ -56,8 +54,6 @@ struct PkgDbMixin
    */
   void openPkgDb();
 
-  inline void postProcessArgs() override { this->openPkgDb(); }
-
   /**
    * @brief Add `target` argument to any parser to read either a `flake-ref` or
    *        path to an existing database.
@@ -69,7 +65,10 @@ struct PkgDbMixin
 
 /* -------------------------------------------------------------------------- */
 
-/** Scrape a flake prefix producing a SQLite3 database with package metadata. */
+/**
+ * @brief Scrape a flake prefix producing a SQLite3 database with
+ *        package metadata.
+ */
 struct ScrapeCommand
   : public DbPathMixin
   , public command::AttrPathMixin
@@ -91,12 +90,6 @@ struct ScrapeCommand
 
     /** @brief Initialize @a input from @a registryInput. */
     void initInput();
-
-    /**
-     * @brief Invoke "child" `preProcessArgs` for `AttrPathMixin`, and
-     *        @a initInput.
-     */
-    void postProcessArgs() override;
 
     /**
      * @brief Execute the `scrape` routine.
@@ -141,9 +134,6 @@ struct GetCommand
   row_id                 id     = 0;
 
   GetCommand();
-
-  /** Prevent "child" `postProcessArgs` routines from running */
-  void postProcessArgs() override {}
 
   /**
    * @brief Execute the `get id` routine.

@@ -10,12 +10,13 @@
 
 #pragma once
 
-#if defined( __clang__ ) && ( __clang_major__ < 15 )
+#include <concepts>
+
 
 /* -------------------------------------------------------------------------- */
 
-#include <concepts>
-
+/* Only provide these definitions for older versions of Clang. */
+#if defined( __clang__ ) && ( __clang_major__ < 15 )
 
 /* -------------------------------------------------------------------------- */
 
@@ -57,6 +58,21 @@ concept constructible_from =
 concept convertible_to =
   std::is_convertible_v<From, To> &&
   requires { static_cast<To>( std::declval<From>() ); };
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The concept `derived_from<Derived, Base>` is satisfied if and only if
+ * @a Base is a class type that is either @a Derived or a public and unambiguous
+ * base of @a Derived, ignoring cv-qualifiers.
+ * Note that this behavior is different to `std::is_base_of` when @a Base is a
+ * private or protected base of @a Derived.
+ */
+  template<class Derived, class Base>
+concept derived_from =
+  std::is_base_of_v<Base, Derived> &&
+  std::is_convertible_v<const volatile Derived *, const volatile Base *>;
 
 
 /* -------------------------------------------------------------------------- */

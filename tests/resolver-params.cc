@@ -1,8 +1,9 @@
 /* ========================================================================== *
  *
- * @file tests/parse-preferences.cc
+ * @file tests/resolver-params.cc
  *
- * @brief Minimal executable that parses a `flox::search::Preferences` struct.
+ * @brief Minimal executable that parses a
+ *        @a flox::resolver::ResolveOneParams struct.
  *
  *
  * -------------------------------------------------------------------------- */
@@ -13,7 +14,8 @@
 
 #include <nlohmann/json.hpp>
 
-#include "flox/search/params.hh"
+#include "test.hh"
+#include "flox/resolver/resolve.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -42,7 +44,7 @@ printInput( const auto & pair )
   int
 main( int argc, char * argv[] )
 {
-  flox::search::SearchParams params;
+  flox::resolver::ResolveOneParams params;
 
   if ( argc < 2 )
     {
@@ -54,6 +56,7 @@ main( int argc, char * argv[] )
                 "type": "github"
               , "owner": "NixOS"
               , "repo": "nixpkgs"
+              , "rev":  "e8039594435c68eb4f780f3e9bf3972a7399c4b1"
               }
             , "subtrees": ["legacyPackages"]
             }
@@ -65,26 +68,23 @@ main( int argc, char * argv[] )
               }
             , "subtrees": ["packages"]
             }
-          , "floxpkgs": {
+          , "nixpkgs-flox": {
               "from": {
                 "type": "github"
               , "owner": "flox"
-              , "repo": "floxpkgs"
+              , "repo": "nixpkgs-flox"
               }
             , "subtrees": ["catalog"]
-            , "stabilities": ["stable"]
+            , "stabilities": ["stable", "staging", "unstable"]
             }
           }
-        , "defaults": {
-            "subtrees": null
-          , "stabilities": ["stable"]
-          }
-        , "priority": ["nixpkgs", "floco", "floxpkgs"]
+        , "priority": ["nixpkgs", "floco", "nixpkgs-flox"]
         }
       , "systems": ["x86_64-linux"]
-      , "allow":   { "unfree": true, "broken": false, "licenses": ["MIT"] }
-      , "semver":  { "preferPreReleases": false }
-      , "query":   { "match": "hello" }
+      , "query":   {
+          "pname": "hello"
+        , "semver": ">=2"
+        }
       } )" ).get_to( params );
     }
   else
@@ -92,8 +92,50 @@ main( int argc, char * argv[] )
       nlohmann::json::parse( argv[1] ).get_to( params );
     }
 
-  std::cout << nlohmann::json( params ).dump() << std::endl;
+  auto state = flox::resolver::ResolverState(
+                 params.registry
+               , dynamic_cast<const flox::pkgdb::QueryPreferences &>( params )
+               );
 
+  auto descriptor = params.query;
+
+  for ( const auto & resolved :
+          flox::resolver::resolve_v0( state, descriptor )
+      )
+    {
+      std::cout << nlohmann::json( resolved ).dump() << std::endl;
+    }
+
+
+  std::cout << std::endl;
+
+  auto resolved = flox::resolver::Resolved {
+    .input = {
+      .name = "nixpkgs"
+    , .locked = nlohmann::json {
+        { "type",  "github" }
+      , { "owner", "NixOS" }
+      , { "repo",  "nixpkgs" }
+      , { "rev",   "e8039594435c68eb4f780f3e9bf3972a7399c4b1" }
+      }
+    }
+  , .path = flox::AttrPath { "legacyPackages", "x86_64-linux", "hello" }
+  , .info = nlohmann::json::object()
+  };
+
+  auto resolvedJSON = nlohmann::json( resolved );
+  std::cout << resolvedJSON.dump() << std::endl;
+
+  resolvedJSON.emplace( "phony", 1 );
+  std::cout << resolvedJSON.dump() << std::endl;
+
+  /* Adding junk fields does NOT throw an error, but they are stripped. */
+  auto resolved2 = resolvedJSON.get<flox::resolver::Resolved>();
+  std::cout << nlohmann::json( resolved2 ).dump() << std::endl;
+
+  /* Assignment completely resets the object, stripping extra fields. */
+  resolvedJSON = resolved2;
+  std::cout << resolvedJSON.dump() << std::endl;
 
   return EXIT_SUCCESS;
 }

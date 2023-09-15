@@ -24,27 +24,49 @@ namespace flox::pkgdb {
 /* -------------------------------------------------------------------------- */
 
   void
-PkgDb::writeInput()
+PkgDb::initViews()
 {
-  sqlite3pp::command cmd(
-    this->db
-  , "INSERT OR IGNORE INTO LockedFlake ( fingerprint, string, attrs ) VALUES"
-    "  ( :fingerprint, :string, :attrs )"
-  );
-  std::string fpStr = fingerprint.to_string( nix::Base16, false );
-  cmd.bind( ":fingerprint", fpStr, sqlite3pp::copy );
-  cmd.bind( ":string", this->lockedRef.string, sqlite3pp::nocopy );
-  cmd.bind( ":attrs",  this->lockedRef.attrs.dump(), sqlite3pp::copy );
-  if ( sql_rc rcode = cmd.execute(); isSQLError( rcode ) )
+  if ( sql_rc rcode = this->execute_all( sql_views ); isSQLError( rcode ) )
     {
       throw PkgDbException(
         this->dbPath
-      , nix::fmt( "Failed to write LockedFlaked info:(%d) %s"
+      , nix::fmt( "Failed to initialize views:(%d) %s"
                 , rcode
                 , this->db.error_msg()
                 )
       );
     }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
+PkgDb::updateViews()
+{
+  /* XXX: Keep in sync with `<pkgdb>/src/pkgdb/schemas.hh' */
+  sqlite3pp::command updateViews(
+    this->db
+  , "DROP VIEW IF EXISTS v_AttrPaths;"
+    "DROP VIEW IF EXISTS v_Semvers;"
+    "DROP VIEW IF EXISTS v_PackagesSearch;"
+    "UPDATE DbVersions SET version = ? WHERE name = 'pkgdb_views_schema'"
+  );
+  updateViews.bind( 1, static_cast<int>( sqlVersions.views ) );
+
+  if ( sql_rc rcode = updateViews.execute_all(); isSQLError( rcode ) )
+    {
+      throw PkgDbException(
+        this->dbPath
+      , nix::fmt( "Failed to update PkgDb Views:(%d) %s"
+                , rcode
+                , this->db.error_msg()
+                )
+      );
+    }
+
+  /* Redefine the `VIEW`s */
+  this->initViews();
 }
 
 
@@ -96,28 +118,70 @@ PkgDb::initTables()
                 )
       );
     }
+}
 
-  if ( sql_rc rcode = this->execute_all( sql_views ); isSQLError( rcode ) )
+
+/* -------------------------------------------------------------------------- */
+
+  void
+PkgDb::initVersions()
+{
+  sqlite3pp::command defineVersions(
+    this->db
+  , "INSERT OR IGNORE INTO DbVersions ( name, version ) VALUES"
+    "  ( 'pkgdb',        '" FLOX_PKGDB_VERSION        "' )"
+    ", ( 'pkgdb_tables_schema', ? )"
+    ", ( 'pkgdb_views_schema', ? )"
+  );
+  defineVersions.bind( 1, static_cast<int>( sqlVersions.tables ) );
+  defineVersions.bind( 2, static_cast<int>( sqlVersions.views ) );
+  if ( sql_rc rcode = defineVersions.execute(); isSQLError( rcode ) )
     {
       throw PkgDbException(
         this->dbPath
-      , nix::fmt( "Failed to initialize views:(%d) %s"
+      , nix::fmt( "Failed to write DbVersions info:(%d) %s"
                 , rcode
                 , this->db.error_msg()
                 )
       );
     }
+}
 
-  static const char * stmtVersions =
-    "INSERT OR IGNORE INTO DbVersions ( name, version ) VALUES"
-    "  ( 'pkgdb',        '" FLOX_PKGDB_VERSION        "' )"
-    ", ( 'pkgdb_schema', '" FLOX_PKGDB_SCHEMA_VERSION "' )";
 
-  if ( sql_rc rcode = this->execute( stmtVersions ); isSQLError( rcode ) )
+/* -------------------------------------------------------------------------- */
+
+  void
+PkgDb::init()
+{
+  this->initTables();
+
+  this->initVersions();
+
+  /* If the views version is outdated, update them. */
+  if ( this->getDbVersion().views < sqlVersions.views ) { this->updateViews(); }
+  else                                                  { this->initViews();   }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
+PkgDb::writeInput()
+{
+  sqlite3pp::command cmd(
+    this->db
+  , "INSERT OR IGNORE INTO LockedFlake ( fingerprint, string, attrs ) VALUES"
+    "  ( ?, ?, ? )"
+  );
+  std::string fpStr = fingerprint.to_string( nix::Base16, false );
+  cmd.bind( 1, fpStr, sqlite3pp::copy );
+  cmd.bind( 2, this->lockedRef.string, sqlite3pp::nocopy );
+  cmd.bind( 3,  this->lockedRef.attrs.dump(), sqlite3pp::copy );
+  if ( sql_rc rcode = cmd.execute(); isSQLError( rcode ) )
     {
       throw PkgDbException(
         this->dbPath
-      , nix::fmt( "Failed to write DbVersions info:(%d) %s"
+      , nix::fmt( "Failed to write LockedFlaked info:(%d) %s"
                 , rcode
                 , this->db.error_msg()
                 )
@@ -354,10 +418,10 @@ PkgDb::addPackage(       row_id             parentId
 PkgDb::setPrefixDone( row_id prefixId, bool done )
 {
   sqlite3pp::command cmd( this->db, R"SQL(
-    UPDATE AttrSets SET done = :done WHERE id in (
+    UPDATE AttrSets SET done = ? WHERE id in (
       WITH RECURSIVE Tree AS (
         SELECT id, parent, 0 as depth FROM AttrSets
-        WHERE ( id = :root )
+        WHERE ( id = ? )
         UNION ALL SELECT O.id, O.parent, ( Parent.depth + 1 ) AS depth
         FROM AttrSets O
         JOIN Tree AS Parent ON ( Parent.id = O.parent )
@@ -365,8 +429,8 @@ PkgDb::setPrefixDone( row_id prefixId, bool done )
       JOIN AttrSets AS Parent ON ( C.parent = Parent.id )
     )
   )SQL" );
-  cmd.bind( ":root", static_cast<long long>( prefixId ) );
-  cmd.bind( ":done", static_cast<int>( done ) );
+  cmd.bind( 1, static_cast<int>( done ) );
+  cmd.bind( 2, static_cast<long long>( prefixId ) );
   if ( sql_rc rcode = cmd.execute(); isSQLError( rcode ) )
     {
       throw PkgDbException(

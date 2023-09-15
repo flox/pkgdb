@@ -22,7 +22,6 @@
 
 /* -------------------------------------------------------------------------- */
 
-/** Interfaces used to search for packages in flakes. */
 namespace flox::search {
 
 /* -------------------------------------------------------------------------- */
@@ -53,10 +52,10 @@ PkgQueryMixin::queryDb( pkgdb::PkgDbReadOnly & pdb ) const
 }
 
 
-/* ========================================================================== */
+/* -------------------------------------------------------------------------- */
 
   argparse::Argument &
-SearchParamsMixin::addSearchParamArgs( argparse::ArgumentParser & parser )
+SearchCommand::addSearchParamArgs( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "parameters" )
                .help( "search paramaters as inline JSON or a path to a file" )
@@ -72,71 +71,14 @@ SearchParamsMixin::addSearchParamArgs( argparse::ArgumentParser & parser )
 }
 
 
-/* ========================================================================== */
+/* -------------------------------------------------------------------------- */
 
 SearchCommand::SearchCommand() : parser( "search" )
 {
   this->parser.add_description(
-    "Search a set of flakes and emit a list satisfactory DB + "
-    "`Packages.id' pairs"
+    "Search a set of flakes and emit a list satisfactory packages"
   );
   this->addSearchParamArgs( this->parser );
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  void
-SearchCommand::initRegistry()
-{
-  nix::ref<nix::Store> store = this->getStore();
-  pkgdb::PkgDbInputFactory factory( store );  // TODO: cacheDir
-  this->registry = std::make_shared<Registry<pkgdb::PkgDbInputFactory>>(
-    this->params.registry
-  , factory
-  );
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  void
-SearchCommand::scrapeIfNeeded()
-{
-  assert( this->registry != nullptr );
-  for ( auto & [name, input] : * this->registry )
-    {
-      input->scrapeSystems( this->params.systems );
-    }
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  void
-SearchCommand::postProcessArgs()
-{
-  static bool didPost = false;
-  if ( didPost ) { return; }
-  this->initRegistry();
-  this->scrapeIfNeeded();
-  didPost = true;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  void
-SearchCommand::showRow(
-  std::string_view    inputName
-, pkgdb::PkgDbInput & input
-, pkgdb::row_id       row
-)
-{
-  nlohmann::json rsl = input.getDbReadOnly()->getPackage( row );
-  rsl.emplace( "input", inputName );
-  rsl.emplace( "path",  input.getDbReadOnly()->getPackagePath( row ) );
-  std::cout << rsl.dump() << std::endl;
 }
 
 
@@ -145,16 +87,17 @@ SearchCommand::showRow(
   int
 SearchCommand::run()
 {
-  this->postProcessArgs();
+  this->initRegistry();
+  this->scrapeIfNeeded();
   assert( this->registry != nullptr );
   pkgdb::PkgQueryArgs args;
   for ( const auto & [name, input] : * this->registry )
     {
-      this->query =
-        pkgdb::PkgQuery( this->params.fillPkgQueryArgs( name, args ) );
+      this->params.fillPkgQueryArgs( name, args );
+      this->query = pkgdb::PkgQuery( args );
       for ( const auto & row : this->queryDb( * input->getDbReadOnly() ) )
         {
-          this->showRow( name, * input, row );
+          this->showRow( * input, row );
         }
     }
   return EXIT_SUCCESS;

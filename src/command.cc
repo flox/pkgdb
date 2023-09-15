@@ -92,8 +92,7 @@ InlineInputMixin::addSubtreeArg( argparse::ArgumentParser & parser )
                .action( [&]( const std::string & subtree )
                         {
                           /* Parse the subtree type to an enum. */
-                          subtree_type stype;
-                          from_json( nlohmann::json( subtree ), stype );
+                          Subtree stype = Subtree::parseSubtree( subtree );
                           /* Create or append the `subtrees' list. */
                           if ( this->registryInput.subtrees.has_value() )
                             {
@@ -113,9 +112,9 @@ InlineInputMixin::addSubtreeArg( argparse::ArgumentParser & parser )
                             }
                           else
                             {
-                              this->registryInput.subtrees = {
-                                std::vector<subtree_type> { stype }
-                              };
+                              this->registryInput.subtrees = std::make_optional(
+                                std::vector<Subtree> { stype }
+                              );
                             }
                         }
                       );

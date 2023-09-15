@@ -3,7 +3,7 @@
  * @file flox/search/params.hh
  *
  * @brief A set of user inputs used to set input preferences and query
- * parameters during search.
+ *        parameters during search.
  *
  *
  * -------------------------------------------------------------------------- */
@@ -22,6 +22,7 @@
 #include "flox/core/types.hh"
 #include "flox/core/util.hh"
 #include "flox/pkgdb/pkg-query.hh"
+#include "flox/pkgdb/params.hh"
 #include "flox/registry.hh"
 
 
@@ -33,37 +34,47 @@ namespace flox::search {
 
 /**
  * @brief A set of query parameters.
+ *
  * This is essentially a reorganized form of @a flox::pkgdb::PkgQueryArgs
  * that is suited for JSON input.
  */
-struct SearchQuery : pkgdb::PkgDescriptorBase {
+struct SearchQuery : public pkgdb::PkgDescriptorBase {
+
+  /* From `pkgdb::PkgDescriptorBase`:
+   *   std::optional<std::string> name;
+   *   std::optional<std::string> pname;
+   *   std::optional<std::string> version;
+   *   std::optional<std::string> semver;
+   */
 
   /** Filter results by partial name/description match. */
   std::optional<std::string> match;
 
-  /** Reset to default state. */
-    inline void
-  clear()
-  {
-    this->pkgdb::PkgDescriptorBase::clear();
-    this->match = std::nullopt;
-  }
 
+  /** @brief Reset to default state. */
+  virtual void clear() override;
 
   /**
-   * Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to lookup
-   * packages filtered by @a SearchQuery requirements.
-   * @param pqa   A set of query args to _fill_ with preferences.
+   * @brief Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to
+   *        lookup packages filtered by @a SearchQuery requirements.
+   *
+   * NOTE: This DOES NOT clear @a pqa before filling it.
+   * This is intended to be used after filling @a pqa with global preferences.
+   * @param pqa A set of query args to _fill_ with preferences.
    * @return A reference to the modified query args.
    */
-    pkgdb::PkgQueryArgs &
-  fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
+  pkgdb::PkgQueryArgs & fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
 
 };  /* End struct "SearchQuery' */
 
 
-void from_json( const nlohmann::json & jfrom,       SearchQuery & qry );
-void to_json(         nlohmann::json & jto,   const SearchQuery & qry );
+/* -------------------------------------------------------------------------- */
+
+/** Convert a JSON object to a @a flox::search::SearchQuery. */
+void from_json( const nlohmann::json & jfrom, SearchQuery & qry );
+
+/** Convert a @a flox::search::SearchQuery to a JSON object. */
+void to_json( nlohmann::json & jto, const SearchQuery & qry );
 
 
 /* -------------------------------------------------------------------------- */
@@ -71,7 +82,7 @@ void to_json(         nlohmann::json & jto,   const SearchQuery & qry );
 /**
  * @brief SearchParams used to search for packages in a collection of inputs.
  *
- * @example
+ * Example Parameters:
  * ```
  * {
  *   "registry": {
@@ -115,71 +126,7 @@ void to_json(         nlohmann::json & jto,   const SearchQuery & qry );
  * }
  * ```
  */
-struct SearchParams {
-
-/* -------------------------------------------------------------------------- */
-
-  /** Settings and fetcher information associated with inputs. */
-  RegistryRaw registry;
-
-  /**
-   * Ordered list of systems to be searched.
-   * Results will be grouped by system in the order they appear here.
-   */
-  std::vector<std::string> systems;
-
-
-  /** Allow/disallow packages with certain metadata. */
-  struct Allows {
-
-    /** Whether to include packages which are explicitly marked `unfree`. */
-    bool unfree = true;
-
-    /** Whether to include packages which are explicitly marked `broken`. */
-    bool broken = false;
-
-    /** Filter results to those explicitly marked with the given licenses. */
-    std::optional<std::vector<std::string>> licenses;
-
-  } allow;
-
-
-  /** Settings associated with semantic version processing. */
-  struct Semver {
-
-    /** Whether pre-release versions should be ordered before releases. */
-    bool preferPreReleases = false;
-
-  } semver;
-
-
-  SearchQuery query;
-
-
-/* -------------------------------------------------------------------------- */
-
-  /** Reset preferences to default/empty state. */
-  void clear();
-
-  /**
-   * Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to lookup
-   * packages in a particular input.
-   * @param input The input name to be searched.
-   * @param pqa   A set of query args to _fill_ with preferences.
-   * @return A reference to the modified query args.
-   */
-  pkgdb::PkgQueryArgs & fillPkgQueryArgs( const std::string         & input
-                                        ,       pkgdb::PkgQueryArgs & pqa
-                                        ) const;
-
-
-};  /* End struct `SearchParams' */
-
-
-/* -------------------------------------------------------------------------- */
-
-void from_json( const nlohmann::json & jfrom,       SearchParams & prefs );
-void to_json(         nlohmann::json & jto,   const SearchParams & prefs );
+using SearchParams = pkgdb::QueryParams<SearchQuery>;
 
 
 /* -------------------------------------------------------------------------- */

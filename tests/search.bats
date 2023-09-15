@@ -14,6 +14,12 @@ setup_file() {
   export TDATA="$TESTS_DIR/data/search";
   export PKGDB_CACHEDIR="$BATS_FILE_TMPDIR/pkgdbs";
   echo "PKGDB_CACHEDIR: $PKGDB_CACHEDIR" >&3;
+  # We don't parallelize these to avoid DB sync headaches and to recycle the
+  # cache between tests.
+  # Nonetheless this file makes an effort to avoid depending on past state in
+  # such a way that would make it difficult to eventually parallelize in
+  # the future.
+  export BATS_NO_PARALLELIZE_WITHIN_FILE=true;
 }
 
 # Dump parameters for a query on `nixpkgs'.
@@ -42,20 +48,15 @@ genParamsNixpkgsFlox() {
 # ---------------------------------------------------------------------------- #
 
 # bats test_tags=search:opt
-#
-# FIXME: You need to add `--databases DIR' to this in order to really make this
-# work, currently it's running off the user's homedir database which is
-# convenient for development, but we can't assume that the developer hasn't
-# tried to scrape that prefix in the past.
 
-#@test "'pkgdb search' scrapes only named subtrees" {
-#  DBPATH="$( $PKGDB get db "$NIXPKGS_REF"; )";
-#  run $PKGDB search "$TDATA/params0.json";
-#  assert_success;
-#  run $PKGDB get id "$DBPATH" x86_64-linux packages;
-#  assert_failure;
-#  assert_output "ERROR: No such AttrSet 'x86_64-linux.packages'.";
-#}
+@test "'pkgdb search' scrapes only named subtrees" {
+  DBPATH="$( $PKGDB get db "$NIXPKGS_REF"; )";
+  run $PKGDB search "$TDATA/params0.json";
+  assert_success;
+  run $PKGDB get id "$DBPATH" x86_64-linux packages;
+  assert_failure;
+  assert_output "ERROR: No such AttrSet 'x86_64-linux.packages'.";
+}
 
 
 # ---------------------------------------------------------------------------- #
@@ -210,15 +211,11 @@ genParamsNixpkgsFlox() {
 
 # ---------------------------------------------------------------------------- #
 
-# TODO: Scanning catalogs takes _for fucking ever_.
-#       Make it faster or else make a mini-catalog for testing against.
-
 # bats test_tags=search:stabilities, search:pname
 
 # `stabilities' ordering
 @test "'pkgdb search' stabilities order" {
-  skip "This is way too slow but it works. TODO: make small catalog for tests";
-  run sh -c "$PKGDB search -q '$( genParamsNixpkgsFlox                         \
+  run sh -c "$PKGDB search -qq '$( genParamsNixpkgsFlox          \
     '.registry.inputs["nixpkgs-flox"].stabilities+=["unstable"]
     |.query.pname|="hello"
     |.query.version|="2.12.1"';
@@ -226,15 +223,14 @@ genParamsNixpkgsFlox() {
   assert_success;
   # catalog.x86_64-linux.stable.hello.2_12_1
   assert_output --partial '0 stable';
-  # catalog.x86_64-linux.unstable.hello.2_12_1
-  assert_output --partial '1 unstable';
   # catalog.x86_64-linux.stable.hello.latest
-  assert_output --partial '2 stable';
+  assert_output --partial '1 stable';
+  # catalog.x86_64-linux.unstable.hello.2_12_1
+  assert_output --partial '2 unstable';
   # catalog.x86_64-linux.unstable.hello.latest
   assert_output --partial '3 unstable';
   refute_output --partial '4 ';
 }
-
 
 
 # ---------------------------------------------------------------------------- #

@@ -50,7 +50,7 @@ test_FloxFlakeInputRegistry0()
 }
 
 
-/* ========================================================================== */
+/* -------------------------------------------------------------------------- */
 
   int
 main( int argc, char * argv[] )
@@ -60,56 +60,56 @@ main( int argc, char * argv[] )
 
 /* -------------------------------------------------------------------------- */
 
-  nix::Verbosity verbosity = nix::lvlWarn;
+  nix::verbosity = nix::lvlWarn;
   if ( ( 1 < argc ) && ( std::string_view( argv[1] ) == "-v" ) ) // NOLINT
     {
-      verbosity = nix::lvlDebug;
+      nix::verbosity = nix::lvlDebug;
     }
 
   /* Initialize `nix' */
-  flox::NixState nstate( verbosity );
+  flox::NixState nstate;
 
 
 /* -------------------------------------------------------------------------- */
 
   /* Initialize common registry. */
   flox::from_json( R"( {
-     "inputs": {
-       "nixpkgs": {
-         "from": {
-           "type": "github"
-         , "owner": "NixOS"
-         , "repo": "nixpkgs"
-         , "rev": "e8039594435c68eb4f780f3e9bf3972a7399c4b1"
-         }
-       , "subtrees": ["legacyPackages"]
-       }
-     , "floco": {
-         "from": {
-           "type": "github"
-         , "owner": "aakropotkin"
-         , "repo": "floco"
-         , "rev": "2afd962bbd6745d4d101c2924de34c5326042928"
-         }
-       , "subtrees": ["packages"]
-       }
-     , "nixpkgs-flox": {
-         "from": {
-           "type": "github"
-         , "owner": "flox"
-         , "repo": "nixpkgs-flox"
-         , "rev": "feb593b6844a96dd4e17497edaabac009be05709"
-         }
-       , "subtrees": ["catalog"]
-       , "stabilities": ["stable"]
-       }
-     }
-   , "defaults": {
-       "subtrees": null
-     , "stabilities": ["stable"]
-     }
-   , "priority": ["nixpkgs", "floco", "nixpkgs-flox"]
-   } )"_json
+      "inputs": {
+        "nixpkgs": {
+          "from": {
+            "type": "github"
+          , "owner": "NixOS"
+          , "repo": "nixpkgs"
+          , "rev": "e8039594435c68eb4f780f3e9bf3972a7399c4b1"
+          }
+        , "subtrees": ["legacyPackages"]
+        }
+      , "floco": {
+          "from": {
+            "type": "github"
+          , "owner": "aakropotkin"
+          , "repo": "floco"
+          , "rev": "1e84b4b16bba5746e1195fa3a4d8addaaf2d9ef4"
+          }
+        , "subtrees": ["packages"]
+        }
+      , "nixpkgs-flox": {
+          "from": {
+            "type": "github"
+          , "owner": "flox"
+          , "repo": "nixpkgs-flox"
+          , "rev": "feb593b6844a96dd4e17497edaabac009be05709"
+          }
+        , "subtrees": ["catalog"]
+        , "stabilities": ["stable"]
+        }
+      }
+    , "defaults": {
+        "subtrees": null
+      , "stabilities": ["stable"]
+      }
+    , "priority": ["nixpkgs", "floco", "nixpkgs-flox"]
+    } )"_json
   , commonRegistry
   );
 
@@ -123,9 +123,8 @@ main( int argc, char * argv[] )
   }
 
 
-/* -------------------------------------------------------------------------- */
-
   return exitCode;
+
 }
 
 

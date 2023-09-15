@@ -27,7 +27,8 @@ initNix()
   static bool didNixInit = false;
   if ( didNixInit ) { return; }
 
-  nix::setStackSize( ( ( static_cast<size_t>( 64 ) ) * 1024 ) * 1024 );  // NOLINT
+  // NOLINTNEXTLINE
+  nix::setStackSize( ( ( static_cast<size_t>( 64 ) ) * 1024 ) * 1024 );
   nix::initNix();
   nix::initGC();
   /* Suppress benign warnings about `nix.conf'. */

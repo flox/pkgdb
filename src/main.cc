@@ -14,6 +14,7 @@
 #include "flox/pkgdb/write.hh"
 #include "flox/pkgdb/command.hh"
 #include "flox/search/command.hh"
+#include "flox/resolver/command.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -35,6 +36,9 @@ main( int argc, char * argv[] )
 
   flox::search::SearchCommand cmdSearch;
   prog.add_subparser( cmdSearch.parser );
+
+  flox::resolver::ResolveCommand cmdResolve;
+  prog.add_subparser( cmdResolve.parser );
 
 
   /* Parse Args */
@@ -66,6 +70,10 @@ main( int argc, char * argv[] )
       if ( prog.is_subcommand_used( "search" ) )
         {
           return cmdSearch.run();
+        }
+      if ( prog.is_subcommand_used( "resolve" ) )
+        {
+          return cmdResolve.run();
         }
     }
   catch( const std::exception & err )
