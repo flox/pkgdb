@@ -12,7 +12,7 @@ described below.
 `pkgdb` search accepts either a path to a JSON file or inline JSON with
 the following abstract schema:
 
-```json
+```
 System ::= "x86_64-linux" | "aarch64-linux" | "x86_64-darwin" | "aarch64-darwin"
 
 License ::= ? SPDX License Identifier ?
