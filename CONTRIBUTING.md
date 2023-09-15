@@ -114,7 +114,6 @@ increment to the `pkgdb` version number.
 When changes are made to table schemas you must bump the `tables` version, while
 additions or changes to any `VIEW` can be reflected using the `views` version.
 Increments to the `views` version do not require existing databases on a user's
-
 system to become invalidated, they are simply upgraded with new `VIEW`
 definitions and their `DbVersions` row for `pkgdb_views_schema` is updated.
 
