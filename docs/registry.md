@@ -119,7 +119,9 @@ This is discussed further in the section below.
 ### Fallbacks
 
 The fields `defaults` and `priority` are optional.
+
 The fields `subtrees` and `stabilities` are optional ( everywhere ).
+
 An explicit `null` is treated the same as omitting a field.
 
 

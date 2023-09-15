@@ -4,6 +4,13 @@ CRUD operations on `nix` package metadata.
 
 [Documentation](https://flox.github.io/pkgdb/index.html)
 
+Additional documentation may be found in the `<pkgdb>/docs` directory.
+This includes JSON input/output schemas used by commands such as `pkgdb search`
+and `pkgdb resolve`.
+
+Links to additional documentation may be found at the bottom of this file.
+
+
 ### Purpose
 
 Evaluating nix expressions for an entire flake is expensive but necessary for 
@@ -30,7 +37,7 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for more information.
 
 ### Usage
 
-#### `pkgdb scrape`
+#### pkgdb scrape
 
 Build the database with the `scrape` subcommand:
 
@@ -235,3 +242,7 @@ Because each unique locked flake has its own database, over time these databases
 will accumulate and require garbage collection.
 At this time there is no automated garbage collection mechanism, but simply
 deleting you cache directory will suffice.
+
+
+## More Documentation
+- [Registry Schema](./docs/registry.md)
