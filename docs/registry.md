@@ -97,7 +97,9 @@ Registry :: {
 
 ## Fields
 
-You must provide at least 1 `input`.
+You must provide at least one `input`.
+The _keys_ in this attribute set correspond to keys in the `priority` list,
+and are often used in the output of `search` and `resolve` invocations.
 
 The `from` fields in each `input` are _flake references_ like those seen in
 `flake.nix` files, being either a URL string or an attribute set representation.
