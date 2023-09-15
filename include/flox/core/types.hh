@@ -78,6 +78,7 @@ struct Subtree {
   // NOLINTNEXTLINE
   constexpr Subtree( subtree_type subtree ) : subtree( subtree ) {}
 
+  /** @brief Construct a @a flox::Subtree from a string. */
   constexpr explicit Subtree( std::string_view str ) noexcept
     : subtree( ( str == "legacyPackages" ) ? ST_LEGACY   :
                ( str == "packages"       ) ? ST_PACKAGES :
@@ -85,8 +86,10 @@ struct Subtree {
              )
   {}
 
-    [[nodiscard]]
-    static Subtree
+
+  /** @brief Parse a string into a @a flox::Subtree. */
+    [[nodiscard]] static
+    Subtree
   parseSubtree( std::string_view str )
   {
     return Subtree {
@@ -99,6 +102,8 @@ struct Subtree {
     };
   }
 
+
+  /** @brief Convert a @a flox::Subtree to a string. */
     [[nodiscard]] friend constexpr
     std::string_view
   to_string( const Subtree & subtree )
@@ -112,6 +117,7 @@ struct Subtree {
       }
   }
 
+  /** @brief Implicitly convert a @a flox::Subtree to a string. */
   constexpr explicit operator std::string_view() const
   {
     return to_string( * this );
@@ -120,16 +126,25 @@ struct Subtree {
   // NOLINTNEXTLINE
   constexpr operator subtree_type() const { return this->subtree; }
 
-  constexpr bool operator==( const Subtree & other ) const = default;
-  constexpr bool operator!=( const Subtree & other ) const = default;
+  /** @brief Compare two @a flox::Subtree for equality. */
+  [[nodiscard]] constexpr
+  bool operator==( const Subtree & other ) const = default;
 
-    constexpr bool
+  /** @brief Compare two @a flox::Subtree for inequality. */
+  [[nodiscard]] constexpr
+  bool operator!=( const Subtree & other ) const = default;
+
+  /** @brief Compare with a @a flox::subtree_type for equality. */
+    [[nodiscard]] constexpr
+    bool
   operator==( const subtree_type & other ) const
   {
     return this->subtree == other;
   }
 
-    constexpr bool
+  /** @brief Compare with a @a flox::subtree_type for inequality. */
+    [[nodiscard]] constexpr
+    bool
   operator!=( const subtree_type & other ) const
   {
     return this->subtree != other;

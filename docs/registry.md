@@ -67,4 +67,66 @@ Here we use JSON, but any trivial format could be used.
 }
 ```
 
-We'll dive into the details below that refer to this example.
+At the top level the _abstract_ schema for the whole registry is:
+
+```
+Subtree :: "packages" | "legacyPackages" | "catalog"
+
+Stability :: "stable" | "staging" | "unstable"
+
+FlakeRef :: ? URL string or Attr Set ?
+
+InputPreferences :: {
+  subtrees    = null | [Subtree...]
+  stabilities = null | [Stability...]
+}
+
+Input :: {
+  from = FlakeRef
+  subtrees    = null | [Subtree...]
+  stabilities = null | [Stability...]
+}
+
+Registry :: {
+  inputs   = { <INPUT-NAME> = Input, ... }
+, defaults = InputPreferences
+, priority = null | [<INPUT-NAME>...]
+}
+```
+
+
+## Fields
+
+You must provide at least 1 `input`.
+
+The `from` fields in each `input` are _flake references_ like those seen in
+`flake.nix` files, being either a URL string or an attribute set representation.
+These _flake references_ may be locked or unlocked but
+**locking is strongly recommended** for most use cases.
+
+The `priority` list should contain ONLY keys from `inputs`, and is used to
+indicate a "high" to "low" priority order for performing resolution and search.
+Any `inputs` which are missing from `priority` will be ranked lexicographically
+after all explicitly prioritized inputs.
+
+The `defaults` field may be used to set fallback settings for `inputs` members.
+Explicit definitions in `inputs` override `defaults` settings.
+This is discussed further in the section below.
+
+
+### Fallbacks
+
+The fields `defaults` and `priority` are optional.
+The fields `subtrees` and `stabilities` are optional ( everywhere ).
+An explicit `null` is treated the same as omitting a field.
+
+
+If no default or explicit settings are given for `stabilities` and `subtrees`
+there is fallback behavior which attempts to _do the right thing_ without being
+overly eager about scraping _everything_ for each input.
+Omitting `subtrees` will cause flakes to use `catalog` if it is available, then
+try `packages`, and finally `legacyPackages` - only one output will be searched
+with this behavior.
+Omitting `stabilities` only effects `catalog` outputs, but only `stable` is used
+as a fallback in these cases.
+
