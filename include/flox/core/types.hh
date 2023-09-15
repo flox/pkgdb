@@ -68,7 +68,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM( subtree_type, {
 } )
 
 
-/** @brief A strongly typed wrapper over an attribute path _subtree_ name. */
+/** @brief A strongly typed wrapper over an attribute path _subtree_ name, which is the first element of an attribute path. */
 struct Subtree {
 
   subtree_type subtree = ST_NONE;
