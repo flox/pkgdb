@@ -215,7 +215,7 @@ genParamsNixpkgsFlox() {
 
 # `stabilities' ordering
 @test "'pkgdb search' stabilities order" {
-  run sh -c "$PKGDB search -qq '$( genParamsNixpkgsFlox                        \
+  run sh -c "$PKGDB search -qq '$( genParamsNixpkgsFlox          \
     '.registry.inputs["nixpkgs-flox"].stabilities+=["unstable"]
     |.query.pname|="hello"
     |.query.version|="2.12.1"';
