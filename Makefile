@@ -254,6 +254,8 @@ install: install-dirs install-bin install-lib install-include
 install-dirs: FORCE
 	$(MKDIR_P) $(BINDIR) $(LIBDIR) $(LIBDIR)/pkgconfig
 	$(MKDIR_P) $(INCLUDEDIR)/flox $(INCLUDEDIR)/flox/core $(INCLUDEDIR)/flox/pkgdb
+	$(MKDIR_P) $(INCLUDEDIR)/flox/search $(INCLUDEDIR)/flox/resolver
+	$(MKDIR_P) $(INCLUDEDIR)/compat
 
 $(INCLUDEDIR)/%: include/% | install-dirs
 	$(CP) -- "$<" "$@"
