@@ -159,6 +159,7 @@ endif
 nix_LDFLAGS := $(nix_LDFLAGS)
 
 ifndef flox_pkgdb_LDFLAGS
+flox_pkgdb_LDFLAGS =
 ifeq (Linux,$(OS))
 flox_pkgdb_LDFLAGS += -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
 else  # Darwin
