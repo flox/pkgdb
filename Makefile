@@ -246,7 +246,6 @@ bin/pkgdb: $(bin_SRCS:.cc=.o) lib/$(LIBFLOXPKGDB)
 # ---------------------------------------------------------------------------- #
 
 $(TESTS) $(TEST_UTILS): $(COMMON_HEADERS)
-$(TESTS) $(TEST_UTILS): CXXFLAGS += '-DTEST_DATA_DIR="$(TEST_DATA_DIR)"'
 $(TESTS) $(TEST_UTILS): CXXFLAGS += $(bin_CXXFLAGS)
 $(TESTS) $(TEST_UTILS): LDFLAGS  += $(bin_LDFLAGS)
 $(TESTS) $(TEST_UTILS): tests/%: tests/%.cc lib/$(LIBFLOXPKGDB)
