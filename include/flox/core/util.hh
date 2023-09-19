@@ -120,7 +120,7 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
-/** Systems to resolve/search in. */
+/** @brief Systems to resolve/search in. */
   inline static const std::vector<std::string> &
 getDefaultSystems()
 {
@@ -131,7 +131,7 @@ getDefaultSystems()
 }
 
 
-/** `flake' subtrees to resolve/search in. */
+/** @brief `flake' subtrees to resolve/search in. */
   inline static const std::vector<std::string> &
 getDefaultSubtrees()
 {
@@ -142,7 +142,7 @@ getDefaultSubtrees()
 }
 
 
-/** Catalog stabilities to resolve/search in. */
+/** @brief Catalog stabilities to resolve/search in. */
   inline static const std::vector<std::string> &
 getDefaultCatalogStabilities()
 {
@@ -156,7 +156,7 @@ getDefaultCatalogStabilities()
 /* -------------------------------------------------------------------------- */
 
 /**
- * Detect if a path is a SQLite3 database file.
+ * @brief Detect if a path is a SQLite3 database file.
  * @param dbPath Absolute path.
  * @return `true` iff @a path is a SQLite3 database file.
  */
@@ -166,7 +166,7 @@ bool isSQLiteDb( const std::string & dbPath );
 /* -------------------------------------------------------------------------- */
 
 /**
- * Parse a flake reference from either a JSON attrset or URI string.
+ * @brief Parse a flake reference from either a JSON attrset or URI string.
  * @param flakeRef JSON or URI string representing a `nix` flake reference.
  * @return Parsed flake reference object.
  */
@@ -184,11 +184,17 @@ parseFlakeRef( const std::string & flakeRef )
 /* -------------------------------------------------------------------------- */
 
 /**
- * Parse a JSON object from an inline string or a path to a JSON file.
+ * @brief Parse a JSON object from an inline string or a path to a JSON file.
  * @param jsonOrPath A JSON string or a path to a JSON file.
  * @return A parsed JSON object.
  */
 nlohmann::json parseOrReadJSONObject( const std::string & jsonOrPath );
+
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Convert a TOML string to a JSON object. */
+nlohmann::json tomlToJSON( std::string_view toml );
 
 
 /* -------------------------------------------------------------------------- */

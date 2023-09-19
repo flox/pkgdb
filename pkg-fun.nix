@@ -13,6 +13,7 @@
 , argparse
 , semver
 , sqlite3pp
+, toml11
 }: stdenv.mkDerivation {
   pname   = "flox-pkgdb";
   version = builtins.replaceStrings ["\n"] [""] ( builtins.readFile ./version );
@@ -38,9 +39,10 @@
   };
   propagatedBuildInputs = [semver nix.dev boost];
   nativeBuildInputs     = [pkg-config];
-  buildInputs           = [sqlite.dev nlohmann_json argparse sqlite3pp];
+  buildInputs           = [sqlite.dev nlohmann_json argparse sqlite3pp toml11];
   nix_INCDIR            = nix.dev.outPath + "/include";
   boost_CFLAGS          = "-I" + boost.dev.outPath + "/include";
+  toml_CFLAGS           = "-I" + toml11.outPath + "/include";
   libExt                = stdenv.hostPlatform.extensions.sharedLibrary;
   SEMVER_PATH           = semver.outPath + "/bin/semver";
   configurePhase        = ''
