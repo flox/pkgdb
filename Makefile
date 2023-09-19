@@ -159,11 +159,10 @@ endif
 nix_LDFLAGS := $(nix_LDFLAGS)
 
 ifndef flox_pkgdb_LDFLAGS
-flox_pkgdb_LDFLAGS =
 ifeq (Linux,$(OS))
-flox_pkgdb_LDFLAGS += -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
+flox_pkgdb_LDFLAGS = -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
 else  # Darwin
-flox_pkgdb_LDFLAGS += '-L$(LIBDIR)'
+flox_pkgdb_LDFLAGS = '-L$(LIBDIR)'
 endif
 flox_pkgdb_LDFLAGS = '-L$(MAKEFILE_DIR)/lib' -lflox-pkgdb
 endif
