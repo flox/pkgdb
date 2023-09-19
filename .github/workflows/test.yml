@@ -82,6 +82,9 @@ jobs:
       - name: Run Tests
         run: nix develop --no-update-lock-file --command make check -j4
 
+      - name: Run Installed
+        run: nix shell . --no-update-lock-file --command pkgdb --help
+
   # Aggregate test results
   all-tests-success:
     if: ${{ always() }}

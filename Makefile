@@ -130,7 +130,7 @@ nljson_CFLAGS := $(nljson_CFLAGS)
 argparse_CFLAGS ?= $(shell $(PKG_CONFIG) --cflags argparse)
 argparse_CFLAGS := $(argparse_CFLAGS)
 
-boost_CFLAGS    ?=                                                             \
+boost_CFLAGS ?=                                                             \
   -I$(shell $(NIX) build --no-link --print-out-paths 'nixpkgs#boost')/include
 boost_CFLAGS := $(boost_CFLAGS)
 
@@ -142,8 +142,8 @@ sqlite3_LDLAGS  := $(sqlite3_LDLAGS)
 sqlite3pp_CFLAGS ?= $(shell $(PKG_CONFIG) --cflags sqlite3pp)
 sqlite3pp_CFLAGS := $(sqlite3pp_CFLAGS)
 
-nix_INCDIR  ?= $(shell $(PKG_CONFIG) --variable=includedir nix-cmd)
-nix_INCDIR  := $(nix_INCDIR)
+nix_INCDIR ?= $(shell $(PKG_CONFIG) --variable=includedir nix-cmd)
+nix_INCDIR := $(nix_INCDIR)
 ifndef nix_CFLAGS
 nix_CFLAGS =  $(boost_CFLAGS)
 nix_CFLAGS += $(shell $(PKG_CONFIG) --cflags nix-main nix-cmd nix-expr)
@@ -159,10 +159,12 @@ endif
 nix_LDFLAGS := $(nix_LDFLAGS)
 
 ifndef flox_pkgdb_LDFLAGS
-flox_pkgdb_LDFLAGS =  '-L$(MAKEFILE_DIR)/lib' -lflox-pkgdb
 ifeq (Linux,$(OS))
-flox_pkgdb_LDFLAGS += -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
+flox_pkgdb_LDFLAGS = -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
+else  # Darwin
+flox_pkgdb_LDFLAGS = '-L$(LIBDIR)'
 endif
+flox_pkgdb_LDFLAGS += '-L$(MAKEFILE_DIR)/lib' -lflox-pkgdb
 endif
 
 
@@ -181,6 +183,7 @@ lib_LDFLAGS += -Wl,--no-as-needed
 endif
 
 bin_LDFLAGS += $(nix_LDFLAGS) $(flox_pkgdb_LDFLAGS) $(sqlite3_LDFLAGS)
+lib_LDFLAGS += $(nix_LDFLAGS) $(sqlite3_LDFLAGS)
 
 
 # ---------------------------------------------------------------------------- #
@@ -220,6 +223,9 @@ clean: FORCE
 lib/$(LIBFLOXPKGDB): $(COMMON_HEADERS)
 lib/$(LIBFLOXPKGDB): CXXFLAGS += $(lib_CXXFLAGS)
 lib/$(LIBFLOXPKGDB): LDFLAGS  += $(lib_LDFLAGS)
+ifeq (Linux,$(OS))
+lib/$(LIBFLOXPKGDB): LDFLAGS += -Wl,-soname,$(LIBFLOXPKGDB)
+endif
 lib/$(LIBFLOXPKGDB): $(lib_SRCS:.cc=.o)
 	$(MKDIR_P) $(@D)
 	$(CXX) $(filter %.o,$^) $(LDFLAGS) -o $@
@@ -265,6 +271,25 @@ $(LIBDIR)/%: lib/% | install-dirs
 
 $(BINDIR)/%: bin/% | install-dirs
 	$(CP) -- "$<" "$@"
+
+# Darwin has to relink
+ifneq (Linux,$(OS))
+$(LIBDIR)/$(LIBFLOXPKGDB): $(COMMON_HEADERS)
+$(LIBDIR)/$(LIBFLOXPKGDB): CXXFLAGS += $(lib_CXXFLAGS)
+$(LIBDIR)/$(LIBFLOXPKGDB): LDFLAGS  += $(lib_LDFLAGS)
+$(LIBDIR)/$(LIBFLOXPKGDB): LDFLAGS  +=         \
+  -Wl,-install_name,$(LIBDIR)/$(LIBFLOXPKGDB)
+$(LIBDIR)/$(LIBFLOXPKGDB): $(lib_SRCS:.cc=.o)
+	$(MKDIR_P) $(@D)
+	$(CXX) $(filter %.o,$^) $(LDFLAGS) -o $@
+
+$(BINDIR)/pkgdb: $(COMMON_HEADERS)
+$(BINDIR)/pkgdb: CXXFLAGS += $(bin_CXXFLAGS)
+$(BINDIR)/pkgdb: LDFLAGS  += $(bin_LDFLAGS)
+$(BINDIR)/pkgdb: $(bin_SRCS:.cc=.o) $(LIBDIR)/$(LIBFLOXPKGDB)
+	$(MKDIR_P) $(@D)
+	$(CXX) $(CXXFLAGS) $(filter %.o,$^) $(LDFLAGS) -o $@
+endif
 
 install-bin: $(addprefix $(BINDIR)/,$(BINS))
 install-lib: $(addprefix $(LIBDIR)/,$(LIBS))
