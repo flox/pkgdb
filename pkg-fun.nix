@@ -58,8 +58,9 @@
     runHook postConfigure;
   '';
   # Checks require internet
-  doCheck        = false;
-  doInstallCheck = false;
+  doCheck          = false;
+  doInstallCheck   = false;
+  meta.mainProgram = "pkgdb";
 }
 
 
