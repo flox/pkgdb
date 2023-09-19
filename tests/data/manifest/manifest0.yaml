@@ -1,0 +1,138 @@
+# Composability: an environment that we are adding packages on top of.
+# This is not the environment that is pulled.
+# This will happen later but is recorded here for completeness.
+# You will either have "floxhub" or "dir" but not both
+
+## TODO
+
+##envBase:
+##  floxhub: "https://hub.flox.dev/owner/env"
+##  dir: "~/somewhere/else/"
+
+# Project enviornments:
+# Declare my installed software (dependencies, software applications)
+install:
+  # 1. Simplest form of dependency requests, just find by name.
+  # This covers the vast majority of usage.
+  # Resolve these to "buildInputs" or equivalent from a shared closure.
+  hello:
+  python3:
+
+  # 2. Maybe they just care about version compatibility though.
+  # For example "API compatible with 12.2", being:
+  #   12.2.0 <= VERSION < 13.0.0-0
+  # Resolve this to "packages" or equivalent which is
+  # isolated to its own closure and added to PATH only.
+  charasay:
+    semver: "^12.2"
+
+  # 3. If someone's a bit picky they might want to request a specific version:
+  # Resolve this to "packages" or equivalent which is isolated
+  # to its own closure and added to PATH only.
+  nodejs:
+    version: "4.2.0"
+
+  # 4. Arbitrary package groupings that we will try to make work
+  openssl:
+    packageGroup: "blue"
+
+  libxml:
+    packageGroup: "blue"
+
+  ruby:
+    packageGroup: "blue"
+
+  # 5. Use stabilities: Force resolution in a `stable' catalog stream.
+  cowsay:
+    stability: "stable"
+
+  # 6. (edge case) Get a "legacy style" package from a subattr.
+  pip:
+    path: "python3.pkgs.pip"
+
+  # 7. (edge case) Or to be real explicit you can give the absolute path.
+  # We use `null' to "glob" where `system' might normally go.
+  # While we don't anticipate that 99% of users will ever need this,
+  # some folks don't like ambiguity, and it's necessary to avoid conflicts
+  # in existing catalogs.
+  which:
+    absPath: ["legacyPackages", null, "flocoPackages", "which", "3.0.1", "global"]
+  quux:
+    absPath: ["evalCatalog", null, "staging", "python3Packages", "quux", "4.2.0"]
+  quux2:
+    absPath: ["legacyPackages", null, "python3Packages", "quux"]
+
+  # 8a. (edge case) Marking a dependency as `optional' will skip it on
+  # unsupported systems.
+  # This package will only be available on `darwin', and will be skipped
+  # on `linux'.
+  darwinSecurity:
+    path: ["darwin", "apple_sdk", "frameworks", "Security"]
+    optional: true
+
+  # 8b. (edge case) Alternate approach to 8a that has better ergonomics.
+  darwinSecurityAlt:
+    systems: ["aarch64-darwin", "x86_64-darwin"]
+    optional: true
+
+  # 9. (edge case) Provide an explicit "packageRepository", a specific
+  # stability, and an exact attribute path to pull from.
+  # packageRepository will be looked up in a separate "registry file".
+  myFavoriteApple:
+    packageRepository:
+      id: "safeway-pkgs"
+    stability: "stable"
+    path: "produce.vegetables.organics.apples.fuji"
+
+  # 10. (edge case) As above but provide an inline definition of
+  # "packageRepository" with no registry lookup.
+  myReallyExplicitApple:
+    packageRepository:
+      type: "github"
+      owner: "sally"
+      repo: "my-pkgs"
+      rev: "d5b4fa110c4b546b7ed51a02d523973a8e075159"
+    path: "produce.vegetables.organics.apples.fuji"
+
+  # 11. (edge case) Or to avoid a repetitive strain injury ( **future extension** not part of base spec):
+  apple: "github:sally/safeway-pkgs/db4fa111dsafadf#produce.vegetables.organics.fuji"
+
+
+  # 12. (edge case) How to refer to nix code directly.
+  # these cannot be pushed to floxhub environments.
+  # we require these in the .flox dir for now
+  foo:
+    input: "./foo.nix"
+    path: "foo"
+
+
+# Set an environment variable
+vars:
+  message: "Howdy"
+  message2: "partner"
+
+# Which activation strategy (edge case)
+# Define these once we have multiple strategies (likely not part
+# of initial requirements).
+# Examples: "etc-profiles" or sourcing a shell script
+
+## TODO
+
+##options:
+##  activation-strategy: "some-option"
+
+# Concept: Which grouping strategy (edge case)
+# Define these to override default grouping behavior
+# Examples: "auto" or "single-nixpkgs-group"
+# Future options (post v1): "flexible-groups-with-overlays" or ...
+
+## TODO
+
+##package-grouping-strategy = "some-option"
+
+# When activating, this outputs ascii art of a cow with a text bubble
+# containing "Howdy partner".
+hook:
+  script: |
+    hello >&2;
+    cowsay "$message $message2" >&2;
