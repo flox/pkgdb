@@ -164,7 +164,7 @@ flox_pkgdb_LDFLAGS = -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
 else  # Darwin
 flox_pkgdb_LDFLAGS = '-L$(LIBDIR)'
 endif
-flox_pkgdb_LDFLAGS = '-L$(MAKEFILE_DIR)/lib' -lflox-pkgdb
+flox_pkgdb_LDFLAGS += '-L$(MAKEFILE_DIR)/lib' -lflox-pkgdb
 endif
 
 
