@@ -57,11 +57,11 @@
     # some folks don't like ambiguity, and it's necessary to avoid conflicts
     # in existing catalogs.
     [install.which]
-    absPath = "legacyPackages.null.flocoPackages.which.'3.0.1'.global"
+    absPath = ["legacyPackages", "null", "flocoPackages", "which", "3.0.1", "global"]
     [install.quux]
-    absPath = "evalCatalog.null.staging.python3Packages.quux.'4.2.0'"
+    absPath = ["evalCatalog", "null", "staging", "python3Packages", "quux", "4.2.0"]
     [install.quux2]
-    absPath = "legacyPackages.null.python3Packages.quux"
+    absPath = ["legacyPackages", "null", "python3Packages", "quux"]
 
     # 8a. (edge case) Marking a dependency as `optional' will skip it on
     # unsupported systems.
@@ -69,7 +69,7 @@
     # on `linux'.
 
     [install.darwinSecurity]
-    path = "darwin.apple_sdk.frameworks.Security"
+    path = ["darwin", "apple_sdk", "frameworks", "Security"]
     optional = true
 
     # 8b. (edge case) Alternate approach to 8a that has better ergonomics.

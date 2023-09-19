@@ -193,8 +193,14 @@ nlohmann::json parseOrReadJSONObject( const std::string & jsonOrPath );
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief Convert a TOML string to a JSON object. */
+/** @brief Convert a TOML string to JSON. */
 nlohmann::json tomlToJSON( std::string_view toml );
+
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Convert a YAML string to JSON. */
+nlohmann::json yamlToJSON( std::string_view yaml );
 
 
 /* -------------------------------------------------------------------------- */
