@@ -173,8 +173,9 @@ nix_LDFLAGS := $(nix_LDFLAGS)
 ifndef flox_pkgdb_LDFLAGS
 flox_pkgdb_LDFLAGS =  '-L$(MAKEFILE_DIR)/lib' -lflox-pkgdb
 ifeq (Linux,$(OS))
-flox_pkgdb_LDFLAGS += -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
+flox_pkgdb_LDFLAGS += -Wl,--enable-new-dtags
 endif
+flox_pkgdb_LDFLAGS +=  '-Wl,-rpath,$$ORIGIN/../lib'
 endif
 
 
