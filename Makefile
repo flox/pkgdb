@@ -90,6 +90,8 @@ CLEANFILES     =  $(ALL_SRCS:.cc=.o)
 CLEANFILES     += $(addprefix bin/,$(BINS)) $(addprefix lib/,$(LIBS))
 CLEANFILES     += $(TESTS) $(TEST_UTILS)
 
+TEST_DATA_DIR = $(MAKEFILE_DIR)/tests/data
+
 
 # ---------------------------------------------------------------------------- #
 
@@ -130,9 +132,13 @@ nljson_CFLAGS := $(nljson_CFLAGS)
 argparse_CFLAGS ?= $(shell $(PKG_CONFIG) --cflags argparse)
 argparse_CFLAGS := $(argparse_CFLAGS)
 
-boost_CFLAGS    ?=                                                             \
+boost_CFLAGS ?=                                                             \
   -I$(shell $(NIX) build --no-link --print-out-paths 'nixpkgs#boost')/include
 boost_CFLAGS := $(boost_CFLAGS)
+
+toml_CFLAGS ?=                                                                 \
+  -I$(shell $(NIX) build --no-link --print-out-paths 'nixpkgs#toml11')/include
+toml_CFLAGS := $(toml_CFLAGS)
 
 sqlite3_CFLAGS  ?= $(shell $(PKG_CONFIG) --cflags sqlite3)
 sqlite3_CFLAGS  := $(sqlite3_CFLAGS)
@@ -142,8 +148,14 @@ sqlite3_LDLAGS  := $(sqlite3_LDLAGS)
 sqlite3pp_CFLAGS ?= $(shell $(PKG_CONFIG) --cflags sqlite3pp)
 sqlite3pp_CFLAGS := $(sqlite3pp_CFLAGS)
 
-nix_INCDIR  ?= $(shell $(PKG_CONFIG) --variable=includedir nix-cmd)
-nix_INCDIR  := $(nix_INCDIR)
+yaml_PREFIX ?=                                                          \
+	$(shell $(NIX) build --no-link --print-out-paths 'nixpkgs#yaml-cpp')
+yaml_PREFIX := $(yaml_PREFIX)
+yaml_CFLAGS  = -isystem $(yaml_PREFIX)/include
+yaml_LDFLAGS = -L$(yaml_PREFIX)/lib -lyaml-cpp
+
+nix_INCDIR ?= $(shell $(PKG_CONFIG) --variable=includedir nix-cmd)
+nix_INCDIR := $(nix_INCDIR)
 ifndef nix_CFLAGS
 nix_CFLAGS =  $(boost_CFLAGS)
 nix_CFLAGS += $(shell $(PKG_CONFIG) --cflags nix-main nix-cmd nix-expr)
@@ -159,10 +171,12 @@ endif
 nix_LDFLAGS := $(nix_LDFLAGS)
 
 ifndef flox_pkgdb_LDFLAGS
-flox_pkgdb_LDFLAGS =  '-L$(MAKEFILE_DIR)/lib' -lflox-pkgdb
 ifeq (Linux,$(OS))
 flox_pkgdb_LDFLAGS += -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
+else  # Darwin
+flox_pkgdb_LDFLAGS += '-L$(LIBDIR)'
 endif
+flox_pkgdb_LDFLAGS = '-L$(MAKEFILE_DIR)/lib' -lflox-pkgdb
 endif
 
 
@@ -170,7 +184,7 @@ endif
 
 lib_CXXFLAGS += $(sqlite3_CFLAGS) $(sqlite3pp_CFLAGS)
 bin_CXXFLAGS += $(argparse_CFLAGS)
-CXXFLAGS     += $(nix_CFLAGS) $(nljson_CFLAGS)
+CXXFLAGS     += $(nix_CFLAGS) $(nljson_CFLAGS) $(toml_CFLAGS) $(yaml_CFLAGS)
 
 ifeq (Linux,$(OS))
 lib_LDFLAGS += -Wl,--as-needed
@@ -181,6 +195,7 @@ lib_LDFLAGS += -Wl,--no-as-needed
 endif
 
 bin_LDFLAGS += $(nix_LDFLAGS) $(flox_pkgdb_LDFLAGS) $(sqlite3_LDFLAGS)
+lib_LDFLAGS += $(nix_LDFLAGS) $(sqlite3_LDFLAGS) $(yaml_LDFLAGS)
 
 
 # ---------------------------------------------------------------------------- #
@@ -220,6 +235,9 @@ clean: FORCE
 lib/$(LIBFLOXPKGDB): $(COMMON_HEADERS)
 lib/$(LIBFLOXPKGDB): CXXFLAGS += $(lib_CXXFLAGS)
 lib/$(LIBFLOXPKGDB): LDFLAGS  += $(lib_LDFLAGS)
+ifeq (Linux,$(OS))
+lib/$(LIBFLOXPKGDB): LDFLAGS += -Wl,-soname,$(LIBFLOXPKGDB)
+endif
 lib/$(LIBFLOXPKGDB): $(lib_SRCS:.cc=.o)
 	$(MKDIR_P) $(@D)
 	$(CXX) $(filter %.o,$^) $(LDFLAGS) -o $@
@@ -240,6 +258,7 @@ bin/pkgdb: $(bin_SRCS:.cc=.o) lib/$(LIBFLOXPKGDB)
 # ---------------------------------------------------------------------------- #
 
 $(TESTS) $(TEST_UTILS): $(COMMON_HEADERS)
+$(TESTS) $(TEST_UTILS): CXXFLAGS += '-DTEST_DATA_DIR="$(TEST_DATA_DIR)"'
 $(TESTS) $(TEST_UTILS): CXXFLAGS += $(bin_CXXFLAGS)
 $(TESTS) $(TEST_UTILS): LDFLAGS  += $(bin_LDFLAGS)
 $(TESTS) $(TEST_UTILS): tests/%: tests/%.cc lib/$(LIBFLOXPKGDB)
@@ -266,6 +285,25 @@ $(LIBDIR)/%: lib/% | install-dirs
 $(BINDIR)/%: bin/% | install-dirs
 	$(CP) -- "$<" "$@"
 
+# Darwin has to relink
+ifneq (Linux,$(OS))
+$(LIBDIR)/$(LIBFLOXPKGDB): $(COMMON_HEADERS)
+$(LIBDIR)/$(LIBFLOXPKGDB): CXXFLAGS += $(lib_CXXFLAGS)
+$(LIBDIR)/$(LIBFLOXPKGDB): LDFLAGS  += $(lib_LDFLAGS)
+$(LIBDIR)/$(LIBFLOXPKGDB): LDFLAGS  +=         \
+  -Wl,-install_name,$(LIBDIR)/$(LIBFLOXPKGDB)
+$(LIBDIR)/$(LIBFLOXPKGDB): $(lib_SRCS:.cc=.o)
+	$(MKDIR_P) $(@D)
+	$(CXX) $(filter %.o,$^) $(LDFLAGS) -o $@
+
+$(BINDIR)/pkgdb: $(COMMON_HEADERS)
+$(BINDIR)/pkgdb: CXXFLAGS += $(bin_CXXFLAGS)
+$(BINDIR)/pkgdb: LDFLAGS  += $(bin_LDFLAGS)
+$(BINDIR)/pkgdb: $(bin_SRCS:.cc=.o) $(LIBDIR)/$(LIBFLOXPKGDB)
+	$(MKDIR_P) $(@D)
+	$(CXX) $(CXXFLAGS) $(filter %.o,$^) $(LDFLAGS) -o $@
+endif
+
 install-bin: $(addprefix $(BINDIR)/,$(BINS))
 install-lib: $(addprefix $(LIBDIR)/,$(LIBS))
 install-include:                                                    \
@@ -287,6 +325,7 @@ cdb: compile_commands.json
 	  fi;                                                                 \
 	  echo $(CXXFLAGS) $(sqlite3_CFLAGS) $(nljson_CFLAGS) $(nix_CFLAGS);  \
 	  echo $(nljson_CFLAGS) $(argparse_CFLAGS) $(sqlite3pp_CFLAGS);       \
+	  echo '-DTEST_DATA_DIR="$(TEST_DATA_DIR)"';   										    \
 	}|$(TR) ' ' '\n'|$(SED) 's/-std=/%cpp -std=/' >> "$@";
 
 
