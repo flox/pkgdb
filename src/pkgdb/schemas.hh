@@ -178,6 +178,10 @@ CREATE VIEW IF NOT EXISTS v_PackagesSearch AS SELECT
 , Packages.name
 , Packages.attrName
 , Packages.pname
+, iif( v_AttrPaths.subtree = 'catalog'
+     , json_extract( v_AttrPaths.path, '$[#-2]' )
+     , json_extract( v_AttrPaths.path, '$[#-1]' )
+     ) AS pkgAttrName
 , Packages.version
 , iif( ( Packages.version IS NULL ), NULL
   , iif( ( Packages.semver IS NOT NULL ), NULL
