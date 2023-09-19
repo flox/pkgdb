@@ -48,12 +48,12 @@ tomlToJSON( std::string_view toml )
           case toml::value_t::array:
             {
               auto tlist = toml::get<std::vector<toml::value>>( tfrom );
-              auto jlist = nlohmann::json::array();
+              jto = nlohmann::json::array();
               for ( const auto & elem : tlist )
                 {
                   nlohmann::json jval;
                   visit( jval, elem );
-                  jlist.emplace_back( std::move( jval ) );
+                  jto.emplace_back( std::move( jval ) );
                 }
             }
             break;
@@ -116,6 +116,7 @@ tomlToJSON( std::string_view toml )
   return nlohmann::json();
 
 }  /* End fn `tomlToJSON()' */
+
 
 /* -------------------------------------------------------------------------- */
 
