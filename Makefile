@@ -171,12 +171,13 @@ endif
 nix_LDFLAGS := $(nix_LDFLAGS)
 
 ifndef flox_pkgdb_LDFLAGS
+flox_pkgdb_LDFLAGS =
 ifeq (Linux,$(OS))
 flox_pkgdb_LDFLAGS += -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
 else  # Darwin
 flox_pkgdb_LDFLAGS += '-L$(LIBDIR)'
 endif
-flox_pkgdb_LDFLAGS = '-L$(MAKEFILE_DIR)/lib' -lflox-pkgdb
+flox_pkgdb_LDFLAGS += '-L$(MAKEFILE_DIR)/lib' -lflox-pkgdb
 endif
 
 
@@ -325,7 +326,7 @@ cdb: compile_commands.json
 	  fi;                                                                 \
 	  echo $(CXXFLAGS) $(sqlite3_CFLAGS) $(nljson_CFLAGS) $(nix_CFLAGS);  \
 	  echo $(nljson_CFLAGS) $(argparse_CFLAGS) $(sqlite3pp_CFLAGS);       \
-	  echo '-DTEST_DATA_DIR="$(TEST_DATA_DIR)"';   										    \
+	  echo '-DTEST_DATA_DIR="$(TEST_DATA_DIR)"';                          \
 	}|$(TR) ' ' '\n'|$(SED) 's/-std=/%cpp -std=/' >> "$@";
 
 
