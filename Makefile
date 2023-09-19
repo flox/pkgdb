@@ -90,8 +90,6 @@ CLEANFILES     =  $(ALL_SRCS:.cc=.o)
 CLEANFILES     += $(addprefix bin/,$(BINS)) $(addprefix lib/,$(LIBS))
 CLEANFILES     += $(TESTS) $(TEST_UTILS)
 
-TEST_DATA_DIR = $(MAKEFILE_DIR)/tests/data
-
 
 # ---------------------------------------------------------------------------- #
 
@@ -136,10 +134,6 @@ boost_CFLAGS ?=                                                             \
   -I$(shell $(NIX) build --no-link --print-out-paths 'nixpkgs#boost')/include
 boost_CFLAGS := $(boost_CFLAGS)
 
-toml_CFLAGS ?=                                                                 \
-  -I$(shell $(NIX) build --no-link --print-out-paths 'nixpkgs#toml11')/include
-toml_CFLAGS := $(toml_CFLAGS)
-
 sqlite3_CFLAGS  ?= $(shell $(PKG_CONFIG) --cflags sqlite3)
 sqlite3_CFLAGS  := $(sqlite3_CFLAGS)
 sqlite3_LDFLAGS ?= $(shell $(PKG_CONFIG) --libs sqlite3)
@@ -147,12 +141,6 @@ sqlite3_LDLAGS  := $(sqlite3_LDLAGS)
 
 sqlite3pp_CFLAGS ?= $(shell $(PKG_CONFIG) --cflags sqlite3pp)
 sqlite3pp_CFLAGS := $(sqlite3pp_CFLAGS)
-
-yaml_PREFIX ?=                                                          \
-	$(shell $(NIX) build --no-link --print-out-paths 'nixpkgs#yaml-cpp')
-yaml_PREFIX := $(yaml_PREFIX)
-yaml_CFLAGS  = -isystem $(yaml_PREFIX)/include
-yaml_LDFLAGS = -L$(yaml_PREFIX)/lib -lyaml-cpp
 
 nix_INCDIR ?= $(shell $(PKG_CONFIG) --variable=includedir nix-cmd)
 nix_INCDIR := $(nix_INCDIR)
@@ -184,7 +172,7 @@ endif
 
 lib_CXXFLAGS += $(sqlite3_CFLAGS) $(sqlite3pp_CFLAGS)
 bin_CXXFLAGS += $(argparse_CFLAGS)
-CXXFLAGS     += $(nix_CFLAGS) $(nljson_CFLAGS) $(toml_CFLAGS) $(yaml_CFLAGS)
+CXXFLAGS     += $(nix_CFLAGS) $(nljson_CFLAGS)
 
 ifeq (Linux,$(OS))
 lib_LDFLAGS += -Wl,--as-needed
@@ -195,7 +183,7 @@ lib_LDFLAGS += -Wl,--no-as-needed
 endif
 
 bin_LDFLAGS += $(nix_LDFLAGS) $(flox_pkgdb_LDFLAGS) $(sqlite3_LDFLAGS)
-lib_LDFLAGS += $(nix_LDFLAGS) $(sqlite3_LDFLAGS) $(yaml_LDFLAGS)
+lib_LDFLAGS += $(nix_LDFLAGS) $(sqlite3_LDFLAGS)
 
 
 # ---------------------------------------------------------------------------- #
