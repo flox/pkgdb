@@ -435,6 +435,11 @@ class FloxFlakeInput : public InputPreferences {
     nix::ref<nix::FlakeRef>    flakeRef;  /**< A parsed flake reference. */
     nix::ref<nix::Store>       store;     /**< A `nix` store connection. */
     std::shared_ptr<FloxFlake> flake;     /**< A flake with an evaluator. */
+    /**
+     * List of subtrees allowed by preferences, or defaults.
+     * This caches the result of `getSubtrees()`.
+     */
+    std::optional<std::vector<Subtree>> enabledSubtrees;
 
   public:
 
@@ -475,6 +480,51 @@ class FloxFlakeInput : public InputPreferences {
           );
         }
       return static_cast<nix::ref<FloxFlake>>( this->flake );
+    }
+
+
+    /**
+     * @brief Get a list of enabled subtrees.
+     *
+     * If the user has explicitly defined a list of subtrees, then simply use
+     * that list.
+     * If the list is undefined, pick the first of:
+     *   1. "catalog"
+     *   2. "package"
+     *   3. "legacyPackages"
+     */
+      [[nodiscard]]
+      const std::vector<Subtree> &
+    getSubtrees()
+    {
+      if ( ! this->enabledSubtrees.has_value() )
+        {
+          if ( this->subtrees.has_value() )
+            {
+              this->enabledSubtrees = * this->subtrees;
+            }
+          else
+            {
+              auto root = this->getFlake()->openEvalCache()->getRoot();
+              if ( root->maybeGetAttr( "catalog" ) != nullptr )
+                {
+                  this->enabledSubtrees = std::vector<Subtree> { ST_CATALOG };
+                }
+              else if ( root->maybeGetAttr( "packages" ) != nullptr )
+                {
+                  this->enabledSubtrees = std::vector<Subtree> { ST_PACKAGES };
+                }
+              else if ( root->maybeGetAttr( "legacyPackages" ) != nullptr )
+                {
+                  this->enabledSubtrees = std::vector<Subtree> { ST_LEGACY };
+                }
+              else
+                {
+                  this->enabledSubtrees = std::vector<Subtree> {};
+                }
+            }
+        }
+      return * this->enabledSubtrees;
     }
 
 };  /* End struct `FloxFlakeInput' */
