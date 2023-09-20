@@ -490,14 +490,14 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
     INSERT INTO Packages (
       parentId, attrName, name, pname, outputs, descriptionId
     ) VALUES
-      ( :parentId, 'aHello', 'hello-2.12.1', 'hello', '["out"]', :descGreetId
+      ( :parentId, 'pkg0', 'hello-2.12.1', 'hello', '["out"]', :descGreetId
       )
-    , ( :parentId, 'aGoodbye', 'goodbye-2.12.1', 'goodbye'
+    , ( :parentId, 'pkg1', 'goodbye-2.12.1', 'goodbye'
       , '["out"]', :descFarewellId
       )
-    , ( :parentId, 'aHola', 'hola-2.12.1', 'hola', '["out"]', :descGreetId
+    , ( :parentId, 'pkg2', 'hola-2.12.1', 'hola', '["out"]', :descGreetId
       )
-    , ( :parentId, 'aCiao', 'ciao-2.12.1', 'ciao', '["out"]', :descFarewellId
+    , ( :parentId, 'pkg3', 'ciao-2.12.1', 'ciao', '["out"]', :descFarewellId
       )
   )SQL" );
   cmd.bind( ":parentId",       static_cast<long long>( linux )        );
@@ -532,7 +532,11 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
           static_cast<flox::pkgdb::match_strength>( row.get<int>( 0 ) );
         if ( count == 1 )
           {
-            EXPECT_EQ( strength, flox::pkgdb::MS_EXACT_PNAME );
+            EXPECT_EQ( strength
+                     , ( flox::pkgdb::MS_EXACT_PNAME  +
+                         flox::pkgdb::MS_PARTIAL_DESC
+                       )
+                     );
           }
         else
           {
@@ -575,7 +579,10 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
           static_cast<flox::pkgdb::match_strength>( row.get<int>( 0 ) );
         if ( count == 1 )
           {
-            EXPECT_EQ( strength, flox::pkgdb::MS_PARTIAL_PNAME_DESC );
+            EXPECT_EQ( strength, ( flox::pkgdb::MS_PARTIAL_PNAME +
+                                   flox::pkgdb::MS_PARTIAL_DESC
+                                 )
+                     );
           }
         else
           {

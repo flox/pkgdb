@@ -236,21 +236,47 @@ PkgQuery::initMatch()
        * string, we add `%<STRING>%` before binding so that `LIKE` works, and
        * need to manually add those characters below when testing for exact
        * matches of the `pname` column.
-       * - 0 : Exact `pname` match.
-       * - 1 : Partial matches on both `pname` and `description`.
-       * - 2 : Partial match on `pname`.
-       * - 3 : Partial match on `description`.
        * Our `WHERE` statement above ensures that at least one of these rankings
        * will be true forall rows.
+       * See the documentation in `pkg-query.hh' for more details.
        */
       std::stringstream matcher;
-      matcher << "iif( ( ( '%' || LOWER( pname ) || '%' ) = LOWER( :match ) )"
-              << ", " << MS_EXACT_PNAME
-              << ", iif( ( pname LIKE :match )"
-              << ", iif( ( description LIKE :match  ), "
-              << MS_PARTIAL_PNAME_DESC << ", "
-              << MS_PARTIAL_PNAME << " ), " << MS_PARTIAL_DESC
-              << " ) ) AS matchStrength";
+
+      /* We start by seeing which matches succeed, and assign a point value
+       * to each.
+       * Their sum produces the combined "strength" of a match. */
+      matcher << R"SQL(
+        ( WITH matches ( id
+                       , exactPname
+                       , exactAttrName
+                       , partialPname
+                       , partialAttrName
+                       , partialDesc
+                       ) AS
+           ( SELECT
+              id
+            , ( ( '%' || LOWER( pname ) || '%' ) = LOWER( :match ) )
+              AS exactPname
+            , ( ( '%' || LOWER( attrName ) || '%' ) = LOWER( :match ) )
+              AS exactAttrName
+            , ( pname LIKE :match )       AS partialPname
+            , ( pkgAttrName LIKE :match ) AS partialAttrName
+            , ( description LIKE :match ) AS partialDesc
+            FROM v_PackagesSearch
+          ) SELECT (
+      )SQL"   << "   iif( exactPname, " << MS_EXACT_PNAME
+              << "      , iif( partialPname, " << MS_PARTIAL_PNAME << ", 0 )"
+              << "      ) + "
+              << "   iif( exactAttrName, " << MS_EXACT_ATTRNAME
+              << "      , iif( partialAttrName, " << MS_PARTIAL_ATTRNAME
+              << "           , 0 )"
+              << "      ) + "
+              << "   iif( partialDesc, " << MS_PARTIAL_DESC << ", 0 )"
+              << R"SQL(
+                   ) FROM matches WHERE ( v_PackagesSearch.id = matches.id )
+        ) AS matchStrength
+      )SQL";
+
       this->addSelection( matcher.str() );
       /* Add `%` before binding so `LIKE` works. */
       binds.emplace( ":match", "%" +  ( * this->match ) + "%" );
@@ -393,7 +419,7 @@ PkgQuery::initOrderBy()
 {
   /* Establish ordering. */
   this->addOrderBy( R"SQL(
-    matchStrength ASC
+    matchStrength DESC
   , subtreesRank ASC
   , systemsRank ASC
   , stabilitiesRank ASC NULLS LAST

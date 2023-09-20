@@ -43,19 +43,28 @@ using row_id = uint64_t;  /**< A _row_ index in a SQLite3 table. */
  * @brief Measures a "strength" ranking that can be used to order packages by
  *        how closely they a match string.
  *
- * - 0 : Case-insensitive exact match with `pname`
- * - 1 : Case-insensitive substring match with `pname` and `description`.
- * - 2 : Case-insensitive substring match with `pname`.
- * - 3 : Case insensitive substring match with `description`.
- * - 4 : No match.
+ * The field `pkgAttrName` is the last part of the attribute path in regular
+ * flakes, and the second to last part in catalogs.
  */
 enum match_strength {
-  MS_EXACT_PNAME        = 0
-, MS_PARTIAL_PNAME_DESC = 1
-, MS_PARTIAL_PNAME      = 2
-, MS_PARTIAL_DESC       = 3
-, MS_NONE               = 4  /* Ensure this is always the highest. */
+  MS_NONE             = 0
+, MS_PARTIAL_DESC     = 1   /**< Substring match on `description`. */
+, MS_PARTIAL_ATTRNAME = 2   /**< Substring match on `pkgAttrName`. */
+, MS_PARTIAL_PNAME    = 4   /**< Substring match on `pname`. */
+, MS_EXACT_ATTRNAME   = 8   /**< Exact match on `pkgAttrName`. */
+, MS_EXACT_PNAME      = 16  /**< Exact match on `pname`. */
 };
+
+static_assert( ( MS_PARTIAL_DESC + MS_PARTIAL_ATTRNAME ) < MS_PARTIAL_PNAME );
+static_assert(
+  ( MS_PARTIAL_DESC + MS_PARTIAL_ATTRNAME + MS_PARTIAL_PNAME ) <
+  MS_EXACT_ATTRNAME
+);
+static_assert(
+  ( MS_PARTIAL_DESC + MS_PARTIAL_ATTRNAME + MS_PARTIAL_PNAME +
+    MS_EXACT_ATTRNAME
+  ) < MS_EXACT_PNAME
+);
 
 
 /* -------------------------------------------------------------------------- */
