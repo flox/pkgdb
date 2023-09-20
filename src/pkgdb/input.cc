@@ -148,22 +148,15 @@ PkgDbInput::scrapePrefix( const flox::AttrPath & prefix )
 PkgDbInput::scrapeSystems( const std::vector<std::string> & systems )
 {
   /* Set fallbacks */
-  std::vector<Subtree> subtrees = this->subtrees.value_or(
-    std::vector<Subtree> { ST_PACKAGES, ST_LEGACY, ST_CATALOG }
-  );
   std::vector<std::string> stabilities =
     this->stabilities.value_or( std::vector<std::string> { "stable" } );
+
   /* Loop and scrape over `subtrees', `systems', and `stabilities'. */
-  for ( const auto & subtree : subtrees )
+  for ( const auto & subtree : this->getSubtrees() )
     {
-      flox::AttrPath prefix;
-      switch ( subtree )
-        {
-          case ST_PACKAGES: prefix = { "packages" };         break;
-          case ST_LEGACY:   prefix = { "legacyPackages" };   break;
-          case ST_CATALOG:  prefix = { "catalog" };          break;
-          default: throw FloxException( "Invalid subtree" ); break;
-        }
+      flox::AttrPath prefix = {
+        static_cast<std::string>( to_string( subtree ) )
+      };
       for ( const auto & system : systems )
         {
           prefix.emplace_back( system );
