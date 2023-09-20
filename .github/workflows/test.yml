@@ -24,6 +24,10 @@ jobs:
         os: [ubuntu-latest, macos-latest]
 
     steps:
+      - run: |
+          echo "XDG_CACHE_HOME: ${XDG_CACHE_HOME:-}";
+          echo "HOME: ${HOME:-}";
+
       - uses: actions/checkout@v3
       - uses: cachix/install-nix-action@v22
         with:
