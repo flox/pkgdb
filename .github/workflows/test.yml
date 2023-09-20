@@ -41,6 +41,14 @@ jobs:
             stalled-download-timeout = 90
             timeout = 0
 
+      - name: Restore Nix Caches
+        id: nix-cache-restore
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            /home/runner/.cache
+          key: ${{ runner.os }}-nix-cache
+
       # This is performed to reduce cpu/memory overhead in tests later.
       # NOTE: Ensure this `rev' is aligned with `<pkgdb>/tests/setup_suite.bats'
       - name: Warm Nix Eval Caches
@@ -84,6 +92,15 @@ jobs:
 
       - name: Run Installed
         run: nix shell . --no-update-lock-file --command pkgdb --help
+
+      - name: Save Nix Caches
+        id: nix-cache-save
+        uses: actions/cache/save@v3
+        with:
+          path: |
+            /home/runner/.cache
+          key: ${{ steps.nix-cache-restore.outputs.cache-primary-key }}
+
 
   # Aggregate test results
   all-tests-success:
