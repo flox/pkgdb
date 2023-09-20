@@ -46,7 +46,7 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: |
-            /home/runner/.cache
+            /home/runner/.cache/nix
           key: ${{ runner.os }}-nix-cache
 
       # This is performed to reduce cpu/memory overhead in tests later.
@@ -98,7 +98,7 @@ jobs:
         uses: actions/cache/save@v3
         with:
           path: |
-            /home/runner/.cache
+            /home/runner/.cache/nix
           key: ${{ steps.nix-cache-restore.outputs.cache-primary-key }}
 
 
