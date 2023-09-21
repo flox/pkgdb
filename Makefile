@@ -183,7 +183,6 @@ lib_LDFLAGS += -Wl,--no-as-needed
 endif
 
 bin_LDFLAGS += $(nix_LDFLAGS) $(flox_pkgdb_LDFLAGS) $(sqlite3_LDFLAGS)
-lib_LDFLAGS += $(nix_LDFLAGS) $(sqlite3_LDFLAGS)
 
 
 # ---------------------------------------------------------------------------- #
@@ -219,37 +218,35 @@ clean: FORCE
 %.o: %.cc $(COMMON_HEADERS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-
-lib/$(LIBFLOXPKGDB): $(COMMON_HEADERS)
-lib/$(LIBFLOXPKGDB): CXXFLAGS += $(lib_CXXFLAGS)
-lib/$(LIBFLOXPKGDB): LDFLAGS  += $(lib_LDFLAGS)
 ifeq (Linux,$(OS))
-lib/$(LIBFLOXPKGDB): LDFLAGS += -Wl,-soname,$(LIBFLOXPKGDB)
+SONAME_FLAG = -Wl,-soname,$(LIBFLOXPKGDB)
+else
+SONAME_FLAG =
 endif
+
+lib/$(LIBFLOXPKGDB): CXXFLAGS += $(lib_CXXFLAGS)
 lib/$(LIBFLOXPKGDB): $(lib_SRCS:.cc=.o)
 	$(MKDIR_P) $(@D)
-	$(CXX) $(filter %.o,$^) $(LDFLAGS) -o $@
+	$(CXX) $(filter %.o,$^) $(LDFLAGS) $(lib_LDFLAGS) $(SONAME_FLAG) -o $@
 
 
 # ---------------------------------------------------------------------------- #
 
 src/pkgdb/write.o: src/pkgdb/schemas.hh
 
-bin/pkgdb: $(COMMON_HEADERS)
-bin/pkgdb: CXXFLAGS += $(bin_CXXFLAGS)
-bin/pkgdb: LDFLAGS  += $(bin_LDFLAGS)
+$(bin_SRCS:.cc=.o): %.o: %.cc $(COMMON_HEADERS)
+	$(CXX) $(CXXFLAGS) $(bin_CXXFLAGS) -c $< -o $@
+
 bin/pkgdb: $(bin_SRCS:.cc=.o) lib/$(LIBFLOXPKGDB)
 	$(MKDIR_P) $(@D)
-	$(CXX) $(CXXFLAGS) $(filter %.o,$^) $(LDFLAGS) -o $@
+	$(CXX) $(filter %.o,$^) $(LDFLAGS) $(bin_LDFLAGS) -o $@
 
 
 # ---------------------------------------------------------------------------- #
 
 $(TESTS) $(TEST_UTILS): $(COMMON_HEADERS)
-$(TESTS) $(TEST_UTILS): CXXFLAGS += $(bin_CXXFLAGS)
-$(TESTS) $(TEST_UTILS): LDFLAGS  += $(bin_LDFLAGS)
 $(TESTS) $(TEST_UTILS): tests/%: tests/%.cc lib/$(LIBFLOXPKGDB)
-	$(CXX) $(CXXFLAGS) $< $(LDFLAGS)  -o $@
+	$(CXX) $(CXXFLAGS) $(bin_CXXFLAGS) $< $(LDFLAGS) $(bin_LDFLAGS) -o $@
 
 
 # ---------------------------------------------------------------------------- #
@@ -274,21 +271,16 @@ $(BINDIR)/%: bin/% | install-dirs
 
 # Darwin has to relink
 ifneq (Linux,$(OS))
-$(LIBDIR)/$(LIBFLOXPKGDB): $(COMMON_HEADERS)
+LINK_INAME_FLAG = -Wl,-install_name,$(LIBDIR)/$(LIBFLOXPKGDB)
 $(LIBDIR)/$(LIBFLOXPKGDB): CXXFLAGS += $(lib_CXXFLAGS)
-$(LIBDIR)/$(LIBFLOXPKGDB): LDFLAGS  += $(lib_LDFLAGS)
-$(LIBDIR)/$(LIBFLOXPKGDB): LDFLAGS  +=         \
-  -Wl,-install_name,$(LIBDIR)/$(LIBFLOXPKGDB)
 $(LIBDIR)/$(LIBFLOXPKGDB): $(lib_SRCS:.cc=.o)
 	$(MKDIR_P) $(@D)
-	$(CXX) $(filter %.o,$^) $(LDFLAGS) -o $@
+	$(CXX) $(filter %.o,$^) $(LDFLAGS) $(lib_LDFLAGS) $(LINK_INAME_FLAG)  \
+	       -o $@
 
-$(BINDIR)/pkgdb: $(COMMON_HEADERS)
-$(BINDIR)/pkgdb: CXXFLAGS += $(bin_CXXFLAGS)
-$(BINDIR)/pkgdb: LDFLAGS  += $(bin_LDFLAGS)
 $(BINDIR)/pkgdb: $(bin_SRCS:.cc=.o) $(LIBDIR)/$(LIBFLOXPKGDB)
 	$(MKDIR_P) $(@D)
-	$(CXX) $(CXXFLAGS) $(filter %.o,$^) $(LDFLAGS) -o $@
+	$(CXX) $(filter %.o,$^) $(LDFLAGS) $(bin_LDFLAGS) -o $@
 endif
 
 install-bin: $(addprefix $(BINDIR)/,$(BINS))
