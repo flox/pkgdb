@@ -89,18 +89,22 @@ struct ManifestDescriptorRaw {
  * @brief Convert an @a flox::resolver::ManifestDescriptorRaw to a JSON object.
  */
 /* Generate to_json/from_json functions. */
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT( ManifestDescriptorRaw
-                                               , name
-                                               , version
-                                               , stability
-                                               , path
-                                               , absPath
-                                               , systems
-                                               , optional
-                                               , packageGroup
-                                               , packageRepository
-                                               , input
-                                               )
+
+// TODO: you have to manually define `to_json` and `from_json`
+//       for `std::variant`.
+
+//NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT( ManifestDescriptorRaw
+//                                               , name
+//                                               , version
+//                                               , stability
+//                                               , path
+//                                               , absPath
+//                                               , systems
+//                                               , optional
+//                                               , packageGroup
+//                                               , packageRepository
+//                                               , input
+//                                               )
 
 
 /* -------------------------------------------------------------------------- */

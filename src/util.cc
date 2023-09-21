@@ -78,6 +78,92 @@ parseOrReadJSONObject( const std::string & jsonOrPath )
 
 /* -------------------------------------------------------------------------- */
 
+  std::vector<std::string>
+splitAttrPath( std::string_view path )
+{
+  std::vector<std::string> parts;
+
+  bool inSingleQuote = false;
+  bool inDoubleQuote = false;
+  bool wasEscaped    = false;
+  auto start         = path.begin();
+
+  auto dequote = [&]( const std::string & part ) -> std::string
+    {
+      std::string noOuter;
+      /* Remove outer quotes. */
+      if ( ( ( ( * part.begin() ) == '\'' ) &&
+             ( ( * ( part.end() - 1 ) ) == '\'' )
+           ) ||
+           ( ( ( * part.begin() ) == '"' ) &&
+             ( ( * ( part.end() - 1 ) ) == '"' )
+           )
+         )
+        {
+          noOuter = std::string( part.begin() + 1, part.end() - 1 );
+        }
+      else
+        {
+          noOuter = part;
+        }
+
+      /* Remove escape characters. */
+      std::string rsl;
+      bool        wasEscaped = false;
+      for ( auto itr = noOuter.begin(); itr != noOuter.end(); ++itr )
+        {
+          if ( wasEscaped )
+            {
+              wasEscaped = false;
+            }
+          else if ( ( * itr ) == '\\' )
+            {
+              wasEscaped = true;
+              continue;
+            }
+          rsl.push_back( * itr );
+        }
+
+      return rsl;
+    };  /* End lambda `dequote' */
+
+  /* Split by dots, handling quotes. */
+  for ( auto itr = path.begin(); itr != path.end(); ++itr )
+    {
+      if ( wasEscaped )
+        {
+          wasEscaped = false;
+        }
+      else if ( ( * itr ) == '\\' )
+        {
+          wasEscaped = true;
+        }
+      else if ( ( ( * itr ) == '\'' ) && ( ! inDoubleQuote ) )
+        {
+          inSingleQuote = ! inSingleQuote;
+        }
+      else if ( ( ( * itr ) == '"' ) && ( ! inSingleQuote ) )
+        {
+          inDoubleQuote = ! inDoubleQuote;
+        }
+      else if ( * itr == '.' && ( ! inSingleQuote ) && ( ! inDoubleQuote ) )
+        {
+          parts.emplace_back( dequote( std::string( start, itr ) ) );
+          start = itr + 1;
+        }
+    }
+
+  if ( start != path.end() )
+    {
+      parts.emplace_back( dequote( std::string( start, path.end() ) ) );
+    }
+
+  return parts;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 }    /* End namespace `flox' */
 
 

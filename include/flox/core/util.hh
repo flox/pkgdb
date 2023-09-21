@@ -205,6 +205,16 @@ nlohmann::json yamlToJSON( std::string_view yaml );
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * @brief Split an attribute path string.
+ *
+ * Handles quoted strings and escapes.
+ */
+std::vector<std::string> splitAttrPath( std::string_view path );
+
+
+/* -------------------------------------------------------------------------- */
+
 }    /* End namespace `flox' */
 
 
