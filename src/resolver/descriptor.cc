@@ -144,8 +144,31 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
         }
     }
 
-  // TODO: input
-  // packageRepository | input
+  if ( raw.packageRepository.has_value() )
+    {
+      if ( raw.input.has_value() )
+        {
+          throw std::runtime_error(
+            "`packageRepository' may not be used with `input'"
+          );
+        }
+
+      if ( std::holds_alternative<std::string>( * raw.packageRepository ) )
+        {
+          this->input =
+            parseFlakeRef( std::get<std::string>( * raw.packageRepository ) );
+        }
+      else
+        {
+          this->input = nix::FlakeRef::fromAttrs(
+            std::get<nix::fetchers::Attrs>( * raw.packageRepository )
+          );
+        }
+    }
+  else if ( raw.input.has_value() )
+    {
+      this->input = * raw.input;
+    }
 
 }
 

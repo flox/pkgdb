@@ -14,6 +14,7 @@
 #include <vector>
 #include <list>
 #include <optional>
+#include <variant>
 
 #include <nix/logging.hh>
 #include <nix/store-api.hh>
@@ -110,6 +111,57 @@ namespace nlohmann {
     }
 
   };  /* End struct `adl_serializer<nix::FlakeRef>' */
+
+  /* Eithers */
+    template<typename A, typename B>
+  struct adl_serializer<std::variant<A, B>> {
+
+      static void
+    to_json( json & jto, const std::variant<A, B> & var )
+    {
+      if ( std::holds_alternative<A>( var ) )
+        {
+          jto = std::get<A>( var );
+        }
+      else
+        {
+          jto = std::get<B>( var );
+        }
+    }
+
+      static void
+    from_json( const json & jfrom, std::variant<A, B> & var )
+    {
+      try
+        {
+          var = jfrom.template get<A>();
+        }
+      catch( ... )
+        {
+          var = jfrom.template get<B>();
+        }
+    }
+
+  };  /* End struct `adl_serializer<std::variant<A, B>>' */
+
+
+  /* nix::fetchers::Attrs */
+    template<>
+  struct adl_serializer<nix::fetchers::Attrs> {
+
+      static void
+    to_json( json & jto, const nix::fetchers::Attrs & attrs )
+    {
+      jto = nix::fetchers::attrsToJSON( attrs );
+    }
+
+      static void
+    from_json( const json & jfrom, nix::fetchers::Attrs & attrs )
+    {
+      attrs = nix::fetchers::jsonToAttrs( jfrom );
+    }
+
+  };  /* End struct `adl_serializer<std::variant<A, B>>' */
 
 }  /* End namespace `nlohmann' */
 
