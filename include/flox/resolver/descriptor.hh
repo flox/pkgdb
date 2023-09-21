@@ -145,6 +145,9 @@ struct ManifestDescriptor {
 
     ManifestDescriptor() = default;
     ManifestDescriptor( const ManifestDescriptorRaw & raw );
+    //ManifestDescriptor( const RegistryRaw           & registry
+    //                  , const ManifestDescriptorRaw & raw
+    //                  );
 
 };
 
