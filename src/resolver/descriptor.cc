@@ -26,7 +26,7 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
   /* You have to split `absPath' first. */
   if ( raw.absPath.has_value() )
     {
-      // TODO: use `splitAttrPath'
+      /* You might need to parse a globbed attr path, so handle that first. */
       AttrPathGlob glob;
       if ( std::holds_alternative<AttrPathGlob>( * raw.absPath ) )
         {
@@ -34,56 +34,21 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
         }
       else
         {
-          const auto & abs = std::get<std::string>( * raw.absPath );
-
-          bool inSingleQuote = false;
-          bool inDoubleQuote = false;
-          bool wasEscaped    = false;
-          auto start         = abs.begin();
-          for ( auto itr = abs.begin(); itr != abs.end(); ++itr )
+          flox::AttrPath path =
+            splitAttrPath( std::get<std::string>( * raw.absPath ) );
+          size_t idx = 0;
+          for ( const auto & part : path )
             {
-              if ( wasEscaped )
-                {
-                  wasEscaped = false;
-                }
-              else if ( ( * itr ) == '\\' )
-                {
-                  wasEscaped = true;
-                }
-              else if ( ( * itr ) == '\'' )
-                {
-                  inSingleQuote = ! inSingleQuote;
-                }
-              else if ( ( * itr ) == '"' )
-                {
-                  inDoubleQuote = ! inDoubleQuote;
-                }
-              else if ( * itr == '.' && ! inSingleQuote && ! inDoubleQuote )
-                {
-                  std::string part( start, itr );
-                  if ( ( glob.size() == 1 ) && ( part == "null" ) )
-                    {
-                      glob.emplace_back( std::nullopt );
-                    }
-                  else
-                    {
-                      glob.emplace_back( std::move( part ) );
-                    }
-                  start = itr + 1;
-                }
-            }
-
-          if ( start != abs.end() )
-            {
-              std::string part( start, abs.end() );
-              if ( ( glob.size() == 1 ) && ( part == "null" ) )
+              /* Treat `null' or `*' in the second element as a glob. */
+              if ( ( idx == 1 ) && ( ( part == "null" ) || ( part == "*" ) ) )
                 {
                   glob.emplace_back( std::nullopt );
                 }
               else
                 {
-                  glob.emplace_back( std::move( part ) );
+                  glob.emplace_back( part );
                 }
+              ++idx;
             }
         }
 
