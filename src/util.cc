@@ -88,29 +88,25 @@ splitAttrPath( std::string_view path )
   bool wasEscaped    = false;
   auto start         = path.begin();
 
+  /* Remove outer quotes and unescape. */
   auto dequote = [&]( const std::string & part ) -> std::string
     {
-      std::string noOuter;
+      auto itr = part.begin();
+      auto end = part.end();
+
       /* Remove outer quotes. */
-      if ( ( ( ( * part.begin() ) == '\'' ) &&
-             ( ( * ( part.end() - 1 ) ) == '\'' )
-           ) ||
-           ( ( ( * part.begin() ) == '"' ) &&
-             ( ( * ( part.end() - 1 ) ) == '"' )
-           )
+      if ( ( ( part.front() == '\'' ) && ( part.back() == '\'' ) ) ||
+           ( ( part.front() == '"' )  && ( part.back() == '"' ) )
          )
         {
-          noOuter = std::string( part.begin() + 1, part.end() - 1 );
-        }
-      else
-        {
-          noOuter = part;
+          ++itr;
+          --end;
         }
 
       /* Remove escape characters. */
       std::string rsl;
       bool        wasEscaped = false;
-      for ( auto itr = noOuter.begin(); itr != noOuter.end(); ++itr )
+      for ( ; itr != end; ++itr )
         {
           if ( wasEscaped )
             {

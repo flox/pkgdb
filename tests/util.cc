@@ -89,6 +89,18 @@ test_splitAttrPath5()
 
 /* -------------------------------------------------------------------------- */
 
+  bool
+test_splitAttrPath6()
+{
+  EXPECT( flox::splitAttrPath( "a.\\\\\\..c" ) ==
+          ( flox::AttrPath { "a", "\\.", "c" } )
+        );
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
   int
 main()
 {
@@ -103,6 +115,7 @@ main()
   RUN_TEST( splitAttrPath3 );
   RUN_TEST( splitAttrPath4 );
   RUN_TEST( splitAttrPath5 );
+  RUN_TEST( splitAttrPath6 );
 
 
 /* -------------------------------------------------------------------------- */
