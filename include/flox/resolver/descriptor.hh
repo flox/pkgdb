@@ -82,7 +82,9 @@ struct ManifestDescriptorRaw {
 /* -------------------------------------------------------------------------- */
 
 /**
- * @fn void from_json( const nlohmann::json & jfrom, ManifestDescriptorRaw & desc )
+ * @fn void from_json( const nlohmann::json        & jfrom
+ *                   ,       ManifestDescriptorRaw & desc
+ *                   )
  * @brief Convert a JSON object to an @a flox::InputPreferences.
  *
  * @fn void to_json( nlohmann::json & jto, const ManifestDescriptorRaw & desc )
