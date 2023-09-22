@@ -1,6 +1,6 @@
 /* ========================================================================== *
  *
- * @file get.cc
+ * @file pkgdb/get.cc
  *
  * @brief Implementation of `pkgdb get` subcommand.
  *
@@ -182,28 +182,12 @@ GetCommand::runDb()
 
 /* -------------------------------------------------------------------------- */
 
-  static bool
-is_number( std::string_view str )
-{
-  return ( ! str.empty() ) &&
-         ( std::find_if( str.begin()
-                       , str.end()
-                       , []( unsigned char chr )
-                         {
-                           return std::isdigit( chr ) != 0;
-                         }
-                       )
-           == str.end()
-         );
-}
-
-
   int
 GetCommand::runPkg()
 {
   nlohmann::json rsl;
   if ( ( this->attrPath.size() == 1 ) &&
-       ( is_number( this->attrPath.front() ) )
+       ( isUInt( this->attrPath.front() ) )
      )
     {
       this->id = stoull( this->attrPath.front() );

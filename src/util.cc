@@ -160,6 +160,21 @@ splitAttrPath( std::string_view path )
 
 /* -------------------------------------------------------------------------- */
 
+  bool
+isUInt( std::string_view str )
+{
+  return ( ! str.empty() ) &&
+         ( std::find_if(
+             str.begin()
+           , str.end()
+           , []( unsigned char chr ) { return std::isdigit( chr ) == 0; }
+           ) == str.end()
+         );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 }    /* End namespace `flox' */
 
 

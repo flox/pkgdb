@@ -267,6 +267,16 @@ std::vector<std::string> splitAttrPath( std::string_view path );
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * @brief Is the string @str a positive natural number?
+ * @param str String to test.
+ * @return `true` iff @a str is a stringized unsigned integer.
+ */
+bool isUInt( std::string_view str );
+
+
+/* -------------------------------------------------------------------------- */
+
 }    /* End namespace `flox' */
 
 
