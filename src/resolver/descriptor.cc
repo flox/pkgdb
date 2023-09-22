@@ -8,6 +8,7 @@
  *
  * -------------------------------------------------------------------------- */
 
+#include <regex>
 #include "versions.hh"
 #include "flox/resolver/descriptor.hh"
 
@@ -309,7 +310,44 @@ ManifestDescriptor::clear()
   pkgdb::PkgQueryArgs &
 ManifestDescriptor::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 {
-  // TODO
+  /* Must exactly match either `pname' or `pkgAttrName'. */
+  if ( this->name.has_value() )
+    {
+      pqa.match            = * this->name;
+      pqa.matchMinStrength = pkgdb::match_strength::MS_EXACT_ATTRNAME;
+    }
+
+  if ( this->version.has_value() )
+    {
+      pqa.version = * this->version;
+    }
+  else if ( this->semver.has_value() )
+    {
+      pqa.semver = * this->semver;
+      /* Use `preferPreRelease' on `~<VERSION>-<TAG>' ranges. */
+      if ( this->semver->at( 0 ) == '~' )
+        {
+          pqa.preferPreReleases = std::regex_match(
+            * this->semver
+          , std::regex( "~[^ ]+-.*", std::regex::ECMAScript )
+          );
+        }
+    }
+
+  if ( this->subtree.has_value() )
+    {
+      pqa.subtrees = std::vector<Subtree> { * this->subtree };
+    }
+
+  if ( this->systems.has_value() ) { pqa.systems = * this->systems; }
+
+  if ( this->stability.has_value() )
+    {
+      pqa.stabilities = std::vector<std::string> { * this->stability };
+    }
+
+  if ( this->path.has_value() ) { pqa.relPath = * this->path; }
+
   return pqa;
 }
 

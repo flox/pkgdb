@@ -135,11 +135,7 @@ struct PkgQueryArgs : public PkgDescriptorBase {
   /** Whether pre-release versions should be ordered before releases. */
   bool preferPreReleases = false;
 
-  /**
-   * Subtrees to search.
-   * TODO: Default to first of `catalog`, `packages`, or `legacyPackages`.
-   *       Requires `db` to be read.
-   */
+  /** Subtrees to search. */
   std::optional<std::vector<Subtree>> subtrees;
 
   /** Systems to search */
