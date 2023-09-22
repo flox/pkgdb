@@ -18,7 +18,14 @@ namespace flox::resolver {
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief Distinguish between semver ranges and exact version matchers. */
+/**
+ * @brief Sets either `version` or `semver` on
+ *        a `flox::resolver::ManifestDescriptor`.
+ *
+ * Distinguishs between semver ranges and exact version matchers.
+ * @param desc The descriptor to initialize.
+ * @param version The version description to parse.
+ */
   static void
 initManifestDescriptorVersion(       ManifestDescriptor & desc
                              , const std::string        & version
@@ -55,6 +62,142 @@ initManifestDescriptorVersion(       ManifestDescriptor & desc
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief Get a `flox::resolver::AttrPathGlob` from a string if necessary. */
+  static AttrPathGlob
+maybeSplitAttrPathGlob( const ManifestDescriptorRaw::AbsPath & absPath )
+{
+  if ( std::holds_alternative<AttrPathGlob>( absPath ) )
+    {
+      return std::get<AttrPathGlob>( absPath );
+    }
+  AttrPathGlob   glob;
+  flox::AttrPath path = splitAttrPath( std::get<std::string>( absPath ) );
+  size_t         idx  = 0;
+  for ( const auto & part : path )
+    {
+      /* Treat `null' or `*' in the second element as a glob. */
+      if ( ( idx == 1 ) && ( ( part == "null" ) || ( part == "*" ) ) )
+        {
+          glob.emplace_back( std::nullopt );
+        }
+      else
+        {
+          glob.emplace_back( part );
+        }
+      ++idx;
+    }
+  return glob;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief Sets various fields on a `flox::resolver::ManifestDescriptor`
+ *        based on the `absPath` field.
+ * @param desc The descriptor to initialize.
+ * @param version The version description to parse.
+ */
+  static void
+initManifestDescriptorAbsPath(       ManifestDescriptor    & desc
+                             , const ManifestDescriptorRaw & raw
+                             )
+{
+  if ( ! raw.absPath.has_value() )
+    {
+      throw std::runtime_error(
+        "`absPath' must be set when calling "
+        "`flox::resolver::ManifestDescriptor::initManifestDescriptorAbsPath'"
+       );
+    }
+
+  /* You might need to parse a globbed attr path, so handle that first. */
+  AttrPathGlob glob = maybeSplitAttrPathGlob( * raw.absPath );
+
+  if ( glob.size() < 3 )
+    {
+      throw std::runtime_error(
+        "`absPath' must have at least three parts"
+      );
+    }
+
+  const auto & first = glob.front();
+  if ( ! first.has_value() )
+    {
+      throw std::runtime_error(
+        "`absPath' may only have a glob as its second element"
+      );
+    }
+  desc.subtree = Subtree( * first );
+
+  if ( raw.stability.has_value() && ( first.value() != "catalog" ) )
+    {
+      throw std::runtime_error(
+        "`stability' cannot be used with non-catalog paths"
+      );
+    }
+
+  if ( first.value() == "catalog" )
+    {
+      if ( glob.size() < 4 )
+        {
+          throw std::runtime_error(
+            "`absPath' must have at least four parts for catalog paths"
+          );
+        }
+      const auto & third = glob.at( 2 );
+      if ( ! third.has_value() )
+        {
+          throw std::runtime_error(
+            "`absPath' may only have a glob as its second element"
+          );
+        }
+      desc.stability = * third;
+      desc.path      = AttrPath {};
+      for ( auto itr = glob.begin() + 3; itr != glob.end(); ++itr )
+        {
+          const auto & elem = * itr;
+          if ( ! elem.has_value() )
+            {
+              throw std::runtime_error(
+                "`absPath' may only have a glob as its second element"
+              );
+            }
+          desc.path->emplace_back( * elem );
+        }
+    }
+  else
+    {
+      desc.path = AttrPath {};
+      for ( auto itr = glob.begin() + 2; itr != glob.end(); ++itr )
+        {
+          const auto & elem = * itr;
+          if ( ! elem.has_value() )
+            {
+              throw std::runtime_error(
+                "`absPath' may only have a glob as its second element"
+              );
+            }
+          desc.path->emplace_back( * elem );
+        }
+    }
+
+  const auto & second = glob.at( 1 );
+  if ( second.has_value() )
+    {
+      desc.systems = std::vector<std::string> { * second };
+      if ( raw.systems.has_value() && ( * raw.systems != * desc.systems ) )
+        {
+          throw std::runtime_error(
+            "`systems' list conflicts with `absPath' system specification"
+          );
+        }
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
   : name( raw.name )
   , optional( raw.optional )
@@ -72,116 +215,11 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
   /* You have to split `absPath' before doing most other fields. */
   if ( raw.absPath.has_value() )
     {
-      /* You might need to parse a globbed attr path, so handle that first. */
-      AttrPathGlob glob;
-      if ( std::holds_alternative<AttrPathGlob>( * raw.absPath ) )
-        {
-          glob = std::get<AttrPathGlob>( * raw.absPath );
-        }
-      else
-        {
-          flox::AttrPath path =
-            splitAttrPath( std::get<std::string>( * raw.absPath ) );
-          size_t idx = 0;
-          for ( const auto & part : path )
-            {
-              /* Treat `null' or `*' in the second element as a glob. */
-              if ( ( idx == 1 ) && ( ( part == "null" ) || ( part == "*" ) ) )
-                {
-                  glob.emplace_back( std::nullopt );
-                }
-              else
-                {
-                  glob.emplace_back( part );
-                }
-              ++idx;
-            }
-        }
-
-      if ( glob.size() < 3 )
-        {
-          throw std::runtime_error(
-            "`absPath' must have at least three parts"
-          );
-        }
-
-      const auto & first = glob.front();
-      if ( ! first.has_value() )
-        {
-          throw std::runtime_error(
-            "`absPath' may only have a glob as its second element"
-          );
-        }
-      this->subtree = Subtree( * first );
-
-      if ( raw.stability.has_value() && ( first.value() != "catalog" ) )
-        {
-          throw std::runtime_error(
-            "`stability' cannot be used with non-catalog paths"
-          );
-        }
-
-      if ( first.value() == "catalog" )
-        {
-          if ( glob.size() < 4 )
-            {
-              throw std::runtime_error(
-                "`absPath' must have at least four parts for catalog paths"
-              );
-            }
-          const auto & third = glob.at( 2 );
-          if ( ! third.has_value() )
-            {
-              throw std::runtime_error(
-                "`absPath' may only have a glob as its second element"
-              );
-            }
-          this->stability = * third;
-          this->path      = AttrPath {};
-          for ( auto itr = glob.begin() + 3; itr != glob.end(); ++itr )
-            {
-              const auto & elem = * itr;
-              if ( ! elem.has_value() )
-                {
-                  throw std::runtime_error(
-                    "`absPath' may only have a glob as its second element"
-                  );
-                }
-              this->path->emplace_back( * elem );
-            }
-        }
-      else
-        {
-          this->path = AttrPath {};
-          for ( auto itr = glob.begin() + 2; itr != glob.end(); ++itr )
-            {
-              const auto & elem = * itr;
-              if ( ! elem.has_value() )
-                {
-                  throw std::runtime_error(
-                    "`absPath' may only have a glob as its second element"
-                  );
-                }
-              this->path->emplace_back( * elem );
-            }
-        }
-
-      const auto & second = glob.at( 1 );
-      if ( second.has_value() )
-        {
-          this->systems = std::vector<std::string> { * second };
-          if ( raw.systems.has_value() && ( * raw.systems != * this->systems ) )
-            {
-              throw std::runtime_error(
-                "`systems' list conflicts with `absPath' system specification"
-              );
-            }
-        }
-
+      initManifestDescriptorAbsPath( * this, raw );
     }
   else if ( raw.stability.has_value() )
     {
-      this->subtree = Subtree( "catalog" );
+      this->subtree   = Subtree( "catalog" );
       this->stability = raw.stability;
     }
 
