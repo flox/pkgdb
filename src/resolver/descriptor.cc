@@ -93,16 +93,23 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
           );
         }
 
-      this->subtree = Subtree( glob.front().value() );
+      const auto & first = glob.front();
+      if ( ! first.has_value() )
+        {
+          throw std::runtime_error(
+            "`absPath' may only have a glob as its second element"
+          );
+        }
+      this->subtree = Subtree( * first );
 
-      if ( raw.stability.has_value() && ( glob.front().value() != "catalog" ) )
+      if ( raw.stability.has_value() && ( first.value() != "catalog" ) )
         {
           throw std::runtime_error(
             "`stability' cannot be used with non-catalog paths"
           );
         }
 
-      if ( glob.front().value() == "catalog" )
+      if ( first.value() == "catalog" )
         {
           if ( glob.size() < 4 )
             {
@@ -110,11 +117,25 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
                 "`absPath' must have at least four parts for catalog paths"
               );
             }
-          this->stability = glob.at( 2 ).value();
+          const auto & third = glob.at( 2 );
+          if ( ! third.has_value() )
+            {
+              throw std::runtime_error(
+                "`absPath' may only have a glob as its second element"
+              );
+            }
+          this->stability = * third;
           this->path      = AttrPath {};
           for ( auto itr = glob.begin() + 3; itr != glob.end(); ++itr )
             {
-              this->path->emplace_back( itr->value() );
+              const auto & elem = * itr;
+              if ( ! elem.has_value() )
+                {
+                  throw std::runtime_error(
+                    "`absPath' may only have a glob as its second element"
+                  );
+                }
+              this->path->emplace_back( * elem );
             }
         }
       else
@@ -122,13 +143,21 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
           this->path = AttrPath {};
           for ( auto itr = glob.begin() + 2; itr != glob.end(); ++itr )
             {
-              this->path->emplace_back( itr->value() );
+              const auto & elem = * itr;
+              if ( ! elem.has_value() )
+                {
+                  throw std::runtime_error(
+                    "`absPath' may only have a glob as its second element"
+                  );
+                }
+              this->path->emplace_back( * elem );
             }
         }
 
-      if ( glob.at( 1 ).has_value() )
+      const auto & second = glob.at( 1 );
+      if ( second.has_value() )
         {
-          this->systems = std::vector<std::string> { * glob.at( 1 ) };
+          this->systems = std::vector<std::string> { * second };
           if ( raw.systems.has_value() && ( * raw.systems != * this->systems ) )
             {
               throw std::runtime_error(
