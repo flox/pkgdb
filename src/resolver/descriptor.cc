@@ -18,6 +18,43 @@ namespace flox::resolver {
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief Distinguish between semver ranges and exact version matchers. */
+  static void
+initManifestDescriptorVersion(       ManifestDescriptor & desc
+                             , const std::string        & version
+                             )
+{
+  switch ( version.at( 0 ) )
+    {
+      case '=':
+        desc.version = version.substr( 1 );
+        break;
+
+      case '*':
+      case '~':
+      case '^':
+      case '>':
+      case '<':
+        desc.semver = version;
+        break;
+
+      default:
+        /* If it's a valid semver, then it's not a range. */
+        if ( versions::isSemver( version ) )
+          {
+            desc.version = version;
+          }
+        else /* Otherwise, assume a range. */
+          {
+            desc.semver = version;
+          }
+        break;
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
   : name( raw.name )
   , optional( raw.optional )
@@ -29,32 +66,7 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
    *       you need to use "=4.2". */
   if ( raw.version.has_value() )
     {
-      switch ( raw.version->at( 0 ) )
-        {
-          case '=':
-            this->version = raw.version->substr( 1 );
-            break;
-
-          case '*':
-          case '~':
-          case '^':
-          case '>':
-          case '<':
-            this->semver = * raw.version;
-            break;
-
-          default:
-            /* If it's a valid semver, then it's not a range. */
-            if ( versions::isSemver( * raw.version ) )
-              {
-                this->version = * raw.version;
-              }
-            else /* Otherwise, assume a range. */
-              {
-                this->semver = * raw.version;
-              }
-            break;
-        }
+      initManifestDescriptorVersion( * this, * raw.version );
     }
 
   /* You have to split `absPath' before doing most other fields. */
