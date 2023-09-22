@@ -145,9 +145,20 @@ struct ManifestDescriptor {
 
     ManifestDescriptor() = default;
     ManifestDescriptor( const ManifestDescriptorRaw & raw );
-    //ManifestDescriptor( const RegistryRaw           & registry
-    //                  , const ManifestDescriptorRaw & raw
-    //                  );
+
+    /** @brief Reset to default state. */
+    void clear();
+
+    /**
+     * @brief Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to
+     *        lookup packages.
+     *
+     * NOTE: This DOES NOT clear @a pqa before filling it.
+     * This is intended to be used after filling @a pqa with global preferences.
+     * @param pqa A set of query args to _fill_ with preferences.
+     * @return A reference to the modified query args.
+     */
+    pkgdb::PkgQueryArgs & fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
 
 };
 

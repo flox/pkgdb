@@ -175,6 +175,33 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
 
 /* -------------------------------------------------------------------------- */
 
+  void
+ManifestDescriptor::clear()
+{
+  this->name     = std::nullopt;
+  this->version  = std::nullopt;
+  this->optional = false;
+  this->group    = std::nullopt;
+  this->subtree  = std::nullopt;
+  this->systems  = std::nullopt;
+  this->stability= std::nullopt;
+  this->path     = std::nullopt;
+  this->input    = std::nullopt;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  pkgdb::PkgQueryArgs &
+ManifestDescriptor::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
+{
+
+  return pqa;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 }  /* End namespaces `flox::resolver' */
 
 

@@ -117,6 +117,12 @@ struct PkgQueryArgs : public PkgDescriptorBase {
   /** Filter results by partial name/description match. */
   std::optional<std::string> match;
 
+  /**
+   * Filter results by _match strength_.
+   * This can be useful for filtering out packages that only partially match.
+   */
+  std::optional<unsigned> matchMinStrength;
+
   /** Filter results to those explicitly marked with the given licenses. */
   std::optional<std::vector<std::string>> licenses;
 
@@ -212,13 +218,14 @@ struct PkgQueryArgs : public PkgDescriptorBase {
  * @fn void to_json( nlohmann::json & j, const PkgQueryArgs & pdb )
  * @brief Convert a @a flox::pkgdb::PkgQueryArgs to a JSON object.
  */
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(
   PkgQueryArgs
 , name
 , pname
 , version
 , semver
 , match
+, matchMinStrength
 , licenses
 , allowBroken
 , allowUnfree

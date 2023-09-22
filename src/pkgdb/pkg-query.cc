@@ -226,9 +226,42 @@ PkgQuery::initMatch()
 {
   if ( this->match.has_value() && ( ! this->match->empty() ) )
     {
-      this->addWhere(
-        "( pname LIKE :match ) OR ( description LIKE :match )"
-      );
+      /* Add filtering based on `matchStrenthMing'. */
+      if ( unsigned minStrength = this->matchMinStrength.value_or( 1 );
+           0 < minStrength
+         )
+        {
+          std::stringstream cond;
+
+          if ( MS_EXACT_PNAME <= minStrength )
+            {
+              cond << "( ( '%' || LOWER( pname ) || '%' ) = LOWER( :match ) )";
+            }
+          else
+            {
+              cond << "( pname LIKE :match )";
+            }
+
+          if ( MS_EXACT_ATTRNAME <= minStrength )
+            {
+              cond << " OR ( ( '%' || LOWER( pkgAttrName ) || '%' ) = "
+                   << "LOWER( :match ) )";
+            }
+          else
+            {
+              cond << " OR ( pkgAttrName LIKE :match )";
+            }
+
+          cond << " OR ( description LIKE :match )";
+          this->addWhere( cond.str() );
+          cond.clear();
+
+          if ( 1 < minStrength )
+            {
+              cond << "matchStrength >= " << minStrength;
+              this->addWhere( cond.str() );
+            }
+        }
 
       /* We _rank_ the strength of a match from 0-3 based on exact and partial
        * matches of `pname` and `description` columns.
@@ -278,6 +311,7 @@ PkgQuery::initMatch()
       )SQL";
 
       this->addSelection( matcher.str() );
+
       /* Add `%` before binding so `LIKE` works. */
       binds.emplace( ":match", "%" +  ( * this->match ) + "%" );
     }
