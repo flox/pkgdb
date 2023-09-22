@@ -22,7 +22,7 @@ namespace flox::resolver {
  * @brief Sets either `version` or `semver` on
  *        a `flox::resolver::ManifestDescriptor`.
  *
- * Distinguishs between semver ranges and exact version matchers.
+ * Distinguishes between semver ranges and exact version matchers.
  * @param desc The descriptor to initialize.
  * @param version The version description to parse.
  */
@@ -96,7 +96,7 @@ maybeSplitAttrPathGlob( const ManifestDescriptorRaw::AbsPath & absPath )
  * @brief Sets various fields on a `flox::resolver::ManifestDescriptor`
  *        based on the `absPath` field.
  * @param desc The descriptor to initialize.
- * @param version The version description to parse.
+ * @param raw The raw description to parse.
  */
   static void
 initManifestDescriptorAbsPath(       ManifestDescriptor    & desc
