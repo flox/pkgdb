@@ -319,7 +319,8 @@ cdb: compile_commands.json
 	  echo $(CXXFLAGS) $(sqlite3_CFLAGS) $(nljson_CFLAGS) $(nix_CFLAGS);  \
 	  echo $(nljson_CFLAGS) $(argparse_CFLAGS) $(sqlite3pp_CFLAGS);       \
 	  echo '-DTEST_DATA_DIR="$(TEST_DATA_DIR)"';                          \
-	}|$(TR) ' ' '\n'|$(SED) 's/-std=/%cpp -std=/' >> "$@";
+	}|$(TR) ' ' '\n'|$(SED) 's/-std=\(.*\)/%cpp -std=\1|%h -std=\1/'      \
+	 |$(TR) '|' '\n' >> "$@";
 
 
 # Get system include paths from `nix' C++ compiler.

@@ -8,6 +8,7 @@
  *
  * -------------------------------------------------------------------------- */
 
+#include "versions.hh"
 #include "flox/resolver/descriptor.hh"
 
 
@@ -19,11 +20,44 @@ namespace flox::resolver {
 
 ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
   : name( raw.name )
-  , version( raw.version )
   , optional( raw.optional )
   , group( raw.packageGroup )
 {
-  /* You have to split `absPath' first. */
+  /* Determine if `version' was a range or not.
+   * NOTE: The string "4.2.0" is not a range, but "4.2" is!
+   *       If you want to explicitly match the `version` field with "4.2" then
+   *       you need to use "=4.2". */
+  if ( raw.version.has_value() )
+    {
+      switch ( raw.version->at( 0 ) )
+        {
+          case '=':
+            this->version = raw.version->substr( 1 );
+            break;
+
+          case '*':
+          case '~':
+          case '^':
+          case '>':
+          case '<':
+            this->semver = * raw.version;
+            break;
+
+          default:
+            /* If it's a valid semver, then it's not a range. */
+            if ( versions::isSemver( * raw.version ) )
+              {
+                this->version = * raw.version;
+              }
+            else /* Otherwise, assume a range. */
+              {
+                this->semver = * raw.version;
+              }
+            break;
+        }
+    }
+
+  /* You have to split `absPath' before doing most other fields. */
   if ( raw.absPath.has_value() )
     {
       /* You might need to parse a globbed attr path, so handle that first. */
@@ -178,15 +212,16 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
   void
 ManifestDescriptor::clear()
 {
-  this->name     = std::nullopt;
-  this->version  = std::nullopt;
-  this->optional = false;
-  this->group    = std::nullopt;
-  this->subtree  = std::nullopt;
-  this->systems  = std::nullopt;
-  this->stability= std::nullopt;
-  this->path     = std::nullopt;
-  this->input    = std::nullopt;
+  this->name      = std::nullopt;
+  this->optional  = false;
+  this->group     = std::nullopt;
+  this->version   = std::nullopt;
+  this->semver    = std::nullopt;
+  this->subtree   = std::nullopt;
+  this->systems   = std::nullopt;
+  this->stability = std::nullopt;
+  this->path      = std::nullopt;
+  this->input     = std::nullopt;
 }
 
 
@@ -195,7 +230,7 @@ ManifestDescriptor::clear()
   pkgdb::PkgQueryArgs &
 ManifestDescriptor::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 {
-
+  // TODO
   return pqa;
 }
 

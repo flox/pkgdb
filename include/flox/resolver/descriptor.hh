@@ -118,14 +118,17 @@ struct ManifestDescriptor {
     /** Match `name`, `pname`, or `pkgAttrName` */
     std::optional<std::string> name;
 
-    /** Match `version` or `semver` if a modifier is present. */
-    std::optional<std::string> version;
-
     /** Whether resoution is allowed to fail without producing errors. */
     bool optional = false;
 
     /** Named _group_ that the package is a member of. */
     std::optional<std::string> group;
+
+    /** Match `version`. */
+    std::optional<std::string> version;
+
+    /** Match a semantic version range. */
+    std::optional<std::string> semver;
 
     /** Match a subtree. */
     std::optional<Subtree> subtree;
@@ -136,7 +139,7 @@ struct ManifestDescriptor {
     /** Match a catalog stability. */
     std::optional<std::string> stability;
 
-    /** Match a relative path. */
+    /** Match a relative attribute path. */
     std::optional<flox::AttrPath> path;
 
     /** Force resolution is a given input, _flake reference_, or file. */
