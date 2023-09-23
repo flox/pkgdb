@@ -30,16 +30,7 @@ namespace flox::resolver {
  * This comprises a set of inputs with @a flox::pkgdb::PkgDbInput handles and
  * a set of descriptors to be resolved.
  */
-class ResolverState : protected pkgdb::PkgDbRegistryMixin {
-
-  /* From `PkgDbRegistryMixin':
-   *   public:
-   *     std::shared_ptr<nix::Store>     store
-   *     std::shared_ptr<nix::EvalState> state
-   *   protected:
-   *     bool                                                force    = false;
-   *     std::shared_ptr<Registry<pkgdb::PkgDbInputFactory>> registry;
-   */
+class ResolverState : public pkgdb::PkgDbRegistryMixin<> {
 
   private:
 
@@ -49,6 +40,13 @@ class ResolverState : protected pkgdb::PkgDbRegistryMixin {
 
 
   protected:
+
+    /* From `PkgDbRegistryMixin':
+     *   std::shared_ptr<nix::Store>                         store
+     *   std::shared_ptr<nix::EvalState>                     state
+     *   bool                                                force    = false
+     *   std::shared_ptr<Registry<pkgdb::PkgDbInputFactory>> registry
+     */
 
       [[nodiscard]]
       virtual std::vector<std::string> &
@@ -65,11 +63,7 @@ class ResolverState : protected pkgdb::PkgDbRegistryMixin {
       void
     initResolverState()
     {
-      if ( this->registry == nullptr )
-        {
-          this->initRegistry();
-          this->scrapeIfNeeded();
-        }
+      if ( this->registry == nullptr ) { this->scrapeIfNeeded(); }
       assert( this->registry != nullptr );
     }
 
@@ -84,6 +78,7 @@ class ResolverState : protected pkgdb::PkgDbRegistryMixin {
     {}
 
 
+    /** @brief Get the _raw_ registry declaration. */
       [[nodiscard]]
       virtual RegistryRaw
     getRegistryRaw() override
@@ -92,25 +87,21 @@ class ResolverState : protected pkgdb::PkgDbRegistryMixin {
     }
 
 
+    /**
+     * @brief Get a _base_ set of query arguments for the input associated with
+     *        @a name and declared @a preferences.
+     */
       [[nodiscard]]
-      nix::ref<Registry<pkgdb::PkgDbInputFactory>>
-    getPkgDbRegistry()
-    {
-      this->initResolverState();
-      return static_cast<nix::ref<Registry<pkgdb::PkgDbInputFactory>>>(
-        this->registry
-      );
-    }
-
       pkgdb::PkgQueryArgs
     getPkgQueryArgs( const std::string & name )
     {
-      this->initResolverState();
       pkgdb::PkgQueryArgs args;
       this->preferences.fillPkgQueryArgs( args );
+      this->initResolverState();
       this->registry->at( name )->fillPkgQueryArgs( args );
       return args;
     }
+
 
 };  /* End class `ResolverState' */
 

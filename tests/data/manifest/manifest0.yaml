@@ -9,6 +9,34 @@
 ##  floxhub: "https://hub.flox.dev/owner/env"
 ##  dir: "~/somewhere/else/"
 
+registry:
+  inputs:
+    nixpkgs:
+      from:
+        type: "github"
+        owner: "NixOS"
+        repo: "nixpkgs"
+        rev: "e8039594435c68eb4f780f3e9bf3972a7399c4b1"
+      subtrees: ["legacyPackages"]
+    nixpkgs-flox:
+      from:
+        type: "github"
+        owner: "flox"
+        repo: "nixpkgs-flox"
+        rev: "feb593b6844a96dd4e17497edaabac009be05709"
+      subtrees: ["catalog"]
+      stabilities: ["stable"]
+    floco:
+      from:
+        type: "github"
+        owner: "aakropotkin"
+        repo: "floco"
+        rev: "1e84b4b16bba5746e1195fa3a4d8addaaf2d9ef4"
+      subtrees: ["packages"]
+
+options:
+  systems: ["x86_64-linux"]
+
 # Project enviornments:
 # Declare my installed software (dependencies, software applications)
 install:
@@ -58,9 +86,9 @@ install:
   which:
     absPath: ["legacyPackages", null, "flocoPackages", "which", "3.0.1", "global"]
   quux:
-    absPath: ["evalCatalog", null, "staging", "python3Packages", "quux", "4.2.0"]
+    absPath: ["evalCatalog", null, "staging", "python3Packages", "numpy", "latest"]
   quux2:
-    absPath: ["legacyPackages", null, "python3Packages", "quux"]
+    absPath: ["legacyPackages", null, "python3Packages", "numpy"]
 
   # 8a. (edge case) Marking a dependency as `optional' will skip it on
   # unsupported systems.
@@ -79,31 +107,31 @@ install:
   # stability, and an exact attribute path to pull from.
   # packageRepository will be looked up in a separate "registry file".
   myFavoriteApple:
-    packageRepository:
-      id: "safeway-pkgs"
+    packageRepository: "nixpkgs-flox"
     stability: "stable"
-    path: "produce.vegetables.organics.apples.fuji"
+    path: "python3Packages.numpy"
 
   # 10. (edge case) As above but provide an inline definition of
   # "packageRepository" with no registry lookup.
   myReallyExplicitApple:
     packageRepository:
       type: "github"
-      owner: "sally"
-      repo: "my-pkgs"
-      rev: "d5b4fa110c4b546b7ed51a02d523973a8e075159"
-    path: "produce.vegetables.organics.apples.fuji"
+      owner: "aakropotkin"
+      repo: "floco"
+    path: "semver"
 
+  # TODO
   # 11. (edge case) Or to avoid a repetitive strain injury ( **future extension** not part of base spec):
-  apple: "github:sally/safeway-pkgs/db4fa111dsafadf#produce.vegetables.organics.fuji"
+  #apple: "github:sally/safeway-pkgs/db4fa111dsafadf#produce.vegetables.organics.fuji"
 
 
+  # TODO
   # 12. (edge case) How to refer to nix code directly.
   # these cannot be pushed to floxhub environments.
   # we require these in the .flox dir for now
-  foo:
-    input: "./foo.nix"
-    path: "foo"
+  #foo:
+  #  input: "./foo.nix"
+  #  path: "foo"
 
 
 # Set an environment variable

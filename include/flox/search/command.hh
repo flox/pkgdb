@@ -51,7 +51,10 @@ struct PkgQueryMixin {
 /* -------------------------------------------------------------------------- */
 
 /** @brief Search flakes for packages satisfying a set of filters. */
-class SearchCommand : public pkgdb::PkgDbRegistryMixin, public PkgQueryMixin {
+class SearchCommand
+  : public pkgdb::PkgDbRegistryMixin<>
+  , public PkgQueryMixin
+{
 
   private:
 

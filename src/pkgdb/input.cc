@@ -194,37 +194,6 @@ PkgDbInput::getRowJSON( row_id row )
 
 /* -------------------------------------------------------------------------- */
 
-  void
-PkgDbRegistryMixin::initRegistry()
-{
-  if ( this->registry == nullptr )
-    {
-      nix::ref<nix::Store> store = this->getStore();
-      pkgdb::PkgDbInputFactory factory( store );  // TODO: cacheDir
-      this->registry = std::make_shared<Registry<PkgDbInputFactory>>(
-        this->getRegistryRaw()
-      , factory
-      );
-    }
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  void
-PkgDbRegistryMixin::scrapeIfNeeded()
-{
-  this->initRegistry();
-  assert( this->registry != nullptr );
-  for ( auto & [name, input] : * this->registry )
-    {
-      input->scrapeSystems( this->getSystems() );
-    }
-}
-
-
-/* -------------------------------------------------------------------------- */
-
 }  /* End namespaces `flox::pkgdb' */
 
 

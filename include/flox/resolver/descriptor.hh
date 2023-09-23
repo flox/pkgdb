@@ -147,7 +147,9 @@ struct ManifestDescriptor {
 
 
     ManifestDescriptor() = default;
-    ManifestDescriptor( const ManifestDescriptorRaw & raw );
+
+    explicit ManifestDescriptor( const ManifestDescriptorRaw & raw );
+
 
     /** @brief Reset to default state. */
     void clear();

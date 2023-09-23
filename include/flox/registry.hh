@@ -100,6 +100,11 @@ concept input_preferences_typename =
 /** @brief Preferences associated with a named registry input. */
 struct RegistryInput : public InputPreferences {
 
+  /* From `InputPreferences':
+   *   std::optional<std::vector<Subtree>>     subtrees;
+   *   std::optional<std::vector<std::string>> stabilities;
+   */
+
   std::shared_ptr<nix::FlakeRef> from;  /**< A parsed flake reference. */
 
   /** @brief Get the flake reference associated with this input. */
@@ -357,7 +362,36 @@ class Registry {
      * @brief Construct a registry from a @a flox::RegistryRaw and
      *        a _factory_.
      */
-    explicit Registry( RegistryRaw registry, FactoryType & factory );
+    explicit Registry( RegistryRaw registry, FactoryType & factory )
+      : registryRaw( std::move( registry ) )
+    {
+      for ( const std::reference_wrapper<const std::string> & _name :
+              this->registryRaw.getOrder()
+          )
+        {
+          const auto & pair = std::find_if(
+            this->registryRaw.inputs.begin()
+          , this->registryRaw.inputs.end()
+          , [&]( const auto & pair ) { return pair.first == _name.get(); }
+          );
+
+          /* Fill default/fallback values if none are defined. */
+          RegistryInput input = pair->second;
+          if ( ! input.subtrees.has_value() )
+            {
+              input.subtrees = this->registryRaw.defaults.subtrees;
+            }
+          if ( ! input.stabilities.has_value() )
+            {
+              input.stabilities = this->registryRaw.defaults.stabilities;
+            }
+
+          /* Construct the input */
+          this->inputs.emplace_back(
+            std::make_pair( pair->first, factory.mkInput( pair->first, input ) )
+          );
+        }
+    }
 
 
     /**
@@ -368,7 +402,16 @@ class Registry {
      */
       [[nodiscard]]
       std::shared_ptr<typename FactoryType::input_type>
-    get( const std::string & name ) const noexcept;
+    get( const std::string & name ) const noexcept
+    {
+      const auto maybeInput = std::find_if(
+        this->inputs.begin()
+      , this->inputs.end()
+      , [&]( const auto & pair ) { return pair.first == name; }
+      );
+      if ( maybeInput == this->inputs.end() ) { return nullptr; }
+      return maybeInput->second;
+    }
 
 
     /**
@@ -378,7 +421,16 @@ class Registry {
      */
       [[nodiscard]]
       std::shared_ptr<typename FactoryType::input_type>
-    at( const std::string & name ) const;
+    at( const std::string & name ) const
+    {
+      const std::shared_ptr<typename FactoryType::input_type> maybeInput =
+        this->get( name );
+      if ( maybeInput == nullptr )
+        {
+          throw std::out_of_range( "No such input '" + name + "'" );
+        }
+      return maybeInput;
+    }
 
 
     /** @brief Get the raw registry read from the user. */

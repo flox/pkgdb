@@ -8,10 +8,10 @@
 #include <fstream>
 
 #include <nlohmann/json.hpp>
-
 #include "test.hh"
 #include "flox/core/util.hh"
 #include "flox/resolver/descriptor.hh"
+#include "flox/resolver/manifest.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -87,6 +87,32 @@ test_parseManifestDescriptor0()
 
 /* -------------------------------------------------------------------------- */
 
+  bool
+test_getLockedInputs()
+{
+  std::ifstream ifs( TEST_DATA_DIR "/manifest/manifest0.yaml" );
+  std::string   yaml( ( std::istreambuf_iterator<char>( ifs ) ),
+                      ( std::istreambuf_iterator<char>() )
+                    );
+
+  nlohmann::json manifestJSON = flox::yamlToJSON( yaml );
+  std::cout << manifestJSON.dump() << std::endl;
+
+  flox::resolver::ManifestRaw raw = manifestJSON;
+  flox::resolver::Manifest    manifest( raw );
+
+  for ( const auto & [name, ref] : manifest.getLockedInputs() )
+    {
+      std::cerr << name << ": " << ref.to_string() << std::endl;
+    }
+
+  return true;
+}
+
+
+
+/* -------------------------------------------------------------------------- */
+
   int
 main()
 {
@@ -98,6 +124,8 @@ main()
   RUN_TEST( yamlToJSON0 );
 
   RUN_TEST( parseManifestDescriptor0 );
+
+  RUN_TEST( getLockedInputs );
 
   return ec;
 }

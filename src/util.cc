@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
+#include <algorithm>
 
 #include <nlohmann/json.hpp>
 
@@ -170,6 +171,15 @@ isUInt( std::string_view str )
            , []( unsigned char chr ) { return std::isdigit( chr ) == 0; }
            ) == str.end()
          );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  bool
+hasPrefix( std::string_view prefix, std::string_view str )
+{
+  return str.compare( 0, prefix.size(), prefix ) == 0;
 }
 
 

@@ -33,45 +33,33 @@ void initNix();
 
 /* -------------------------------------------------------------------------- */
 
-/**
- * @brief Runtime state containing a `nix` store connection and a
- *        `nix` evaluator.
- */
-struct NixState {
+/** @brief Mixin which provides a lazy handle to a `nix` store connection. */
+struct NixStoreMixin {
 
-/* -------------------------------------------------------------------------- */
+  protected:
+
+    std::shared_ptr<nix::Store> store;  /**< `nix` store connection.   */
+
 
   public:
 
-    std::shared_ptr<nix::Store>     store;  /**< `nix` store connection.   */
-    std::shared_ptr<nix::EvalState> state;  /**< `nix` evaluator instance. */
-
-
-/* -------------------------------------------------------------------------- */
-
-  // public:
-
     /**
-     * @brief Construct `NixState` from an existing store connection.
+     * @brief Construct `NixStoreMixin` from an existing store connection.
      *
      * This may be useful if you wish to avoid a non-default store.
      * @param store An open `nix` store connection.
      */
-    explicit NixState( nix::ref<nix::Store> & store )
+    explicit NixStoreMixin( nix::ref<nix::Store> & store )
       : store( static_cast<std::shared_ptr<nix::Store>>( store ) )
     {
       initNix();
     }
 
     /**
-     * @brief Construct `NixState` using the systems default `nix` store.
+     * @brief Construct `NixStoreMixin` using the systems default `nix` store.
      */
-    NixState() { initNix(); }
+    NixStoreMixin() { initNix(); }
 
-
-/* -------------------------------------------------------------------------- */
-
-  // public:
 
     /**
      * @brief Lazily open a `nix` store connection.
@@ -81,12 +69,45 @@ struct NixState {
       nix::ref<nix::Store>
     getStore()
     {
-      if ( this->store == nullptr )
-        {
-          this->store = nix::openStore();
-        }
+      if ( this->store == nullptr ) { this->store = nix::openStore(); }
       return static_cast<nix::ref<nix::Store>>( this->store );
     }
+
+
+};  /* End struct `NixStoreMixin' */
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief Runtime state containing a `nix` store connection and a
+ *        `nix` evaluator.
+ */
+class NixState : public NixStoreMixin {
+
+  protected:
+
+    /* From `NixStoreMixin':
+     *   std::shared_ptr<nix::Store> store
+     */
+
+    std::shared_ptr<nix::EvalState> state;  /**< `nix` evaluator instance. */
+
+
+  public:
+
+    /** @brief Construct `NixState` using the systems default `nix` store. */
+    NixState() : NixStoreMixin() {}
+
+    /**
+     * @brief Construct `NixState` from an existing store connection.
+     *
+     * This may be useful if you wish to avoid a non-default store.
+     * @param store An open `nix` store connection.
+     */
+    explicit NixState( nix::ref<nix::Store> & store )
+      : NixStoreMixin( store )
+    {}
 
 
     /**
@@ -109,8 +130,6 @@ struct NixState {
       return static_cast<nix::ref<nix::EvalState>>( this->state );
     }
 
-
-/* -------------------------------------------------------------------------- */
 
 };  /* End class `NixState' */
 

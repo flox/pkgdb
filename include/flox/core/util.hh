@@ -277,6 +277,17 @@ bool isUInt( std::string_view str );
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * @brief Does the string @str have the prefix @a prefix?
+ * @param prefix The prefix to check for.
+ * @param str String to test.
+ * @return `true` iff @a str has the prefix @a prefix.
+ */
+bool hasPrefix( std::string_view prefix, std::string_view str );
+
+
+/* -------------------------------------------------------------------------- */
+
 }    /* End namespace `flox' */
 
 
