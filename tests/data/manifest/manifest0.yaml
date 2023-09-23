@@ -1,13 +1,3 @@
-# Composability: an environment that we are adding packages on top of.
-# This is not the environment that is pulled.
-# This will happen later but is recorded here for completeness.
-# You will either have "floxhub" or "dir" but not both
-
-## TODO
-
-##envBase:
-##  floxhub: "https://hub.flox.dev/owner/env"
-##  dir: "~/somewhere/else/"
 
 registry:
   inputs:
@@ -18,6 +8,7 @@ registry:
         repo: "nixpkgs"
         rev: "e8039594435c68eb4f780f3e9bf3972a7399c4b1"
       subtrees: ["legacyPackages"]
+
     nixpkgs-flox:
       from:
         type: "github"
@@ -26,6 +17,7 @@ registry:
         rev: "feb593b6844a96dd4e17497edaabac009be05709"
       subtrees: ["catalog"]
       stabilities: ["stable"]
+
     floco:
       from:
         type: "github"
@@ -34,8 +26,34 @@ registry:
         rev: "1e84b4b16bba5746e1195fa3a4d8addaaf2d9ef4"
       subtrees: ["packages"]
 
+
+## TODO
+
+# Composability: an environment that we are adding packages on top of.
+# This is not the environment that is pulled.
+# This will happen later but is recorded here for completeness.
+# You will either have "floxhub" or "dir" but not both
+
+##envBase:
+##  floxhub: "https://hub.flox.dev/owner/env"
+##  dir: "~/somewhere/else/"
+
+
 options:
   systems: ["x86_64-linux"]
+# TODO
+# Which activation strategy (edge case)
+# Define these once we have multiple strategies (likely not part
+# of initial requirements).
+# Examples: "etc-profiles" or sourcing a shell script
+##  activation-strategy: "some-option"
+
+# Concept: Which grouping strategy (edge case)
+# Define these to override default grouping behavior
+# Examples: "auto" or "single-nixpkgs-group"
+# Future options (post v1): "flexible-groups-with-overlays" or ...
+##  package-grouping-strategy = "some-option"
+
 
 # Project enviornments:
 # Declare my installed software (dependencies, software applications)
@@ -139,24 +157,6 @@ vars:
   message: "Howdy"
   message2: "partner"
 
-# Which activation strategy (edge case)
-# Define these once we have multiple strategies (likely not part
-# of initial requirements).
-# Examples: "etc-profiles" or sourcing a shell script
-
-## TODO
-
-##options:
-##  activation-strategy: "some-option"
-
-# Concept: Which grouping strategy (edge case)
-# Define these to override default grouping behavior
-# Examples: "auto" or "single-nixpkgs-group"
-# Future options (post v1): "flexible-groups-with-overlays" or ...
-
-## TODO
-
-##package-grouping-strategy = "some-option"
 
 # When activating, this outputs ascii art of a cow with a text bubble
 # containing "Howdy partner".

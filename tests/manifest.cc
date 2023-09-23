@@ -95,10 +95,7 @@ test_getLockedInputs()
                       ( std::istreambuf_iterator<char>() )
                     );
 
-  nlohmann::json manifestJSON = flox::yamlToJSON( yaml );
-  std::cout << manifestJSON.dump() << std::endl;
-
-  flox::resolver::ManifestRaw raw = manifestJSON;
+  flox::resolver::ManifestRaw raw = flox::yamlToJSON( yaml );
   flox::resolver::Manifest    manifest( raw );
 
   for ( const auto & [name, ref] : manifest.getLockedInputs() )
