@@ -231,33 +231,36 @@ PkgQuery::initMatch()
            0 < minStrength
          )
         {
-          std::stringstream cond;
+          {
+            std::stringstream cond;
 
-          if ( MS_EXACT_PNAME <= minStrength )
-            {
-              cond << "( ( '%' || LOWER( pname ) || '%' ) = LOWER( :match ) )";
-            }
-          else
-            {
-              cond << "( pname LIKE :match )";
-            }
+            if ( MS_EXACT_PNAME <= minStrength )
+              {
+                cond << "( ( '%' || LOWER( pname ) || '%' ) = "
+                        "LOWER( :match ) )";
+              }
+            else
+              {
+                cond << "( pname LIKE :match )";
+              }
 
-          if ( MS_EXACT_ATTRNAME <= minStrength )
-            {
-              cond << " OR ( ( '%' || LOWER( pkgAttrName ) || '%' ) = "
-                   << "LOWER( :match ) )";
-            }
-          else
-            {
-              cond << " OR ( pkgAttrName LIKE :match )";
-            }
+            if ( MS_EXACT_ATTRNAME <= minStrength )
+              {
+                cond << " OR ( ( '%' || LOWER( pkgAttrName ) || '%' ) = "
+                     << "LOWER( :match ) )";
+              }
+            else
+              {
+                cond << " OR ( pkgAttrName LIKE :match )";
+              }
 
-          cond << " OR ( description LIKE :match )";
-          this->addWhere( cond.str() );
-          cond.clear();
+            cond << " OR ( description LIKE :match )";
+            this->addWhere( cond.str() );
+          }
 
           if ( 1 < minStrength )
             {
+              std::stringstream cond;
               cond << "matchStrength >= " << minStrength;
               this->addWhere( cond.str() );
             }

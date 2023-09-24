@@ -278,6 +278,7 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
             std::get<nix::fetchers::Attrs>( * raw.packageRepository )
           );
         }
+      assert( std::holds_alternative<nix::FlakeRef>( * this->input ) );
     }
   else if ( raw.input.has_value() )
     {
@@ -346,7 +347,8 @@ ManifestDescriptor::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
       pqa.stabilities = std::vector<std::string> { * this->stability };
     }
 
-  if ( this->path.has_value() ) { pqa.relPath = * this->path; }
+  // FIXME
+  //if ( this->path.has_value() ) { pqa.relPath = * this->path; }
 
   return pqa;
 }

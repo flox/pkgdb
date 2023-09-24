@@ -107,6 +107,13 @@ struct RegistryInput : public InputPreferences {
 
   std::shared_ptr<nix::FlakeRef> from;  /**< A parsed flake reference. */
 
+  RegistryInput() = default;
+
+  explicit RegistryInput( const nix::FlakeRef & from )
+    : from( std::make_shared<nix::FlakeRef>( from ) )
+  {}
+
+
   /** @brief Get the flake reference associated with this input. */
     [[nodiscard]]
     nix::ref<nix::FlakeRef>
@@ -114,6 +121,7 @@ struct RegistryInput : public InputPreferences {
   {
     return static_cast<nix::ref<nix::FlakeRef>>( this->from );
   };
+
 
 };  /* End struct `RegistryInput' */
 

@@ -16,6 +16,49 @@ namespace flox::resolver {
 
 /* -------------------------------------------------------------------------- */
 
+/* Generate `to_json' and `from_json' `ManifestRaw::EnvBase' */
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(
+  ManifestRaw::EnvBase
+, floxhub
+, dir
+)
+
+
+/* Generate `to_json' and `from_json' `ManifestRaw::Options' */
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(
+  ManifestRaw::Options::Allows
+, unfree
+, broken
+, licenses
+)
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(
+  ManifestRaw::Options::Semver
+, preferPreReleases
+)
+
+// TODO: Remap `fooBar' to `foo-bar' in the JSON.
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(
+  ManifestRaw::Options
+, systems
+, allow
+, semver
+, packageGroupingStrategy
+, activationStrategy
+)
+
+
+/* Generate `to_json' and `from_json' `ManifestRaw::Hook' */
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(
+  ManifestRaw::Hook
+, script
+, file
+)
+
+
+/* -------------------------------------------------------------------------- */
+
   void
 from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
 {
@@ -47,37 +90,19 @@ from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
         }
       else if ( key == "vars" )
         {
-          // TODO
-          continue;
+          value.get_to( manifest.vars );
         }
       else if ( key == "hook" )
         {
-          // TODO
-          continue;
+          value.get_to( manifest.hook );
         }
       else if ( key == "options" )
         {
-          ManifestRaw::Options options;
-          for ( const auto & [okey, ovalue] : value.items() )
-            {
-              if ( okey == "systems" )
-                {
-                  ovalue.get_to( options.systems );
-                }
-              else
-                {
-                  throw FloxException(
-                    "Unrecognized manifest field: `options." + key + "'."
-                  );
-                }
-              // TODO: others
-            }
-          manifest.options = std::move( options );
+          value.get_to( manifest.options );
         }
-      else if ( key == "envBase" )
+      else if ( ( key == "envBase" ) || ( key == "env-base" ) )
         {
-          // TODO
-          continue;
+          value.get_to( manifest.envBase );
         }
       else
         {
@@ -134,6 +159,63 @@ Manifest::getPkgQueryArgs( const std::string & name )
 
 /* -------------------------------------------------------------------------- */
 
+  void
+Manifest::initPreferences()
+{
+  if ( this->raw.options.systems.has_value() )
+    {
+      this->preferences.systems = * this->raw.options.systems;
+    }
+
+  if ( this->raw.options.allow.has_value() )
+    {
+      if ( this->raw.options.allow->unfree.has_value() )
+        {
+          this->preferences.allow.unfree = * this->raw.options.allow->unfree;
+        }
+      if ( this->raw.options.allow->broken.has_value() )
+        {
+          this->preferences.allow.broken = * this->raw.options.allow->broken;
+        }
+      if ( this->raw.options.allow->licenses.has_value() )
+        {
+          this->preferences.allow.licenses =
+            * this->raw.options.allow->licenses;
+        }
+    }
+
+  if ( this->raw.options.semver.has_value() )
+    {
+      if ( this->raw.options.semver->preferPreReleases.has_value() )
+        {
+          this->preferences.semver.preferPreReleases =
+            * this->raw.options.semver->preferPreReleases;
+        }
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  void
+Manifest::initGroups()
+{
+  for ( const auto & [name, desc] : this->raw.install )
+    {
+      if ( desc.group.has_value() )
+        {
+          this->groups[* desc.group].emplace( name );
+        }
+      else
+        {
+          this->groups["__ungrouped__"].emplace( name );
+        }
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
   std::unordered_map<std::string, nix::FlakeRef>
 Manifest::getInlineInputs() const
 {
@@ -169,7 +251,7 @@ Manifest::initRegistryRaw()
     {
       RegistryInput input;
       input.from = std::make_shared<nix::FlakeRef>( ref );
-      this->registryRaw->inputs.emplace( "__indirect__" + name
+      this->registryRaw->inputs.emplace( "__inline__" + name
                                        , std::move( input )
                                        );
     }
@@ -181,24 +263,7 @@ Manifest::initRegistryRaw()
   std::vector<std::string> &
 Manifest::getSystems()
 {
-  /* Lazily fill */
-  if ( this->systems.empty() )
-    {
-      if ( this->raw.options.has_value() &&
-           this->raw.options->systems.has_value()
-         )
-        {
-          this->systems = * this->raw.options->systems;
-        }
-      else
-        {
-          /* Fallback to current system. */
-          this->systems = std::vector<std::string> {
-            nix::settings.thisSystem.get()
-          };
-        }
-    }
-  return this->systems;
+  return this->preferences.systems;
 }
 
 
@@ -225,6 +290,105 @@ Manifest::getLockedInputs()
                     );
     }
   return inputs;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  std::optional<ManifestDescriptor>
+Manifest::getDescriptor( const std::string & iid )
+{
+  try                                { return this->raw.install.at( iid ); }
+  catch( const std::out_of_range & ) { return std::nullopt; }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+// TODO: this should be taking `system' as an argument so we can limit the
+//       results to a maximum of 1/input.
+  std::vector<Manifest::Resolved>
+Manifest::resolveDescriptor( const std::string & iid )
+{
+  auto descriptor = this->getDescriptor( iid );
+  if ( ! descriptor.has_value() )
+    {
+      throw FloxException( "No such package `install." + iid + "'." );
+    }
+
+  auto dbs = this->getPkgDbRegistry();
+
+  std::vector<Manifest::Resolved> resolved;
+
+  /* Todo list of inputs that need to be processed. */
+  std::vector<std::string> inputNames;
+
+  /* Determine which inputs we should resolve in. */
+  if ( descriptor->input.has_value() )
+    {
+      std::visit(
+        overloaded {
+          [&]( const std::string & path )
+            {
+              (void) path;
+              throw FloxException(
+                "Manifest::resolveDescriptor( 'inputs." + iid + "' ): "
+                "Expression files not yet supported. TODO\n"
+                "  -Alex <3"
+              );
+            }
+        , [&]( const nix::FlakeRef & ref )
+            {
+              if ( ref.input.getType() == "indirect" )
+                {
+                  inputNames.emplace_back(
+                    nix::fetchers::getStrAttr( ref.input.attrs, "id" )
+                  );
+                }
+              else
+                {
+                  inputNames.emplace_back( "__inline__" + iid );
+                }
+            }
+        }
+      , * descriptor->input
+      );
+    }
+  else
+    {
+      for ( const auto & [name, _] : * dbs )
+        {
+          inputNames.emplace_back( name );
+        }
+    }
+
+  /* Resolve that shit. */
+  for ( auto & name : inputNames )
+    {
+      auto input = dbs->at( name );
+      auto args  = this->getPkgQueryArgs( name );
+      descriptor->fillPkgQueryArgs( args );
+      pkgdb::PkgQuery query( args );
+      auto dbRO = input->getDbReadOnly();
+      auto rows = query.execute( dbRO->db );
+
+      /* A swing and a miss. */
+      if ( rows.empty() ) { continue; }
+
+      std::string resolvedName =
+        hasPrefix( "__inline__", name ) ? dbRO->getLockedFlakeRef().to_string()
+                                        : name;
+
+      for ( const auto & row : rows )
+        {
+          resolved.emplace_back( Resolved { .input = resolvedName
+                                          , .path  = dbRO->getPackagePath( row )
+                                          }
+                               );
+        }
+    }
+
+  return resolved;
 }
 
 

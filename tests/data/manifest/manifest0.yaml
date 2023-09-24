@@ -1,29 +1,30 @@
 
 registry:
+  priority: ["nixpkgs", "floco", "nixpkgs-flox"]
   inputs:
     nixpkgs:
       from:
-        type: "github"
-        owner: "NixOS"
-        repo: "nixpkgs"
-        rev: "e8039594435c68eb4f780f3e9bf3972a7399c4b1"
+        type: github
+        owner: NixOS
+        repo: nixpkgs
+        rev: e8039594435c68eb4f780f3e9bf3972a7399c4b1
       subtrees: ["legacyPackages"]
 
     nixpkgs-flox:
       from:
-        type: "github"
-        owner: "flox"
-        repo: "nixpkgs-flox"
-        rev: "feb593b6844a96dd4e17497edaabac009be05709"
+        type: github
+        owner: flox
+        repo: nixpkgs-flox
+        rev: feb593b6844a96dd4e17497edaabac009be05709
       subtrees: ["catalog"]
       stabilities: ["stable"]
 
     floco:
       from:
-        type: "github"
-        owner: "aakropotkin"
-        repo: "floco"
-        rev: "1e84b4b16bba5746e1195fa3a4d8addaaf2d9ef4"
+        type: github
+        owner: aakropotkin
+        repo: floco
+        rev: 1e84b4b16bba5746e1195fa3a4d8addaaf2d9ef4
       subtrees: ["packages"]
 
 
@@ -34,9 +35,9 @@ registry:
 # This will happen later but is recorded here for completeness.
 # You will either have "floxhub" or "dir" but not both
 
-##envBase:
-##  floxhub: "https://hub.flox.dev/owner/env"
-##  dir: "~/somewhere/else/"
+envBase:
+  floxhub: "https://hub.flox.dev/owner/env"
+#  dir: "~/somewhere/else/"
 
 
 options:
@@ -46,13 +47,13 @@ options:
 # Define these once we have multiple strategies (likely not part
 # of initial requirements).
 # Examples: "etc-profiles" or sourcing a shell script
-##  activation-strategy: "some-option"
+  activationStrategy: etc-profiles
 
 # Concept: Which grouping strategy (edge case)
 # Define these to override default grouping behavior
 # Examples: "auto" or "single-nixpkgs-group"
 # Future options (post v1): "flexible-groups-with-overlays" or ...
-##  package-grouping-strategy = "some-option"
+  packageGroupingStrategy: auto
 
 
 # Project enviornments:
@@ -62,84 +63,93 @@ install:
   # This covers the vast majority of usage.
   # Resolve these to "buildInputs" or equivalent from a shared closure.
   hello:
+
   python3:
+    name: python3 # FIXME: allow `name' to be optional here ( `from_json' )
+    packageRepository:
+      type: github
+      owner: NixOS
+      repo: nixpkgs
+      rev: e8039594435c68eb4f780f3e9bf3972a7399c4b1
+      # TODO: subtrees?
 
   # 2. Maybe they just care about version compatibility though.
   # For example "API compatible with 12.2", being:
   #   12.2.0 <= VERSION < 13.0.0-0
   # Resolve this to "packages" or equivalent which is
   # isolated to its own closure and added to PATH only.
-  charasay:
-    semver: "^12.2"
+  ##charasay:
+  ##  semver: ^12.2
 
   # 3. If someone's a bit picky they might want to request a specific version:
   # Resolve this to "packages" or equivalent which is isolated
   # to its own closure and added to PATH only.
-  nodejs:
-    version: "4.2.0"
+  ##nodejs:
+  ##  version: 4.2.0
 
   # 4. Arbitrary package groupings that we will try to make work
-  openssl:
-    packageGroup: "blue"
+  ##openssl:
+  ##  packageGroup: blue
 
-  libxml:
-    packageGroup: "blue"
+  ##libxml:
+  ##  packageGroup: blue
 
-  ruby:
-    packageGroup: "blue"
+  ##ruby:
+  ##  packageGroup: blue
 
   # 5. Use stabilities: Force resolution in a `stable' catalog stream.
-  cowsay:
-    stability: "stable"
+  ##cowsay:
+  ##  stability: stable
 
   # 6. (edge case) Get a "legacy style" package from a subattr.
-  pip:
-    path: "python3.pkgs.pip"
+  ##pip:
+  ##  path: python3.pkgs.pip
 
   # 7. (edge case) Or to be real explicit you can give the absolute path.
   # We use `null' to "glob" where `system' might normally go.
   # While we don't anticipate that 99% of users will ever need this,
   # some folks don't like ambiguity, and it's necessary to avoid conflicts
   # in existing catalogs.
-  which:
-    absPath: ["legacyPackages", null, "flocoPackages", "which", "3.0.1", "global"]
-  quux:
-    absPath: ["evalCatalog", null, "staging", "python3Packages", "numpy", "latest"]
-  quux2:
-    absPath: ["legacyPackages", null, "python3Packages", "numpy"]
+  ##which:
+  ##  absPath: ["legacyPackages", null, "flocoPackages", "which", "3.0.1", "global"]
+  ##quux:
+  ##  absPath: ["evalCatalog", null, "staging", "python3Packages", "numpy", "latest"]
+  ##quux2:
+  ##  absPath: ["legacyPackages", null, "python3Packages", "numpy"]
 
   # 8a. (edge case) Marking a dependency as `optional' will skip it on
   # unsupported systems.
   # This package will only be available on `darwin', and will be skipped
   # on `linux'.
-  darwinSecurity:
-    path: ["darwin", "apple_sdk", "frameworks", "Security"]
-    optional: true
+  ##darwinSecurity:
+  ##  path: ["darwin", "apple_sdk", "frameworks", "Security"]
+  ##  optional: true
 
   # 8b. (edge case) Alternate approach to 8a that has better ergonomics.
-  darwinSecurityAlt:
-    systems: ["aarch64-darwin", "x86_64-darwin"]
-    optional: true
+  ##darwinSecurityAlt:
+  ##  systems: ["aarch64-darwin", "x86_64-darwin"]
+  ##  optional: true
 
   # 9. (edge case) Provide an explicit "packageRepository", a specific
   # stability, and an exact attribute path to pull from.
   # packageRepository will be looked up in a separate "registry file".
-  myFavoriteApple:
-    packageRepository: "nixpkgs-flox"
-    stability: "stable"
-    path: "python3Packages.numpy"
+  ## myFavoriteApple:
+  ##   packageRepository: nixpkgs-flox
+  ##   stability: stable
+  ##   path: python3Packages.numpy
 
   # 10. (edge case) As above but provide an inline definition of
-  # "packageRepository" with no registry lookup.
-  myReallyExplicitApple:
-    packageRepository:
-      type: "github"
-      owner: "aakropotkin"
-      repo: "floco"
-    path: "semver"
+  # packageRepository with no registry lookup.
+  ## myReallyExplicitApple:
+  ##   packageRepository:
+  ##     type: github
+  ##     owner: aakropotkin
+  ##     repo: floco
+  ##   path: semver
 
   # TODO
-  # 11. (edge case) Or to avoid a repetitive strain injury ( **future extension** not part of base spec):
+  # 11. (edge case) Or to avoid a repetitive strain injury
+  #     ( **future extension** not part of base spec):
   #apple: "github:sally/safeway-pkgs/db4fa111dsafadf#produce.vegetables.organics.fuji"
 
 
@@ -154,8 +164,8 @@ install:
 
 # Set an environment variable
 vars:
-  message: "Howdy"
-  message2: "partner"
+  message: Howdy
+  message2: partner
 
 
 # When activating, this outputs ascii art of a cow with a text bubble

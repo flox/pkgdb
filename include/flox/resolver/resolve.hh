@@ -75,6 +75,7 @@ using Descriptor = PkgDescriptorRaw;
  * @param one If `true`, return only the first result.
  * @return A list of resolved packages.
  */
+[[nodiscard]]
 std::vector<Resolved> resolve_v0(       ResolverState & state
                                 , const Descriptor    & descriptor
                                 ,       bool            one        = false
@@ -99,6 +100,7 @@ std::vector<Resolved> resolve_v0(       ResolverState & state
  * @param descriptor The package descriptor.
  * @return The best resolved installable or `std:nullopt` if resolution failed.
  */
+  [[nodiscard]]
   std::optional<Resolved>
 resolveOne_v0(       ResolverState & state
              , const Descriptor    & descriptor
@@ -117,6 +119,54 @@ resolveOne_v0(       ResolverState & state
  * @return The best resolved installable or `std:nullopt` if resolution failed.
  */
 #define resolveOne( ... )  resolveOne_v0( __VA_ARGS__ )
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief Resolve a package descriptor in a given flake.
+ * @param preferences Settings controlling resolution.
+ * @param flake The flake to resolve in.
+ * @param descriptor The package descriptor.
+ * @param one If `true`, return only the first result.
+ */
+  [[nodiscard]] inline
+  std::vector<Resolved>
+resolveInFlake_v0( const pkgdb::QueryPreferences & preferences
+                 , const RegistryInput           & flake
+                 , const Descriptor              & descriptor
+                 ,       bool                      one         = false
+                 )
+{
+  RegistryRaw registry;
+  registry.inputs.emplace( flake.getFlakeRef()->to_string(), flake );
+  ResolverState state( registry, preferences );
+  return resolve_v0( state, descriptor, one );
+}
+
+
+/**
+ * @brief Resolve a package descriptor in a given flake.
+ * @param preferences Settings controlling resolution.
+ * @param flake The flake to resolve in.
+ * @param descriptor The package descriptor.
+ * @param one If `true`, return only the first result.
+ */
+  [[nodiscard]] inline
+  std::vector<Resolved>
+resolveInFlake_v0( const pkgdb::QueryPreferences & preferences
+                 , const nix::FlakeRef           & flake
+                 , const Descriptor              & descriptor
+                 ,       bool                      one         = false
+                 )
+{
+  return resolveInFlake_v0( preferences
+                          , RegistryInput( flake )
+                          , descriptor
+                          , one
+                          );
+}
+
 
 
 /* -------------------------------------------------------------------------- */

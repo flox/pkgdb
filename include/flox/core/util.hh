@@ -26,6 +26,17 @@
 
 /* -------------------------------------------------------------------------- */
 
+/* Backported from C++20b. */
+
+/** @brief Helper type for `std::visit( overloaded { ... } );` */
+template<class... Ts>
+struct overloaded : Ts... { using Ts::operator()...; };
+
+template<class... Ts> overloaded( Ts... ) -> overloaded<Ts...>;
+
+
+/* -------------------------------------------------------------------------- */
+
 /* Extension to the `nlohmann::json' serializer to support addition STLs. */
 namespace nlohmann {
 
