@@ -358,7 +358,10 @@ Manifest::resolveDescriptor( const std::string & iid )
     {
       for ( const auto & [name, _] : * dbs )
         {
-          inputNames.emplace_back( name );
+          if ( ! hasPrefix( "__inline__", name ) )
+            {
+              inputNames.emplace_back( name );
+            }
         }
     }
 

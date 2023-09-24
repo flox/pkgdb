@@ -102,8 +102,8 @@ install:
   ##  stability: stable
 
   # 6. (edge case) Get a "legacy style" package from a subattr.
-  ##pip:
-  ##  path: python3.pkgs.pip
+  pip:
+    path: python310Packages.pip
 
   # 7. (edge case) Or to be real explicit you can give the absolute path.
   # We use `null' to "glob" where `system' might normally go.

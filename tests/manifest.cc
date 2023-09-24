@@ -182,6 +182,33 @@ test_resolveDescriptor1()
   std::string   yaml( ( std::istreambuf_iterator<char>( ifs ) ),
                       ( std::istreambuf_iterator<char>() )
                     );
+  flox::resolver::ManifestRaw raw = flox::yamlToJSON( yaml );
+  flox::resolver::Manifest    manifest( raw );
+
+  auto resolutions = manifest.resolveDescriptor( "python3" );
+
+  EXPECT_EQ( resolutions.size(), std::size_t( 17 ) );
+
+  for ( const auto & resolution : resolutions )
+    {
+      EXPECT_EQ( resolution.input
+               , "github:NixOS/nixpkgs/e8039594435c68eb4f780f3e9bf3972a7399c4b1"
+               );
+    }
+
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  bool
+test_resolveDescriptor2()
+{
+  std::ifstream ifs( TEST_DATA_DIR "/manifest/manifest0.yaml" );
+  std::string   yaml( ( std::istreambuf_iterator<char>( ifs ) ),
+                      ( std::istreambuf_iterator<char>() )
+                    );
 
   using namespace flox::resolver;
 
@@ -189,18 +216,16 @@ test_resolveDescriptor1()
   Manifest    manifest( raw );
 
 
-  auto resolutions = manifest.resolveDescriptor( "python3" );
+  auto resolutions = manifest.resolveDescriptor( "pip" );
 
-  EXPECT_EQ( resolutions.size(), std::size_t( 17 ) );
+  /* We should only match the `nixpkgs' one here. */
+  EXPECT_EQ( resolutions.size(), std::size_t( 1 ) );
 
   // FIXME: remove JSON output, this was for debugging.
   nlohmann::json jresolutions = nlohmann::json::array();
 
   for ( const auto & resolution : resolutions )
     {
-      EXPECT_EQ( resolution.input
-               , "github:NixOS/nixpkgs/e8039594435c68eb4f780f3e9bf3972a7399c4b1"
-               );
       jresolutions.push_back( nlohmann::json {
         { "input", resolution.input }
       , { "path",  resolution.path  }
@@ -235,6 +260,7 @@ main()
 
   RUN_TEST( resolveDescriptor0 );
   RUN_TEST( resolveDescriptor1 );
+  RUN_TEST( resolveDescriptor2 );
 
   return ec;
 }

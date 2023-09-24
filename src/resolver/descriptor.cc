@@ -347,8 +347,7 @@ ManifestDescriptor::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
       pqa.stabilities = std::vector<std::string> { * this->stability };
     }
 
-  // FIXME
-  //if ( this->path.has_value() ) { pqa.relPath = * this->path; }
+  pqa.relPath = this->path;
 
   return pqa;
 }
