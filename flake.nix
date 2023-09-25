@@ -95,7 +95,9 @@
         ] ++ (
           if pkgsFor.stdenv.isLinux or false then [pkgsFor.valgrind] else []
         );
-        inherit (pkgsFor.flox-pkgdb) nix_INCDIR boost_CFLAGS libExt SEMVER_PATH;
+        inherit (pkgsFor.flox-pkgdb)
+          nix_INCDIR boost_CFLAGS toml_CFLAGS yaml_PREFIX libExt SEMVER_PATH
+        ;
         shellHook = ''
           shopt -s autocd;
 

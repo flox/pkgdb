@@ -1,7 +1,9 @@
 is_sqlite3
+manifest
 pkgdb
 registry
 resolver
 resolver-params
 search-params
+util
 versions

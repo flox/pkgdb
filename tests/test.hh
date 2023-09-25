@@ -13,6 +13,15 @@
 
 /* -------------------------------------------------------------------------- */
 
+/* This shouldn't happen, but it's a sane fallback for running from the
+ * project root. */
+#ifndef TEST_DATA_DIR
+#  define TEST_DATA_DIR  "./tests/data"
+#endif  /* End `ifndef TEST_DATA_DIR' */
+
+
+/* -------------------------------------------------------------------------- */
+
 static const std::string nixpkgsRef =
   "github:NixOS/nixpkgs/e8039594435c68eb4f780f3e9bf3972a7399c4b1";
 
