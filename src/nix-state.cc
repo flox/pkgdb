@@ -42,6 +42,11 @@ initNix()
   nix::evalSettings.pureEval.setDefault( true );
   nix::evalSettings.useEvalCache.setDefault( true );
 
+  /* Use custom logger */
+  bool printBuildLogs = nix::logger->isVerbose();
+  delete nix::logger;
+  nix::logger = makeFilteredLogger( printBuildLogs );
+
   didNixInit = true;
 }
 

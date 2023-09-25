@@ -59,6 +59,29 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * @brief Add a `name' field to the descriptor if it is missing, and no
+ *        other accebtable field is present.
+ *
+ * The fields `absPath` or `path` may be used instead of the `name` field, but
+ * if none are present use the `install.<ID>` identifier as `name`.
+ *
+ * @param[in] iid The `install.<ID>` identifier associated with the descriptor.
+ * @param[in,out] desc The descriptor to fixup.
+ */
+  static void
+fixupDescriptor( const std::string & iid, ManifestDescriptor & desc )
+{
+  if ( ! ( desc.name.has_value() || desc.path.has_value() ) )
+    {
+      desc.name = iid;
+    }
+}
+
+
+
+/* -------------------------------------------------------------------------- */
+
   void
 from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
 {
@@ -75,12 +98,12 @@ from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
                   manDesc.name = name;
                   manifest.install.emplace( name, std::move( manDesc ) );
                 }
-              else
+              else // TODO: strings
                 {
-                  manifest.install.emplace(
-                    name
-                  , ManifestDescriptor( desc.get<ManifestDescriptorRaw>() )
-                  );
+                  auto manDesc =
+                    ManifestDescriptor( desc.get<ManifestDescriptorRaw>() );
+                  fixupDescriptor( name, manDesc );
+                  manifest.install.emplace( name, std::move( manDesc ) );
                 }
             }
         }

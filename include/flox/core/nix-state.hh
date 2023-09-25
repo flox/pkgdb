@@ -22,11 +22,19 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief Create a custom `nix::Logger` which ignores some messages. */
+nix::Logger * makeFilteredLogger( bool printBuildLogs );
+
+
+/* -------------------------------------------------------------------------- */
+
 /**
  * @brief Perform one time `nix` global runtime setup.
  *
  * You may safely call this function multiple times, after the first invocation
  * it is effectively a no-op.
+ *
+ * This replaces the default `nix::Logger` with a @a flox::FilteredLogger.
  */
 void initNix();
 

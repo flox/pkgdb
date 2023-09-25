@@ -65,7 +65,6 @@ install:
   hello:
 
   python3:
-    name: python3 # FIXME: allow `name' to be optional here ( `from_json' )
     packageRepository:
       type: github
       owner: NixOS
@@ -78,8 +77,8 @@ install:
   #   12.2.0 <= VERSION < 13.0.0-0
   # Resolve this to "packages" or equivalent which is
   # isolated to its own closure and added to PATH only.
-  ##charasay:
-  ##  semver: ^12.2
+  charasay:
+    semver: ^2
 
   # 3. If someone's a bit picky they might want to request a specific version:
   # Resolve this to "packages" or equivalent which is isolated

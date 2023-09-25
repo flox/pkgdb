@@ -221,6 +221,39 @@ test_resolveDescriptor2()
   /* We should only match the `nixpkgs' one here. */
   EXPECT_EQ( resolutions.size(), std::size_t( 1 ) );
 
+  for ( const auto & resolution : resolutions )
+    {
+      EXPECT_EQ( resolution.input, "nixpkgs" );
+    }
+
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  bool
+test_resolveDescriptor3()
+{
+  std::ifstream ifs( TEST_DATA_DIR "/manifest/manifest0.yaml" );
+  std::string   yaml( ( std::istreambuf_iterator<char>( ifs ) ),
+                      ( std::istreambuf_iterator<char>() )
+                    );
+
+  using namespace flox::resolver;
+
+  ManifestRaw raw = flox::yamlToJSON( yaml );
+  Manifest    manifest( raw );
+
+
+  auto resolutions = manifest.resolveDescriptor( "charasay" );
+
+  /* We should match the `nixpkgs' one.
+   *
+   * We should match three from `nixpkgs-flox' on `stable'.
+   * One of these being `latest' which is an alias of `v3.0.1' */
+  EXPECT_EQ( resolutions.size(), std::size_t( 4 ) );
+
   // FIXME: remove JSON output, this was for debugging.
   nlohmann::json jresolutions = nlohmann::json::array();
 
@@ -261,6 +294,7 @@ main()
   RUN_TEST( resolveDescriptor0 );
   RUN_TEST( resolveDescriptor1 );
   RUN_TEST( resolveDescriptor2 );
+  RUN_TEST( resolveDescriptor3 );
 
   return ec;
 }
