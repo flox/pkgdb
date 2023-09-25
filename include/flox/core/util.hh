@@ -14,6 +14,7 @@
 #include <vector>
 #include <list>
 #include <optional>
+#include <variant>
 
 #include <nix/logging.hh>
 #include <nix/store-api.hh>
@@ -21,6 +22,17 @@
 #include <nix/flake/flakeref.hh>
 
 #include <nlohmann/json.hpp>
+
+
+/* -------------------------------------------------------------------------- */
+
+/* Backported from C++20b. */
+
+/** @brief Helper type for `std::visit( overloaded { ... } );` */
+template<class... Ts>
+struct overloaded : Ts... { using Ts::operator()...; };
+
+template<class... Ts> overloaded( Ts... ) -> overloaded<Ts...>;
 
 
 /* -------------------------------------------------------------------------- */
@@ -111,6 +123,57 @@ namespace nlohmann {
 
   };  /* End struct `adl_serializer<nix::FlakeRef>' */
 
+  /* Eithers */
+    template<typename A, typename B>
+  struct adl_serializer<std::variant<A, B>> {
+
+      static void
+    to_json( json & jto, const std::variant<A, B> & var )
+    {
+      if ( std::holds_alternative<A>( var ) )
+        {
+          jto = std::get<A>( var );
+        }
+      else
+        {
+          jto = std::get<B>( var );
+        }
+    }
+
+      static void
+    from_json( const json & jfrom, std::variant<A, B> & var )
+    {
+      try
+        {
+          var = jfrom.template get<A>();
+        }
+      catch( ... )
+        {
+          var = jfrom.template get<B>();
+        }
+    }
+
+  };  /* End struct `adl_serializer<std::variant<A, B>>' */
+
+
+  /* nix::fetchers::Attrs */
+    template<>
+  struct adl_serializer<nix::fetchers::Attrs> {
+
+      static void
+    to_json( json & jto, const nix::fetchers::Attrs & attrs )
+    {
+      jto = nix::fetchers::attrsToJSON( attrs );
+    }
+
+      static void
+    from_json( const json & jfrom, nix::fetchers::Attrs & attrs )
+    {
+      attrs = nix::fetchers::jsonToAttrs( jfrom );
+    }
+
+  };  /* End struct `adl_serializer<std::variant<A, B>>' */
+
 }  /* End namespace `nlohmann' */
 
 
@@ -120,7 +183,7 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
-/** Systems to resolve/search in. */
+/** @brief Systems to resolve/search in. */
   inline static const std::vector<std::string> &
 getDefaultSystems()
 {
@@ -131,7 +194,7 @@ getDefaultSystems()
 }
 
 
-/** `flake' subtrees to resolve/search in. */
+/** @brief `flake' subtrees to resolve/search in. */
   inline static const std::vector<std::string> &
 getDefaultSubtrees()
 {
@@ -142,7 +205,7 @@ getDefaultSubtrees()
 }
 
 
-/** Catalog stabilities to resolve/search in. */
+/** @brief Catalog stabilities to resolve/search in. */
   inline static const std::vector<std::string> &
 getDefaultCatalogStabilities()
 {
@@ -156,7 +219,7 @@ getDefaultCatalogStabilities()
 /* -------------------------------------------------------------------------- */
 
 /**
- * Detect if a path is a SQLite3 database file.
+ * @brief Detect if a path is a SQLite3 database file.
  * @param dbPath Absolute path.
  * @return `true` iff @a path is a SQLite3 database file.
  */
@@ -166,7 +229,7 @@ bool isSQLiteDb( const std::string & dbPath );
 /* -------------------------------------------------------------------------- */
 
 /**
- * Parse a flake reference from either a JSON attrset or URI string.
+ * @brief Parse a flake reference from either a JSON attrset or URI string.
  * @param flakeRef JSON or URI string representing a `nix` flake reference.
  * @return Parsed flake reference object.
  */
@@ -184,11 +247,54 @@ parseFlakeRef( const std::string & flakeRef )
 /* -------------------------------------------------------------------------- */
 
 /**
- * Parse a JSON object from an inline string or a path to a JSON file.
+ * @brief Parse a JSON object from an inline string or a path to a JSON file.
  * @param jsonOrPath A JSON string or a path to a JSON file.
  * @return A parsed JSON object.
  */
 nlohmann::json parseOrReadJSONObject( const std::string & jsonOrPath );
+
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Convert a TOML string to JSON. */
+nlohmann::json tomlToJSON( std::string_view toml );
+
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Convert a YAML string to JSON. */
+nlohmann::json yamlToJSON( std::string_view yaml );
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief Split an attribute path string.
+ *
+ * Handles quoted strings and escapes.
+ */
+std::vector<std::string> splitAttrPath( std::string_view path );
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief Is the string @str a positive natural number?
+ * @param str String to test.
+ * @return `true` iff @a str is a stringized unsigned integer.
+ */
+bool isUInt( std::string_view str );
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief Does the string @str have the prefix @a prefix?
+ * @param prefix The prefix to check for.
+ * @param str String to test.
+ * @return `true` iff @a str has the prefix @a prefix.
+ */
+bool hasPrefix( std::string_view prefix, std::string_view str );
 
 
 /* -------------------------------------------------------------------------- */

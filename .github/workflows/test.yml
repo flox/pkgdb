@@ -91,7 +91,7 @@ jobs:
         run: nix develop --no-update-lock-file --command make check -j4
 
       - name: Run Installed
-        run: nix shell . --no-update-lock-file --command pkgdb --help
+        run: nix run . --no-update-lock-file -- --help
 
       - name: Save Nix Caches
         id: nix-cache-save

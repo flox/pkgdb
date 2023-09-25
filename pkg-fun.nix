@@ -13,6 +13,8 @@
 , argparse
 , semver
 , sqlite3pp
+, toml11
+, yaml-cpp
 }: stdenv.mkDerivation {
   pname   = "flox-pkgdb";
   version = builtins.replaceStrings ["\n"] [""] ( builtins.readFile ./version );
@@ -38,12 +40,16 @@
   };
   propagatedBuildInputs = [semver nix.dev boost];
   nativeBuildInputs     = [pkg-config];
-  buildInputs           = [sqlite.dev nlohmann_json argparse sqlite3pp];
-  nix_INCDIR            = nix.dev.outPath + "/include";
-  boost_CFLAGS          = "-I" + boost.dev.outPath + "/include";
-  libExt                = stdenv.hostPlatform.extensions.sharedLibrary;
-  SEMVER_PATH           = semver.outPath + "/bin/semver";
-  configurePhase        = ''
+  buildInputs           = [
+    sqlite.dev nlohmann_json argparse sqlite3pp toml11 yaml-cpp
+  ];
+  nix_INCDIR     = nix.dev.outPath + "/include";
+  boost_CFLAGS   = "-I" + boost.dev.outPath + "/include";
+  toml_CFLAGS    = "-I" + toml11.outPath + "/include";
+  yaml_PREFIX    = yaml-cpp.outPath;
+  libExt         = stdenv.hostPlatform.extensions.sharedLibrary;
+  SEMVER_PATH    = semver.outPath + "/bin/semver";
+  configurePhase = ''
     runHook preConfigure;
     export PREFIX="$out";
     if [[ "''${enableParallelBuilding:-1}" = 1 ]]; then
@@ -52,8 +58,9 @@
     runHook postConfigure;
   '';
   # Checks require internet
-  doCheck        = false;
-  doInstallCheck = false;
+  doCheck          = false;
+  doInstallCheck   = false;
+  meta.mainProgram = "pkgdb";
 }
 
 
