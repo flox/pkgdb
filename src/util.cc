@@ -78,6 +78,117 @@ parseOrReadJSONObject( const std::string & jsonOrPath )
 
 /* -------------------------------------------------------------------------- */
 
+  std::vector<std::string>
+splitAttrPath( std::string_view path )
+{
+  std::vector<std::string> parts;
+
+  bool inSingleQuote = false;
+  bool inDoubleQuote = false;
+  bool wasEscaped    = false;
+  auto start         = path.begin();
+
+  /* Remove outer quotes and unescape. */
+  auto dequote = [&]( const std::string & part ) -> std::string
+    {
+      auto itr = part.begin();
+      auto end = part.end();
+
+      /* Remove outer quotes. */
+      if ( ( ( part.front() == '\'' ) && ( part.back() == '\'' ) ) ||
+           ( ( part.front() == '"' )  && ( part.back() == '"' ) )
+         )
+        {
+          ++itr;
+          --end;
+        }
+
+      /* Remove escape characters. */
+      std::string rsl;
+      bool        wasEscaped = false;
+      for ( ; itr != end; ++itr )
+        {
+          if ( wasEscaped )
+            {
+              wasEscaped = false;
+            }
+          else if ( ( * itr ) == '\\' )
+            {
+              wasEscaped = true;
+              continue;
+            }
+          rsl.push_back( * itr );
+        }
+
+      return rsl;
+    };  /* End lambda `dequote' */
+
+  /* Split by dots, handling quotes. */
+  for ( auto itr = path.begin(); itr != path.end(); ++itr )
+    {
+      if ( wasEscaped )
+        {
+          wasEscaped = false;
+        }
+      else if ( ( * itr ) == '\\' )
+        {
+          wasEscaped = true;
+        }
+      else if ( ( ( * itr ) == '\'' ) && ( ! inDoubleQuote ) )
+        {
+          inSingleQuote = ! inSingleQuote;
+        }
+      else if ( ( ( * itr ) == '"' ) && ( ! inSingleQuote ) )
+        {
+          inDoubleQuote = ! inDoubleQuote;
+        }
+      else if ( * itr == '.' && ( ! inSingleQuote ) && ( ! inDoubleQuote ) )
+        {
+          parts.emplace_back( dequote( std::string( start, itr ) ) );
+          start = itr + 1;
+        }
+    }
+
+  if ( start != path.end() )
+    {
+      parts.emplace_back( dequote( std::string( start, path.end() ) ) );
+    }
+
+  return parts;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  bool
+isUInt( std::string_view str )
+{
+  return ( ! str.empty() ) &&
+         ( std::find_if(
+             str.begin()
+           , str.end()
+           , []( unsigned char chr ) { return std::isdigit( chr ) == 0; }
+           ) == str.end()
+         );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  bool
+hasPrefix( std::string_view prefix, std::string_view str )
+{
+  if ( str.size() < prefix.size() ) { return false; }
+  for ( size_t i = 0; i < prefix.size(); ++i )
+    {
+      if ( str[i] != prefix[i] ) { return false; }
+    }
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 }    /* End namespace `flox' */
 
 
