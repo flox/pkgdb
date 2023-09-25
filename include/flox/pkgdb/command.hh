@@ -21,7 +21,7 @@ namespace flox::pkgdb {
 /* -------------------------------------------------------------------------- */
 
 /** @brief Adds a single package database path to a state blob. */
-struct DbPathMixin : virtual public flox::NixState
+struct DbPathMixin
 {
 
   std::optional<std::filesystem::path> dbPath;
@@ -178,6 +178,26 @@ struct GetCommand
   int run();
 
 };  /* End struct `GetCommand' */
+
+
+/* -------------------------------------------------------------------------- */
+
+struct ListCommand {
+
+  command::VerboseParser               parser;
+  std::optional<std::filesystem::path> cacheDir;
+  bool                                 json      = false;
+  bool                                 basenames = false;
+
+  ListCommand();
+
+  /**
+   * @brief Execute the `list` routine.
+   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+   */
+  int run();
+
+};  /* End struct `ListCommand' */
 
 
 /* -------------------------------------------------------------------------- */

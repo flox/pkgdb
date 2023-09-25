@@ -149,6 +149,13 @@ Subcommands:
 - `pkgdb get path`  Lookup an (AttrSets|Packages).id attribute path
 
 
+#### pkgdb list
+
+List all known databases and their associated flake information.
+Accepts the options `--cachedir PATH` and `--json`.
+See `pkgdb list --help` for more info.
+
+
 ### Schema
 
 The data is represented in a tree format matching the `attrPath` structure.

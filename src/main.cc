@@ -34,6 +34,9 @@ main( int argc, char * argv[] )
   flox::pkgdb::GetCommand cmdGet;
   prog.add_subparser( cmdGet.parser );
 
+  flox::pkgdb::ListCommand cmdList;
+  prog.add_subparser( cmdList.parser );
+
   flox::search::SearchCommand cmdSearch;
   prog.add_subparser( cmdSearch.parser );
 
@@ -66,6 +69,10 @@ main( int argc, char * argv[] )
       if ( prog.is_subcommand_used( "get" ) )
         {
           return cmdGet.run();
+        }
+      if ( prog.is_subcommand_used( "list" ) )
+        {
+          return cmdList.run();
         }
       if ( prog.is_subcommand_used( "search" ) )
         {
