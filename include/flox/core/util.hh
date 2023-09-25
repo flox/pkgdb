@@ -26,9 +26,14 @@
 
 /* -------------------------------------------------------------------------- */
 
-/* Backported from C++20b. */
+/* Backported from C++20a for C++20b compatability. */
 
-/** @brief Helper type for `std::visit( overloaded { ... } );` */
+/** 
+ * @brief Helper type for `std::visit( overloaded { ... }, x );` pattern.
+ * 
+ * This is a _quality of life_ helper that shortens boilerplate required for
+ * creating type matching statements.
+ */
 template<class... Ts>
 struct overloaded : Ts... { using Ts::operator()...; };
 
