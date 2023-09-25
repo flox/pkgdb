@@ -33,9 +33,9 @@
         m = builtins.match ".*\\.([^.]+)" name;
       in if m == null then "" else builtins.head m;
       ignoredExts = ["o" "so" "dylib"];
+      notResult   = ( builtins.match "result(-*)?" bname ) == null;
       notIgnored  = ( ! ( builtins.elem bname ignores ) ) &&
                     ( ! ( builtins.elem ext ignoredExts ) );
-      notResult = ( builtins.match "result(-*)?" bname ) == null;
     in notIgnored && notResult;
   };
   propagatedBuildInputs = [semver nix.dev boost];
