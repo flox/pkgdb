@@ -294,7 +294,6 @@ PkgQuery::initMatch()
     }
   else
     {
-      /* Add a bogus `matchStrength` so that later `ORDER BY` works. */
       this->addSelection( "NULL AS matchExactPname" );
       this->addSelection( "NULL AS matchExactPkgAttrName" );
       this->addSelection( "NULL AS matchPartialPname" );
