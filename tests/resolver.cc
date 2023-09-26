@@ -92,7 +92,7 @@ test_resolve0()
 
   auto rsl = flox::resolver::resolve_v0( state, descriptor );
 
-  EXPECT_EQ( rsl.size(), static_cast<std::size_t>( 5 ) );
+  EXPECT_EQ( rsl.size(), std::size_t( 5 ) );
 
   return true;
 }
@@ -119,7 +119,7 @@ test_resolveStabilities()
 
   auto rsl = flox::resolver::resolve_v0( state, descriptor );
 
-  EXPECT_EQ( rsl.size(), static_cast<std::size_t>( 13 ) );
+  EXPECT_EQ( rsl.size(), std::size_t( 13 ) );
 
   return true;
 }
@@ -142,7 +142,7 @@ test_resolveInput()
 
   auto rsl = flox::resolver::resolve_v0( state, descriptor );
 
-  EXPECT_EQ( rsl.size(), static_cast<std::size_t>( 1 ) );
+  EXPECT_EQ( rsl.size(), std::size_t( 1 ) );
   EXPECT_EQ( rsl.front().input.name, "nixpkgs" );
 
   return true;
