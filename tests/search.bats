@@ -66,10 +66,10 @@ genParamsNixpkgsFlox() {
 @test "'pkgdb search' 'match=hello'" {
   run sh -c "$PKGDB search '$TDATA/params0.json'|wc -l;";
   assert_success;
-  assert_output 10;
+  assert_output 11;
   run sh -c "$PKGDB search '$TDATA/params0.json'|grep hello|wc -l;";
   assert_success;
-  assert_output 10;
+  assert_output 11;
 }
 
 

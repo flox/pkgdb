@@ -107,6 +107,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_Packages
 
 /* XXX: Keep in sync with `<pkgdb>/src/pkgdb/write.cc:PkgDb::initTables()' */
 static const char * sql_views = R"SQL(
+
+-- A JSON list form of the _attribute path_ to an `AttrSets` row.
 CREATE VIEW IF NOT EXISTS v_AttrPaths AS
   WITH Tree ( id, parent, attrName, subtree, system, stability, path ) AS
   (
@@ -134,6 +136,7 @@ CREATE VIEW IF NOT EXISTS v_AttrPaths AS
   ) SELECT * FROM Tree;
 
 
+-- Splits semvers into their major, minor, patch, and pre-release tags.
 CREATE VIEW IF NOT EXISTS v_Semvers AS SELECT
   semver
 , major
@@ -161,24 +164,10 @@ FROM (
 ) ORDER BY major, minor, patch, preTag DESC NULLS FIRST;
 
 
-CREATE VIEW IF NOT EXISTS v_PackagesSearch AS SELECT
+-- Supplies additional version information identifying _date_ versions,
+-- and categorizes versions into _types_.
+CREATE VIEW IF NOT EXISTS v_PackagesVersions AS SELECT
   Packages.id
-, v_AttrPaths.subtree
-, v_AttrPaths.system
-, v_AttrPaths.stability
-, json_insert( v_AttrPaths.path, '$[#]', Packages.attrName ) AS path
-, json_insert( iif( ( v_AttrPaths.subtree = 'catalog' )
-                  , json_remove( v_AttrPaths.path, '$[2]', '$[1]', '$[0]' )
-                  , json_remove( v_AttrPaths.path, '$[1]', '$[0]' )
-                  )
-             , '$[#]'
-             , Packages.attrName
-             ) AS relPath
-, ( json_extract( v_AttrPaths.path, '$[#]' ) + 1 ) AS depth
-, Packages.name
-, Packages.attrName
-, Packages.pname
-, Packages.version
 , iif( ( Packages.version IS NULL ), NULL
   , iif( ( Packages.semver IS NOT NULL ), NULL
        , iif( ( ( SELECT Packages.version = date( Packages.version ) )
@@ -187,11 +176,6 @@ CREATE VIEW IF NOT EXISTS v_PackagesSearch AS SELECT
             )
        )
   ) AS versionDate
-, Packages.semver
-, v_Semvers.major
-, v_Semvers.minor
-, v_Semvers.patch
-, v_Semvers.preTag
 , iif( ( Packages.version IS NULL ), 3
      , iif( ( Packages.semver IS NOT NULL ), 0
        , iif( ( ( SELECT Packages.version = date( Packages.version ) )
@@ -202,6 +186,50 @@ CREATE VIEW IF NOT EXISTS v_PackagesSearch AS SELECT
        )
      )
   AS versionType
+FROM Packages
+LEFT OUTER JOIN v_Semvers ON ( Packages.semver = v_Semvers.semver );
+
+
+-- Additional information about the _attribute path_ for a `Packages` row.
+CREATE VIEW IF NOT EXISTS v_PackagesPaths AS SELECT
+  Packages.id
+, json_insert( v_AttrPaths.path, '$[#]', Packages.attrName ) AS path
+, json_insert( iif( ( v_AttrPaths.subtree = 'catalog' )
+                  , json_remove( v_AttrPaths.path, '$[2]', '$[1]', '$[0]' )
+                  , json_remove( v_AttrPaths.path, '$[1]', '$[0]' )
+                  )
+             , '$[#]'
+             , Packages.attrName
+             ) AS relPath
+, ( json_array_length( v_AttrPaths.path ) + 1 ) AS depth
+, iif( v_AttrPaths.subtree = 'catalog'
+     , json_extract( v_AttrPaths.path, '$[#-1]' )
+     , Packages.attrName
+     ) AS pkgAttrName
+FROM Packages INNER JOIN v_AttrPaths ON ( Packages.parentId = v_AttrPaths.id );
+
+
+-- Aggregates columns used for searching packages.
+CREATE VIEW IF NOT EXISTS v_PackagesSearch AS SELECT
+  Packages.id
+, v_AttrPaths.subtree
+, v_AttrPaths.system
+, v_AttrPaths.stability
+, v_PackagesPaths.path
+, v_PackagesPaths.relPath
+, v_PackagesPaths.depth
+, Packages.name
+, Packages.attrName
+, Packages.pname
+, v_PackagesPaths.pkgAttrName
+, Packages.version
+, v_PackagesVersions.versionDate
+, Packages.semver
+, v_Semvers.major
+, v_Semvers.minor
+, v_Semvers.patch
+, v_Semvers.preTag
+, v_PackagesVersions.versionType
 , Packages.license
 , Packages.broken
 , iif( ( broken IS NULL ), 1, iif( broken, 2, 0 ) ) AS brokenRank
@@ -209,9 +237,11 @@ CREATE VIEW IF NOT EXISTS v_PackagesSearch AS SELECT
 , iif( ( unfree IS NULL ), 1, iif( unfree, 2, 0 ) ) AS unfreeRank
 , Descriptions.description
 FROM Packages
-LEFT OUTER JOIN Descriptions ON ( Packages.descriptionId = Descriptions.id  )
-LEFT OUTER JOIN v_Semvers    ON ( Packages.semver        = v_Semvers.semver )
-     INNER JOIN v_AttrPaths  ON ( Packages.parentId      = v_AttrPaths.id   )
+LEFT OUTER JOIN Descriptions ON ( Packages.descriptionId = Descriptions.id )
+LEFT OUTER JOIN v_Semvers    ON ( Packages.semver = v_Semvers.semver )
+     INNER JOIN v_AttrPaths        ON ( Packages.parentId = v_AttrPaths.id )
+     INNER JOIN v_PackagesPaths    ON ( Packages.id = v_PackagesPaths.id )
+     INNER JOIN v_PackagesVersions ON ( Packages.id = v_PackagesVersions.id )
 )SQL";
 
 

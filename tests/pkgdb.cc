@@ -490,14 +490,14 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
     INSERT INTO Packages (
       parentId, attrName, name, pname, outputs, descriptionId
     ) VALUES
-      ( :parentId, 'aHello', 'hello-2.12.1', 'hello', '["out"]', :descGreetId
+      ( :parentId, 'pkg0', 'hello-2.12.1', 'hello', '["out"]', :descGreetId
       )
-    , ( :parentId, 'aGoodbye', 'goodbye-2.12.1', 'goodbye'
+    , ( :parentId, 'pkg1', 'goodbye-2.12.1', 'goodbye'
       , '["out"]', :descFarewellId
       )
-    , ( :parentId, 'aHola', 'hola-2.12.1', 'hola', '["out"]', :descGreetId
+    , ( :parentId, 'pkg2', 'hola-2.12.1', 'hola', '["out"]', :descGreetId
       )
-    , ( :parentId, 'aCiao', 'ciao-2.12.1', 'ciao', '["out"]', :descFarewellId
+    , ( :parentId, 'pkg3', 'ciao-2.12.1', 'ciao', '["out"]', :descFarewellId
       )
   )SQL" );
   cmd.bind( ":parentId",       static_cast<long long>( linux )        );
@@ -518,9 +518,13 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
 
   /* Run `match = "hello"' query */
   {
-    qargs.match = "hello";
+    qargs.match      = "hello";
+    qargs.matchStyle = flox::pkgdb::PkgQueryArgs::QMS_SEARCH;
     flox::pkgdb::PkgQuery qry( qargs
-                             , std::vector<std::string> { "matchStrength" }
+                             , std::vector<std::string> {
+                                 "matchExactPname"
+                               , "matchPartialDescription"
+                               }
                              );
     qargs.match = std::nullopt;
     size_t count = 0;
@@ -528,15 +532,15 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
     for ( const auto & row : * bound )
       {
         ++count;
-        flox::pkgdb::match_strength strength =
-          static_cast<flox::pkgdb::match_strength>( row.get<int>( 0 ) );
         if ( count == 1 )
           {
-            EXPECT_EQ( strength, flox::pkgdb::MS_EXACT_PNAME );
+            EXPECT( row.get<bool>( 0 ) );
+            EXPECT( row.get<bool>( 1 ) );
           }
         else
           {
-            EXPECT_EQ( strength, flox::pkgdb::MS_PARTIAL_DESC );
+            EXPECT( ! row.get<bool>( 0 ) );
+            EXPECT( row.get<bool>( 1 ) );
           }
       }
     EXPECT_EQ( count, std::size_t( 2 ) );
@@ -544,9 +548,12 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
 
   /* Run `match = "farewell"' query */
   {
-    qargs.match = "farewell";
+    qargs.match      = "farewell";
+    qargs.matchStyle = flox::pkgdb::PkgQueryArgs::QMS_SEARCH;
     flox::pkgdb::PkgQuery qry( qargs
-                             , std::vector<std::string> { "matchStrength" }
+                             , std::vector<std::string> {
+                                 "matchPartialDescription"
+                               }
                              );
     qargs.match = std::nullopt;
     size_t count = 0;
@@ -554,16 +561,20 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
     for ( const auto & row : * bound )
       {
         ++count;
-        EXPECT_EQ( row.get<int>( 0 ), flox::pkgdb::MS_PARTIAL_DESC );
+        EXPECT( row.get<bool>( 0 ) );
       }
     EXPECT_EQ( count, std::size_t( 2 ) );
   }
 
   /* Run `match = "hel"' query */
   {
-    qargs.match = "hel";
+    qargs.match      = "hel";
+    qargs.matchStyle = flox::pkgdb::PkgQueryArgs::QMS_SEARCH;
     flox::pkgdb::PkgQuery qry( qargs
-                             , std::vector<std::string> { "matchStrength" }
+                             , std::vector<std::string> {
+                                 "matchPartialPname"
+                               , "matchPartialDescription"
+                               }
                              );
     qargs.match = std::nullopt;
     size_t count = 0;
@@ -571,26 +582,27 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
     for ( const auto & row : * bound )
       {
         ++count;
-        flox::pkgdb::match_strength strength =
-          static_cast<flox::pkgdb::match_strength>( row.get<int>( 0 ) );
         if ( count == 1 )
           {
-            EXPECT_EQ( strength, flox::pkgdb::MS_PARTIAL_PNAME_DESC );
+            EXPECT( row.get<bool>( 0 ) );
+            EXPECT( row.get<bool>( 1 ) );
           }
         else
           {
-            EXPECT_EQ( strength, flox::pkgdb::MS_PARTIAL_DESC );
-          }
+            EXPECT( ! row.get<bool>( 0 ) );
+            EXPECT( row.get<bool>( 1 ) );
+     }
       }
     EXPECT_EQ( count, std::size_t( 2 ) );
   }
 
   /* Run `match = "xxxxx"' query */
   {
-    qargs.match = "xxxxx";
+    qargs.match      = "xxxxx";
+    qargs.matchStyle = flox::pkgdb::PkgQueryArgs::QMS_RESOLVE;
     flox::pkgdb::PkgQuery qry( qargs );
     qargs.match = std::nullopt;
-    EXPECT_EQ( qry.execute( db.db ).size(), std::size_t( 0 ) );
+    EXPECT( qry.execute( db.db ).empty() );
   }
 
   return true;

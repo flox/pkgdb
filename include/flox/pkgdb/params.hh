@@ -75,6 +75,7 @@ struct QueryPreferences {
    */
   pkgdb::PkgQueryArgs & fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
 
+
 };  /* End struct `QueryPreferences' */
 
 
@@ -84,6 +85,7 @@ struct QueryPreferences {
  * @brief Convert a JSON object to a @a flox::pkgdb::QueryPreferences.
  *
  * NOTE: This DOES clear @a prefs before filling it.
+ * NOTE: Does not `throw` for unknown keys at the top level.
  */
 void from_json( const nlohmann::json & jfrom, QueryPreferences & prefs );
 
@@ -167,6 +169,7 @@ struct QueryParams : public QueryPreferences {
     this->query.fillPkgQueryArgs( pqa );
     return true;
   }
+
 
 };  /* End struct `ResolveOneParams' */
 

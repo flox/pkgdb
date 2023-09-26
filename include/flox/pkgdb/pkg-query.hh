@@ -39,27 +39,6 @@ using row_id = uint64_t;  /**< A _row_ index in a SQLite3 table. */
 
 /* -------------------------------------------------------------------------- */
 
-/**
- * @brief Measures a "strength" ranking that can be used to order packages by
- *        how closely they a match string.
- *
- * - 0 : Case-insensitive exact match with `pname`
- * - 1 : Case-insensitive substring match with `pname` and `description`.
- * - 2 : Case-insensitive substring match with `pname`.
- * - 3 : Case insensitive substring match with `description`.
- * - 4 : No match.
- */
-enum match_strength {
-  MS_EXACT_PNAME        = 0
-, MS_PARTIAL_PNAME_DESC = 1
-, MS_PARTIAL_PNAME      = 2
-, MS_PARTIAL_DESC       = 3
-, MS_NONE               = 4  /* Ensure this is always the highest. */
-};
-
-
-/* -------------------------------------------------------------------------- */
-
 /** @brief Minimal set of query parameters related to a single package. */
 struct PkgDescriptorBase {
   std::optional<std::string> name;    /**< Filter results by exact `name`. */
@@ -105,7 +84,23 @@ concept pkg_descriptor_typename = std::derived_from<T, PkgDescriptorBase>;
  */
 struct PkgQueryArgs : public PkgDescriptorBase {
 
-  /** Filter results by partial name/description match. */
+  enum match_style {
+    QMS_NONE = 0  /**< Indicates unset/unspecified. */
+  /**
+   * Match exact or partial `pname`/`pkgAttrName`, and partial `descriptions`.
+   */
+  , QMS_SEARCH  = 1
+  , QMS_RESOLVE = 2  /**< Match exact `pname` or `pkgAttrName`. */
+  };  /* End enum `match_style' */
+  /**
+   * Indicates how `match` ( if any ) should be interpreted by the
+   * query builder.
+   *
+   * @see match_style
+   */
+  match_style matchStyle = QMS_NONE;
+
+  /** Filter results by partial match according to `matchStyle` rules. */
   std::optional<std::string> match;
 
   /** Filter results to those explicitly marked with the given licenses. */
@@ -120,11 +115,7 @@ struct PkgQueryArgs : public PkgDescriptorBase {
   /** Whether pre-release versions should be ordered before releases. */
   bool preferPreReleases = false;
 
-  /**
-   * Subtrees to search.
-   * TODO: Default to first of `catalog`, `packages`, or `legacyPackages`.
-   *       Requires `db` to be read.
-   */
+  /** Subtrees to search. */
   std::optional<std::vector<Subtree>> subtrees;
 
   /** Systems to search */
@@ -152,12 +143,13 @@ struct PkgQueryArgs : public PkgDescriptorBase {
       , PQEC_MIX_NAME = 2
       /** Version/semver are mutually exclusive */
       , PQEC_MIX_VERSION_SEMVER  = 3
-      , PQEC_INVALID_SEMVER      = 4  /**< Semver Parse Error */
-      , PQEC_INVALID_LICENSE     = 5  /**< License has invalid character */
-      , PQEC_INVALID_SUBTREE     = 6  /**< Unrecognized subtree */
-      , PQEC_CONFLICTING_SUBTREE = 7  /**< Conflicting subtree/stability */
-      , PQEC_INVALID_SYSTEM      = 8  /**< Unrecognized/unsupported system */
-      , PQEC_INVALID_STABILITY   = 9  /**< Unrecognized stability */
+      , PQEC_INVALID_SEMVER      = 4   /**< Semver Parse Error */
+      , PQEC_INVALID_LICENSE     = 5   /**< License has invalid character */
+      , PQEC_INVALID_SUBTREE     = 6   /**< Unrecognized subtree */
+      , PQEC_CONFLICTING_SUBTREE = 7   /**< Conflicting subtree/stability */
+      , PQEC_INVALID_SYSTEM      = 8   /**< Unrecognized/unsupported system */
+      , PQEC_INVALID_STABILITY   = 9   /**< Unrecognized stability */
+      , PQEC_INVALID_MATCH_STYLE = 10  /**< `match` without `matchStyle` */
       } errorCode;
 
     protected:
@@ -194,31 +186,6 @@ struct PkgQueryArgs : public PkgDescriptorBase {
   std::optional<PkgQueryInvalidArgException::error_code> validate() const;
 
 };  /* End struct `PkgQueryArgs' */
-
-
-/**
- * @fn void from_json( const nlohmann::json & j, PkgQueryArgs & pdb )
- * @brief Convert a JSON object to a @a flox::pkgdb::PkgQueryArgs.
- *
- * @fn void to_json( nlohmann::json & j, const PkgQueryArgs & pdb )
- * @brief Convert a @a flox::pkgdb::PkgQueryArgs to a JSON object.
- */
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
-  PkgQueryArgs
-, name
-, pname
-, version
-, semver
-, match
-, licenses
-, allowBroken
-, allowUnfree
-, preferPreReleases
-, subtrees
-, systems
-, stabilities
-, relPath
-)
 
 
 /* -------------------------------------------------------------------------- */

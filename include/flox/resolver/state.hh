@@ -109,6 +109,7 @@ class ResolverState : protected pkgdb::PkgDbRegistryMixin {
       pkgdb::PkgQueryArgs args;
       this->preferences.fillPkgQueryArgs( args );
       this->registry->at( name )->fillPkgQueryArgs( args );
+      args.matchStyle = pkgdb::PkgQueryArgs::QMS_RESOLVE;
       return args;
     }
 

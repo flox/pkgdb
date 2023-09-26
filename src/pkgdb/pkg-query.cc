@@ -66,6 +66,9 @@ PkgQueryArgs::PkgQueryInvalidArgException::errorMessage(
       case PQEC_INVALID_STABILITY:
         return "Unrecognized `stability' in query arguments";
         break;
+      case PQEC_INVALID_MATCH_STYLE:
+        return "Query `matchStyle' must be set when `match' is used";
+        break;
       default:
       case PQEC_ERROR:
         return "Encountered and error processing query arguments";
@@ -80,6 +83,13 @@ PkgQueryArgs::PkgQueryInvalidArgException::errorMessage(
 PkgQueryArgs::validate() const
 {
   using error_code = PkgQueryArgs::PkgQueryInvalidArgException::error_code;
+
+  if ( this->match.has_value() && ( ! this->match->empty() ) &&
+       ( this->matchStyle == QMS_NONE )
+     )
+    {
+      return error_code::PQEC_INVALID_MATCH_STYLE;
+    }
 
   if ( this->name.has_value() &&
        ( this->pname.has_value()   ||
@@ -149,6 +159,7 @@ PkgQueryArgs::validate() const
 PkgQueryArgs::clear()
 {
   this->PkgDescriptorBase::clear();
+  this->matchStyle        = QMS_NONE;
   this->match             = std::nullopt;
   this->licenses          = std::nullopt;
   this->allowBroken       = false;
@@ -226,41 +237,69 @@ PkgQuery::initMatch()
 {
   if ( this->match.has_value() && ( ! this->match->empty() ) )
     {
-      this->addWhere(
-        "( pname LIKE :match ) OR ( description LIKE :match )"
-      );
+      /* If `match' is set `matchStyle' must be set too. */
+      switch( this->matchStyle )
+        {
 
-      /* We _rank_ the strength of a match from 0-3 based on exact and partial
-       * matches of `pname` and `description` columns.
-       * Because we intend to use `bind` to handle quoting the user's match
-       * string, we add `%<STRING>%` before binding so that `LIKE` works, and
-       * need to manually add those characters below when testing for exact
-       * matches of the `pname` column.
-       * - 0 : Exact `pname` match.
-       * - 1 : Partial matches on both `pname` and `description`.
-       * - 2 : Partial match on `pname`.
-       * - 3 : Partial match on `description`.
-       * Our `WHERE` statement above ensures that at least one of these rankings
-       * will be true forall rows.
-       */
-      std::stringstream matcher;
-      matcher << "iif( ( ( '%' || LOWER( pname ) || '%' ) = LOWER( :match ) )"
-              << ", " << MS_EXACT_PNAME
-              << ", iif( ( pname LIKE :match )"
-              << ", iif( ( description LIKE :match  ), "
-              << MS_PARTIAL_PNAME_DESC << ", "
-              << MS_PARTIAL_PNAME << " ), " << MS_PARTIAL_DESC
-              << " ) ) AS matchStrength";
-      this->addSelection( matcher.str() );
-      /* Add `%` before binding so `LIKE` works. */
-      binds.emplace( ":match", "%" +  ( * this->match ) + "%" );
+          case QMS_RESOLVE:
+            this->addSelection( "( :match = pname ) AS matchExactPname" );
+            this->addSelection(
+              "( :match = pkgAttrName ) AS matchExactPkgAttrName"
+            );
+            this->addSelection( "NULL AS matchPartialPname" );
+            this->addSelection( "NULL AS matchPartialPkgAttrName" );
+            this->addSelection( "NULL AS matchPartialDescription" );
+            binds.emplace( ":match", * this->match );
+            this->addWhere( "( matchExactPname OR matchExactPkgAttrName )" );
+            break;
+
+          case QMS_SEARCH:
+            /* We have to add '%' around `:match' because they were added for
+             * use with `LIKE'. */
+            this->addSelection(
+              "( ( '%' || LOWER( pname ) || '%' ) = LOWER( :match ) ) "
+              "AS matchExactPname"
+            );
+            this->addSelection(
+              "( ( '%' || LOWER( pkgAttrName ) || '%' ) = LOWER( :match ) ) "
+              "AS matchExactPkgAttrName"
+            );
+            this->addSelection( "( pname LIKE :match ) AS matchPartialPname" );
+            this->addSelection(
+              "( pkgAttrName LIKE :match ) AS matchPartialPkgAttrName"
+            );
+            this->addSelection(
+              "( description LIKE :match ) AS matchPartialDescription"
+            );
+            /* Add `%` before binding so `LIKE` works. */
+            binds.emplace( ":match", "%" +  ( * this->match ) + "%" );
+            this->addWhere(
+              "( matchExactPname OR matchExactPkgAttrName OR"
+              "  matchPartialPname OR matchPartialPkgAttrName OR"
+              "  matchPartialDescription "
+              ")"
+            );
+            break;
+
+          /* This should have been caught earlier by `validate', but we have to
+           * include it in this `switch' so that compilers don't gripe. */
+          case QMS_NONE:
+          default:
+            throw PkgQueryArgs::PkgQueryInvalidArgException(
+              PkgQueryInvalidArgException::error_code::PQEC_INVALID_MATCH_STYLE
+            );
+            break;
+        }
+
     }
   else
     {
       /* Add a bogus `matchStrength` so that later `ORDER BY` works. */
-      std::stringstream matcher;
-      matcher << MS_NONE << " AS matchStrength";
-      this->addSelection( matcher.str() );
+      this->addSelection( "NULL AS matchExactPname" );
+      this->addSelection( "NULL AS matchExactPkgAttrName" );
+      this->addSelection( "NULL AS matchPartialPname" );
+      this->addSelection( "NULL AS matchPartialPkgAttrName" );
+      this->addSelection( "NULL AS matchPartialDescription" );
     }
 }
 
@@ -393,7 +432,12 @@ PkgQuery::initOrderBy()
 {
   /* Establish ordering. */
   this->addOrderBy( R"SQL(
-    matchStrength ASC
+    matchExactPname         DESC
+  , matchExactPkgAttrName   DESC
+  , matchPartialPname       DESC
+  , matchPartialPkgAttrName DESC
+  , matchPartialDescription DESC
+
   , subtreesRank ASC
   , systemsRank ASC
   , stabilitiesRank ASC NULLS LAST

@@ -49,11 +49,12 @@ to_json( nlohmann::json & jto, const SearchQuery & qry )
 SearchQuery::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 {
   /* XXX: DOES NOT CLEAR FIRST! We are called after global preferences. */
-  pqa.name    = this->name;
-  pqa.pname   = this->pname;
-  pqa.version = this->version;
-  pqa.semver  = this->semver;
-  pqa.match   = this->match;
+  pqa.name       = this->name;
+  pqa.pname      = this->pname;
+  pqa.version    = this->version;
+  pqa.semver     = this->semver;
+  pqa.match      = this->match;
+  pqa.matchStyle = pkgdb::PkgQueryArgs::QMS_SEARCH;
   return pqa;
 }
 
