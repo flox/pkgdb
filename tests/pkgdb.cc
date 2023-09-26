@@ -420,7 +420,7 @@ test_PkgQuery1( flox::pkgdb::PkgDb & db )
   /* Run `allowBroken = false' query */
   {
     flox::pkgdb::PkgQuery qry( qargs );
-    EXPECT_EQ( qry.execute( db.db ).size(), static_cast<size_t>( 3 ) );
+    EXPECT_EQ( qry.execute( db.db ).size(), std::size_t( 3 ) );
   }
 
   /* Run `allowBroken = true' query */
@@ -428,14 +428,14 @@ test_PkgQuery1( flox::pkgdb::PkgDb & db )
     qargs.allowBroken = true;
     flox::pkgdb::PkgQuery qry( qargs );
     qargs.allowBroken = false;
-    EXPECT_EQ( qry.execute( db.db ).size(), static_cast<size_t>( 4 ) );
+    EXPECT_EQ( qry.execute( db.db ).size(), std::size_t( 4 ) );
   }
 
   /* Run `allowUnfree = true' query */
   {
     flox::pkgdb::PkgQuery qry( qargs );
     /* still omits broken */
-    EXPECT_EQ( qry.execute( db.db ).size(), static_cast<size_t>( 3 ) );
+    EXPECT_EQ( qry.execute( db.db ).size(), std::size_t( 3 ) );
   }
 
   /* Run `allowUnfree = false' query */
@@ -444,7 +444,7 @@ test_PkgQuery1( flox::pkgdb::PkgDb & db )
     flox::pkgdb::PkgQuery qry( qargs );
     qargs.allowUnfree = true;
     /* still omits broken as well */
-    EXPECT_EQ( qry.execute( db.db ).size(), static_cast<size_t>( 2 ) );
+    EXPECT_EQ( qry.execute( db.db ).size(), std::size_t( 2 ) );
   }
 
   /* Run `licenses = ["GPL-3.0-or-later", "BUSL-1.1", "MIT"]' query */
@@ -455,7 +455,7 @@ test_PkgQuery1( flox::pkgdb::PkgDb & db )
     flox::pkgdb::PkgQuery qry( qargs );
     qargs.licenses = std::nullopt;
     /* omits NULL licenses */
-    EXPECT_EQ( qry.execute( db.db ).size(), static_cast<size_t>( 2 ) );
+    EXPECT_EQ( qry.execute( db.db ).size(), std::size_t( 2 ) );
   }
 
   /* Run `licenses = ["BUSL-1.1", "MIT"]' query */
@@ -464,7 +464,7 @@ test_PkgQuery1( flox::pkgdb::PkgDb & db )
     flox::pkgdb::PkgQuery qry( qargs );
     qargs.licenses = std::nullopt;
     /* omits NULL licenses */
-    EXPECT_EQ( qry.execute( db.db ).size(), static_cast<size_t>( 1 ) );
+    EXPECT_EQ( qry.execute( db.db ).size(), std::size_t( 1 ) );
   }
 
   return true;
@@ -539,7 +539,7 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
             EXPECT_EQ( strength, flox::pkgdb::MS_PARTIAL_DESC );
           }
       }
-    EXPECT_EQ( count, static_cast<size_t>( 2 ) );
+    EXPECT_EQ( count, std::size_t( 2 ) );
   }
 
   /* Run `match = "farewell"' query */
@@ -556,7 +556,7 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
         ++count;
         EXPECT_EQ( row.get<int>( 0 ), flox::pkgdb::MS_PARTIAL_DESC );
       }
-    EXPECT_EQ( count, static_cast<size_t>( 2 ) );
+    EXPECT_EQ( count, std::size_t( 2 ) );
   }
 
   /* Run `match = "hel"' query */
@@ -582,7 +582,7 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
             EXPECT_EQ( strength, flox::pkgdb::MS_PARTIAL_DESC );
           }
       }
-    EXPECT_EQ( count, static_cast<size_t>( 2 ) );
+    EXPECT_EQ( count, std::size_t( 2 ) );
   }
 
   /* Run `match = "xxxxx"' query */
@@ -590,7 +590,7 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
     qargs.match = "xxxxx";
     flox::pkgdb::PkgQuery qry( qargs );
     qargs.match = std::nullopt;
-    EXPECT_EQ( qry.execute( db.db ).size(), static_cast<size_t>( 0 ) );
+    EXPECT_EQ( qry.execute( db.db ).size(), std::size_t( 0 ) );
   }
 
   return true;
@@ -645,7 +645,7 @@ test_getPackages0( flox::pkgdb::PkgDb & db )
     qargs.semver = { "^2" };
     size_t count = db.getPackages( qargs ).size();
     qargs.semver = std::nullopt;
-    EXPECT_EQ( count, static_cast<size_t>( 2 ) );
+    EXPECT_EQ( count, std::size_t( 2 ) );
   }
 
   /* Run `semver = "^3"' query */
@@ -653,7 +653,7 @@ test_getPackages0( flox::pkgdb::PkgDb & db )
     qargs.semver = { "^3" };
     size_t count = db.getPackages( qargs ).size();
     qargs.semver = std::nullopt;
-    EXPECT_EQ( count, static_cast<size_t>( 1 ) );
+    EXPECT_EQ( count, std::size_t( 1 ) );
   }
 
   /* Run `semver = "^2.13"' query */
@@ -661,7 +661,7 @@ test_getPackages0( flox::pkgdb::PkgDb & db )
     qargs.semver = { "^2.13" };
     size_t count = db.getPackages( qargs ).size();
     qargs.semver = std::nullopt;
-    EXPECT_EQ( count, static_cast<size_t>( 0 ) );
+    EXPECT_EQ( count, std::size_t( 0 ) );
   }
 
   return true;
