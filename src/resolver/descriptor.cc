@@ -314,8 +314,7 @@ ManifestDescriptor::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
   /* Must exactly match either `pname' or `pkgAttrName'. */
   if ( this->name.has_value() )
     {
-      pqa.match            = * this->name;
-      pqa.matchMinStrength = pkgdb::match_strength::MS_EXACT_ATTRNAME;
+      pqa.pnameOrPkgAttrName = * this->name;
     }
 
   if ( this->version.has_value() )
