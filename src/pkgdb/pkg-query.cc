@@ -415,7 +415,6 @@ PkgQuery::initOrderBy()
   this->addOrderBy( R"SQL(
     exactPname              DESC
   , exactPkgAttrName        DESC
-
   , matchExactPname         DESC
   , matchExactPkgAttrName   DESC
   , matchPartialPname       DESC
