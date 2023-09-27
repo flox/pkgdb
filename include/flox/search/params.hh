@@ -47,9 +47,8 @@ struct SearchQuery : public pkgdb::PkgDescriptorBase {
    *   std::optional<std::string> semver;
    */
 
-  /** Filter results by partial name/description match. */
-  std::optional<std::string> match;
-
+  /** Filter results by partial match on pname, pkgAttrName, or description */
+  std::optional<std::string> partialMatch;
 
   /** @brief Reset to default state. */
   virtual void clear() override;
@@ -122,7 +121,7 @@ void to_json( nlohmann::json & jto, const SearchQuery & qry );
  * , "systems": ["x86_64-linux"]
  * , "allow":   { "unfree": true, "broken": false, "licenses": ["MIT"] }
  * , "semver":  { "preferPreReleases": false }
- * , "query":   { "match": "hello" }
+ * , "query":   { "partialMatch": "hello" }
  * }
  * ```
  */

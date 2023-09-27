@@ -84,13 +84,6 @@ PkgQueryArgs::validate() const
 {
   using error_code = PkgQueryArgs::InvalidArgException::error_code;
 
-  if ( this->match.has_value() && ( ! this->match->empty() ) &&
-       ( this->matchStyle == QMS_NONE )
-     )
-    {
-      return error_code::PQEC_INVALID_MATCH_STYLE;
-    }
-
   if ( this->name.has_value() &&
        ( this->pname.has_value()   ||
          this->version.has_value() ||
@@ -159,16 +152,16 @@ PkgQueryArgs::validate() const
 PkgQueryArgs::clear()
 {
   this->PkgDescriptorBase::clear();
-  this->matchStyle        = QMS_NONE;
-  this->match             = std::nullopt;
-  this->licenses          = std::nullopt;
-  this->allowBroken       = false;
-  this->allowUnfree       = true;
-  this->preferPreReleases = false;
-  this->subtrees          = std::nullopt;
-  this->systems           = { nix::settings.thisSystem.get() };
-  this->stabilities       = std::nullopt;
-  this->relPath           = std::nullopt;
+  this->partialMatch       = std::nullopt;
+  this->pnameOrPkgAttrName = std::nullopt;
+  this->licenses           = std::nullopt;
+  this->allowBroken        = false;
+  this->allowUnfree        = true;
+  this->preferPreReleases  = false;
+  this->subtrees           = std::nullopt;
+  this->systems            = { nix::settings.thisSystem.get() };
+  this->stabilities        = std::nullopt;
+  this->relPath            = std::nullopt;
 }
 
 
@@ -235,65 +228,54 @@ addIn( std::stringstream & oss, const std::vector<std::string> & elems )
   void
 PkgQuery::initMatch()
 {
-  if ( this->match.has_value() && ( ! this->match->empty() ) )
+  if ( this->pnameOrPkgAttrName.has_value() && ( ! this->pnameOrPkgAttrName->empty() ) )
     {
-      /* If `match' is set `matchStyle' must be set too. */
-      switch( this->matchStyle )
-        {
-
-          case QMS_RESOLVE:
-            this->addSelection( "( :match = pname ) AS matchExactPname" );
-            this->addSelection(
-              "( :match = pkgAttrName ) AS matchExactPkgAttrName"
-            );
-            this->addSelection( "NULL AS matchPartialPname" );
-            this->addSelection( "NULL AS matchPartialPkgAttrName" );
-            this->addSelection( "NULL AS matchPartialDescription" );
-            binds.emplace( ":match", * this->match );
-            this->addWhere( "( matchExactPname OR matchExactPkgAttrName )" );
-            break;
-
-          case QMS_SEARCH:
-            /* We have to add '%' around `:match' because they were added for
-             * use with `LIKE'. */
-            this->addSelection(
-              "( ( '%' || LOWER( pname ) || '%' ) = LOWER( :match ) ) "
-              "AS matchExactPname"
-            );
-            this->addSelection(
-              "( ( '%' || LOWER( pkgAttrName ) || '%' ) = LOWER( :match ) ) "
-              "AS matchExactPkgAttrName"
-            );
-            this->addSelection( "( pname LIKE :match ) AS matchPartialPname" );
-            this->addSelection(
-              "( pkgAttrName LIKE :match ) AS matchPartialPkgAttrName"
-            );
-            this->addSelection(
-              "( description LIKE :match ) AS matchPartialDescription"
-            );
-            /* Add `%` before binding so `LIKE` works. */
-            binds.emplace( ":match", "%" +  ( * this->match ) + "%" );
-            this->addWhere(
-              "( matchExactPname OR matchExactPkgAttrName OR"
-              "  matchPartialPname OR matchPartialPkgAttrName OR"
-              "  matchPartialDescription "
-              ")"
-            );
-            break;
-
-          /* This should have been caught earlier by `validate', but we have to
-           * include it in this `switch' so that compilers don't gripe. */
-          case QMS_NONE:
-          default:
-            throw PkgQueryArgs::InvalidArgException(
-              InvalidArgException::error_code::PQEC_INVALID_MATCH_STYLE
-            );
-            break;
-        }
-
+      this->addSelection(
+        "( :pnameOrPkgAttrName = pname ) AS exactPname"
+      );
+      this->addSelection(
+        "( :pnameOrPkgAttrName = pkgAttrName ) AS exactPkgAttrName"
+      );
+      binds.emplace( ":pnameOrPkgAttrName", * this->pnameOrPkgAttrName );
+      this->addWhere( "( exactPname OR exactPkgAttrName )" );
     }
   else
     {
+      /* Add bogus `match*` values so that later `ORDER BY` works. */
+      this->addSelection( "NULL AS exactPname" );
+      this->addSelection( "NULL AS exactPkgAttrName" );
+    }
+  if ( this->partialMatch.has_value() && ( ! this->partialMatch->empty() ) )
+    {
+      /* We have to add '%' around `:match' because they were added for
+       * use with `LIKE'. */
+      this->addSelection(
+        "( ( '%' || LOWER( pname ) || '%' ) = LOWER( :partialMatch ) ) "
+        "AS matchExactPname"
+      );
+      this->addSelection(
+        "( ( '%' || LOWER( pkgAttrName ) || '%' ) = LOWER( :partialMatch ) ) "
+        "AS matchExactPkgAttrName"
+      );
+      this->addSelection( "( pname LIKE :partialMatch ) AS matchPartialPname" );
+      this->addSelection(
+        "( pkgAttrName LIKE :partialMatch ) AS matchPartialPkgAttrName"
+      );
+      this->addSelection(
+        "( description LIKE :partialMatch ) AS matchPartialDescription"
+      );
+      /* Add `%` before binding so `LIKE` works. */
+      binds.emplace( ":partialMatch", "%" +  ( * this->partialMatch ) + "%" );
+      this->addWhere(
+        "( matchExactPname OR matchExactPkgAttrName OR"
+        "  matchPartialPname OR matchPartialPkgAttrName OR"
+        "  matchPartialDescription "
+        ")"
+      );
+    }
+  else
+    {
+      /* Add bogus `match*` values so that later `ORDER BY` works. */
       this->addSelection( "NULL AS matchExactPname" );
       this->addSelection( "NULL AS matchExactPkgAttrName" );
       this->addSelection( "NULL AS matchPartialPname" );
@@ -431,7 +413,10 @@ PkgQuery::initOrderBy()
 {
   /* Establish ordering. */
   this->addOrderBy( R"SQL(
-    matchExactPname         DESC
+    exactPname              DESC
+  , exactPkgAttrName        DESC
+
+  , matchExactPname         DESC
   , matchExactPkgAttrName   DESC
   , matchPartialPname       DESC
   , matchPartialPkgAttrName DESC

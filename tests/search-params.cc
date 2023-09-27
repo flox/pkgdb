@@ -86,7 +86,7 @@ main( int argc, char * argv[] )
       , "systems": ["x86_64-linux"]
       , "allow":   { "unfree": true, "broken": false, "licenses": ["MIT"] }
       , "semver":  { "preferPreReleases": false }
-      , "query":   { "match": "hello" }
+      , "query":   { "partialMatch": "hello" }
       } )" ).get_to( params );
     }
   else

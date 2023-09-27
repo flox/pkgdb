@@ -473,7 +473,7 @@ test_PkgQuery1( flox::pkgdb::PkgDb & db )
 
 /* -------------------------------------------------------------------------- */
 
-/* Tests `match' filtering. */
+/* Tests `partialMatch' and `pnameOrPkgAttrName' filtering. */
   bool
 test_PkgQuery2( flox::pkgdb::PkgDb & db )
 {
@@ -516,17 +516,16 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
   flox::pkgdb::PkgQueryArgs qargs;
   qargs.systems = std::vector<std::string> { "x86_64-linux" };
 
-  /* Run `match = "hello"' query */
+  /* Run `partialMatch = "hello"' query */
   {
-    qargs.match      = "hello";
-    qargs.matchStyle = flox::pkgdb::PkgQueryArgs::QMS_SEARCH;
+    qargs.partialMatch      = "hello";
     flox::pkgdb::PkgQuery qry( qargs
                              , std::vector<std::string> {
                                  "matchExactPname"
                                , "matchPartialDescription"
                                }
                              );
-    qargs.match = std::nullopt;
+    qargs.partialMatch = std::nullopt;
     size_t count = 0;
     auto   bound = qry.bind( db.db );
     for ( const auto & row : * bound )
@@ -546,16 +545,15 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
     EXPECT_EQ( count, std::size_t( 2 ) );
   }
 
-  /* Run `match = "farewell"' query */
+  /* Run `partialMatch = "farewell"' query */
   {
-    qargs.match      = "farewell";
-    qargs.matchStyle = flox::pkgdb::PkgQueryArgs::QMS_SEARCH;
+    qargs.partialMatch      = "farewell";
     flox::pkgdb::PkgQuery qry( qargs
                              , std::vector<std::string> {
                                  "matchPartialDescription"
                                }
                              );
-    qargs.match = std::nullopt;
+    qargs.partialMatch = std::nullopt;
     size_t count = 0;
     auto   bound = qry.bind( db.db );
     for ( const auto & row : * bound )
@@ -566,17 +564,16 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
     EXPECT_EQ( count, std::size_t( 2 ) );
   }
 
-  /* Run `match = "hel"' query */
+  /* Run `partialMatch = "hel"' query */
   {
-    qargs.match      = "hel";
-    qargs.matchStyle = flox::pkgdb::PkgQueryArgs::QMS_SEARCH;
+    qargs.partialMatch = "hel";
     flox::pkgdb::PkgQuery qry( qargs
                              , std::vector<std::string> {
                                  "matchPartialPname"
                                , "matchPartialDescription"
                                }
                              );
-    qargs.match = std::nullopt;
+    qargs.partialMatch = std::nullopt;
     size_t count = 0;
     auto   bound = qry.bind( db.db );
     for ( const auto & row : * bound )
@@ -596,12 +593,11 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
     EXPECT_EQ( count, std::size_t( 2 ) );
   }
 
-  /* Run `match = "xxxxx"' query */
+  /* Run `pnameOrPkgAttrName = "xxxxx"' query */
   {
-    qargs.match      = "xxxxx";
-    qargs.matchStyle = flox::pkgdb::PkgQueryArgs::QMS_RESOLVE;
+    qargs.pnameOrPkgAttrName = "xxxxx";
     flox::pkgdb::PkgQuery qry( qargs );
-    qargs.match = std::nullopt;
+    qargs.pnameOrPkgAttrName = std::nullopt;
     EXPECT( qry.execute( db.db ).empty() );
   }
 
