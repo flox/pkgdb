@@ -21,7 +21,7 @@ namespace flox::search {
 SearchQuery::clear()
 {
   this->pkgdb::PkgDescriptorBase::clear();
-  this->match = std::nullopt;
+  this->partialMatch = std::nullopt;
 }
 
 
@@ -31,7 +31,7 @@ SearchQuery::clear()
 from_json( const nlohmann::json & jfrom, SearchQuery & qry )
 {
   pkgdb::from_json( jfrom, dynamic_cast<pkgdb::PkgDescriptorBase &>( qry ) );
-  try { jfrom.at( "match" ).get_to( qry.match ); }
+  try { jfrom.at( "partialMatch" ).get_to( qry.partialMatch ); }
   catch( const nlohmann::json::out_of_range & ) {}
 }
 
@@ -39,7 +39,7 @@ from_json( const nlohmann::json & jfrom, SearchQuery & qry )
 to_json( nlohmann::json & jto, const SearchQuery & qry )
 {
   pkgdb::to_json( jto, dynamic_cast<const pkgdb::PkgDescriptorBase &>( qry ) );
-  jto["match"] = qry.match;
+  jto["partialMatch"] = qry.partialMatch;
 }
 
 
@@ -49,12 +49,11 @@ to_json( nlohmann::json & jto, const SearchQuery & qry )
 SearchQuery::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 {
   /* XXX: DOES NOT CLEAR FIRST! We are called after global preferences. */
-  pqa.name       = this->name;
-  pqa.pname      = this->pname;
-  pqa.version    = this->version;
-  pqa.semver     = this->semver;
-  pqa.match      = this->match;
-  pqa.matchStyle = pkgdb::PkgQueryArgs::QMS_SEARCH;
+  pqa.name               = this->name;
+  pqa.pname              = this->pname;
+  pqa.version            = this->version;
+  pqa.semver             = this->semver;
+  pqa.partialMatch       = this->partialMatch;
   return pqa;
 }
 

@@ -54,6 +54,9 @@ struct PkgDescriptorRaw : public pkgdb::PkgDescriptorBase {
    *   std::optional<std::string> semver;
    */
 
+  /** Filter results by an exact match on either `pname` or `pkgAttrName`. To match just `pname` see @a flox::pkgdb::PkgDescriptorBase. */
+  std::optional<std::string> pnameOrPkgAttrName;
+
   /** Restricts resolution to the named registry input. */
   std::optional<std::string> input;
 

@@ -22,7 +22,7 @@
     "preferPreReleases": false
   }
 , "query": {
-    "match": "hello"
+    "partialMatch": "hello"
   , "name": null
   , "pname": null
   , "version": null

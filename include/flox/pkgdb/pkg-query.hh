@@ -84,24 +84,11 @@ concept pkg_descriptor_typename = std::derived_from<T, PkgDescriptorBase>;
  */
 struct PkgQueryArgs : public PkgDescriptorBase {
 
-  enum match_style {
-    QMS_NONE = 0  /**< Indicates unset/unspecified. */
-  /**
-   * Match exact or partial `pname`/`pkgAttrName`, and partial `descriptions`.
-   */
-  , QMS_SEARCH  = 1
-  , QMS_RESOLVE = 2  /**< Match exact `pname` or `pkgAttrName`. */
-  };  /* End enum `match_style' */
-  /**
-   * Indicates how `match` ( if any ) should be interpreted by the
-   * query builder.
-   *
-   * @see match_style
-   */
-  match_style matchStyle = QMS_NONE;
+  /** Filter results by partial match on pname, pkgAttrName, or description */
+  std::optional<std::string> partialMatch;
 
-  /** Filter results by partial match according to `matchStyle` rules. */
-  std::optional<std::string> match;
+  /** Filter results by an exact match on either `pname` or `pkgAttrName`. To match just `pname` see @a flox::pkgdb::PkgDescriptorBase. */
+  std::optional<std::string> pnameOrPkgAttrName;
 
   /** Filter results to those explicitly marked with the given licenses. */
   std::optional<std::vector<std::string>> licenses;
