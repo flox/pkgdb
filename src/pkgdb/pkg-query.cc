@@ -34,8 +34,8 @@ PkgDescriptorBase::clear()
 /* -------------------------------------------------------------------------- */
 
   std::string
-PkgQueryArgs::PkgQueryInvalidArgException::errorMessage(
-  const PkgQueryArgs::PkgQueryInvalidArgException::error_code & ecode
+PkgQueryArgs::InvalidArgException::errorMessage(
+  const PkgQueryArgs::InvalidArgException::error_code & ecode
 )
 {
   switch ( ecode )
@@ -79,10 +79,10 @@ PkgQueryArgs::PkgQueryInvalidArgException::errorMessage(
 
 /* -------------------------------------------------------------------------- */
 
-  std::optional<PkgQueryArgs::PkgQueryInvalidArgException::error_code>
+  std::optional<PkgQueryArgs::InvalidArgException::error_code>
 PkgQueryArgs::validate() const
 {
-  using error_code = PkgQueryArgs::PkgQueryInvalidArgException::error_code;
+  using error_code = PkgQueryArgs::InvalidArgException::error_code;
 
   if ( this->match.has_value() && ( ! this->match->empty() ) &&
        ( this->matchStyle == QMS_NONE )
@@ -486,7 +486,7 @@ PkgQuery::init()
   /* Validate parameters */
   if ( auto maybe_ec = this->validate(); maybe_ec != std::nullopt )
     {
-      throw PkgQueryArgs::PkgQueryInvalidArgException( * maybe_ec );
+      throw PkgQueryArgs::InvalidArgException( * maybe_ec );
     }
 
   this->addSelection( "*" );
