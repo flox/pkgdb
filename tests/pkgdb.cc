@@ -518,7 +518,7 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
 
   /* Run `partialMatch = "hello"' query */
   {
-    qargs.partialMatch      = "hello";
+    qargs.partialMatch = "hello";
     flox::pkgdb::PkgQuery qry( qargs
                              , std::vector<std::string> {
                                  "matchExactPname"
