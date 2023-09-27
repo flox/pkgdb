@@ -59,7 +59,6 @@ class FilteredLogger : public nix::Logger {
       bool
     shouldIgnoreWarning( const std::string & str )
     {
-
       /* Ignore warnings about overrides for missing indirect inputs.
        * These can come up when an indirect input drops a dependendency
        * between different revisions and isn't particularly interesting
