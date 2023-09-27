@@ -101,6 +101,30 @@ test_splitAttrPath6()
 
 /* -------------------------------------------------------------------------- */
 
+  bool
+test_variantJSON0()
+{
+  using Trivial = std::variant<int, bool, std::string>;
+
+  Trivial tint       = 420;
+  Trivial tbool      = true;
+  Trivial tstr       = "Howdy";
+  nlohmann::json jto = tint;
+
+  EXPECT_EQ( jto, 420 );
+
+  jto = tbool;
+  EXPECT_EQ( jto, true );
+
+  jto = tstr;
+  EXPECT_EQ( jto, "Howdy" );
+
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
   int
 main()
 {
@@ -117,6 +141,7 @@ main()
   RUN_TEST( splitAttrPath5 );
   RUN_TEST( splitAttrPath6 );
 
+  RUN_TEST( variantJSON0 );
 
 /* -------------------------------------------------------------------------- */
 

@@ -45,10 +45,14 @@ template<class... Ts> overloaded( Ts... ) -> overloaded<Ts...>;
 /* Extension to the `nlohmann::json' serializer to support addition STLs. */
 namespace nlohmann {
 
-  /** Serializers for `std::optional` */
+  /** @brief Optional types to/from JSON. */
     template <typename T>
   struct adl_serializer<std::optional<T>> {
 
+    /**
+     *  @brief Convert an optional type to a JSON type  treating `std::nullopt`
+     *         as `null`.
+     */
       static void
     to_json( json & jto, const std::optional<T> & opt )
     {
@@ -56,6 +60,10 @@ namespace nlohmann {
       else                   { jto = nullptr; }
     }
 
+    /**
+     * @brief Convert a JSON type to an `optional<T>` treating
+     *        `null` as `std::nullopt`.
+     */
       static void
     from_json( const json & jfrom, std::optional<T> & opt )
     {
@@ -66,51 +74,111 @@ namespace nlohmann {
   };  /* End struct `adl_serializer<std::optional<T>>' */
 
 
-    template <typename T>
-  struct adl_serializer<std::vector<std::optional<T>>> {
+/* -------------------------------------------------------------------------- */
 
+  /** @brief Variants ( Eithers ) of two elements to/from JSON. */
+    template<typename A, typename B>
+  struct adl_serializer<std::variant<A, B>> {
+
+    /** @brief Convert a @a std::variant<A, B> to a JSON type. */
       static void
-    to_json( json & jto, const std::vector<std::optional<T>> & vec )
+    to_json( json & jto, const std::variant<A, B> & var )
     {
-      jto = json::array();
-      for ( const auto & opt : vec )
+      if ( std::holds_alternative<A>( var ) )
         {
-          if ( opt.has_value() ) { jto.push_back( * opt ); }
-          else                   { jto.push_back( nullptr ); }
+          jto = std::get<A>( var );
+        }
+      else
+        {
+          jto = std::get<B>( var );
         }
     }
 
+    /** @brief Convert a JSON type to a @a std::variant<A, B>. */
       static void
-    from_json( const json & jfrom, std::vector<std::optional<T>> & vec )
+    from_json( const json & jfrom, std::variant<A, B> & var )
     {
-      vec.clear();
-      for ( const auto & value : jfrom )
+      try
         {
-          if ( value.is_null() )
-            {
-              vec.push_back( std::nullopt );
-            }
-          else
-            {
-              vec.push_back( std::make_optional( value.template get<T>() ) );
-            }
+          var = jfrom.template get<A>();
+        }
+      catch( ... )
+        {
+          var = jfrom.template get<B>();
         }
     }
 
-  };  /* End struct `adl_serializer<std::vector<std::optional<T>>>' */
+  };  /* End struct `adl_serializer<std::variant<A, B>>' */
 
 
-  /* Flake Refs */
+/* -------------------------------------------------------------------------- */
+
+  /** @brief Variants ( Eithers ) of any number of elements to/from JSON. */
+    template<typename A, typename... Types>
+  struct adl_serializer<std::variant<A, Types...>> {
+
+    /** @brief Convert a @a std::variant<A, Types...> to a JSON type. */
+      static void
+    to_json( json & jto, const std::variant<A, Types...> & var )
+    {
+      /* This _unwraps_ the inner type and calls the proper `to_json' */
+      std::visit( [&]( auto unwrapped ) -> void { jto = unwrapped; }, var );
+    }
+
+    /** @brief Convert a JSON type to a @a std::variant<Types...>. */
+      static void
+    from_json( const json & jfrom, std::variant<A, Types...> & var )
+    {
+      try
+        {
+          var = jfrom.template get<A>();
+        }
+      catch( ... )
+        {
+          using next_variant = std::variant<Types...>;
+          var = jfrom.template get<next_variant>();
+        }
+    }
+
+  };  /* End struct `adl_serializer<std::variant<A, Types...>>' */
+
+/* -------------------------------------------------------------------------- */
+
+  /** @brief @a nix::fetchers::Attrs to/from JSON */
+    template<>
+  struct adl_serializer<nix::fetchers::Attrs> {
+
+    /** @brief Convert a @a nix::fetchers::Attrs to a JSON object. */
+      static void
+    to_json( json & jto, const nix::fetchers::Attrs & attrs )
+    {
+      jto = nix::fetchers::attrsToJSON( attrs );
+    }
+
+    /** @brief Convert a JSON object to a @a nix::fetchers::Attrs. */
+      static void
+    from_json( const json & jfrom, nix::fetchers::Attrs & attrs )
+    {
+      attrs = nix::fetchers::jsonToAttrs( jfrom );
+    }
+
+  };  /* End struct `adl_serializer<nix::fetchers::Attrs>' */
+
+
+/* -------------------------------------------------------------------------- */
+
+  /** @brief @a nix::FlakeRef to/from JSON. */
     template<>
   struct adl_serializer<nix::FlakeRef> {
 
+    /** @brief Convert a @a nix::FlakeRef to a JSON object. */
       static void
     to_json( json & jto, const nix::FlakeRef & ref )
     {
       jto = nix::fetchers::attrsToJSON( ref.toAttrs() );
     }
 
-    /** _Move-only_ constructor for flake-ref from JSON. */
+    /** @brief _Move-only_ conversion of a JSON object to a @a nix::FlakeRef. */
       static nix::FlakeRef
     from_json( const json & jfrom )
     {
@@ -128,61 +196,13 @@ namespace nlohmann {
 
   };  /* End struct `adl_serializer<nix::FlakeRef>' */
 
-  /* Eithers */
-    template<typename A, typename B>
-  struct adl_serializer<std::variant<A, B>> {
 
-      static void
-    to_json( json & jto, const std::variant<A, B> & var )
-    {
-      if ( std::holds_alternative<A>( var ) )
-        {
-          jto = std::get<A>( var );
-        }
-      else
-        {
-          jto = std::get<B>( var );
-        }
-    }
-
-      static void
-    from_json( const json & jfrom, std::variant<A, B> & var )
-    {
-      try
-        {
-          var = jfrom.template get<A>();
-        }
-      catch( ... )
-        {
-          var = jfrom.template get<B>();
-        }
-    }
-
-  };  /* End struct `adl_serializer<std::variant<A, B>>' */
-
-
-  /* nix::fetchers::Attrs */
-    template<>
-  struct adl_serializer<nix::fetchers::Attrs> {
-
-      static void
-    to_json( json & jto, const nix::fetchers::Attrs & attrs )
-    {
-      jto = nix::fetchers::attrsToJSON( attrs );
-    }
-
-      static void
-    from_json( const json & jfrom, nix::fetchers::Attrs & attrs )
-    {
-      attrs = nix::fetchers::jsonToAttrs( jfrom );
-    }
-
-  };  /* End struct `adl_serializer<std::variant<A, B>>' */
+/* -------------------------------------------------------------------------- */
 
 }  /* End namespace `nlohmann' */
 
 
-/* ========================================================================== */
+/* -------------------------------------------------------------------------- */
 
 namespace flox {
 
