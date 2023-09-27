@@ -142,7 +142,7 @@ struct PkgQueryArgs : public PkgDescriptorBase {
 
 
   /** @brief Errors concerning validity of package query parameters. */
-  struct PkgQueryInvalidArgException : public flox::FloxException {
+  struct InvalidArgException : public flox::FloxException {
 
     public:
 
@@ -166,10 +166,10 @@ struct PkgQueryArgs : public PkgDescriptorBase {
 
     public:
 
-      explicit PkgQueryInvalidArgException(
+      explicit InvalidArgException(
         const error_code & ecode = PQEC_ERROR
       ) : flox::FloxException(
-            PkgQueryInvalidArgException::errorMessage( ecode )
+            InvalidArgException::errorMessage( ecode )
           )
         , errorCode( ecode )
       {}
@@ -191,7 +191,7 @@ struct PkgQueryArgs : public PkgDescriptorBase {
    *         code otherwise.
    */
   [[nodiscard]]
-  std::optional<PkgQueryInvalidArgException::error_code> validate() const;
+  std::optional<InvalidArgException::error_code> validate() const;
 
 };  /* End struct `PkgQueryArgs' */
 

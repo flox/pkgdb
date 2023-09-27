@@ -13,6 +13,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "flox/core/exceptions.hh"
 #include "flox/core/util.hh"
 #include "flox/flox-flake.hh"
 #include "flox/pkgdb/write.hh"
@@ -87,20 +88,39 @@ SearchCommand::SearchCommand() : parser( "search" )
   int
 SearchCommand::run()
 {
-  this->initRegistry();
-  this->scrapeIfNeeded();
-  assert( this->registry != nullptr );
-  pkgdb::PkgQueryArgs args;
-  for ( const auto & [name, input] : * this->registry )
+  try
     {
-      this->params.fillPkgQueryArgs( name, args );
-      this->query = pkgdb::PkgQuery( args );
-      for ( const auto & row : this->queryDb( * input->getDbReadOnly() ) )
+      this->initRegistry();
+      this->scrapeIfNeeded();
+      assert( this->registry != nullptr );
+      pkgdb::PkgQueryArgs args;
+      for ( const auto & [name, input] : * this->registry )
         {
-          this->showRow( * input, row );
+          this->params.fillPkgQueryArgs( name, args );
+          this->query = pkgdb::PkgQuery( args );
+          for ( const auto & row : this->queryDb( * input->getDbReadOnly() ) )
+            {
+              this->showRow( * input, row );
+            }
         }
+      return EXIT_SUCCESS;
     }
-  return EXIT_SUCCESS;
+  catch( const pkgdb::PkgQuery::InvalidArgException & err )
+    {
+      // TODO: DRY ( see main.cc )
+      int exitCode = EC_PKG_QUERY_INVALID_ARG;
+      exitCode += static_cast<int>( err.errorCode );
+      std::cout << "{ \"error\": \"" << err.what() << "\", \"code\": "
+                << exitCode << " }" << std::endl;
+      return exitCode;
+    }
+  catch( const std::exception & err )
+    {
+      // TODO: DRY ( see main.cc )
+      std::cout << "{ \"error\": \"" << err.what() << "\", \"code\": "
+                << EC_FAILURE << " }" << std::endl;
+      return EC_FAILURE;
+    }
 }
 
 

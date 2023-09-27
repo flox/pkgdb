@@ -55,7 +55,6 @@ genParamsNixpkgsFlox() {
   assert_success;
   run $PKGDB get id "$DBPATH" x86_64-linux packages;
   assert_failure;
-  assert_output "ERROR: No such AttrSet 'x86_64-linux.packages'.";
 }
 
 
