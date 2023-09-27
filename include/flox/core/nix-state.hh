@@ -22,6 +22,12 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief Create a custom `nix::Logger` which ignores some messages. */
+nix::Logger * makeFilteredLogger( bool printBuildLogs );
+
+
+/* -------------------------------------------------------------------------- */
+
 /**
  * @brief Perform one time `nix` global runtime setup.
  *
@@ -70,8 +76,6 @@ struct NixState {
 
 
 /* -------------------------------------------------------------------------- */
-
-  // public:
 
     /**
      * @brief Lazily open a `nix` store connection.
