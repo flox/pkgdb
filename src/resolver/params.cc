@@ -38,6 +38,8 @@ PkgDescriptorRaw::clear()
 from_json( const nlohmann::json & jfrom, PkgDescriptorRaw & desc )
 {
   pkgdb::from_json( jfrom, dynamic_cast<pkgdb::PkgDescriptorBase &>( desc ) );
+  try { jfrom.at( "pnameOrPkgAttrName" ).get_to( desc.pnameOrPkgAttrName ); }
+  catch( const nlohmann::json::out_of_range & ) {}
   try { jfrom.at( "preferPreReleases" ).get_to( desc.preferPreReleases ); }
   catch( const nlohmann::json::out_of_range & ) {}
   try { jfrom.at( "path" ).get_to( desc.path ); }
@@ -49,6 +51,7 @@ from_json( const nlohmann::json & jfrom, PkgDescriptorRaw & desc )
 to_json( nlohmann::json & jto, const PkgDescriptorRaw & desc )
 {
   pkgdb::to_json( jto, dynamic_cast<const pkgdb::PkgDescriptorBase &>( desc ) );
+  jto["pnameOrPkgAttrName"] = desc.pnameOrPkgAttrName;
   jto["preferPreReleases"] = desc.preferPreReleases;
   jto["path"] = desc.path;
 }
