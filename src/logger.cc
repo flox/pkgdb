@@ -20,6 +20,26 @@ namespace flox {
 /* -------------------------------------------------------------------------- */
 
 /**
+ * @brief determine if we should use ANSI escape sequences.
+ *
+ * This is a copy of `nix::shouldANSI` with the addition of checking the
+ * `NOCOLOR` environment variable ( `nix::shouldANSI` only checks `NO_COLOR` ).
+ */
+  static bool
+shouldANSI()
+{
+  return isatty( STDERR_FILENO )
+      && ( nix::getEnv( "TERM" ).value_or( "dumb" ) != "dumb" )
+      && ( ! ( nix::getEnv("NO_COLOR").has_value() ||
+               nix::getEnv("NOCOLOR").has_value()
+             )
+         );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
  * @brief Custom `nix::Logger` implementation used to filter some messages.
  *
  * This is an exact copy of `nix::SimpleLogger` with the addition of filtering
@@ -29,19 +49,27 @@ class FilteredLogger : public nix::Logger {
 
   protected:
 
-    /** @brief Detect ignored warnings. */
+    /**
+     * @brief Detect ignored warnings.
+     *
+     * In theory this is normally controlled by verbosiry, but because the
+     * verbosity setting conditionals exist in external libs, we have to
+     * handle them here.
+     */
       bool
     shouldIgnoreWarning( const std::string & str )
     {
 
       /* Ignore warnings about overrides for missing indirect inputs.
-       * These can come up when an indirect input drops a dependendency between
-       * different revisions and isn't particularly interesting to users. */
+       * These can come up when an indirect input drops a dependendency
+       * between different revisions and isn't particularly interesting
+       * to users. */
       if ( str.find( " has an override for a non-existent input " ) !=
            std::string::npos
          )
         {
-          return true;
+          /* Don't ignore with `-v' or if we are dumping logs to a file. */
+          return ( ! this->tty ) || ( nix::verbosity < nix::lvlTalkative );
         }
 
       return false;
@@ -60,12 +88,14 @@ class FilteredLogger : public nix::Logger {
   public:
 
     bool systemd;         /**< Whether we should emit `systemd` style logs. */
-    bool tty;             /**< Whether we should emit TTY colors in logs. */
+    bool tty;             /**< Whether we are connected to a TTY. */
+    bool color;           /**< Whether we should emit colors in logs. */
     bool printBuildLogs;  /**< Whether we should emit build logs. */
 
     FilteredLogger( bool printBuildLogs )
       : systemd( nix::getEnv( "IN_SYSTEMD" ) == "1" )
-      , tty( nix::shouldANSI() )
+      , tty( isatty( STDERR_FILENO ) )
+      , color( shouldANSI() )
       , printBuildLogs( printBuildLogs )
     {}
 
@@ -135,7 +165,7 @@ class FilteredLogger : public nix::Logger {
         }
 
       nix::writeToStderr(
-        prefix + nix::filterANSIEscapes( str, ! tty ) + "\n"
+        prefix + nix::filterANSIEscapes( str, ! this->color ) + "\n"
       );
     }
 
