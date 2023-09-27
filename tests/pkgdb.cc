@@ -598,8 +598,8 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
     qargs.pnameOrPkgAttrName = "hello";
     flox::pkgdb::PkgQuery qry( qargs
                              , std::vector<std::string> {
-                                 "exactPname"
-                               , "exactPkgAttrName"
+                                 "matchExactPname"
+                               , "matchExactPkgAttrName"
                                }
                              );
     qargs.pnameOrPkgAttrName = std::nullopt;
@@ -608,9 +608,9 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
     for ( const auto & row : * bound )
       {
         ++count;
-        // exactPname is true
+        /* matchExactPname is true */
         EXPECT( row.get<bool>( 0 ) );
-        // exactPkgAttrName is false
+        /* exactPkgAttrName is false */
         EXPECT( ! row.get<bool>( 1 ) );
       }
     EXPECT_EQ( count, std::size_t( 1 ) );
@@ -629,8 +629,8 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
     qargs.pnameOrPkgAttrName = "pkg0";
     flox::pkgdb::PkgQuery qry( qargs
                              , std::vector<std::string> {
-                                 "exactPname"
-                               , "exactPkgAttrName"
+                                 "matchExactPname"
+                               , "matchExactPkgAttrName"
                                }
                              );
     qargs.pnameOrPkgAttrName = std::nullopt;
@@ -639,9 +639,9 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
     for ( const auto & row : * bound )
       {
         ++count;
-        // exactPname is false
+        /* exactPname is false */
         EXPECT( ! row.get<bool>( 0 ) );
-        // exactPkgAttrName is true
+        /* exactPkgAttrName is true */
         EXPECT( row.get<bool>( 1 ) );
       }
     EXPECT_EQ( count, std::size_t( 1 ) );

@@ -213,7 +213,7 @@ applied to `inputs` by showing the _explicit_ form of the same params:
 }
 ```
 
-- `inputs.<NAME>stabilities` was applied to all inputs which didn't explicitly
+- `inputs.<NAME>.stabilities` was applied to all inputs which didn't explicitly
    specify them.
 - `inputs.<NAME>.subtrees` was applied to all inputs which didn't explicitly
    specify them.

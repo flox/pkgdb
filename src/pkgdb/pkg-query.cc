@@ -228,24 +228,25 @@ addIn( std::stringstream & oss, const std::vector<std::string> & elems )
   void
 PkgQuery::initMatch()
 {
-  if ( this->pnameOrPkgAttrName.has_value() && ( ! this->pnameOrPkgAttrName->empty() ) )
+  if ( this->pnameOrPkgAttrName.has_value() &&
+       ( ! this->pnameOrPkgAttrName->empty() )
+     )
     {
       this->addSelection(
-        "( :pnameOrPkgAttrName = pname ) AS exactPname"
+        "( :pnameOrPkgAttrName = pname ) AS matchExactPname"
       );
       this->addSelection(
-        "( :pnameOrPkgAttrName = pkgAttrName ) AS exactPkgAttrName"
+        "( :pnameOrPkgAttrName = pkgAttrName ) AS matchExactPkgAttrName"
       );
       binds.emplace( ":pnameOrPkgAttrName", * this->pnameOrPkgAttrName );
-      this->addWhere( "( exactPname OR exactPkgAttrName )" );
+      this->addWhere( "( matchExactPname OR matchExactPkgAttrName )" );
+      this->addSelection( "NULL AS matchPartialPname" );
+      this->addSelection( "NULL AS matchPartialPkgAttrName" );
+      this->addSelection( "NULL AS matchPartialDescription" );
     }
-  else
-    {
-      /* Add bogus `match*` values so that later `ORDER BY` works. */
-      this->addSelection( "NULL AS exactPname" );
-      this->addSelection( "NULL AS exactPkgAttrName" );
-    }
-  if ( this->partialMatch.has_value() && ( ! this->partialMatch->empty() ) )
+  else if ( this->partialMatch.has_value() &&
+            ( ! this->partialMatch->empty() )
+          )
     {
       /* We have to add '%' around `:match' because they were added for
        * use with `LIKE'. */
@@ -413,9 +414,7 @@ PkgQuery::initOrderBy()
 {
   /* Establish ordering. */
   this->addOrderBy( R"SQL(
-    exactPname              DESC
-  , exactPkgAttrName        DESC
-  , matchExactPname         DESC
+    matchExactPname         DESC
   , matchExactPkgAttrName   DESC
   , matchPartialPname       DESC
   , matchPartialPkgAttrName DESC
