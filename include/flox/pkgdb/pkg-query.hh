@@ -39,36 +39,6 @@ using row_id = uint64_t;  /**< A _row_ index in a SQLite3 table. */
 
 /* -------------------------------------------------------------------------- */
 
-/**
- * @brief Measures a "strength" ranking that can be used to order packages by
- *        how closely they a match string.
- *
- * The field `pkgAttrName` is the last part of the attribute path in regular
- * flakes, and the second to last part in catalogs.
- */
-enum match_strength {
-  MS_NONE             = 0
-, MS_PARTIAL_DESC     = 1   /**< Substring match on `description`. */
-, MS_PARTIAL_ATTRNAME = 2   /**< Substring match on `pkgAttrName`. */
-, MS_PARTIAL_PNAME    = 4   /**< Substring match on `pname`. */
-, MS_EXACT_ATTRNAME   = 8   /**< Exact match on `pkgAttrName`. */
-, MS_EXACT_PNAME      = 16  /**< Exact match on `pname`. */
-};
-
-static_assert( ( MS_PARTIAL_DESC + MS_PARTIAL_ATTRNAME ) < MS_PARTIAL_PNAME );
-static_assert(
-  ( MS_PARTIAL_DESC + MS_PARTIAL_ATTRNAME + MS_PARTIAL_PNAME ) <
-  MS_EXACT_ATTRNAME
-);
-static_assert(
-  ( MS_PARTIAL_DESC + MS_PARTIAL_ATTRNAME + MS_PARTIAL_PNAME +
-    MS_EXACT_ATTRNAME
-  ) < MS_EXACT_PNAME
-);
-
-
-/* -------------------------------------------------------------------------- */
-
 /** @brief Minimal set of query parameters related to a single package. */
 struct PkgDescriptorBase {
   std::optional<std::string> name;    /**< Filter results by exact `name`. */
@@ -114,8 +84,11 @@ concept pkg_descriptor_typename = std::derived_from<T, PkgDescriptorBase>;
  */
 struct PkgQueryArgs : public PkgDescriptorBase {
 
-  /** Filter results by partial name/description match. */
-  std::optional<std::string> match;
+  /** Filter results by partial match on pname, pkgAttrName, or description */
+  std::optional<std::string> partialMatch;
+
+  /** Filter results by an exact match on either `pname` or `pkgAttrName`. To match just `pname` see @a flox::pkgdb::PkgDescriptorBase. */
+  std::optional<std::string> pnameOrPkgAttrName;
 
   /**
    * Filter results by _match strength_.
@@ -163,12 +136,13 @@ struct PkgQueryArgs : public PkgDescriptorBase {
       , PQEC_MIX_NAME = 2
       /** Version/semver are mutually exclusive */
       , PQEC_MIX_VERSION_SEMVER  = 3
-      , PQEC_INVALID_SEMVER      = 4  /**< Semver Parse Error */
-      , PQEC_INVALID_LICENSE     = 5  /**< License has invalid character */
-      , PQEC_INVALID_SUBTREE     = 6  /**< Unrecognized subtree */
-      , PQEC_CONFLICTING_SUBTREE = 7  /**< Conflicting subtree/stability */
-      , PQEC_INVALID_SYSTEM      = 8  /**< Unrecognized/unsupported system */
-      , PQEC_INVALID_STABILITY   = 9  /**< Unrecognized stability */
+      , PQEC_INVALID_SEMVER      = 4   /**< Semver Parse Error */
+      , PQEC_INVALID_LICENSE     = 5   /**< License has invalid character */
+      , PQEC_INVALID_SUBTREE     = 6   /**< Unrecognized subtree */
+      , PQEC_CONFLICTING_SUBTREE = 7   /**< Conflicting subtree/stability */
+      , PQEC_INVALID_SYSTEM      = 8   /**< Unrecognized/unsupported system */
+      , PQEC_INVALID_STABILITY   = 9   /**< Unrecognized stability */
+      , PQEC_INVALID_MATCH_STYLE = 10  /**< `match` without `matchStyle` */
       } errorCode;
 
     protected:
@@ -205,32 +179,6 @@ struct PkgQueryArgs : public PkgDescriptorBase {
   std::optional<InvalidArgException::error_code> validate() const;
 
 };  /* End struct `PkgQueryArgs' */
-
-
-/**
- * @fn void from_json( const nlohmann::json & j, PkgQueryArgs & pdb )
- * @brief Convert a JSON object to a @a flox::pkgdb::PkgQueryArgs.
- *
- * @fn void to_json( nlohmann::json & j, const PkgQueryArgs & pdb )
- * @brief Convert a @a flox::pkgdb::PkgQueryArgs to a JSON object.
- */
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(
-  PkgQueryArgs
-, name
-, pname
-, version
-, semver
-, match
-, matchMinStrength
-, licenses
-, allowBroken
-, allowUnfree
-, preferPreReleases
-, subtrees
-, systems
-, stabilities
-, relPath
-)
 
 
 /* -------------------------------------------------------------------------- */

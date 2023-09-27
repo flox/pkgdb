@@ -76,7 +76,7 @@ from_json( const nlohmann::json & jfrom, QueryPreferences & prefs )
               else
                 {
                   throw FloxException(
-                    "Unexpected preferences field 'allow." + key + '\''
+                    "Unexpected preferences field 'allow." + akey + '\''
                   );
                 }
             }
@@ -92,7 +92,7 @@ from_json( const nlohmann::json & jfrom, QueryPreferences & prefs )
               else
                 {
                   throw FloxException(
-                    "Unexpected preferences field 'semver." + key + '\''
+                    "Unexpected preferences field 'semver." + skey + '\''
                   );
                 }
             }
