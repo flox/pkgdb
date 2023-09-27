@@ -50,11 +50,39 @@ main( int argc, char * argv[] )
     {
       prog.parse_args( argc, argv );
     }
-  catch( const std::exception & err )
+  catch( const flox::pkgdb::PkgQuery::InvalidArgException & err )
     {
+      // TODO: DRY ( see search/command.cc )
+      int exitCode = flox::EC_PKG_QUERY_INVALID_ARG;
+      exitCode += static_cast<int>( err.errorCode );
+      for ( int i = 1; i < argc; ++i )
+        {
+          if ( std::string_view( argv[i] ) == "search" )
+            {
+              std::cout << "{ \"error\": \"" << err.what() << "\", \"code\": "
+                        << exitCode << " }" << std::endl;
+              return exitCode;
+            }
+        }
       std::cerr << "ERROR: " << err.what() << std::endl;
       std::cerr << prog << std::endl;
-      return EXIT_FAILURE;
+      return exitCode;
+    }
+  catch( const std::exception & err )
+    {
+      // TODO: DRY ( see search/command.cc )
+      for ( int i = 1; i < argc; ++i )
+        {
+          if ( std::string_view( argv[i] ) == "search" )
+            {
+              std::cout << "{ \"error\": \"" << err.what() << "\", \"code\": "
+                        << flox::EC_FAILURE << " }" << std::endl;
+              return flox::EC_FAILURE;
+            }
+        }
+      std::cerr << "ERROR: " << err.what() << std::endl;
+      std::cerr << prog << std::endl;
+      return flox::EC_FAILURE;
     }
 
 
@@ -83,9 +111,39 @@ main( int argc, char * argv[] )
           return cmdResolve.run();
         }
     }
+  catch( const flox::pkgdb::PkgQuery::InvalidArgException & err )
+    {
+      // TODO: DRY ( see search/command.cc )
+      int exitCode = flox::EC_PKG_QUERY_INVALID_ARG;
+      exitCode += static_cast<int>( err.errorCode );
+      for ( int i = 1; i < argc; ++i )
+        {
+          if ( std::string_view( argv[i] ) == "search" )
+            {
+              std::cout << "{ \"error\": \"" << err.what() << "\", \"code\": "
+                        << exitCode << " }" << std::endl;
+              return exitCode;
+            }
+        }
+      std::cerr << "ERROR: " << err.what() << std::endl;
+      std::cerr << prog << std::endl;
+      return exitCode;
+    }
   catch( const std::exception & err )
     {
+      // TODO: DRY ( see search/command.cc )
+      for ( int i = 1; i < argc; ++i )
+        {
+          if ( std::string_view( argv[i] ) == "search" )
+            {
+              std::cout << "{ \"error\": \"" << err.what() << "\", \"code\": "
+                        << flox::EC_FAILURE << " }" << std::endl;
+              return flox::EC_FAILURE;
+            }
+        }
       std::cerr << "ERROR: " << err.what() << std::endl;
+      std::cerr << prog << std::endl;
+      return flox::EC_FAILURE;
     }
 
   return EXIT_FAILURE;
