@@ -66,6 +66,9 @@ PkgQueryArgs::InvalidArgException::errorMessage(
       case PQEC_INVALID_STABILITY:
         return "Unrecognized `stability' in query arguments";
         break;
+      case PQEC_INVALID_MATCH_STYLE:
+        return "Query `matchStyle' must be set when `match' is used";
+        break;
       default:
       case PQEC_ERROR:
         return "Encountered and error processing query arguments";
@@ -149,15 +152,16 @@ PkgQueryArgs::validate() const
 PkgQueryArgs::clear()
 {
   this->PkgDescriptorBase::clear();
-  this->match             = std::nullopt;
-  this->licenses          = std::nullopt;
-  this->allowBroken       = false;
-  this->allowUnfree       = true;
-  this->preferPreReleases = false;
-  this->subtrees          = std::nullopt;
-  this->systems           = { nix::settings.thisSystem.get() };
-  this->stabilities       = std::nullopt;
-  this->relPath           = std::nullopt;
+  this->partialMatch       = std::nullopt;
+  this->pnameOrPkgAttrName = std::nullopt;
+  this->licenses           = std::nullopt;
+  this->allowBroken        = false;
+  this->allowUnfree        = true;
+  this->preferPreReleases  = false;
+  this->subtrees           = std::nullopt;
+  this->systems            = { nix::settings.thisSystem.get() };
+  this->stabilities        = std::nullopt;
+  this->relPath            = std::nullopt;
 }
 
 
@@ -224,43 +228,59 @@ addIn( std::stringstream & oss, const std::vector<std::string> & elems )
   void
 PkgQuery::initMatch()
 {
-  if ( this->match.has_value() && ( ! this->match->empty() ) )
+  if ( this->pnameOrPkgAttrName.has_value() && ( ! this->pnameOrPkgAttrName->empty() ) )
     {
-      this->addWhere(
-        "( pname LIKE :match ) OR ( description LIKE :match )"
+      this->addSelection(
+        "( :pnameOrPkgAttrName = pname ) AS exactPname"
       );
-
-      /* We _rank_ the strength of a match from 0-3 based on exact and partial
-       * matches of `pname` and `description` columns.
-       * Because we intend to use `bind` to handle quoting the user's match
-       * string, we add `%<STRING>%` before binding so that `LIKE` works, and
-       * need to manually add those characters below when testing for exact
-       * matches of the `pname` column.
-       * - 0 : Exact `pname` match.
-       * - 1 : Partial matches on both `pname` and `description`.
-       * - 2 : Partial match on `pname`.
-       * - 3 : Partial match on `description`.
-       * Our `WHERE` statement above ensures that at least one of these rankings
-       * will be true forall rows.
-       */
-      std::stringstream matcher;
-      matcher << "iif( ( ( '%' || LOWER( pname ) || '%' ) = LOWER( :match ) )"
-              << ", " << MS_EXACT_PNAME
-              << ", iif( ( pname LIKE :match )"
-              << ", iif( ( description LIKE :match  ), "
-              << MS_PARTIAL_PNAME_DESC << ", "
-              << MS_PARTIAL_PNAME << " ), " << MS_PARTIAL_DESC
-              << " ) ) AS matchStrength";
-      this->addSelection( matcher.str() );
-      /* Add `%` before binding so `LIKE` works. */
-      binds.emplace( ":match", "%" +  ( * this->match ) + "%" );
+      this->addSelection(
+        "( :pnameOrPkgAttrName = pkgAttrName ) AS exactPkgAttrName"
+      );
+      binds.emplace( ":pnameOrPkgAttrName", * this->pnameOrPkgAttrName );
+      this->addWhere( "( exactPname OR exactPkgAttrName )" );
     }
   else
     {
-      /* Add a bogus `matchStrength` so that later `ORDER BY` works. */
-      std::stringstream matcher;
-      matcher << MS_NONE << " AS matchStrength";
-      this->addSelection( matcher.str() );
+      /* Add bogus `match*` values so that later `ORDER BY` works. */
+      this->addSelection( "NULL AS exactPname" );
+      this->addSelection( "NULL AS exactPkgAttrName" );
+    }
+  if ( this->partialMatch.has_value() && ( ! this->partialMatch->empty() ) )
+    {
+      /* We have to add '%' around `:match' because they were added for
+       * use with `LIKE'. */
+      this->addSelection(
+        "( ( '%' || LOWER( pname ) || '%' ) = LOWER( :partialMatch ) ) "
+        "AS matchExactPname"
+      );
+      this->addSelection(
+        "( ( '%' || LOWER( pkgAttrName ) || '%' ) = LOWER( :partialMatch ) ) "
+        "AS matchExactPkgAttrName"
+      );
+      this->addSelection( "( pname LIKE :partialMatch ) AS matchPartialPname" );
+      this->addSelection(
+        "( pkgAttrName LIKE :partialMatch ) AS matchPartialPkgAttrName"
+      );
+      this->addSelection(
+        "( description LIKE :partialMatch ) AS matchPartialDescription"
+      );
+      /* Add `%` before binding so `LIKE` works. */
+      binds.emplace( ":partialMatch", "%" +  ( * this->partialMatch ) + "%" );
+      this->addWhere(
+        "( matchExactPname OR matchExactPkgAttrName OR"
+        "  matchPartialPname OR matchPartialPkgAttrName OR"
+        "  matchPartialDescription "
+        ")"
+      );
+    }
+  else
+    {
+      /* Add bogus `match*` values so that later `ORDER BY` works. */
+      this->addSelection( "NULL AS matchExactPname" );
+      this->addSelection( "NULL AS matchExactPkgAttrName" );
+      this->addSelection( "NULL AS matchPartialPname" );
+      this->addSelection( "NULL AS matchPartialPkgAttrName" );
+      this->addSelection( "NULL AS matchPartialDescription" );
     }
 }
 
@@ -393,7 +413,14 @@ PkgQuery::initOrderBy()
 {
   /* Establish ordering. */
   this->addOrderBy( R"SQL(
-    matchStrength ASC
+    exactPname              DESC
+  , exactPkgAttrName        DESC
+  , matchExactPname         DESC
+  , matchExactPkgAttrName   DESC
+  , matchPartialPname       DESC
+  , matchPartialPkgAttrName DESC
+  , matchPartialDescription DESC
+
   , subtreesRank ASC
   , systemsRank ASC
   , stabilitiesRank ASC NULLS LAST

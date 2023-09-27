@@ -24,11 +24,11 @@ setup_file() {
 
 # Dump parameters for a query on `nixpkgs'.
 genParams() {
-  jq -r '.query.match|=null' "$TDATA/params0.json"|jq "${1?}";
+  jq -r '.query.partialMatch|=null' "$TDATA/params0.json"|jq "${1?}";
 }
 
 genParamsNixpkgsFlox() {
-  jq -r '.query.match|=null
+  jq -r '.query.partialMatch|=null
         |.registry.inputs|=( del( .nixpkgs )|del( .floco ) )'  \
      "$TDATA/params1.json"|jq "${1?}";
 }
@@ -36,7 +36,7 @@ genParamsNixpkgsFlox() {
 
 # ---------------------------------------------------------------------------- #
 
-# bats test_tags=search:match
+# bats test_tags=search:partialMatch
 
 # Searches `nixpkgs#legacyPackages.x86_64-linux' for a fuzzy match on "hello"
 @test "'pkgdb search' params0.json" {
@@ -62,13 +62,13 @@ genParamsNixpkgsFlox() {
 
 # bats test_tags=search:match
 #
-@test "'pkgdb search' 'match=hello'" {
+@test "'pkgdb search' 'partialMatch=hello'" {
   run sh -c "$PKGDB search '$TDATA/params0.json'|wc -l;";
   assert_success;
-  assert_output 10;
+  assert_output 11;
   run sh -c "$PKGDB search '$TDATA/params0.json'|grep hello|wc -l;";
   assert_success;
-  assert_output 10;
+  assert_output 11;
 }
 
 
