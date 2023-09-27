@@ -52,7 +52,7 @@ class FilteredLogger : public nix::Logger {
     /**
      * @brief Detect ignored warnings.
      *
-     * In theory this is normally controlled by verbosiry, but because the
+     * In theory this is normally controlled by verbosity, but because the
      * verbosity setting conditionals exist in external libs, we have to
      * handle them here.
      */
