@@ -285,8 +285,8 @@ PkgQuery::initMatch()
            * include it in this `switch' so that compilers don't gripe. */
           case QMS_NONE:
           default:
-            throw PkgQueryArgs::PkgQueryInvalidArgException(
-              PkgQueryInvalidArgException::error_code::PQEC_INVALID_MATCH_STYLE
+            throw PkgQueryArgs::InvalidArgException(
+              InvalidArgException::error_code::PQEC_INVALID_MATCH_STYLE
             );
             break;
         }
