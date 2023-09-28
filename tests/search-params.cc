@@ -20,18 +20,6 @@
 
 using namespace nlohmann::literals;
 
-/* -------------------------------------------------------------------------- */
-
-/**
- * @brief Ensure defaults/fallbacks work correctly with
- *        @a flox::search::SearchParams `from_json`.
- */
-  bool
-test_SearchParams_defaults0() {
-
-  return true;
-}
-
 
 /* -------------------------------------------------------------------------- */
 
