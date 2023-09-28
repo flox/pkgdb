@@ -55,22 +55,27 @@ from_json( const nlohmann::json & jfrom, QueryPreferences & prefs )
     {
       if ( key == "systems" )
         {
+          if ( value.is_null() ) { continue; }
           value.get_to( prefs.systems );
         }
       else if ( key == "allow" )
         {
+          if ( value.is_null() ) { continue; }
           for ( const auto & [akey, avalue] : value.items() )
             {
               if ( akey == "unfree" )
                 {
+                  if ( avalue.is_null() ) { continue; }
                   avalue.get_to( prefs.allow.unfree );
                 }
               else if ( akey == "broken" )
                 {
+                  if ( avalue.is_null() ) { continue; }
                   avalue.get_to( prefs.allow.broken );
                 }
               else if ( akey == "licenses" )
                 {
+                  if ( avalue.is_null() ) { continue; }
                   avalue.get_to( prefs.allow.licenses );
                 }
               else
@@ -83,10 +88,12 @@ from_json( const nlohmann::json & jfrom, QueryPreferences & prefs )
         }
       else if ( key == "semver" )
         {
+          if ( value.is_null() ) { continue; }
           for ( const auto & [skey, svalue] : value.items() )
             {
               if ( skey == "preferPreReleases" )
                 {
+                  if ( svalue.is_null() ) { continue; }
                   svalue.get_to( prefs.semver.preferPreReleases );
                 }
               else
