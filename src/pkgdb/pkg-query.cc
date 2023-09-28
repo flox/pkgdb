@@ -245,8 +245,8 @@ PkgQuery::initMatch()
   else
     {
       /* Add bogus `match*` values so that later `ORDER BY` works. */
-      this->addSelection( "0 AS exactPname" );
-      this->addSelection( "0 AS exactPkgAttrName" );
+      this->addSelection( "NULL AS exactPname" );
+      this->addSelection( "NULL AS exactPkgAttrName" );
     }
 
   /* Filter by partial matches on `pname', `pkgAttrName', or `description'. */
@@ -281,11 +281,11 @@ PkgQuery::initMatch()
   else
     {
       /* Add bogus `match*` values so that later `ORDER BY` works. */
-      this->addSelection( "0 AS matchExactPname" );
-      this->addSelection( "0 AS matchExactPkgAttrName" );
-      this->addSelection( "0 AS matchPartialPname" );
-      this->addSelection( "0 AS matchPartialPkgAttrName" );
-      this->addSelection( "0 AS matchPartialDescription" );
+      this->addSelection( "NULL AS matchExactPname" );
+      this->addSelection( "NULL AS matchExactPkgAttrName" );
+      this->addSelection( "NULL AS matchPartialPname" );
+      this->addSelection( "NULL AS matchPartialPkgAttrName" );
+      this->addSelection( "NULL AS matchPartialDescription" );
     }
 }
 
