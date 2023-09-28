@@ -175,25 +175,6 @@ struct PkgQueryArgs : public PkgDescriptorBase {
 };  /* End struct `PkgQueryArgs' */
 
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(
-  PkgQueryArgs
-, name
-, pname
-, version
-, semver
-, partialMatch
-, pnameOrPkgAttrName
-, licenses
-, allowBroken
-, allowUnfree
-, preferPreReleases
-, subtrees
-, systems
-, stabilities
-, relPath
-)
-
-
 /* -------------------------------------------------------------------------- */
 
 /**
