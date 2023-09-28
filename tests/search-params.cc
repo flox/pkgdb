@@ -22,18 +22,14 @@ using namespace nlohmann::literals;
 
 /* -------------------------------------------------------------------------- */
 
-  void
-printInput( const auto & pair )
-{
-  const std::string                               & name   = pair.first;
-  const flox::RegistryInput & params = pair.second;
-  std::cout << "    " << name << std::endl
-            << "      subtrees: "
-            << nlohmann::json( params.subtrees ).dump() << std::endl
-            << "      stabilities: "
-            << nlohmann::json(
-                 params.stabilities.value_or( std::vector<std::string> {} )
-               ).dump() << std::endl;
+/**
+ * @brief Ensure defaults/fallbacks work correctly with
+ *        @a flox::search::SearchParams `from_json`.
+ */
+  bool
+test_SearchParams_defaults0() {
+
+  return true;
 }
 
 
@@ -42,60 +38,70 @@ printInput( const auto & pair )
   int
 main( int argc, char * argv[] )
 {
-  flox::search::SearchParams params;
 
   if ( argc < 2 )
     {
-      nlohmann::json::parse( R"( {
-        "registry": {
-          "inputs": {
-            "nixpkgs": {
-              "from": {
-                "type": "github"
-              , "owner": "NixOS"
-              , "repo": "nixpkgs"
-              , "rev": "e8039594435c68eb4f780f3e9bf3972a7399c4b1"
-              }
-            , "subtrees": ["legacyPackages"]
-            }
-          , "floco": {
-              "from": {
-                "type": "github"
-              , "owner": "aakropotkin"
-              , "repo": "floco"
-              , "rev": "1e84b4b16bba5746e1195fa3a4d8addaaf2d9ef4"
-              }
-            , "subtrees": ["packages"]
-            }
-          , "floxpkgs": {
-              "from": {
-                "type": "github"
-              , "owner": "flox"
-              , "repo": "floxpkgs"
-              }
-            , "subtrees": ["catalog"]
-            , "stabilities": ["stable"]
-            }
-          }
-        , "defaults": {
-            "subtrees": null
-          , "stabilities": ["stable"]
-          }
-        , "priority": ["nixpkgs", "floco", "floxpkgs"]
-        }
-      , "systems": ["x86_64-linux"]
-      , "allow":   { "unfree": true, "broken": false, "licenses": ["MIT"] }
-      , "semver":  { "preferPreReleases": false }
-      , "query":   { "partialMatch": "hello" }
-      } )" ).get_to( params );
+      std::cerr << "ERROR: You must provide a JSON string as the "
+                << "first argument." << std::endl;
+      return EXIT_FAILURE;
     }
-  else
+
+
+  /* Parse */
+  nlohmann::json paramsJSON;
+  try
     {
-      nlohmann::json::parse( argv[1] ).get_to( params );
+      paramsJSON = flox::parseOrReadJSONObject( argv[1] );
+    }
+  catch( const std::exception & err )
+    {
+      std::cerr << "ERROR: Failed to parse search parameters: "
+                << err.what() << std::endl;
+      return EXIT_FAILURE + 1;
+    }
+  catch( ... )
+    {
+      std::cerr << "ERROR: Failed to parse search parameters." << std::endl;
+      return EXIT_FAILURE + 2;
     }
 
-  std::cout << nlohmann::json( params ).dump() << std::endl;
 
+  /* Deserialize */
+  flox::search::SearchParams params;
+  try
+    {
+      paramsJSON.get_to( params );
+    }
+  catch( const std::exception & err )
+    {
+      std::cerr << "ERROR: Failed to convert search parameters from JSON: "
+                << err.what() << std::endl;
+      return EXIT_FAILURE + 3;
+    }
+  catch( ... )
+    {
+      std::cerr << "ERROR: Failed to convert search parameters from JSON."
+                << std::endl;
+      return EXIT_FAILURE + 4;
+    }
+
+
+  /* Serialize */
+  try
+    {
+      std::cout << nlohmann::json( params ).dump() << std::endl;
+    }
+  catch( const std::exception & err )
+    {
+      std::cerr << "ERROR: Failed to serialize search parameters: "
+                << err.what() << std::endl;
+      return EXIT_FAILURE + 5;
+    }
+  catch( ... )
+    {
+      std::cerr << "ERROR: Failed to serialize search parameters." << std::endl;
+      return EXIT_FAILURE + 6;
+    }
 
   return EXIT_SUCCESS;
 }
