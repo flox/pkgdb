@@ -12,6 +12,10 @@ load setup_suite.bash;
 
 setup_file() {
   export TDATA="$TESTS_DIR/data/search";
+
+  # Path to `search-params' utility.
+  export SEARCH_PARAMS="$TESTS_DIR/search-params";
+
   export PKGDB_CACHEDIR="$BATS_FILE_TMPDIR/pkgdbs";
   echo "PKGDB_CACHEDIR: $PKGDB_CACHEDIR" >&3;
   # We don't parallelize these to avoid DB sync headaches and to recycle the
@@ -229,6 +233,73 @@ genParamsNixpkgsFlox() {
   # catalog.x86_64-linux.unstable.hello.latest
   assert_output --partial '3 unstable';
   refute_output --partial '4 ';
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# bats test_tags=search:params, search:params:fallbacks
+
+@test "search-params with empty object" {
+  run $SEARCH_PARAMS '{}';
+  assert_success;
+
+  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.allow.broken';";
+  assert_success;
+  assert_output 'false';
+
+  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.allow.unfree';";
+  assert_success;
+  assert_output 'true';
+
+  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.allow.licenses';";
+  assert_success;
+  assert_output 'null';
+
+  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.query.match';";
+  assert_success;
+  assert_output 'null';
+
+  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.query.name';";
+  assert_success;
+  assert_output 'null';
+
+  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.query.pname';";
+  assert_success;
+  assert_output 'null';
+
+  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.query.semver';";
+  assert_success;
+  assert_output 'null';
+
+  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.query.version';";
+  assert_success;
+  assert_output 'null';
+
+  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.registry.inputs';";
+  assert_success;
+  assert_output '{}';
+
+  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.registry.defaults.stabilities';";
+  assert_success;
+  assert_output 'null';
+
+  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.registry.defaults.subtrees';";
+  assert_success;
+  assert_output 'null';
+
+  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.registry.priority';";
+  assert_success;
+  assert_output '[]';
+
+  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.semver.preferPreReleases';";
+  assert_success;
+  assert_output 'false';
+
+  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.systems|length';";
+  assert_success;
+  assert_output '1';
+
 }
 
 
