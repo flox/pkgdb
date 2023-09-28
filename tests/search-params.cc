@@ -39,30 +39,51 @@ test_SearchParams_defaults0() {
 main( int argc, char * argv[] )
 {
 
-  if ( argc < 2 )
-    {
-      std::cerr << "ERROR: You must provide a JSON string as the "
-                << "first argument." << std::endl;
-      return EXIT_FAILURE;
-    }
-
-
   /* Parse */
   nlohmann::json paramsJSON;
-  try
+  if ( argc < 2 )
     {
-      paramsJSON = flox::parseOrReadJSONObject( argv[1] );
+      try
+        {
+          std::string line;
+          std::string paramsString;
+
+          while ( std::getline( std::cin, line ) && ( ! line.empty() ) )
+            {
+              paramsString += line;
+            }
+
+          paramsJSON = nlohmann::json::parse( paramsString );
+        }
+      catch( const std::exception & err )
+        {
+          std::cerr << "ERROR: Failed to parse search parameters: "
+                    << err.what() << std::endl;
+          return EXIT_FAILURE + 1;
+        }
+      catch( ... )
+        {
+          std::cerr << "ERROR: Failed to parse search parameters." << std::endl;
+          return EXIT_FAILURE + 2;
+        }
     }
-  catch( const std::exception & err )
+  else
     {
-      std::cerr << "ERROR: Failed to parse search parameters: "
-                << err.what() << std::endl;
-      return EXIT_FAILURE + 1;
-    }
-  catch( ... )
-    {
-      std::cerr << "ERROR: Failed to parse search parameters." << std::endl;
-      return EXIT_FAILURE + 2;
+      try
+        {
+          paramsJSON = flox::parseOrReadJSONObject( argv[1] );
+        }
+      catch( const std::exception & err )
+        {
+          std::cerr << "ERROR: Failed to parse search parameters: "
+                    << err.what() << std::endl;
+          return EXIT_FAILURE + 1;
+        }
+      catch( ... )
+        {
+          std::cerr << "ERROR: Failed to parse search parameters." << std::endl;
+          return EXIT_FAILURE + 2;
+        }
     }
 
 
