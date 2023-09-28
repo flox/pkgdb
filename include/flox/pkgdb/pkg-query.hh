@@ -90,12 +90,6 @@ struct PkgQueryArgs : public PkgDescriptorBase {
   /** Filter results by an exact match on either `pname` or `pkgAttrName`. To match just `pname` see @a flox::pkgdb::PkgDescriptorBase. */
   std::optional<std::string> pnameOrPkgAttrName;
 
-  /**
-   * Filter results by _match strength_.
-   * This can be useful for filtering out packages that only partially match.
-   */
-  std::optional<unsigned> matchMinStrength;
-
   /** Filter results to those explicitly marked with the given licenses. */
   std::optional<std::vector<std::string>> licenses;
 
