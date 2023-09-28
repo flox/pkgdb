@@ -184,10 +184,12 @@ from_json( const nlohmann::json & jfrom, QueryParams<QueryType> & params )
     {
       if ( key == "registry" )
         {
+          if ( value.is_null() ) { continue; }
           value.get_to( params.registry );
         }
       else if ( key == "query" )
         {
+          if ( value.is_null() ) { continue; }
           value.get_to( params.query );
         }
       else if ( ( key == "systems" ) ||

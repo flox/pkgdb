@@ -35,6 +35,7 @@ from_json( const nlohmann::json & jfrom, SearchQuery & qry )
                       , auto                 & sink
                       )
     {
+      if ( from.is_null() ) { return; }
       try
         {
           from.get_to( sink );
