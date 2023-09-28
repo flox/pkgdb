@@ -37,5 +37,5 @@
   , "priority": ["nixpkgs", "nixpkgs-flox", "floco", "floxpkgs"]
   }
 , "systems": ["x86_64-linux"]
-, "query": { "partialMatch": "hello" }
+, "query": { "match": "hello" }
 }

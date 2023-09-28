@@ -30,16 +30,67 @@ SearchQuery::clear()
   void
 from_json( const nlohmann::json & jfrom, SearchQuery & qry )
 {
-  pkgdb::from_json( jfrom, dynamic_cast<pkgdb::PkgDescriptorBase &>( qry ) );
-  try { jfrom.at( "partialMatch" ).get_to( qry.partialMatch ); }
-  catch( const nlohmann::json::out_of_range & ) {}
+  auto getOrFail = [&]( const std::string    & key
+                      , const nlohmann::json & from
+                      , auto                 & sink
+                      )
+    {
+      try
+        {
+          from.get_to( sink );
+        }
+      catch( const nlohmann::json::exception & err )
+        {
+          throw FloxException(
+            "Failed to parse search query field: 'query." + key + "':\n  " +
+            err.what()
+          );
+        }
+      catch( ... )
+        {
+          throw FloxException(
+            "Failed to parse search query field: 'query." + key + "'."
+          );
+        }
+    };
+
+  for ( const auto & [key, value] : jfrom.items() )
+    {
+      if ( key == "name" )
+        {
+          getOrFail( key, value, qry.name );
+        }
+      else if ( key == "pname" )
+        {
+          getOrFail( key, value, qry.pname );
+        }
+      else if ( key == "version" )
+        {
+          getOrFail( key, value, qry.version );
+        }
+      else if ( key == "semver" )
+        {
+          getOrFail( key, value, qry.semver );
+        }
+      else if ( key == "match" )
+        {
+          getOrFail( key, value, qry.partialMatch );
+        }
+      else
+        {
+          throw FloxException(
+            "Unrecognized search query key: 'query." + key + "'."
+          );
+        }
+    }
 }
+
 
   void
 to_json( nlohmann::json & jto, const SearchQuery & qry )
 {
   pkgdb::to_json( jto, dynamic_cast<const pkgdb::PkgDescriptorBase &>( qry ) );
-  jto["partialMatch"] = qry.partialMatch;
+  jto["match"] = qry.partialMatch;
 }
 
 
@@ -49,11 +100,11 @@ to_json( nlohmann::json & jto, const SearchQuery & qry )
 SearchQuery::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 {
   /* XXX: DOES NOT CLEAR FIRST! We are called after global preferences. */
-  pqa.name               = this->name;
-  pqa.pname              = this->pname;
-  pqa.version            = this->version;
-  pqa.semver             = this->semver;
-  pqa.partialMatch       = this->partialMatch;
+  pqa.name         = this->name;
+  pqa.pname        = this->pname;
+  pqa.version      = this->version;
+  pqa.semver       = this->semver;
+  pqa.partialMatch = this->partialMatch;
   return pqa;
 }
 

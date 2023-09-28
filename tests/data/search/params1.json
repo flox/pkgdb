@@ -41,7 +41,7 @@
     "preferPreReleases": false
   }
 , "query": {
-    "partialMatch": "hello"
+    "match": "hello"
   , "name": null
   , "pname": null
   , "version": null
