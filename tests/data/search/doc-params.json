@@ -62,6 +62,6 @@
   , "pname": null
   , "version": null
   , "semver": "2"
-  , "partialMatch": "hello"
+  , "match": "hello"
   }
 }

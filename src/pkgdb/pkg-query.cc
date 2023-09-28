@@ -228,7 +228,10 @@ addIn( std::stringstream & oss, const std::vector<std::string> & elems )
   void
 PkgQuery::initMatch()
 {
-  if ( this->pnameOrPkgAttrName.has_value() && ( ! this->pnameOrPkgAttrName->empty() ) )
+  /* Filter by exact matches on `pname' or `pkgAttrName'. */
+  if ( this->pnameOrPkgAttrName.has_value() &&
+       ( ! this->pnameOrPkgAttrName->empty() )
+     )
     {
       this->addSelection(
         "( :pnameOrPkgAttrName = pname ) AS exactPname"
@@ -245,6 +248,8 @@ PkgQuery::initMatch()
       this->addSelection( "NULL AS exactPname" );
       this->addSelection( "NULL AS exactPkgAttrName" );
     }
+
+  /* Filter by partial matches on `pname', `pkgAttrName', or `description'. */
   if ( this->partialMatch.has_value() && ( ! this->partialMatch->empty() ) )
     {
       /* We have to add '%' around `:match' because they were added for
