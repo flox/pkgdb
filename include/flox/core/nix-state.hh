@@ -69,6 +69,8 @@ struct NixStoreMixin {
     NixStoreMixin() { initNix(); }
 
 
+/* -------------------------------------------------------------------------- */
+
     /**
      * @brief Lazily open a `nix` store connection.
      *

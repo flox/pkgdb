@@ -44,7 +44,7 @@ initNix()
 
   /* Use custom logger */
   bool printBuildLogs = nix::logger->isVerbose();
-  delete nix::logger;
+  if ( nix::logger != nullptr ) { delete nix::logger; }
   nix::logger = makeFilteredLogger( printBuildLogs );
 
   didNixInit = true;
