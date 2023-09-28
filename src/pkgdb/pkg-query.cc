@@ -228,7 +228,10 @@ addIn( std::stringstream & oss, const std::vector<std::string> & elems )
   void
 PkgQuery::initMatch()
 {
-  if ( this->pnameOrPkgAttrName.has_value() && ( ! this->pnameOrPkgAttrName->empty() ) )
+  /* Filter by exact matches on `pname' or `pkgAttrName'. */
+  if ( this->pnameOrPkgAttrName.has_value() &&
+       ( ! this->pnameOrPkgAttrName->empty() )
+     )
     {
       this->addSelection(
         "( :pnameOrPkgAttrName = pname ) AS exactPname"
@@ -242,9 +245,11 @@ PkgQuery::initMatch()
   else
     {
       /* Add bogus `match*` values so that later `ORDER BY` works. */
-      this->addSelection( "NULL AS exactPname" );
-      this->addSelection( "NULL AS exactPkgAttrName" );
+      this->addSelection( "0 AS exactPname" );
+      this->addSelection( "0 AS exactPkgAttrName" );
     }
+
+  /* Filter by partial matches on `pname', `pkgAttrName', or `description'. */
   if ( this->partialMatch.has_value() && ( ! this->partialMatch->empty() ) )
     {
       /* We have to add '%' around `:match' because they were added for
@@ -276,11 +281,11 @@ PkgQuery::initMatch()
   else
     {
       /* Add bogus `match*` values so that later `ORDER BY` works. */
-      this->addSelection( "NULL AS matchExactPname" );
-      this->addSelection( "NULL AS matchExactPkgAttrName" );
-      this->addSelection( "NULL AS matchPartialPname" );
-      this->addSelection( "NULL AS matchPartialPkgAttrName" );
-      this->addSelection( "NULL AS matchPartialDescription" );
+      this->addSelection( "0 AS matchExactPname" );
+      this->addSelection( "0 AS matchExactPkgAttrName" );
+      this->addSelection( "0 AS matchPartialPname" );
+      this->addSelection( "0 AS matchPartialPkgAttrName" );
+      this->addSelection( "0 AS matchPartialDescription" );
     }
 }
 
