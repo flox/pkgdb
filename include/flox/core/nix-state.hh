@@ -51,7 +51,15 @@ class NixStoreMixin {
 
   public:
 
+    /* Copy/Move base class boilerplate */
+    NixStoreMixin( const NixStoreMixin &  ) = default;
+    NixStoreMixin(       NixStoreMixin && ) = default;
+
     virtual ~NixStoreMixin() = default;
+
+    NixStoreMixin & operator=( const NixStoreMixin &  ) = default;
+    NixStoreMixin & operator=(       NixStoreMixin && ) = default;
+
 
     /**
      * @brief Construct `NixStoreMixin` from an existing store connection.

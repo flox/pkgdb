@@ -50,7 +50,16 @@ struct InputPreferences {
   std::optional<std::vector<std::string>> stabilities;
 
 
+  /* Copy/Move base class boilerplate */
+  InputPreferences()                            = default;
+  InputPreferences( const InputPreferences &  ) = default;
+  InputPreferences(       InputPreferences && ) = default;
+
   virtual ~InputPreferences() = default;
+
+  InputPreferences & operator=( const InputPreferences &  ) = default;
+  InputPreferences & operator=(       InputPreferences && ) = default;
+
 
   /** @brief Reset to default state. */
   virtual void clear();
