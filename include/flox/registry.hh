@@ -355,9 +355,9 @@ class Registry {
     RegistryRaw registryRaw;
 
     /** A list of `<SHORTNAME>, <FLAKE>` pairs in priority order. */
-    std::vector< std::pair<std::string
-               , std::shared_ptr<typename FactoryType::input_type>>
-               > inputs;
+    std::vector<
+      std::pair<std::string, std::shared_ptr<typename FactoryType::input_type>>
+    > inputs;
 
 
   public:
