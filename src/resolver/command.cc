@@ -55,12 +55,10 @@ ResolveCommand::ResolveCommand() : parser( "resolve" )
    ResolverState
  ResolveCommand::getResolverState() const
  {
-   return ResolverState(
-     this->params.registry
-   , dynamic_cast<const pkgdb::QueryPreferences &>( this->params )
-   );
+   return { this->params.registry
+          , dynamic_cast<const pkgdb::QueryPreferences &>( this->params )
+          };
  }
-
 
 
 /* -------------------------------------------------------------------------- */
@@ -68,12 +66,9 @@ ResolveCommand::ResolveCommand() : parser( "resolve" )
   int
 ResolveCommand::run()
 {
-  this->initRegistry();
-  this->scrapeIfNeeded();
-  assert( this->registry != nullptr );
   auto state = this->getResolverState();
   auto rsl   = resolve( state, this->getQuery() );
-  std::cout << nlohmann::json( rsl ) .dump() << std::endl;
+  std::cout << nlohmann::json( rsl ).dump() << std::endl;
   return EXIT_SUCCESS;
 }
 

@@ -49,6 +49,18 @@ struct InputPreferences {
    */
   std::optional<std::vector<std::string>> stabilities;
 
+
+  /* Copy/Move base class boilerplate */
+  InputPreferences()                            = default;
+  InputPreferences( const InputPreferences &  ) = default;
+  InputPreferences(       InputPreferences && ) = default;
+
+  virtual ~InputPreferences() = default;
+
+  InputPreferences & operator=( const InputPreferences &  ) = default;
+  InputPreferences & operator=(       InputPreferences && ) = default;
+
+
   /** @brief Reset to default state. */
   virtual void clear();
 
@@ -343,9 +355,9 @@ class Registry {
     RegistryRaw registryRaw;
 
     /** A list of `<SHORTNAME>, <FLAKE>` pairs in priority order. */
-    std::vector< std::pair<std::string
-               , std::shared_ptr<typename FactoryType::input_type>>
-               > inputs;
+    std::vector<
+      std::pair<std::string, std::shared_ptr<typename FactoryType::input_type>>
+    > inputs;
 
 
   public:

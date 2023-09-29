@@ -26,29 +26,31 @@ class PkgDbInput : public FloxFlakeInput {
 
   private:
 
+    /* Provided by `FloxFlakeInput':
+     *   nix::ref<nix::FlakeRef>             flakeRef
+     *   nix::ref<nix::Store>                store
+     *   std::shared_ptr<FloxFlake>          flake
+     *   std::optional<std::vector<Subtree>> enabledSubtrees
+     */
+
     /** Path to the flake's pkgdb SQLite3 file. */
     std::filesystem::path dbPath;
 
     /**
-     * @brief A read-only database connection that remains open for the lifetime
-     *        of @a this object.
+     * A read-only database connection that remains open for the lifetime of
+     * @a this object.
      */
     std::shared_ptr<PkgDbReadOnly> dbRO;
 
     /**
-     * @brief A read/write database connection that may be opened and closed as
-     *        needed using @a getDbReadWrite and @a closeDbReadWrite.
+     * A read/write database connection that may be opened and closed as needed
+     * using @a getDbReadWrite and @a closeDbReadWrite.
      */
     std::shared_ptr<PkgDb> dbRW;
-
-
-  public:
 
     /** The name of the input, used to emit output with shortnames. */
     std::optional<std::string> name;
 
-
-  private:
 
     /**
      * @brief Prepare database handles for use.
@@ -174,10 +176,15 @@ class PkgDbInput : public FloxFlakeInput {
     void scrapeSystems( const std::vector<std::string> & systems );
 
 
+    /** @brief Add/set a shortname for this input. */
+    void setName( std::string_view name ) { this->name = name; }
+
+
     /**
      * @brief Get an identifier for this input.
      * @return The shortname of this input, or its locked flake-ref.
      */
+      [[nodiscard]]
       std::string
     getNameOrURL()
     {
@@ -187,10 +194,8 @@ class PkgDbInput : public FloxFlakeInput {
     }
 
 
-    /**
-     * @brief Get a JSON representation of a row in the database.
-     */
-    nlohmann::json getRowJSON( row_id row );
+    /** @brief Get a JSON representation of a row in the database. */
+    [[nodiscard]] nlohmann::json getRowJSON( row_id row );
 
 
 };  /* End struct `PkgDbInput' */
@@ -202,10 +207,13 @@ class PkgDbInput : public FloxFlakeInput {
 class PkgDbInputFactory {
 
   private:
+
     nix::ref<nix::Store>  store;    /**< `nix` store connection. */
     std::filesystem::path cacheDir; /**< Cache directory. */
 
+
   public:
+
     using input_type = PkgDbInput;
 
     /** @brief Construct a factory using a `nix` evaluator. */
@@ -243,26 +251,28 @@ static_assert( registry_input_factory<PkgDbInputFactory> );
  * Derived classes must provide their own @a getRegistryRaw and @a getSystems
  * implementations to support @a initRegistry and @a scrapeIfNeeded.
  */
-struct PkgDbRegistryMixin : virtual public NixState {
+class PkgDbRegistryMixin : virtual protected NixStoreMixin {
 
-  /* From `NixState':
-   *   public:
-   *     std::shared_ptr<nix::Store>     store
-   *     std::shared_ptr<nix::EvalState> state
-   */
-
-  protected:
+  private:
 
     bool force = false;  /**< Whether to force re-evaluation of flakes. */
 
     std::shared_ptr<Registry<pkgdb::PkgDbInputFactory>> registry;
 
 
-    /** Initialize @a registry member from @a params.registry. */
+  protected:
+
+    /* From `NixStoreMixin':
+     *   nix::ref<nix::Store> getStore()
+     */
+
+
+    /** @brief Initialize @a registry member from @a params.registry. */
     void initRegistry();
 
     /**
-     * Lazily perform scraping on input flakes.
+     * @brief Lazily perform scraping on input flakes.
+     *
      * If scraping is necessary temprorary read/write handles are opened for
      * those flakes and closed before returning from this function.
      */
@@ -274,7 +284,18 @@ struct PkgDbRegistryMixin : virtual public NixState {
     /** @return A list of systems to be scraped. */
     [[nodiscard]] virtual std::vector<std::string> & getSystems() = 0;
 
-};  /* End struct `PkgDbRegistryMixin' */
+
+  public:
+
+    /**
+     * @brief Get the set of package databases to resolve in.
+     *
+     * This lazily initializes the registry and scrapes inputs when necessary.
+     */
+    [[nodiscard]] nix::ref<Registry<PkgDbInputFactory>> getPkgDbRegistry();
+
+
+};  /* End class `PkgDbRegistryMixin' */
 
 
 /* -------------------------------------------------------------------------- */
