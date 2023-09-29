@@ -69,7 +69,7 @@ ResolveCommand::run()
 {
   auto state = this->getResolverState();
   auto rsl   = resolve( state, this->getQuery() );
-  std::cout << nlohmann::json( rsl ) .dump() << std::endl;
+  std::cout << nlohmann::json( rsl ).dump() << std::endl;
   return EXIT_SUCCESS;
 }
 
