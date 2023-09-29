@@ -90,11 +90,8 @@ SearchCommand::run()
 {
   try
     {
-      this->initRegistry();
-      this->scrapeIfNeeded();
-      assert( this->registry != nullptr );
       pkgdb::PkgQueryArgs args;
-      for ( const auto & [name, input] : * this->registry )
+      for ( const auto & [name, input] : * this->getPkgDbRegistry() )
         {
           this->params.fillPkgQueryArgs( name, args );
           this->query = pkgdb::PkgQuery( args );

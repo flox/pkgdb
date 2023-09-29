@@ -68,9 +68,6 @@ ResolveCommand::ResolveCommand() : parser( "resolve" )
   int
 ResolveCommand::run()
 {
-  this->initRegistry();
-  this->scrapeIfNeeded();
-  assert( this->registry != nullptr );
   auto state = this->getResolverState();
   auto rsl   = resolve( state, this->getQuery() );
   std::cout << nlohmann::json( rsl ) .dump() << std::endl;

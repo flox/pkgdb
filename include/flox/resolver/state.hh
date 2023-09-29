@@ -55,18 +55,6 @@ class ResolverState : public pkgdb::PkgDbRegistryMixin {
     }
 
 
-    /**
-     * @brief Initializes `PkgDbRegistryMixin::registry` and scrapes inputs
-     *        when necessary.
-     */
-      void
-    initResolverState()
-    {
-      if ( this->registry == nullptr ) { this->scrapeIfNeeded(); }
-      assert( this->registry != nullptr );
-    }
-
-
   public:
 
     ResolverState( const RegistryRaw             & registry
@@ -96,8 +84,7 @@ class ResolverState : public pkgdb::PkgDbRegistryMixin {
     {
       pkgdb::PkgQueryArgs args;
       this->preferences.fillPkgQueryArgs( args );
-      this->initResolverState();
-      this->registry->at( name )->fillPkgQueryArgs( args );
+      this->getPkgDbRegistry()->at( name )->fillPkgQueryArgs( args );
       return args;
     }
 

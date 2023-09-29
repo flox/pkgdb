@@ -253,16 +253,18 @@ static_assert( registry_input_factory<PkgDbInputFactory> );
  */
 class PkgDbRegistryMixin : virtual protected NixStoreMixin {
 
-  protected:
-
-    /* From `NixStoreMixin':
-     *   std::shared_ptr<nix::Store> store
-     *   nix::ref<nix::Store>        getStore()
-     */
+  private:
 
     bool force = false;  /**< Whether to force re-evaluation of flakes. */
 
     std::shared_ptr<Registry<pkgdb::PkgDbInputFactory>> registry;
+
+
+  protected:
+
+    /* From `NixStoreMixin':
+     *   nix::ref<nix::Store> getStore()
+     */
 
 
     /** @brief Initialize @a registry member from @a params.registry. */
