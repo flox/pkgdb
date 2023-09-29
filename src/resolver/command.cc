@@ -55,10 +55,9 @@ ResolveCommand::ResolveCommand() : parser( "resolve" )
    ResolverState
  ResolveCommand::getResolverState() const
  {
-   return ResolverState(
-     this->params.registry
-   , dynamic_cast<const pkgdb::QueryPreferences &>( this->params )
-   );
+   return { this->params.registry
+          , dynamic_cast<const pkgdb::QueryPreferences &>( this->params )
+          };
  }
 
 
