@@ -976,16 +976,16 @@ test_getPackages_semver0( flox::pkgdb::PkgDb & db )
     , ( :parentId, 'hello1', 'hello-2.13.1', 'hello', '2.13.1', '2.13.1'
       , 'GPL-3.0-or-later', '["out"]', '["out"]', false, false, :descriptionId
       )
-    , ( :parentId, 'hello1', 'hello-2.14.1', 'hello', '2.14.1', '2.14.1'
+    , ( :parentId, 'hello2', 'hello-2.14.1', 'hello', '2.14.1', '2.14.1'
       , 'GPL-3.0-or-later', '["out"]', '["out"]', false, false, :descriptionId
       )
-    , ( :parentId, 'hello2', 'hello-3', 'hello', '3', '3.0.0'
+    , ( :parentId, 'hello3', 'hello-3', 'hello', '3', '3.0.0'
       , 'GPL-3.0-or-later', '["out"]', '["out"]', false, false, :descriptionId
       )
-    , ( :parentId, 'hello3', 'hello-4.2.0', 'hello', '4.2', '4.2.0'
+    , ( :parentId, 'hello4', 'hello-4.2.0', 'hello', '4.2', '4.2.0'
       , 'GPL-3.0-or-later', '["out"]', '["out"]', false, false, :descriptionId
       )
-    , ( :parentId, 'hello4', 'hello-no-version', 'hello', NULL, NULL
+    , ( :parentId, 'hello5', 'hello-no-version', 'hello', NULL, NULL
       , 'GPL-3.0-or-later', '["out"]', '["out"]', false, false, :descriptionId
       )
   )SQL" );
@@ -1068,6 +1068,16 @@ test_getPackages_semver0( flox::pkgdb::PkgDb & db )
       }
   }
 
+  /* '*' : Any semantic version, should omit `hello-no-version' */
+  {
+    auto semvers = getSemvers( "*" );
+    EXPECT_EQ( semvers.size(), std::size_t( 5 ) );
+    EXPECT( std::ranges::all_of(
+              semvers
+            , []( const auto & maybeSemver ) { return maybeSemver.has_value(); }
+            )
+          );
+  }
 
   return true;
 }
