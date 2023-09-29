@@ -105,7 +105,7 @@ class NixState : public NixStoreMixin {
   public:
 
     /** @brief Construct `NixState` using the systems default `nix` store. */
-    NixState() {}
+    NixState() = default;
 
     /**
      * @brief Construct `NixState` from an existing store connection.
