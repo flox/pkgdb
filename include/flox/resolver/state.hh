@@ -43,7 +43,6 @@ class ResolverState : public pkgdb::PkgDbRegistryMixin<> {
 
     /* From `PkgDbRegistryMixin':
      *   std::shared_ptr<nix::Store>                         store
-     *   std::shared_ptr<nix::EvalState>                     state
      *   bool                                                force    = false
      *   std::shared_ptr<Registry<pkgdb::PkgDbInputFactory>> registry
      */
