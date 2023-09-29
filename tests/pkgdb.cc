@@ -973,7 +973,10 @@ test_getPackages_semver0( flox::pkgdb::PkgDb & db )
       ( :parentId, 'hello0', 'hello-2.12', 'hello', '2.12', '2.12.0'
       , 'GPL-3.0-or-later', '["out"]', '["out"]', false, false, :descriptionId
       )
-    , ( :parentId, 'hello1', 'hello-2.12.1', 'hello', '2.12.1', '2.12.1'
+    , ( :parentId, 'hello1', 'hello-2.13.1', 'hello', '2.13.1', '2.13.1'
+      , 'GPL-3.0-or-later', '["out"]', '["out"]', false, false, :descriptionId
+      )
+    , ( :parentId, 'hello1', 'hello-2.14.1', 'hello', '2.14.1', '2.14.1'
       , 'GPL-3.0-or-later', '["out"]', '["out"]', false, false, :descriptionId
       )
     , ( :parentId, 'hello2', 'hello-3', 'hello', '3', '3.0.0'
@@ -1024,6 +1027,30 @@ test_getPackages_semver0( flox::pkgdb::PkgDb & db )
   /* ^2 : 2.0.0 <= VERSION < 3.0.0 */
   {
     auto semvers = getSemvers( "^2" );
+    EXPECT_EQ( semvers.size(), std::size_t( 3 ) );
+    size_t idx = 0;
+    for ( const std::optional<std::string> & maybeSemver : semvers )
+      {
+        EXPECT( maybeSemver.has_value() );
+        if ( idx == 0 )
+          {
+            EXPECT_EQ( * maybeSemver, "2.14.1" );
+          }
+        else if ( idx == 1 )
+          {
+            EXPECT_EQ( * maybeSemver, "2.13.1" );
+          }
+        else if ( idx == 2 )
+          {
+            EXPECT_EQ( * maybeSemver, "2.12.0" );
+          }
+        ++idx;
+      }
+  }
+
+  /* ^2.13.1 : 2.13.1 <= VERSION < 3.0.0 */
+  {
+    auto semvers = getSemvers( "^2.13.1" );
     EXPECT_EQ( semvers.size(), std::size_t( 2 ) );
     size_t idx = 0;
     for ( const std::optional<std::string> & maybeSemver : semvers )
@@ -1031,15 +1058,16 @@ test_getPackages_semver0( flox::pkgdb::PkgDb & db )
         EXPECT( maybeSemver.has_value() );
         if ( idx == 0 )
           {
-            EXPECT_EQ( * maybeSemver, "2.12.1" );
+            EXPECT_EQ( * maybeSemver, "2.14.1" );
           }
         else if ( idx == 1 )
           {
-            EXPECT_EQ( * maybeSemver, "2.12.0" );
+            EXPECT_EQ( * maybeSemver, "2.13.1" );
           }
         ++idx;
       }
   }
+
 
   return true;
 }
