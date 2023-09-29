@@ -48,7 +48,7 @@ class ResolverState : public pkgdb::PkgDbRegistryMixin {
      */
 
       [[nodiscard]]
-      virtual std::vector<std::string> &
+      std::vector<std::string> &
     getSystems() override
     {
       return this->preferences.systems;
@@ -57,21 +57,17 @@ class ResolverState : public pkgdb::PkgDbRegistryMixin {
 
   public:
 
-    ResolverState( const RegistryRaw             & registry
-                 , const pkgdb::QueryPreferences & preferences
+    ResolverState( RegistryRaw             registry
+                 , pkgdb::QueryPreferences preferences
                  )
-      : registryRaw( registry )
-      , preferences( preferences )
+      : registryRaw( std::move( registry ) )
+      , preferences( std::move( preferences ) )
     {}
 
 
     /** @brief Get the _raw_ registry declaration. */
-      [[nodiscard]]
-      virtual RegistryRaw
-    getRegistryRaw() override
-    {
-      return this->registryRaw;
-    }
+    [[nodiscard]]
+    RegistryRaw getRegistryRaw() override { return this->registryRaw; }
 
 
     /**
