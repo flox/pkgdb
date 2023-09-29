@@ -48,14 +48,9 @@ class PkgDbInput : public FloxFlakeInput {
      */
     std::shared_ptr<PkgDb> dbRW;
 
-
-  public:
-
     /** The name of the input, used to emit output with shortnames. */
     std::optional<std::string> name;
 
-
-  private:
 
     /**
      * @brief Prepare database handles for use.
@@ -179,6 +174,10 @@ class PkgDbInput : public FloxFlakeInput {
      * @param systems Systems to be scraped.
      */
     void scrapeSystems( const std::vector<std::string> & systems );
+
+
+    /** @brief Add/set a shortname for this input. */
+    void setName( std::string_view name ) { this->name = name; }
 
 
     /**

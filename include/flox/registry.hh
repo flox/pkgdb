@@ -49,6 +49,9 @@ struct InputPreferences {
    */
   std::optional<std::vector<std::string>> stabilities;
 
+
+  virtual ~InputPreferences() = default;
+
   /** @brief Reset to default state. */
   virtual void clear();
 

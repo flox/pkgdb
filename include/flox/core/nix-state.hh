@@ -51,6 +51,8 @@ class NixStoreMixin {
 
   public:
 
+    virtual ~NixStoreMixin() = default;
+
     /**
      * @brief Construct `NixStoreMixin` from an existing store connection.
      *
