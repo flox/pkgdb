@@ -42,7 +42,7 @@ void initNix();
 /* -------------------------------------------------------------------------- */
 
 /** @brief Mixin which provides a lazy handle to a `nix` store connection. */
-struct NixStoreMixin {
+class NixStoreMixin {
 
   protected:
 
@@ -69,8 +69,6 @@ struct NixStoreMixin {
     NixStoreMixin() { initNix(); }
 
 
-/* -------------------------------------------------------------------------- */
-
     /**
      * @brief Lazily open a `nix` store connection.
      *
@@ -84,7 +82,7 @@ struct NixStoreMixin {
     }
 
 
-};  /* End struct `NixStoreMixin' */
+};  /* End class `NixStoreMixin' */
 
 
 /* -------------------------------------------------------------------------- */

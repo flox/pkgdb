@@ -251,14 +251,14 @@ static_assert( registry_input_factory<PkgDbInputFactory> );
  * Derived classes must provide their own @a getRegistryRaw and @a getSystems
  * implementations to support @a initRegistry and @a scrapeIfNeeded.
  */
-struct PkgDbRegistryMixin : virtual public NixStoreMixin {
-
-  /* From `NixStoreMixin':
-   *   public:
-   *     std::shared_ptr<nix::Store> store
-   */
+class PkgDbRegistryMixin : virtual protected NixStoreMixin {
 
   protected:
+
+    /* From `NixStoreMixin':
+     *   std::shared_ptr<nix::Store> store
+     *   nix::ref<nix::Store>        getStore()
+     */
 
     bool force = false;  /**< Whether to force re-evaluation of flakes. */
 
@@ -282,7 +282,8 @@ struct PkgDbRegistryMixin : virtual public NixStoreMixin {
     /** @return A list of systems to be scraped. */
     [[nodiscard]] virtual std::vector<std::string> & getSystems() = 0;
 
-};  /* End struct `PkgDbRegistryMixin' */
+
+};  /* End class `PkgDbRegistryMixin' */
 
 
 /* -------------------------------------------------------------------------- */
