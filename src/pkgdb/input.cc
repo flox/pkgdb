@@ -225,6 +225,19 @@ PkgDbRegistryMixin::scrapeIfNeeded()
 
 /* -------------------------------------------------------------------------- */
 
+  nix::ref<Registry<PkgDbInputFactory>>
+PkgDbRegistryMixin::getPkgDbRegistry()
+{
+  if ( this->registry == nullptr ) { this->scrapeIfNeeded(); }
+  assert( this->registry != nullptr );
+  return static_cast<nix::ref<Registry<PkgDbInputFactory>>>(
+    this->registry
+  );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 }  /* End namespaces `flox::pkgdb' */
 
 

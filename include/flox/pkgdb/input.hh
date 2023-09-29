@@ -283,6 +283,16 @@ class PkgDbRegistryMixin : virtual protected NixStoreMixin {
     [[nodiscard]] virtual std::vector<std::string> & getSystems() = 0;
 
 
+  public:
+
+    /**
+     * @brief Get the set of package databases to resolve in.
+     *
+     * This lazily initializes the registry and scrapes inputs when necessary.
+     */
+    [[nodiscard]] nix::ref<Registry<PkgDbInputFactory>> getPkgDbRegistry();
+
+
 };  /* End class `PkgDbRegistryMixin' */
 
 
