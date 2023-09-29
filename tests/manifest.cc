@@ -250,11 +250,10 @@ test_resolveDescriptor3()
 
   /* We should match the `nixpkgs' one.
    *
-   * We should match three from `nixpkgs-flox' on `stable'.
-   * One of these being `latest' which is an alias of `v3.0.1' */
-  EXPECT_EQ( resolutions.size(), std::size_t( 4 ) );
+   * We should match one from `nixpkgs-flox' on `stable'.
+   * We should filter out `latest' and `3_0_1'. */
+  EXPECT_EQ( resolutions.size(), std::size_t( 2 ) );
 
-  // FIXME: remove JSON output, this was for debugging.
   nlohmann::json jresolutions = nlohmann::json::array();
 
   for ( const auto & resolution : resolutions )

@@ -24,7 +24,7 @@
     # Resolve this to "packages" or equivalent which is
     # isolated to its own closure and added to PATH only.
     [install.charasay]
-    semver = "^12.2"
+    version = "^12.2"
 
 
     # 3. If someone's a bit picky they might want to request a specific version:
