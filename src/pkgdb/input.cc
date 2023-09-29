@@ -102,20 +102,21 @@ PkgDbInput::scrapePrefix( const flox::AttrPath & prefix )
 
   if ( root == nullptr ) { return; }
 
-  auto   db  = this->getDbReadWrite();
-  row_id row = db->addOrGetAttrSetId( prefix );
+  /* Open a read/write connection. */
+  auto   dbRW = this->getDbReadWrite();
+  row_id row  = dbRW->addOrGetAttrSetId( prefix );
 
   todo.emplace(
     std::make_tuple( prefix, static_cast<flox::Cursor>( root ), row )
   );
 
   /* Start a transaction */
-  sqlite3pp::transaction txn( db->db );
+  sqlite3pp::transaction txn( dbRW->db );
   try
     {
       while ( ! todo.empty() )
         {
-          this->dbRW->scrape(
+          dbRW->scrape(
             this->getFlake()->state->symbols
           , todo.front()
           , todo
@@ -124,13 +125,13 @@ PkgDbInput::scrapePrefix( const flox::AttrPath & prefix )
         }
 
       /* Mark the prefix and its descendants as "done" */
-      this->dbRW->setPrefixDone( row, true );
+      dbRW->setPrefixDone( row, true );
     }
   catch( const nix::EvalError & )
     {
       txn.rollback();
       /* Close the r/w connection if we opened it. */
-      if ( ! wasRW ) { this->dbRW = nullptr; }
+      if ( ! wasRW ) { this->closeDbReadWrite(); }
       throw;
     }
 
@@ -138,7 +139,7 @@ PkgDbInput::scrapePrefix( const flox::AttrPath & prefix )
   txn.commit();
 
   /* Close the r/w connection if we opened it. */
-  if ( ! wasRW ) { this->dbRW = nullptr; }
+  if ( ! wasRW ) { this->closeDbReadWrite(); }
 }
 
 
@@ -184,10 +185,10 @@ PkgDbInput::scrapeSystems( const std::vector<std::string> & systems )
   nlohmann::json
 PkgDbInput::getRowJSON( row_id row )
 {
-  nix::ref<PkgDbReadOnly> db = this->getDbReadOnly();
-  nlohmann::json rsl = db->getPackage( row );
+  auto dbRO = this->getDbReadOnly();
+  auto rsl  = dbRO->getPackage( row );
   rsl.emplace( "input", this->getNameOrURL() );
-  rsl.emplace( "path",  db->getPackagePath( row ) );
+  rsl.emplace( "path",  dbRO->getPackagePath( row ) );
   return rsl;
 }
 
