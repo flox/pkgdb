@@ -1072,11 +1072,10 @@ test_getPackages_semver0( flox::pkgdb::PkgDb & db )
   {
     auto semvers = getSemvers( "*" );
     EXPECT_EQ( semvers.size(), std::size_t( 5 ) );
-    EXPECT( std::ranges::all_of(
-              semvers
-            , []( const auto & maybeSemver ) { return maybeSemver.has_value(); }
-            )
-          );
+    for ( const auto & maybeSemver : semvers )
+      { 
+        EXPECT( maybeSemver.has_value() );
+      }
   }
 
   return true;
