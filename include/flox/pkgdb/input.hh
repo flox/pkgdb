@@ -184,6 +184,7 @@ class PkgDbInput : public FloxFlakeInput {
      * @brief Get an identifier for this input.
      * @return The shortname of this input, or its locked flake-ref.
      */
+      [[nodiscard]]
       std::string
     getNameOrURL()
     {
@@ -194,7 +195,7 @@ class PkgDbInput : public FloxFlakeInput {
 
 
     /** @brief Get a JSON representation of a row in the database. */
-    nlohmann::json getRowJSON( row_id row );
+    [[nodiscard]] nlohmann::json getRowJSON( row_id row );
 
 
 };  /* End struct `PkgDbInput' */
