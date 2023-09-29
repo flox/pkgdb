@@ -69,10 +69,10 @@ struct SearchQuery : public pkgdb::PkgDescriptorBase {
 
 /* -------------------------------------------------------------------------- */
 
-/** Convert a JSON object to a @a flox::search::SearchQuery. */
+/** @brief Convert a JSON object to a @a flox::search::SearchQuery. */
 void from_json( const nlohmann::json & jfrom, SearchQuery & qry );
 
-/** Convert a @a flox::search::SearchQuery to a JSON object. */
+/** @brief Convert a @a flox::search::SearchQuery to a JSON object. */
 void to_json( nlohmann::json & jto, const SearchQuery & qry );
 
 
