@@ -42,8 +42,13 @@ template<class... Ts> overloaded( Ts... ) -> overloaded<Ts...>;
 
 /* -------------------------------------------------------------------------- */
 
-/* Extension to the `nlohmann::json' serializer to support addition STLs. */
+/**
+ * @brief Extension to the `nlohmann::json' serializer to support additional
+ *        _Argument Dependent Lookup_ (ADL) types.
+ */
 namespace nlohmann {
+
+/* -------------------------------------------------------------------------- */
 
   /** @brief Optional types to/from JSON. */
     template <typename T>
@@ -113,7 +118,19 @@ namespace nlohmann {
 
 /* -------------------------------------------------------------------------- */
 
-  /** @brief Variants ( Eithers ) of any number of elements to/from JSON. */
+  /**
+   * @brief Variants ( Eithers ) of any number of elements to/from JSON.
+   *
+   * The order of your types effects priority.
+   * Any valid parse or coercion from a type named _early_ in the variant list
+   * will succeed before attempting to parse alternatives.
+   *
+   * For example, always attempt `bool` first, then `int`, then `float`, and
+   * alway attempt `std::string` LAST.
+   *
+   * It's important to note that you must never nest multiple `std::optional`
+   * types in a variant, instead make `std::optional<std::variant<...>>`.
+   */
     template<typename A, typename... Types>
   struct adl_serializer<std::variant<A, Types...>> {
 
@@ -121,7 +138,8 @@ namespace nlohmann {
       static void
     to_json( json & jto, const std::variant<A, Types...> & var )
     {
-      /* This _unwraps_ the inner type and calls the proper `to_json' */
+      /* This _unwraps_ the inner type and calls the proper `to_json'.
+       * The compiler does the heavy lifting for us here <3. */
       std::visit( [&]( auto unwrapped ) -> void { jto = unwrapped; }, var );
     }
 
@@ -129,18 +147,26 @@ namespace nlohmann {
       static void
     from_json( const json & jfrom, std::variant<A, Types...> & var )
     {
+      /* Try getting typename `A', or recur. */
       try
         {
           var = jfrom.template get<A>();
         }
       catch( ... )
         {
+          /* Strip typename `A' from variant, and call recursively. */
           using next_variant = std::variant<Types...>;
-          var = jfrom.template get<next_variant>();
+
+          /* Coerce to `next_variant' type. */
+          next_variant next = jfrom.template get<next_variant>();
+          std::visit( [&]( auto unwrapped ) -> void { var = unwrapped; }
+                    , next
+                    );
         }
     }
 
   };  /* End struct `adl_serializer<std::variant<A, Types...>>' */
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -152,6 +178,7 @@ namespace nlohmann {
       static void
     to_json( json & jto, const nix::fetchers::Attrs & attrs )
     {
+      /* That was easy. */
       jto = nix::fetchers::attrsToJSON( attrs );
     }
 
@@ -159,6 +186,7 @@ namespace nlohmann {
       static void
     from_json( const json & jfrom, nix::fetchers::Attrs & attrs )
     {
+      /* That was easy. */
       attrs = nix::fetchers::jsonToAttrs( jfrom );
     }
 
@@ -175,6 +203,7 @@ namespace nlohmann {
       static void
     to_json( json & jto, const nix::FlakeRef & ref )
     {
+      /* That was easy. */
       jto = nix::fetchers::attrsToJSON( ref.toAttrs() );
     }
 

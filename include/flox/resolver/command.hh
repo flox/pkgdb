@@ -24,7 +24,7 @@ namespace flox::resolver {
  * @brief Resolve a set of package requirements to a set of
  *        satisfactory installables.
  */
-struct ResolveCommand : public pkgdb::PkgDbRegistryMixin<> {
+struct ResolveCommand : public pkgdb::PkgDbRegistryMixin {
 
   private:
 

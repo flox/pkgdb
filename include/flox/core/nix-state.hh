@@ -42,14 +42,24 @@ void initNix();
 /* -------------------------------------------------------------------------- */
 
 /** @brief Mixin which provides a lazy handle to a `nix` store connection. */
-struct NixStoreMixin {
+class NixStoreMixin {
 
-  protected:
+  private:
 
     std::shared_ptr<nix::Store> store;  /**< `nix` store connection.   */
 
 
   public:
+
+    /* Copy/Move base class boilerplate */
+    NixStoreMixin( const NixStoreMixin &  ) = default;
+    NixStoreMixin(       NixStoreMixin && ) = default;
+
+    virtual ~NixStoreMixin() = default;
+
+    NixStoreMixin & operator=( const NixStoreMixin &  ) = default;
+    NixStoreMixin & operator=(       NixStoreMixin && ) = default;
+
 
     /**
      * @brief Construct `NixStoreMixin` from an existing store connection.
@@ -69,8 +79,6 @@ struct NixStoreMixin {
     NixStoreMixin() { initNix(); }
 
 
-/* -------------------------------------------------------------------------- */
-
     /**
      * @brief Lazily open a `nix` store connection.
      *
@@ -84,7 +92,7 @@ struct NixStoreMixin {
     }
 
 
-};  /* End struct `NixStoreMixin' */
+};  /* End class `NixStoreMixin' */
 
 
 /* -------------------------------------------------------------------------- */
@@ -95,7 +103,7 @@ struct NixStoreMixin {
  */
 class NixState : public NixStoreMixin {
 
-  protected:
+  private:
 
     /* From `NixStoreMixin':
      *   std::shared_ptr<nix::Store> store
@@ -107,7 +115,7 @@ class NixState : public NixStoreMixin {
   public:
 
     /** @brief Construct `NixState` using the systems default `nix` store. */
-    NixState() : NixStoreMixin() {}
+    NixState() = default;
 
     /**
      * @brief Construct `NixState` from an existing store connection.

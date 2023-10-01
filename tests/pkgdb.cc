@@ -928,6 +928,7 @@ test_DbPackage0( flox::pkgdb::PkgDb & db )
                    static_cast<flox::pkgdb::PkgDbReadOnly &>( db )
                  , pkgId
                  );
+
   EXPECT( pkg.getPathStrs() ==
           ( flox::AttrPath { "legacyPackages", "x86_64-linux", "hello" } )
         );
@@ -948,6 +949,135 @@ test_DbPackage0( flox::pkgdb::PkgDb & db )
   EXPECT_EQ( nix::parseFlakeRef( nixpkgsRef ).to_string()
            , pkg.getLockedFlakeRef().to_string()
            );
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  bool
+test_getPackages_semver0( flox::pkgdb::PkgDb & db )
+{
+  clearTables( db );
+
+  /* Make packages */
+  row_id linux =
+    db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-linux" } );
+  row_id desc =
+    db.addOrGetDescriptionId( "A program with a friendly greeting/farewell" );
+  sqlite3pp::command cmd( db.db, R"SQL(
+    INSERT INTO Packages (
+      parentId, attrName, name, pname, version, semver, license, outputs
+    , outputsToInstall, broken, unfree, descriptionId
+    ) VALUES
+      ( :parentId, 'hello0', 'hello-2.12', 'hello', '2.12', '2.12.0'
+      , 'GPL-3.0-or-later', '["out"]', '["out"]', false, false, :descriptionId
+      )
+    , ( :parentId, 'hello1', 'hello-2.13.1', 'hello', '2.13.1', '2.13.1'
+      , 'GPL-3.0-or-later', '["out"]', '["out"]', false, false, :descriptionId
+      )
+    , ( :parentId, 'hello2', 'hello-2.14.1', 'hello', '2.14.1', '2.14.1'
+      , 'GPL-3.0-or-later', '["out"]', '["out"]', false, false, :descriptionId
+      )
+    , ( :parentId, 'hello3', 'hello-3', 'hello', '3', '3.0.0'
+      , 'GPL-3.0-or-later', '["out"]', '["out"]', false, false, :descriptionId
+      )
+    , ( :parentId, 'hello4', 'hello-4.2.0', 'hello', '4.2', '4.2.0'
+      , 'GPL-3.0-or-later', '["out"]', '["out"]', false, false, :descriptionId
+      )
+    , ( :parentId, 'hello5', 'hello-no-version', 'hello', NULL, NULL
+      , 'GPL-3.0-or-later', '["out"]', '["out"]', false, false, :descriptionId
+      )
+  )SQL" );
+  cmd.bind( ":parentId",      static_cast<long long>( linux ) );
+  cmd.bind( ":descriptionId", static_cast<long long>( desc )  );
+  if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
+    {
+      throw flox::pkgdb::PkgDbException(
+        db.dbPath
+      , nix::fmt( "Failed to write Packages:(%d) %s"
+                , rc
+                , db.db.error_msg()
+                )
+      );
+    }
+
+  flox::pkgdb::PkgQueryArgs qargs;
+  qargs.subtrees = std::vector<flox::Subtree> { flox::ST_LEGACY };
+  qargs.systems  = std::vector<std::string> { "x86_64-linux" };
+  qargs.pname    = "hello";
+
+  auto getSemvers =
+    [&]( const std::string & semver ) -> std::vector<std::optional<std::string>>
+    {
+      std::vector<std::optional<std::string>> rsl;
+      qargs.semver = { semver };
+      for( flox::pkgdb::row_id rowId : db.getPackages( qargs ) )
+        {
+          rsl.emplace_back(
+            flox::pkgdb::DbPackage(
+              static_cast<flox::pkgdb::PkgDbReadOnly &>( db )
+            , rowId
+            ).getSemver()
+          );
+        }
+      return rsl;
+    };
+
+  /* ^2 : 2.0.0 <= VERSION < 3.0.0 */
+  {
+    auto semvers = getSemvers( "^2" );
+    EXPECT_EQ( semvers.size(), std::size_t( 3 ) );
+    size_t idx = 0;
+    for ( const std::optional<std::string> & maybeSemver : semvers )
+      {
+        EXPECT( maybeSemver.has_value() );
+        if ( idx == 0 )
+          {
+            EXPECT_EQ( * maybeSemver, "2.14.1" );
+          }
+        else if ( idx == 1 )
+          {
+            EXPECT_EQ( * maybeSemver, "2.13.1" );
+          }
+        else if ( idx == 2 )
+          {
+            EXPECT_EQ( * maybeSemver, "2.12.0" );
+          }
+        ++idx;
+      }
+  }
+
+  /* ^2.13.1 : 2.13.1 <= VERSION < 3.0.0 */
+  {
+    auto semvers = getSemvers( "^2.13.1" );
+    EXPECT_EQ( semvers.size(), std::size_t( 2 ) );
+    size_t idx = 0;
+    for ( const std::optional<std::string> & maybeSemver : semvers )
+      {
+        EXPECT( maybeSemver.has_value() );
+        if ( idx == 0 )
+          {
+            EXPECT_EQ( * maybeSemver, "2.14.1" );
+          }
+        else if ( idx == 1 )
+          {
+            EXPECT_EQ( * maybeSemver, "2.13.1" );
+          }
+        ++idx;
+      }
+  }
+
+  /* '*' : Any semantic version, should omit `hello-no-version' */
+  {
+    auto semvers = getSemvers( "*" );
+    EXPECT_EQ( semvers.size(), std::size_t( 5 ) );
+    for ( const auto & maybeSemver : semvers )
+      { 
+        EXPECT( maybeSemver.has_value() );
+      }
+  }
+
   return true;
 }
 
@@ -1013,6 +1143,8 @@ main( int argc, char * argv[] )
     RUN_TEST( getPackages2, db );
 
     RUN_TEST( DbPackage0, db );
+
+    RUN_TEST( getPackages_semver0, db );
 
   }
 

@@ -137,33 +137,6 @@ from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
 
 /* -------------------------------------------------------------------------- */
 
-  std::shared_ptr<pkgdb::PkgDbInput>
-ManifestInputFactory::mkInput( const std::string   & name
-                             , const RegistryInput & input
-                             )
-{
-  if ( hasPrefix( "__inline__", name ) )
-    {
-      return std::make_shared<pkgdb::PkgDbInput>(
-        this->store
-      , input
-      , this->cacheDir
-      );
-    }
-  else
-    {
-      return std::make_shared<pkgdb::PkgDbInput>(
-        this->store
-      , input
-      , this->cacheDir
-      , name
-      );
-    }
-}
-
-
-/* -------------------------------------------------------------------------- */
-
 /**
  * @brief Get a _base_ set of query arguments for the input associated with
  *        @a name and declared @a preferences.
@@ -174,8 +147,7 @@ Manifest::getPkgQueryArgs( const std::string & name )
 {
   pkgdb::PkgQueryArgs args;
   args.systems = this->getSystems();
-  this->initRegistry();
-  this->registry->at( name )->fillPkgQueryArgs( args );
+  this->getPkgDbRegistry()->at( name )->fillPkgQueryArgs( args );
   return args;
 }
 

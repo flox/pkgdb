@@ -84,52 +84,7 @@ void from_json( const nlohmann::json & jfrom, ManifestRaw & manifest );
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief Constructs @a pkgdb::PkgDbInput from manifest `registry` and
- *         `install.*.packageRepository` inputs.
- */
-class ManifestInputFactory {
-
-  private:
-
-    nix::ref<nix::Store>  store;    /**< `nix` store connection. */
-    std::filesystem::path cacheDir; /**< Cache directory. */
-
-
-  public:
-
-    using input_type = pkgdb::PkgDbInput;
-
-    /** @brief Construct a factory using a `nix` evaluator. */
-    explicit ManifestInputFactory(
-      nix::ref<nix::Store>  & store
-    , std::filesystem::path   cacheDir = pkgdb::getPkgDbCachedir()
-    ) : store( store )
-      , cacheDir( std::move( cacheDir ) )
-    {}
-
-
-    /**
-     * @brief Construct an input from a @a RegistryInput.
-     *
-     * If @a name has the prefix "__inline__" the name is NOT passed through to
-     * the @a PkgDbInput constructor.
-     * This causes any resulting output to use the _flake reference_
-     * URL instead.
-     */
-      [[nodiscard]]
-      std::shared_ptr<pkgdb::PkgDbInput>
-    mkInput( const std::string & name, const RegistryInput & input );
-
-
-};  /* End class `ManifestInputFactory' */
-
-
-static_assert( registry_input_factory<ManifestInputFactory> );
-
-
-/* -------------------------------------------------------------------------- */
-
-class Manifest : public pkgdb::PkgDbRegistryMixin<ManifestInputFactory> {
+class Manifest : public pkgdb::PkgDbRegistryMixin {
 
   protected:
 

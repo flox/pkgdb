@@ -30,7 +30,7 @@ namespace flox::resolver {
  * This comprises a set of inputs with @a flox::pkgdb::PkgDbInput handles and
  * a set of descriptors to be resolved.
  */
-class ResolverState : public pkgdb::PkgDbRegistryMixin<> {
+class ResolverState : public pkgdb::PkgDbRegistryMixin {
 
   private:
 
@@ -48,42 +48,26 @@ class ResolverState : public pkgdb::PkgDbRegistryMixin<> {
      */
 
       [[nodiscard]]
-      virtual std::vector<std::string> &
+      std::vector<std::string> &
     getSystems() override
     {
       return this->preferences.systems;
     }
 
 
-    /**
-     * @brief Initializes `PkgDbRegistryMixin::registry` and scrapes inputs
-     *        when necessary.
-     */
-      void
-    initResolverState()
-    {
-      if ( this->registry == nullptr ) { this->scrapeIfNeeded(); }
-      assert( this->registry != nullptr );
-    }
-
-
   public:
 
-    ResolverState( const RegistryRaw             & registry
-                 , const pkgdb::QueryPreferences & preferences
+    ResolverState( RegistryRaw             registry
+                 , pkgdb::QueryPreferences preferences
                  )
-      : registryRaw( registry )
-      , preferences( preferences )
+      : registryRaw( std::move( registry ) )
+      , preferences( std::move( preferences ) )
     {}
 
 
     /** @brief Get the _raw_ registry declaration. */
-      [[nodiscard]]
-      virtual RegistryRaw
-    getRegistryRaw() override
-    {
-      return this->registryRaw;
-    }
+    [[nodiscard]]
+    RegistryRaw getRegistryRaw() override { return this->registryRaw; }
 
 
     /**
@@ -96,8 +80,7 @@ class ResolverState : public pkgdb::PkgDbRegistryMixin<> {
     {
       pkgdb::PkgQueryArgs args;
       this->preferences.fillPkgQueryArgs( args );
-      this->initResolverState();
-      this->registry->at( name )->fillPkgQueryArgs( args );
+      this->getPkgDbRegistry()->at( name )->fillPkgQueryArgs( args );
       return args;
     }
 

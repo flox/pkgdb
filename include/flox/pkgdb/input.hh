@@ -37,25 +37,20 @@ class PkgDbInput : public FloxFlakeInput {
     std::filesystem::path dbPath;
 
     /**
-     * A read-only database connection that remains open for the lifetime
-     * of @a this object.
+     * A read-only database connection that remains open for the lifetime of
+     * @a this object.
      */
     std::shared_ptr<PkgDbReadOnly> dbRO;
 
     /**
-     * A read/write database connection that may be opened and closed as
-     * needed using @a getDbReadWrite and @a closeDbReadWrite.
+     * A read/write database connection that may be opened and closed as needed
+     * using @a getDbReadWrite and @a closeDbReadWrite.
      */
     std::shared_ptr<PkgDb> dbRW;
-
-
-  public:
 
     /** The name of the input, used to emit output with shortnames. */
     std::optional<std::string> name;
 
-
-  private:
 
     /**
      * @brief Prepare database handles for use.
@@ -181,10 +176,15 @@ class PkgDbInput : public FloxFlakeInput {
     void scrapeSystems( const std::vector<std::string> & systems );
 
 
+    /** @brief Add/set a shortname for this input. */
+    void setName( std::string_view name ) { this->name = name; }
+
+
     /**
      * @brief Get an identifier for this input.
      * @return The shortname of this input, or its locked flake-ref.
      */
+      [[nodiscard]]
       std::string
     getNameOrURL()
     {
@@ -195,7 +195,7 @@ class PkgDbInput : public FloxFlakeInput {
 
 
     /** @brief Get a JSON representation of a row in the database. */
-    nlohmann::json getRowJSON( row_id row );
+    [[nodiscard]] nlohmann::json getRowJSON( row_id row );
 
 
 };  /* End struct `PkgDbInput' */
@@ -253,10 +253,9 @@ static_assert( registry_input_factory<PkgDbInputFactory> );
  * Derived classes must provide their own @a getRegistryRaw and @a getSystems
  * implementations to support @a initRegistry and @a scrapeIfNeeded.
  */
-  template <registry_input_factory Factory = PkgDbInputFactory>
-class PkgDbRegistryMixin : virtual public NixStoreMixin {
+class PkgDbRegistryMixin : virtual protected NixStoreMixin {
 
-  protected:
+  private:
 
     /* From `NixStoreMixin':
      *   std::shared_ptr<nix::Store> store
@@ -264,40 +263,26 @@ class PkgDbRegistryMixin : virtual public NixStoreMixin {
 
     bool force = false;  /**< Whether to force re-evaluation of flakes. */
 
-    std::shared_ptr<Registry<Factory>> registry;
+    std::shared_ptr<Registry<PkgDbInputFactory>> registry;
+
+
+  protected:
+
+    /* From `NixStoreMixin':
+     *   nix::ref<nix::Store> getStore()
+     */
 
 
     /** @brief Initialize @a registry member from @a params.registry. */
-      void
-    initRegistry()
-    {
-      if ( this->registry == nullptr )
-        {
-          nix::ref<nix::Store> store = this->getStore();
-          Factory factory( store );  // TODO: cacheDir
-          this->registry = std::make_shared<Registry<Factory>>(
-            this->getRegistryRaw()
-          , factory
-          );
-        }
-    }
-
+    void initRegistry();
 
     /**
      * @brief Lazily perform scraping on input flakes.
+     *
      * If scraping is necessary temprorary read/write handles are opened for
      * those flakes and closed before returning from this function.
      */
-      void
-    scrapeIfNeeded()
-    {
-      this->initRegistry();
-      assert( this->registry != nullptr );
-      for ( auto & [name, input] : * this->registry )
-        {
-          input->scrapeSystems( this->getSystems() );
-        }
-    }
+    void scrapeIfNeeded();
 
 
     /** @return A raw registry used to initialize. */
@@ -315,16 +300,7 @@ class PkgDbRegistryMixin : virtual public NixStoreMixin {
      *
      * This lazily initializes the registry and scrapes inputs when necessary.
      */
-      [[nodiscard]]
-      nix::ref<Registry<Factory>>
-    getPkgDbRegistry()
-    {
-      if ( this->registry == nullptr ) { this->scrapeIfNeeded(); }
-      assert( this->registry != nullptr );
-      return static_cast<nix::ref<Registry<Factory>>>(
-        this->registry
-      );
-    }
+    [[nodiscard]] nix::ref<Registry<PkgDbInputFactory>> getPkgDbRegistry();
 
 
 };  /* End class `PkgDbRegistryMixin' */
