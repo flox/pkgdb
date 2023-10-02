@@ -112,7 +112,19 @@ concept input_preferences_typename =
 /** @brief Preferences associated with a named registry input. */
 struct RegistryInput : public InputPreferences {
 
+  /* From `InputPreferences':
+   *   std::optional<std::vector<Subtree>>     subtrees;
+   *   std::optional<std::vector<std::string>> stabilities;
+   */
+
   std::shared_ptr<nix::FlakeRef> from;  /**< A parsed flake reference. */
+
+  RegistryInput() = default;
+
+  explicit RegistryInput( const nix::FlakeRef & from )
+    : from( std::make_shared<nix::FlakeRef>( from ) )
+  {}
+
 
   /** @brief Get the flake reference associated with this input. */
     [[nodiscard]]
@@ -121,6 +133,7 @@ struct RegistryInput : public InputPreferences {
   {
     return static_cast<nix::ref<nix::FlakeRef>>( this->from );
   };
+
 
 };  /* End struct `RegistryInput' */
 
@@ -175,6 +188,7 @@ concept registry_input_factory =
 class RegistryInputFactory {
 
   public:
+
     using input_type = RegistryInput;
 
     /** @brief Construct an input from a @a flox::RegistryInput. */
@@ -184,6 +198,7 @@ class RegistryInputFactory {
     {
       return std::make_shared<RegistryInput>( input );
     }
+
 
 };  /* End class `RegistryInputFactory' */
 
@@ -369,7 +384,36 @@ class Registry {
      * @brief Construct a registry from a @a flox::RegistryRaw and
      *        a _factory_.
      */
-    explicit Registry( RegistryRaw registry, FactoryType & factory );
+    explicit Registry( RegistryRaw registry, FactoryType & factory )
+      : registryRaw( std::move( registry ) )
+    {
+      for ( const std::reference_wrapper<const std::string> & _name :
+              this->registryRaw.getOrder()
+          )
+        {
+          const auto & pair = std::find_if(
+            this->registryRaw.inputs.begin()
+          , this->registryRaw.inputs.end()
+          , [&]( const auto & pair ) { return pair.first == _name.get(); }
+          );
+
+          /* Fill default/fallback values if none are defined. */
+          RegistryInput input = pair->second;
+          if ( ! input.subtrees.has_value() )
+            {
+              input.subtrees = this->registryRaw.defaults.subtrees;
+            }
+          if ( ! input.stabilities.has_value() )
+            {
+              input.stabilities = this->registryRaw.defaults.stabilities;
+            }
+
+          /* Construct the input */
+          this->inputs.emplace_back(
+            std::make_pair( pair->first, factory.mkInput( pair->first, input ) )
+          );
+        }
+    }
 
 
     /**
@@ -380,7 +424,16 @@ class Registry {
      */
       [[nodiscard]]
       std::shared_ptr<typename FactoryType::input_type>
-    get( const std::string & name ) const noexcept;
+    get( const std::string & name ) const noexcept
+    {
+      const auto maybeInput = std::find_if(
+        this->inputs.begin()
+      , this->inputs.end()
+      , [&]( const auto & pair ) { return pair.first == name; }
+      );
+      if ( maybeInput == this->inputs.end() ) { return nullptr; }
+      return maybeInput->second;
+    }
 
 
     /**
@@ -390,7 +443,16 @@ class Registry {
      */
       [[nodiscard]]
       std::shared_ptr<typename FactoryType::input_type>
-    at( const std::string & name ) const;
+    at( const std::string & name ) const
+    {
+      const std::shared_ptr<typename FactoryType::input_type> maybeInput =
+        this->get( name );
+      if ( maybeInput == nullptr )
+        {
+          throw std::out_of_range( "No such input '" + name + "'" );
+        }
+      return maybeInput;
+    }
 
 
     /** @brief Get the raw registry read from the user. */
@@ -441,10 +503,10 @@ class Registry {
  * @brief A simple @a flox::RegistryInput that opens a `nix` evaluator for
  *        a flake.
  */
-class FloxFlakeInput : public InputPreferences {
+class FloxFlakeInput : public RegistryInput {
 
   private:
-    nix::ref<nix::FlakeRef>    flakeRef;  /**< A parsed flake reference. */
+
     nix::ref<nix::Store>       store;     /**< A `nix` store connection. */
     std::shared_ptr<FloxFlake> flake;     /**< A flake with an evaluator. */
     /**
@@ -453,46 +515,23 @@ class FloxFlakeInput : public InputPreferences {
      */
     std::optional<std::vector<Subtree>> enabledSubtrees;
 
+
   public:
 
     /**
      * @brief Construct a @a flox::FloxFlakeInput from a `nix` store connection
      *        and @a flox::RegistryInput.
      */
-    FloxFlakeInput(       nix::ref<nix::Store> & store
+    FloxFlakeInput( const nix::ref<nix::Store> & store
                   , const RegistryInput        & input
                   )
-      : flakeRef( input.getFlakeRef() )
+      : RegistryInput( input )
       , store( store )
-    {
-      this->subtrees    = input.subtrees;
-      this->stabilities = input.stabilities;
-    }
-
-
-    /** @brief Get the flake reference associated with this input. */
-      [[nodiscard]]
-      nix::ref<nix::FlakeRef>
-    getFlakeRef() const
-    {
-      return this->flakeRef;
-    }
+    {}
 
 
     /** @brief Get a handle for a flake with a `nix` evaluator. */
-      [[nodiscard]]
-      nix::ref<FloxFlake>
-    getFlake()
-    {
-      if ( this->flake == nullptr )
-        {
-          this->flake = std::make_shared<FloxFlake>(
-            NixState( this->store ).getState()
-          , * this->flakeRef
-          );
-        }
-      return static_cast<nix::ref<FloxFlake>>( this->flake );
-    }
+    [[nodiscard]] nix::ref<FloxFlake> getFlake();
 
 
     /**
@@ -505,58 +544,25 @@ class FloxFlakeInput : public InputPreferences {
      *   2. "package"
      *   3. "legacyPackages"
      */
-      [[nodiscard]]
-      const std::vector<Subtree> &
-    getSubtrees()
-    {
-      if ( ! this->enabledSubtrees.has_value() )
-        {
-          if ( this->subtrees.has_value() )
-            {
-              this->enabledSubtrees = * this->subtrees;
-            }
-          else
-            {
-              auto root = this->getFlake()->openEvalCache()->getRoot();
-              if ( root->maybeGetAttr( "catalog" ) != nullptr )
-                {
-                  this->enabledSubtrees = std::vector<Subtree> { ST_CATALOG };
-                }
-              else if ( root->maybeGetAttr( "packages" ) != nullptr )
-                {
-                  this->enabledSubtrees = std::vector<Subtree> { ST_PACKAGES };
-                }
-              else if ( root->maybeGetAttr( "legacyPackages" ) != nullptr )
-                {
-                  this->enabledSubtrees = std::vector<Subtree> { ST_LEGACY };
-                }
-              else
-                {
-                  this->enabledSubtrees = std::vector<Subtree> {};
-                }
-            }
-        }
-      return * this->enabledSubtrees;
-    }
+    [[nodiscard]] const std::vector<Subtree> & getSubtrees();
+
 
 };  /* End struct `FloxFlakeInput' */
 
 
 /** @brief A factory for @a flox::FloxFlakeInput objects. */
-class FloxFlakeInputFactory {
-
-  private:
-    nix::ref<nix::Store> store;  /**< `nix` store connection. */
+class FloxFlakeInputFactory : NixStoreMixin  {
 
   public:
+
     using input_type = FloxFlakeInput;
 
     /** @brief Construct a factory using a new `nix` store connection. */
-    FloxFlakeInputFactory() : store( NixState().getStore() ) {}
+    FloxFlakeInputFactory() = default;
 
     /** @brief Construct a factory using a `nix` store connection. */
-    explicit FloxFlakeInputFactory( nix::ref<nix::Store> & store )
-      : store( store )
+    explicit FloxFlakeInputFactory( const nix::ref<nix::Store> & store )
+      : NixStoreMixin( store )
     {}
 
     /** @brief Construct an input from a @a flox::RegistryInput. */
@@ -564,8 +570,9 @@ class FloxFlakeInputFactory {
       std::shared_ptr<FloxFlakeInput>
     mkInput( const std::string & /* unused */, const RegistryInput & input )
     {
-      return std::make_shared<FloxFlakeInput>( this->store, input );
+      return std::make_shared<FloxFlakeInput>( this->getStore(), input );
     }
+
 
 };  /* End class `FloxFlakeInputFactory' */
 

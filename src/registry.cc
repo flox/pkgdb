@@ -49,6 +49,7 @@ RegistryRaw::clear()
   this->defaults.clear();
 }
 
+
 /* -------------------------------------------------------------------------- */
 
   std::vector<std::reference_wrapper<const std::string>>
@@ -93,9 +94,7 @@ to_json( nlohmann::json & jto, const RegistryInput & rip )
     }
   else
     {
-      jto.emplace( "from"
-                   , nix::fetchers::attrsToJSON( rip.from->toAttrs() )
-                   );
+      jto.emplace( "from", nix::fetchers::attrsToJSON( rip.from->toAttrs() ) );
     }
 }
 
@@ -130,78 +129,54 @@ RegistryRaw::fillPkgQueryArgs( const std::string         & input
 
 /* -------------------------------------------------------------------------- */
 
-  template <registry_input_factory FactoryType>
-Registry<FactoryType>::Registry( RegistryRaw registry, FactoryType & factory )
-  : registryRaw( std::move( registry ) )
+  nix::ref<FloxFlake>
+FloxFlakeInput::getFlake()
 {
-  for ( const std::reference_wrapper<const std::string> & _name :
-          this->registryRaw.getOrder()
-      )
+  if ( this->flake == nullptr )
     {
-      const auto & pair = std::find_if(
-        this->registryRaw.inputs.begin()
-      , this->registryRaw.inputs.end()
-      , [&]( const auto & pair ) { return pair.first == _name.get(); }
-      );
-
-      /* Fill default/fallback values if none are defined. */
-      RegistryInput input = pair->second;
-      if ( ! input.subtrees.has_value() )
-        {
-          input.subtrees = this->registryRaw.defaults.subtrees;
-        }
-      if ( ! input.stabilities.has_value() )
-        {
-          input.stabilities = this->registryRaw.defaults.stabilities;
-        }
-
-      /* Construct the input */
-      this->inputs.emplace_back(
-        std::make_pair( pair->first, factory.mkInput( pair->first, input ) )
+      this->flake = std::make_shared<FloxFlake>(
+        NixState( this->store ).getState()
+      , * this->getFlakeRef()
       );
     }
+  return static_cast<nix::ref<FloxFlake>>( this->flake );
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-  template<registry_input_factory FactoryType>
-  std::shared_ptr<typename FactoryType::input_type>
-Registry<FactoryType>::get( const std::string & name ) const noexcept
+  const std::vector<Subtree> &
+FloxFlakeInput::getSubtrees()
 {
-  const auto maybeInput = std::find_if(
-    this->inputs.begin()
-  , this->inputs.end()
-  , [&]( const auto & pair ) { return pair.first == name; }
-  );
-  if ( maybeInput == this->inputs.end() ) { return nullptr; }
-  return maybeInput->second;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-  template<registry_input_factory FactoryType>
-  std::shared_ptr<typename FactoryType::input_type>
-Registry<FactoryType>::at( const std::string & name ) const
-{
-  const std::shared_ptr<typename FactoryType::input_type> maybeInput =
-    this->get( name );
-  if ( maybeInput == nullptr )
+  if ( ! this->enabledSubtrees.has_value() )
     {
-      throw std::out_of_range( "No such input '" + name + "'" );
+      if ( this->subtrees.has_value() )
+        {
+          this->enabledSubtrees = * this->subtrees;
+        }
+      else
+        {
+          auto root = this->getFlake()->openEvalCache()->getRoot();
+          if ( root->maybeGetAttr( "catalog" ) != nullptr )
+            {
+              this->enabledSubtrees = std::vector<Subtree> { ST_CATALOG };
+            }
+          else if ( root->maybeGetAttr( "packages" ) != nullptr )
+            {
+              this->enabledSubtrees = std::vector<Subtree> { ST_PACKAGES };
+            }
+          else if ( root->maybeGetAttr( "legacyPackages" ) != nullptr )
+            {
+              this->enabledSubtrees = std::vector<Subtree> { ST_LEGACY };
+            }
+          else
+            {
+              this->enabledSubtrees = std::vector<Subtree> {};
+            }
+        }
     }
-  return maybeInput;
+  return * this->enabledSubtrees;
 }
-
-
-/* -------------------------------------------------------------------------- */
-
-/* Instantiate class templates for common registries. */
-
-template class Registry<RegistryInputFactory>;
-template class Registry<FloxFlakeInputFactory>;
-template class Registry<pkgdb::PkgDbInputFactory>;
 
 
 /* -------------------------------------------------------------------------- */
