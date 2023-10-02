@@ -86,7 +86,7 @@ void from_json( const nlohmann::json & jfrom, ManifestRaw & manifest );
 
 class Manifest : public pkgdb::PkgDbRegistryMixin {
 
-  protected:
+  private:
 
     /* From `PkgDbRegistryMixin':
      *   std::shared_ptr<nix::Store>                         store;
@@ -119,6 +119,7 @@ class Manifest : public pkgdb::PkgDbRegistryMixin {
      */
     std::unordered_map<std::string, std::unordered_set<std::string>> groups;
 
+
     /**
      * @brief Get a _base_ set of query arguments for the input associated with
      *        @a name and declared @a preferences.
@@ -126,23 +127,14 @@ class Manifest : public pkgdb::PkgDbRegistryMixin {
     [[nodiscard]]
     pkgdb::PkgQueryArgs getPkgQueryArgs( const std::string & name );
 
-
-  private:
-
     /** @brief Initialize @a preferences from @a raw.options. */
     void initPreferences();
 
     /** @brief Initialize @a groups from @a raw.install. */
     void initGroups();
 
-    // FIXME:
-    public:
-
     /** @brief Collects _inline_ inputs from descriptors. */
     std::unordered_map<std::string, nix::FlakeRef> getInlineInputs() const;
-
-    private:
-
 
     /**
      * @brief Collects _inline_ inputs from descriptors extending those
@@ -150,15 +142,15 @@ class Manifest : public pkgdb::PkgDbRegistryMixin {
      */
     void initRegistryRaw();
 
-
-    [[nodiscard]] virtual std::vector<std::string> & getSystems() override;
+    [[nodiscard]] std::vector<std::string> & getSystems() override;
 
 
   public:
 
     Manifest() = default;
 
-    explicit Manifest( const ManifestRaw & raw ) : raw( raw )
+    explicit Manifest( ManifestRaw raw )
+      : raw( std::move( raw ) )
     {
       this->initPreferences();
       this->initGroups();
@@ -166,7 +158,7 @@ class Manifest : public pkgdb::PkgDbRegistryMixin {
 
 
     /** @brief Get the _raw_ registry declaration. */
-    [[nodiscard]] virtual RegistryRaw getRegistryRaw() override;
+    [[nodiscard]] RegistryRaw getRegistryRaw() override;
 
 
     /** @brief Get a list of all registry inputs' locked _flake references_. */
