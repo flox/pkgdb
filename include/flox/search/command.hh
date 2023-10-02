@@ -98,6 +98,7 @@ class SearchCommand
      */
     int run();
 
+
 };  /* End struct `ScrapeCommand' */
 
 
