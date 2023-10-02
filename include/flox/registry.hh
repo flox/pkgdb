@@ -265,14 +265,15 @@ struct RegistryRaw {
   std::vector<std::string> priority;
 
 
-  virtual ~RegistryRaw()                       = default;
-           RegistryRaw()                       = default;
-           RegistryRaw( const RegistryRaw &  ) = default;
-           RegistryRaw(       RegistryRaw && ) = default;
+  /* Base class boilerplate. */
+  RegistryRaw()                       = default;
+  RegistryRaw( const RegistryRaw &  ) = default;
+  RegistryRaw(       RegistryRaw && ) = default;
+
+  virtual ~RegistryRaw() = default;
 
   RegistryRaw & operator=( const RegistryRaw &  ) = default;
   RegistryRaw & operator=(       RegistryRaw && ) = default;
-
 
   /**
    * @abrief Return an ordered list of input names.
