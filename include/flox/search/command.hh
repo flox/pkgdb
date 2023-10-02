@@ -55,7 +55,8 @@ class SearchCommand : public pkgdb::PkgDbRegistryMixin, public PkgQueryMixin {
 
   private:
 
-    SearchParams params;
+    SearchParams           params;  /**< Query arguments and inputs */
+    command::VerboseParser parser;  /**< Query arguments and inputs parser */
 
     /**
      * @brief Add argument to any parser to construct
@@ -78,8 +79,6 @@ class SearchCommand : public pkgdb::PkgDbRegistryMixin, public PkgQueryMixin {
 
   public:
 
-    command::VerboseParser parser;
-
     SearchCommand();
 
     /** @brief Display a single row from the given @a input. */
@@ -89,13 +88,16 @@ class SearchCommand : public pkgdb::PkgDbRegistryMixin, public PkgQueryMixin {
       std::cout << input.getRowJSON( row ).dump() << std::endl;
     }
 
+    [[nodiscard]] command::VerboseParser & getParser() { return this->parser; }
+
     /**
      * @brief Execute the `search` routine.
      * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
      */
     int run();
 
-};  /* End struct `ScrapeCommand' */
+
+};  /* End class `ScrapeCommand' */
 
 
 /* -------------------------------------------------------------------------- */

@@ -30,6 +30,7 @@ struct DbPathMixin
     argparse::Argument &
   addDatabasePathOption( argparse::ArgumentParser & parser );
 
+
 };  /* End struct `DbPathMixin' */
 
 
@@ -60,6 +61,7 @@ struct PkgDbMixin
    */
   argparse::Argument & addTargetArg( argparse::ArgumentParser & parser );
 
+
 };  /* End struct `PkgDbMixin' */
 
 
@@ -69,27 +71,28 @@ struct PkgDbMixin
  * @brief Scrape a flake prefix producing a SQLite3 database with
  *        package metadata.
  */
-struct ScrapeCommand
+class ScrapeCommand
   : public DbPathMixin
   , public command::AttrPathMixin
   , public command::InlineInputMixin
 {
 
-  protected:
+  private:
 
+    command::VerboseParser    parser;
     std::optional<PkgDbInput> input;
+    /** Whether to force re-evaluation. */
+    bool force = false;
 
-    bool force = false;  /**< Whether to force re-evaluation. */
+    /** @brief Initialize @a input from @a registryInput. */
+    void initInput();
 
 
   public:
 
-    command::VerboseParser parser;
-
     ScrapeCommand();
 
-    /** @brief Initialize @a input from @a registryInput. */
-    void initInput();
+    [[nodiscard]] command::VerboseParser & getParser() { return this->parser; }
 
     /**
      * @brief Execute the `scrape` routine.
@@ -97,7 +100,8 @@ struct ScrapeCommand
      */
     int run();
 
-};  /* End struct `ScrapeCommand' */
+
+};  /* End class `ScrapeCommand' */
 
 
 /* -------------------------------------------------------------------------- */
@@ -118,86 +122,102 @@ struct ScrapeCommand
  * - `pkgdb get db FLAKE-REF`
  *   + Print the absolute path to the associated flake's db.
  */
-struct GetCommand
+class GetCommand
   : public PkgDbMixin<PkgDbReadOnly>
   , public command::AttrPathMixin
 {
 
-  command::VerboseParser parser;          /**< `get`       parser */
-  command::VerboseParser pId;             /**< `get id`    parser */
-  command::VerboseParser pPath;           /**< `get path`  parser */
-  command::VerboseParser pDone;           /**< `get done`  parser */
-  command::VerboseParser pFlake;          /**< `get flake` parser */
-  command::VerboseParser pDb;             /**< `get db`    parser */
-  command::VerboseParser pPkg;            /**< `get pkg`   parser */
-  bool                   isPkg  = false;
-  row_id                 id     = 0;
+  private:
 
-  GetCommand();
+    command::VerboseParser parser;          /**< `get`       parser */
+    command::VerboseParser pId;             /**< `get id`    parser */
+    command::VerboseParser pPath;           /**< `get path`  parser */
+    command::VerboseParser pDone;           /**< `get done`  parser */
+    command::VerboseParser pFlake;          /**< `get flake` parser */
+    command::VerboseParser pDb;             /**< `get db`    parser */
+    command::VerboseParser pPkg;            /**< `get pkg`   parser */
+    bool                   isPkg  = false;
+    row_id                 id     = 0;
 
-  /**
-   * @brief Execute the `get id` routine.
-   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
-   */
-  int runId();
+    /**
+     * @brief Execute the `get id` routine.
+     * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+     */
+    int runId();
 
-  /**
-   * @brief Execute the `get done` routine.
-   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
-   */
-  int runDone();
+    /**
+     * @brief Execute the `get done` routine.
+     * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+     */
+    int runDone();
 
-  /**
-   * @brief Execute the `get path` routine.
-   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
-   */
-  int runPath();
+    /**
+     * @brief Execute the `get path` routine.
+     * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+     */
+    int runPath();
 
-  /**
-   * @brief Execute the `get flake` routine.
-   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
-   */
-  int runFlake();
+    /**
+     * @brief Execute the `get flake` routine.
+     * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+     */
+    int runFlake();
 
-  /**
-   * @brief Execute the `get db` routine.
-   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
-   */
-  int runDb();
+    /**
+     * @brief Execute the `get db` routine.
+     * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+     */
+    int runDb();
 
-  /**
-   * @brief Execute the `get pkg` routine.
-   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
-   */
-  int runPkg();
+    /**
+     * @brief Execute the `get pkg` routine.
+     * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+     */
+    int runPkg();
 
-  /**
-   * @brief Execute the `get` routine.
-   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
-   */
-  int run();
 
-};  /* End struct `GetCommand' */
+  public:
+
+    GetCommand();
+
+    [[nodiscard]] command::VerboseParser & getParser() { return this->parser; }
+
+    /**
+     * @brief Execute the `get` routine.
+     * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+     */
+    int run();
+
+
+};  /* End class `GetCommand' */
 
 
 /* -------------------------------------------------------------------------- */
 
-struct ListCommand {
+class ListCommand {
 
-  command::VerboseParser               parser;
-  std::optional<std::filesystem::path> cacheDir;
-  bool                                 json      = false;
-  bool                                 basenames = false;
+  private:
 
-  ListCommand();
+    command::VerboseParser               parser;
+    std::optional<std::filesystem::path> cacheDir;
+    bool                                 json      = false;
+    bool                                 basenames = false;
 
-  /**
-   * @brief Execute the `list` routine.
-   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
-   */
-  int run();
 
-};  /* End struct `ListCommand' */
+  public:
+
+    ListCommand();
+
+    [[nodiscard]] command::VerboseParser & getParser() { return this->parser; }
+
+    /**
+     * @brief Execute the `list` routine.
+     * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+     */
+    int run();
+
+
+};  /* End class `ListCommand' */
 
 
 /* -------------------------------------------------------------------------- */
