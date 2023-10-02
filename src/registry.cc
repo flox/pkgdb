@@ -49,6 +49,7 @@ RegistryRaw::clear()
   this->defaults.clear();
 }
 
+
 /* -------------------------------------------------------------------------- */
 
   std::vector<std::reference_wrapper<const std::string>>
@@ -93,9 +94,7 @@ to_json( nlohmann::json & jto, const RegistryInput & rip )
     }
   else
     {
-      jto.emplace( "from"
-                   , nix::fetchers::attrsToJSON( rip.from->toAttrs() )
-                   );
+      jto.emplace( "from", nix::fetchers::attrsToJSON( rip.from->toAttrs() ) );
     }
 }
 
@@ -125,6 +124,58 @@ RegistryRaw::fillPkgQueryArgs( const std::string         & input
       pqa.stabilities = this->defaults.stabilities;
     }
   return pqa;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  nix::ref<FloxFlake>
+FloxFlakeInput::getFlake()
+{
+  if ( this->flake == nullptr )
+    {
+      this->flake = std::make_shared<FloxFlake>(
+        NixState( this->store ).getState()
+      , * this->getFlakeRef()
+      );
+    }
+  return static_cast<nix::ref<FloxFlake>>( this->flake );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  const std::vector<Subtree> &
+FloxFlakeInput::getSubtrees()
+{
+  if ( ! this->enabledSubtrees.has_value() )
+    {
+      if ( this->subtrees.has_value() )
+        {
+          this->enabledSubtrees = * this->subtrees;
+        }
+      else
+        {
+          auto root = this->getFlake()->openEvalCache()->getRoot();
+          if ( root->maybeGetAttr( "catalog" ) != nullptr )
+            {
+              this->enabledSubtrees = std::vector<Subtree> { ST_CATALOG };
+            }
+          else if ( root->maybeGetAttr( "packages" ) != nullptr )
+            {
+              this->enabledSubtrees = std::vector<Subtree> { ST_PACKAGES };
+            }
+          else if ( root->maybeGetAttr( "legacyPackages" ) != nullptr )
+            {
+              this->enabledSubtrees = std::vector<Subtree> { ST_LEGACY };
+            }
+          else
+            {
+              this->enabledSubtrees = std::vector<Subtree> {};
+            }
+        }
+    }
+  return * this->enabledSubtrees;
 }
 
 

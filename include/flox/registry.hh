@@ -188,6 +188,7 @@ concept registry_input_factory =
 class RegistryInputFactory {
 
   public:
+
     using input_type = RegistryInput;
 
     /** @brief Construct an input from a @a flox::RegistryInput. */
@@ -197,6 +198,7 @@ class RegistryInputFactory {
     {
       return std::make_shared<RegistryInput>( input );
     }
+
 
 };  /* End class `RegistryInputFactory' */
 
@@ -501,10 +503,10 @@ class Registry {
  * @brief A simple @a flox::RegistryInput that opens a `nix` evaluator for
  *        a flake.
  */
-class FloxFlakeInput : public InputPreferences {
+class FloxFlakeInput : public RegistryInput {
 
   private:
-    nix::ref<nix::FlakeRef>    flakeRef;  /**< A parsed flake reference. */
+
     nix::ref<nix::Store>       store;     /**< A `nix` store connection. */
     std::shared_ptr<FloxFlake> flake;     /**< A flake with an evaluator. */
     /**
@@ -513,46 +515,23 @@ class FloxFlakeInput : public InputPreferences {
      */
     std::optional<std::vector<Subtree>> enabledSubtrees;
 
+
   public:
 
     /**
      * @brief Construct a @a flox::FloxFlakeInput from a `nix` store connection
      *        and @a flox::RegistryInput.
      */
-    FloxFlakeInput(       nix::ref<nix::Store> & store
+    FloxFlakeInput( const nix::ref<nix::Store> & store
                   , const RegistryInput        & input
                   )
-      : flakeRef( input.getFlakeRef() )
+      : RegistryInput( input )
       , store( store )
-    {
-      this->subtrees    = input.subtrees;
-      this->stabilities = input.stabilities;
-    }
-
-
-    /** @brief Get the flake reference associated with this input. */
-      [[nodiscard]]
-      nix::ref<nix::FlakeRef>
-    getFlakeRef() const
-    {
-      return this->flakeRef;
-    }
+    {}
 
 
     /** @brief Get a handle for a flake with a `nix` evaluator. */
-      [[nodiscard]]
-      nix::ref<FloxFlake>
-    getFlake()
-    {
-      if ( this->flake == nullptr )
-        {
-          this->flake = std::make_shared<FloxFlake>(
-            NixState( this->store ).getState()
-          , * this->flakeRef
-          );
-        }
-      return static_cast<nix::ref<FloxFlake>>( this->flake );
-    }
+    [[nodiscard]] nix::ref<FloxFlake> getFlake();
 
 
     /**
@@ -565,58 +544,25 @@ class FloxFlakeInput : public InputPreferences {
      *   2. "package"
      *   3. "legacyPackages"
      */
-      [[nodiscard]]
-      const std::vector<Subtree> &
-    getSubtrees()
-    {
-      if ( ! this->enabledSubtrees.has_value() )
-        {
-          if ( this->subtrees.has_value() )
-            {
-              this->enabledSubtrees = * this->subtrees;
-            }
-          else
-            {
-              auto root = this->getFlake()->openEvalCache()->getRoot();
-              if ( root->maybeGetAttr( "catalog" ) != nullptr )
-                {
-                  this->enabledSubtrees = std::vector<Subtree> { ST_CATALOG };
-                }
-              else if ( root->maybeGetAttr( "packages" ) != nullptr )
-                {
-                  this->enabledSubtrees = std::vector<Subtree> { ST_PACKAGES };
-                }
-              else if ( root->maybeGetAttr( "legacyPackages" ) != nullptr )
-                {
-                  this->enabledSubtrees = std::vector<Subtree> { ST_LEGACY };
-                }
-              else
-                {
-                  this->enabledSubtrees = std::vector<Subtree> {};
-                }
-            }
-        }
-      return * this->enabledSubtrees;
-    }
+    [[nodiscard]] const std::vector<Subtree> & getSubtrees();
+
 
 };  /* End struct `FloxFlakeInput' */
 
 
 /** @brief A factory for @a flox::FloxFlakeInput objects. */
-class FloxFlakeInputFactory {
-
-  private:
-    nix::ref<nix::Store> store;  /**< `nix` store connection. */
+class FloxFlakeInputFactory : NixStoreMixin  {
 
   public:
+
     using input_type = FloxFlakeInput;
 
     /** @brief Construct a factory using a new `nix` store connection. */
-    FloxFlakeInputFactory() : store( NixState().getStore() ) {}
+    FloxFlakeInputFactory() = default;
 
     /** @brief Construct a factory using a `nix` store connection. */
-    explicit FloxFlakeInputFactory( nix::ref<nix::Store> & store )
-      : store( store )
+    explicit FloxFlakeInputFactory( const nix::ref<nix::Store> & store )
+      : NixStoreMixin( store )
     {}
 
     /** @brief Construct an input from a @a flox::RegistryInput. */
@@ -624,8 +570,9 @@ class FloxFlakeInputFactory {
       std::shared_ptr<FloxFlakeInput>
     mkInput( const std::string & /* unused */, const RegistryInput & input )
     {
-      return std::make_shared<FloxFlakeInput>( this->store, input );
+      return std::make_shared<FloxFlakeInput>( this->getStore(), input );
     }
+
 
 };  /* End class `FloxFlakeInputFactory' */
 

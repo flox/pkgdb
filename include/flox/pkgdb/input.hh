@@ -22,8 +22,6 @@ namespace flox::pkgdb {
 /** @brief A @a RegistryInput that opens a @a PkgDb associated with a flake. */
 class PkgDbInput : public FloxFlakeInput {
 
-/* -------------------------------------------------------------------------- */
-
   private:
 
     /* Provided by `FloxFlakeInput':

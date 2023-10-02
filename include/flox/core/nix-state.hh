@@ -67,7 +67,7 @@ class NixStoreMixin {
      * This may be useful if you wish to avoid a non-default store.
      * @param store An open `nix` store connection.
      */
-    explicit NixStoreMixin( nix::ref<nix::Store> & store )
+    explicit NixStoreMixin( const nix::ref<nix::Store> & store )
       : store( static_cast<std::shared_ptr<nix::Store>>( store ) )
     {
       initNix();
