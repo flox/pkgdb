@@ -45,13 +45,14 @@ struct PkgQueryMixin {
    */
   std::vector<pkgdb::row_id> queryDb( pkgdb::PkgDbReadOnly & pdb ) const;
 
+
 };  /* End struct `PkgQueryMixin' */
 
 
 /* -------------------------------------------------------------------------- */
 
 /** @brief Search flakes for packages satisfying a set of filters. */
-class SearchCommand : public pkgdb::PkgDbRegistryMixin, public PkgQueryMixin {
+class SearchCommand : pkgdb::PkgDbRegistryMixin, PkgQueryMixin {
 
   private:
 
@@ -65,15 +66,12 @@ class SearchCommand : public pkgdb::PkgDbRegistryMixin, public PkgQueryMixin {
       argparse::Argument &
     addSearchParamArgs( argparse::ArgumentParser & parser );
 
-
-  protected:
-
       [[nodiscard]]
-      virtual RegistryRaw
+      RegistryRaw
     getRegistryRaw() override { return this->params.registry; }
 
       [[nodiscard]]
-      virtual std::vector<std::string> &
+      std::vector<std::string> &
     getSystems() override { return this->params.systems; }
 
 
@@ -82,7 +80,7 @@ class SearchCommand : public pkgdb::PkgDbRegistryMixin, public PkgQueryMixin {
     SearchCommand();
 
     /** @brief Display a single row from the given @a input. */
-      void
+      static void
     showRow( pkgdb::PkgDbInput & input, pkgdb::row_id row )
     {
       std::cout << input.getRowJSON( row ).dump() << std::endl;

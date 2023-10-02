@@ -24,7 +24,7 @@ namespace flox::resolver {
  * @brief Resolve a set of package requirements to a set of
  *        satisfactory installables.
  */
-class ResolveCommand : public pkgdb::PkgDbRegistryMixin {
+class ResolveCommand : pkgdb::PkgDbRegistryMixin {
 
   private:
 
@@ -42,9 +42,6 @@ class ResolveCommand : public pkgdb::PkgDbRegistryMixin {
 
     [[nodiscard]]
     PkgDescriptorRaw getQuery() const { return this->params.query; }
-
-
-  protected:
 
     [[nodiscard]]
     RegistryRaw getRegistryRaw() override { return this->params.registry; }
