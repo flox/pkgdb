@@ -41,7 +41,7 @@ main( int argc, char * argv[] )
   prog.add_subparser( cmdSearch.parser );
 
   flox::resolver::ResolveCommand cmdResolve;
-  prog.add_subparser( cmdResolve.parser );
+  prog.add_subparser( cmdResolve.getParser() );
 
 
   /* Parse Args */

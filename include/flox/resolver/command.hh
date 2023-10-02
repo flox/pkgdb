@@ -28,7 +28,8 @@ struct ResolveCommand : public pkgdb::PkgDbRegistryMixin {
 
   private:
 
-    ResolveOneParams params;
+    ResolveOneParams       params;  /**< Query arguments and inputs */
+    command::VerboseParser parser;  /**< Query arguments and inputs parser */
 
     /**
      * @brief Add argument to any parser to construct
@@ -45,15 +46,11 @@ struct ResolveCommand : public pkgdb::PkgDbRegistryMixin {
 
   protected:
 
-      [[nodiscard]]
-      virtual RegistryRaw
-    getRegistryRaw() override
-    {
-      return this->params.registry;
-    }
+    [[nodiscard]]
+    RegistryRaw getRegistryRaw() override { return this->params.registry; }
 
       [[nodiscard]]
-      virtual std::vector<std::string> &
+      std::vector<std::string> &
     getSystems() override
     {
       return this->params.systems;
@@ -62,9 +59,9 @@ struct ResolveCommand : public pkgdb::PkgDbRegistryMixin {
 
   public:
 
-    command::VerboseParser parser;
-
     ResolveCommand();
+
+    [[nodiscard]] command::VerboseParser & getParser() { return this->parser; }
 
     /**
      * @brief Execute the `resolve` routine.
@@ -72,6 +69,7 @@ struct ResolveCommand : public pkgdb::PkgDbRegistryMixin {
      * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
      */
     int run();
+
 
 };  /* End struct `ResolveCommand' */
 
