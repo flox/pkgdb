@@ -112,7 +112,7 @@ class Manifest : public pkgdb::PkgDbRegistryMixin {
     std::optional<RegistryRaw> registryRaw;
 
     /**
-     * @brief A map of groups to the IDs of descriptors which declare them.
+     * A map of groups to the IDs of descriptors which declare them.
      *
      * The reserved group "__ungrouped__" contains all descriptors that do not
      * declare a group.
@@ -132,9 +132,6 @@ class Manifest : public pkgdb::PkgDbRegistryMixin {
 
     /** @brief Initialize @a groups from @a raw.install. */
     void initGroups();
-
-    /** @brief Collects _inline_ inputs from descriptors. */
-    std::unordered_map<std::string, nix::FlakeRef> getInlineInputs() const;
 
     /**
      * @brief Collects _inline_ inputs from descriptors extending those
@@ -156,20 +153,19 @@ class Manifest : public pkgdb::PkgDbRegistryMixin {
       this->initGroups();
     }
 
+    /** @brief Collects _inline_ inputs from descriptors. */
+    std::unordered_map<std::string, nix::FlakeRef> getInlineInputs() const;
 
     /** @brief Get the _raw_ registry declaration. */
     [[nodiscard]] RegistryRaw getRegistryRaw() override;
-
 
     /** @brief Get a list of all registry inputs' locked _flake references_. */
     [[nodiscard]]
     std::unordered_map<std::string, nix::FlakeRef> getLockedInputs();
 
-
     /** @brief Get a descriptor by its `id` ( key into `install` ). */
     [[nodiscard]]
     std::optional<ManifestDescriptor> getDescriptor( const std::string & iid );
-
 
     /** @brief Get query preferences. */
       [[nodiscard]]
@@ -191,7 +187,6 @@ class Manifest : public pkgdb::PkgDbRegistryMixin {
     {
       return this->groups;
     }
-
 
     struct Resolved {
       std::string input;  /**< Input shortname or locked URL */
