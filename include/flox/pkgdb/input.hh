@@ -98,7 +98,6 @@ class PkgDbInput : public FloxFlakeInput {
       this->init();
     }
 
-
     /**
      * @brief Construct a @a PkgDbInput from a @a RegistryInput and a path to
      *        the directory where the database should be cached.
@@ -124,7 +123,6 @@ class PkgDbInput : public FloxFlakeInput {
       this->init();
     }
 
-
     /**
      * @return The read-only database connection handle.
      */
@@ -135,22 +133,18 @@ class PkgDbInput : public FloxFlakeInput {
       return static_cast<nix::ref<PkgDbReadOnly>>( this->dbRO );
     }
 
-
     /**
      * @brief Open a read/write database connection if one is not open, and
      *        return a handle.
      */
     [[nodiscard]] nix::ref<PkgDb> getDbReadWrite();
 
-
     /** @brief Close the read/write database connection if it is open. */
     void closeDbReadWrite() { this->dbRW = nullptr; }
-
 
     /** @return Filesystem path to the flake's package database. */
     [[nodiscard]]
     std::filesystem::path getDbPath() const { return this->dbPath; }
-
 
     /**
      * @brief Ensure that an attribute path prefix has been scraped.
@@ -165,7 +159,6 @@ class PkgDbInput : public FloxFlakeInput {
      */
     void scrapePrefix( const flox::AttrPath & prefix );
 
-
     /**
      * @brief Scrape all prefixes indicated by @a InputPreferences for
      *        @a systems.
@@ -173,10 +166,8 @@ class PkgDbInput : public FloxFlakeInput {
      */
     void scrapeSystems( const std::vector<std::string> & systems );
 
-
     /** @brief Add/set a shortname for this input. */
     void setName( std::string_view name ) { this->name = name; }
-
 
     /**
      * @brief Get an identifier for this input.
@@ -190,7 +181,6 @@ class PkgDbInput : public FloxFlakeInput {
         this->getFlake()->lockedFlake.flake.lockedRef.to_string()
       );
     }
-
 
     /** @brief Get a JSON representation of a row in the database. */
     [[nodiscard]] nlohmann::json getRowJSON( row_id row );
@@ -221,7 +211,6 @@ class PkgDbInputFactory {
     ) : store( store )
       , cacheDir( std::move( cacheDir ) )
     {}
-
 
     /** @brief Construct an input from a @a RegistryInput. */
       [[nodiscard]]
@@ -282,10 +271,8 @@ class PkgDbRegistryMixin : virtual protected NixStoreMixin {
      */
     void scrapeIfNeeded();
 
-
     /** @return A raw registry used to initialize. */
     [[nodiscard]] virtual RegistryRaw getRegistryRaw() = 0;
-
 
     /** @return A list of systems to be scraped. */
     [[nodiscard]] virtual std::vector<std::string> & getSystems() = 0;
