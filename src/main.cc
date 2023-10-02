@@ -29,19 +29,19 @@ main( int argc, char * argv[] )
   prog.add_description( "CRUD operations for package metadata" );
 
   flox::pkgdb::ScrapeCommand cmdScrape;
-  prog.add_subparser( cmdScrape.parser );
+  prog.add_subparser( cmdScrape.getParser() );
 
   flox::pkgdb::GetCommand cmdGet;
-  prog.add_subparser( cmdGet.parser );
+  prog.add_subparser( cmdGet.getParser() );
 
   flox::pkgdb::ListCommand cmdList;
-  prog.add_subparser( cmdList.parser );
+  prog.add_subparser( cmdList.getParser() );
 
   flox::search::SearchCommand cmdSearch;
-  prog.add_subparser( cmdSearch.parser );
+  prog.add_subparser( cmdSearch.getParser() );
 
   flox::resolver::ResolveCommand cmdResolve;
-  prog.add_subparser( cmdResolve.parser );
+  prog.add_subparser( cmdResolve.getParser() );
 
 
   /* Parse Args */

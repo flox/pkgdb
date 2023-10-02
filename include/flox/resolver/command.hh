@@ -24,11 +24,12 @@ namespace flox::resolver {
  * @brief Resolve a set of package requirements to a set of
  *        satisfactory installables.
  */
-struct ResolveCommand : public pkgdb::PkgDbRegistryMixin {
+class ResolveCommand : pkgdb::PkgDbRegistryMixin {
 
   private:
 
-    ResolveOneParams params;
+    ResolveOneParams       params;  /**< Query arguments and inputs */
+    command::VerboseParser parser;  /**< Query arguments and inputs parser */
 
     /**
      * @brief Add argument to any parser to construct
@@ -42,18 +43,11 @@ struct ResolveCommand : public pkgdb::PkgDbRegistryMixin {
     [[nodiscard]]
     PkgDescriptorRaw getQuery() const { return this->params.query; }
 
-
-  protected:
-
-      [[nodiscard]]
-      virtual RegistryRaw
-    getRegistryRaw() override
-    {
-      return this->params.registry;
-    }
+    [[nodiscard]]
+    RegistryRaw getRegistryRaw() override { return this->params.registry; }
 
       [[nodiscard]]
-      virtual std::vector<std::string> &
+      std::vector<std::string> &
     getSystems() override
     {
       return this->params.systems;
@@ -62,9 +56,9 @@ struct ResolveCommand : public pkgdb::PkgDbRegistryMixin {
 
   public:
 
-    command::VerboseParser parser;
-
     ResolveCommand();
+
+    [[nodiscard]] command::VerboseParser & getParser() { return this->parser; }
 
     /**
      * @brief Execute the `resolve` routine.
@@ -73,7 +67,8 @@ struct ResolveCommand : public pkgdb::PkgDbRegistryMixin {
      */
     int run();
 
-};  /* End struct `ResolveCommand' */
+
+};  /* End class `ResolveCommand' */
 
 
 /* -------------------------------------------------------------------------- */

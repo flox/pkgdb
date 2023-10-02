@@ -41,14 +41,29 @@ using row_id = uint64_t;  /**< A _row_ index in a SQLite3 table. */
 
 /** @brief Minimal set of query parameters related to a single package. */
 struct PkgDescriptorBase {
+
   std::optional<std::string> name;    /**< Filter results by exact `name`. */
   std::optional<std::string> pname;   /**< Filter results by exact `pname`. */
   std::optional<std::string> version; /**< Filter results by exact version. */
   std::optional<std::string> semver;  /**< Filter results by version range. */
 
+
+  /* Base struct boilerplate */
+  PkgDescriptorBase()                             = default;
+  PkgDescriptorBase( const PkgDescriptorBase &  ) = default;
+  PkgDescriptorBase(       PkgDescriptorBase && ) = default;
+
+  virtual ~PkgDescriptorBase() = default;
+
+  PkgDescriptorBase & operator=( const PkgDescriptorBase &  ) = default;
+  PkgDescriptorBase & operator=(       PkgDescriptorBase && ) = default;
+
   /** @brief Reset to default state. */
   virtual void clear();
-};
+
+
+};  /* End struct `PkgDescriptorBase' */
+
 
 /**
  * @fn void from_json( const nlohmann::json & j, PkgDescriptorBase & pdb )
@@ -157,7 +172,7 @@ struct PkgQueryArgs : public PkgDescriptorBase {
 
 
   /** @brief Reset argset to its _default_ state. */
-  virtual void clear() override;
+  void clear() override;
 
   /**
    * @brief Sanity check parameters.
@@ -314,8 +329,7 @@ class PkgQuery : public PkgQueryArgs {
      * from @a binds before being executed.
      * @return An unbound SQL query string.
      */
-    [[nodiscard]]
-    std::string str() const;
+    [[nodiscard]] std::string str() const;
 
     /**
      * @brief Create a bound SQLite query ready for execution.
@@ -335,6 +349,7 @@ class PkgQuery : public PkgQueryArgs {
      */
     [[nodiscard]]
     std::vector<row_id> execute( sqlite3pp::database & pdb ) const;
+
 
 };  /* End class `PkgQuery' */
 
