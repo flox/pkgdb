@@ -53,7 +53,7 @@ jobs:
           {
             printf 'extra-trusted-public-keys = ';
             echo "${{ secrets.FLOX_STORE_PUBLIC_NIX_SECRET_KEY }}"  \
-              | nix key convert-secret-to-public;
+              |nix key convert-secret-to-public;
           }|sudo tee -a /etc/nix/nix.conf >/dev/null
 
       - name: Nix AWS Setup
