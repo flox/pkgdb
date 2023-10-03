@@ -26,11 +26,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup Cache Secret Key
-        run: |
-          echo '${{ secrets.FLOX_STORE_PUBLIC_NIX_SECRET_KEY }}'  \
-               > /tmp/secret-key
-
       - uses: cachix/install-nix-action@v22
         with:
           extra_nix_config: |
@@ -48,8 +43,10 @@ jobs:
             stalled-download-timeout = 90
             timeout = 0
 
-      - name: Setup Cache Public Key
+      - name: Setup AWS Cache Keys
         run: |
+          echo '${{ secrets.FLOX_STORE_PUBLIC_NIX_SECRET_KEY }}'  \
+               > /tmp/secret-key
           {
             printf 'extra-substituters = s3://flox-store';
             printf '?secret-key=/tmp/secret-key&write-nar-listing=1';
@@ -135,6 +132,9 @@ jobs:
         run: nix run . --no-update-lock-file -- --help
 
       - name: Push Nix Store Contents
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: nix copy --all --to 's3://flox-store?secret-key=/tmp/secret-key&write-nar-listing=1&ls-compression=br';
 
       - name: Save Nix Caches
