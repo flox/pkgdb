@@ -36,7 +36,7 @@ jobs:
           extra_nix_config: |
             experimental-features = nix-command flakes
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
-            substituters = https://cache.nixos.org s3://flox-store?secret-key=/tmp/secret-key&write-nar-listing=1&ls-compression=br
+            substituters = https://cache.nixos.org
 
             trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
             max-jobs = auto
@@ -51,6 +51,10 @@ jobs:
       - name: Setup Cache Public Key
         run: |
           {
+            printf 'extra-substituters = s3://flox-store';
+            printf '?secret-key=/tmp/secret-key&write-nar-listing=1';
+            echo '&ls-compression=br';
+
             printf 'extra-trusted-public-keys = ';
             echo "${{ secrets.FLOX_STORE_PUBLIC_NIX_SECRET_KEY }}"  \
               |nix key convert-secret-to-public;
@@ -131,7 +135,7 @@ jobs:
         run: nix run . --no-update-lock-file -- --help
 
       - name: Push Nix Store Contents
-        run: nix copy --all --to s3://flox-store
+        run: nix copy --all --to 's3://flox-store?secret-key=/tmp/secret-key&write-nar-listing=1&ls-compression=br';
 
       - name: Save Nix Caches
         id: nix-cache-save
