@@ -25,12 +25,19 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Setup Cache Secret Key
+        run: |
+          echo '${{ secrets.FLOX_STORE_PUBLIC_NIX_SECRET_KEY }}'  \
+               > /tmp/secret-key
+
       - uses: cachix/install-nix-action@v22
         with:
           extra_nix_config: |
             experimental-features = nix-command flakes
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
-            substituters = https://cache.nixos.org
+            substituters = https://cache.nixos.org s3://flox-store?secret-key=/tmp/secret-key&write-nar-listing=1&ls-compression=br
+
             trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
             max-jobs = auto
             cores = 0
@@ -40,6 +47,39 @@ jobs:
             connect-timeout = 5
             stalled-download-timeout = 90
             timeout = 0
+
+      - name: Setup Cache Public Key
+        run: |
+          {
+            printf 'extra-trusted-public-keys = ';
+            echo "${{ secrets.FLOX_STORE_PUBLIC_NIX_SECRET_KEY }}"  \
+              | nix key convert-secret-to-public;
+          }|sudo tee -a /etc/nix/nix.conf >/dev/null
+
+      - name: Nix AWS Setup
+        run: |
+          SERVICE_D='/etc/systemd/system/nix-daemon.service.d';
+          sudo mkdir -p "$SERVICE_D";
+          {
+            echo '[Service]';
+            printf 'Environment=AWS_ACCESS_KEY_ID=';
+            echo '${{ secrets.AWS_ACCESS_KEY_ID }}';
+            printf 'Environment=AWS_SECRET_ACCESS_KEY=';
+            echo '${{ secrets.AWS_SECRET_ACCESS_KEY }}';
+          }|sudo tee -a "$SERVICE_D/aws-credentials.conf" >/dev/null;
+
+      - name: Restart Nix Daemon
+        run: |
+          if [[ "$RUNNER_OS" == 'Linux' ]]; then
+            sudo systemctl daemon-reload;
+            sudo systemctl restart nix-daemon.service;
+          elif [[ "$RUNNER_OS" == 'macOS' ]]; then
+            sudo launchctl stop org.nixos.nix-daemon;
+            sudo launchctl start org.nixos.nix-daemon;
+          else
+            echo "Unsupported OS: $RUNNER_OS";
+            exit 1;
+          fi
 
       - name: Restore Nix Caches
         id: nix-cache-restore
@@ -68,18 +108,15 @@ jobs:
 
       - name: Setup
         run: |
-          echo "# ============================================================================ #" >&2;
           echo 'Runner Version' >&2;
           { printf '    bash   version: '; bash   --version|head -n1; } >&2;
           { printf '    nix    version: '; nix    --version; } >&2;
-          echo "# ---------------------------------------------------------------------------- #" >&2;
           NO_WELCOME=: nix develop --no-update-lock-file --command sh -c '
             echo "";
             echo "Development Environment Versions";
             printf "    nix    version: "; nix    --version;
             printf "    CXX    version: "; $CXX --version|head -n1;
           ' >&2;
-          echo "# ============================================================================ #" >&2;
 
       - name: Run Build
         run: nix develop --no-update-lock-file --command make -j4
@@ -92,6 +129,9 @@ jobs:
 
       - name: Run Installed
         run: nix run . --no-update-lock-file -- --help
+
+      - name: Push Nix Store Contents
+        run: nix copy --all --to s3://flox-store
 
       - name: Save Nix Caches
         id: nix-cache-save
