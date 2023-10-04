@@ -38,7 +38,7 @@ test_isSemver0()
 
 /* -------------------------------------------------------------------------- */
 
-/* Must be `%Y-%m-%d` or `%m-%d-%Y` and may contain trailing characters. */
+/** @brief `%Y-%m-%d` or `%m-%d-%Y` but may contain trailing characters. */
   bool
 test_isDate0()
 {
@@ -60,6 +60,30 @@ test_isDate0()
 
 /* -------------------------------------------------------------------------- */
 
+  bool
+test_isSemverRange0()
+{
+  EXPECT( versions::isSemverRange( "^4.2.0" ) );
+  EXPECT( versions::isSemverRange( "4.2.0" ) );
+  EXPECT( versions::isSemverRange( "4.2" ) );
+  EXPECT( versions::isSemverRange( "4 - 5" ) );
+
+  EXPECT( ! versions::isSemverRange( "howdy" ) );
+  EXPECT( ! versions::isSemverRange( "howdy ^4.2.0" ) );
+
+  /* Globs/special */
+  EXPECT( versions::isSemverRange( "" ) );
+  EXPECT( versions::isSemverRange( "*" ) );
+  EXPECT( versions::isSemverRange( "latest" ) );
+  EXPECT( versions::isSemverRange( "any" ) );
+  EXPECT( versions::isSemverRange( " * " ) );
+
+  return  true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
   int
 main()
 {
@@ -69,6 +93,7 @@ main()
   RUN_TEST( semverSat1 );
   RUN_TEST( isSemver0 );
   RUN_TEST( isDate0 );
+  RUN_TEST( isSemverRange0 );
 
   return ec;
 }

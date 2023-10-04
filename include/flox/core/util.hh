@@ -353,6 +353,28 @@ bool hasPrefix( std::string_view prefix, std::string_view str );
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief trim from start ( in place ). */
+std::string & ltrim( std::string & str );
+
+/** @brief trim from end ( in place ). */
+std::string & rtrim( std::string & str );
+
+/** @brief trim from both ends ( in place ). */
+std::string & trim( std::string & str );
+
+
+/** @brief trim from start ( copying ). */
+[[nodiscard]] std::string ltrim_copy( std::string_view str );
+
+/** @brief trim from end ( copying ). */
+[[nodiscard]] std::string rtrim_copy( std::string_view str );
+
+/** @brief trim from both ends ( copying ). */
+[[nodiscard]] std::string trim_copy( std::string_view str );
+
+
+/* -------------------------------------------------------------------------- */
+
 }    /* End namespace `flox' */
 
 

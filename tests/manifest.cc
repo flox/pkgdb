@@ -106,7 +106,7 @@ test_parseManifestDescriptor0()
 
 /** @brief Test descriptor parsing of semver ranges and version matches. */
   bool
-test_parseManifestDescriptor1()
+test_parseManifestDescriptor_version0()
 {
 
   flox::resolver::ManifestDescriptorRaw raw = R"( {
@@ -129,7 +129,7 @@ test_parseManifestDescriptor1()
 
 /** @brief Test descriptor parsing of semver ranges and version matches. */
   bool
-test_parseManifestDescriptor2()
+test_parseManifestDescriptor_version1()
 {
 
   flox::resolver::ManifestDescriptorRaw raw = R"( {
@@ -150,6 +150,222 @@ test_parseManifestDescriptor2()
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief Test descriptor parsing of semver ranges and version matches. */
+  bool
+test_parseManifestDescriptor_version2()
+{
+
+  flox::resolver::ManifestDescriptorRaw raw = R"( {
+    "name": "foo"
+  , "version": "=4.2"
+  } )"_json;
+
+  flox::resolver::ManifestDescriptor descriptor( raw );
+
+  /* Expect detection of exact version match.
+   * Ensure the leading `=` is stripped. */
+  EXPECT( ! descriptor.semver.has_value() );
+  EXPECT( descriptor.version.has_value() );
+  EXPECT_EQ( * descriptor.version, "4.2" );
+
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Test descriptor parsing of semver ranges and version matches. */
+  bool
+test_parseManifestDescriptor_version3()
+{
+
+  flox::resolver::ManifestDescriptorRaw raw = R"( {
+    "name": "foo"
+  , "version": ""
+  } )"_json;
+
+  flox::resolver::ManifestDescriptor descriptor( raw );
+
+  /* Expect detection glob/_any_ version match. */
+  EXPECT( descriptor.semver.has_value() );
+  EXPECT( ! descriptor.version.has_value() );
+  EXPECT_EQ( * descriptor.semver, "" );
+
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Test descriptor parsing inline inputs. */
+  bool
+test_parseManifestDescriptor_input0()
+{
+
+  flox::resolver::ManifestDescriptorRaw raw = R"( {
+    "name": "foo"
+  , "packageRepository": {
+      "type": "github"
+    , "owner": "NixOS"
+    , "repo": "nixpkgs"
+    }
+  } )"_json;
+
+  flox::resolver::ManifestDescriptor descriptor( raw );
+
+  EXPECT( descriptor.input.has_value() );
+  EXPECT( std::holds_alternative<nix::FlakeRef>( * descriptor.input ) );
+
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Test descriptor parsing inline inputs. */
+  bool
+test_parseManifestDescriptor_input1()
+{
+
+  flox::resolver::ManifestDescriptorRaw raw = R"( {
+    "name": "foo"
+  , "input": "./pkgs/foo/default.nix"
+  } )"_json;
+
+  flox::resolver::ManifestDescriptor descriptor( raw );
+
+  EXPECT( descriptor.input.has_value() );
+  EXPECT( std::holds_alternative<std::string>( * descriptor.input ) );
+
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Test descriptor `path`/`absPath` parsing. */
+  bool
+test_parseManifestDescriptor_path0()
+{
+
+  flox::resolver::ManifestDescriptorRaw raw = R"( {
+    "absPath": "legacyPackages.null.hello"
+  } )"_json;
+
+  flox::resolver::ManifestDescriptor descriptor( raw );
+
+  EXPECT( descriptor.subtree.has_value() );
+  EXPECT_EQ( * descriptor.subtree, flox::ST_LEGACY );
+  EXPECT( ! descriptor.systems.has_value() );
+  EXPECT( ! descriptor.stability.has_value() );
+  EXPECT( descriptor.path.has_value() );
+  EXPECT( ( * descriptor.path ) == ( flox::AttrPath { "hello" } ) );
+
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Test descriptor `path`/`absPath` parsing. */
+  bool
+test_parseManifestDescriptor_path1()
+{
+
+  flox::resolver::ManifestDescriptorRaw raw = R"( {
+    "absPath": "legacyPackages.*.hello"
+  } )"_json;
+
+  flox::resolver::ManifestDescriptor descriptor( raw );
+
+  EXPECT( descriptor.subtree.has_value() );
+  EXPECT_EQ( * descriptor.subtree, flox::ST_LEGACY );
+  EXPECT( ! descriptor.systems.has_value() );
+  EXPECT( ! descriptor.stability.has_value() );
+  EXPECT( descriptor.path.has_value() );
+  EXPECT( ( * descriptor.path ) == ( flox::AttrPath { "hello" } ) );
+
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Test descriptor `path`/`absPath` parsing. */
+  bool
+test_parseManifestDescriptor_path2()
+{
+
+  flox::resolver::ManifestDescriptorRaw raw = R"( {
+    "absPath": ["legacyPackages", null, "hello"]
+  } )"_json;
+
+  flox::resolver::ManifestDescriptor descriptor( raw );
+
+  EXPECT( descriptor.subtree.has_value() );
+  EXPECT_EQ( * descriptor.subtree, flox::ST_LEGACY );
+  EXPECT( ! descriptor.systems.has_value() );
+  EXPECT( ! descriptor.stability.has_value() );
+  EXPECT( descriptor.path.has_value() );
+  EXPECT( ( * descriptor.path ) == ( flox::AttrPath { "hello" } ) );
+
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Test descriptor `path`/`absPath` parsing. */
+  bool
+test_parseManifestDescriptor_path3()
+{
+
+  flox::resolver::ManifestDescriptorRaw raw = R"( {
+    "absPath": ["legacyPackages", "*", "hello"]
+  } )"_json;
+
+  flox::resolver::ManifestDescriptor descriptor( raw );
+
+  EXPECT( descriptor.subtree.has_value() );
+  EXPECT_EQ( * descriptor.subtree, flox::ST_LEGACY );
+  EXPECT( ! descriptor.systems.has_value() );
+  EXPECT( ! descriptor.stability.has_value() );
+  EXPECT( descriptor.path.has_value() );
+  EXPECT( ( * descriptor.path ) == ( flox::AttrPath { "hello" } ) );
+
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Test descriptor `path`/`absPath` parsing. */
+  bool
+test_parseManifestDescriptor_path4()
+{
+
+  flox::resolver::ManifestDescriptorRaw raw = R"( {
+    "absPath": ["legacyPackages", "x86_64-linux", "hello"]
+  } )"_json;
+
+  flox::resolver::ManifestDescriptor descriptor( raw );
+
+  EXPECT( descriptor.subtree.has_value() );
+  EXPECT_EQ( * descriptor.subtree, flox::ST_LEGACY );
+  EXPECT( descriptor.systems.has_value() );
+  EXPECT( ( * descriptor.systems ) ==
+          ( std::vector<std::string> { "x86_64-linux" } )
+        );
+  EXPECT( ! descriptor.stability.has_value() );
+  EXPECT( descriptor.path.has_value() );
+  EXPECT( ( * descriptor.path ) == ( flox::AttrPath { "hello" } ) );
+
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
   int
 main()
 {
@@ -161,8 +377,22 @@ main()
   RUN_TEST( yamlToJSON0 );
 
   RUN_TEST( parseManifestDescriptor0 );
-  RUN_TEST( parseManifestDescriptor1 );
-  RUN_TEST( parseManifestDescriptor2 );
+
+  RUN_TEST( parseManifestDescriptor_version0 );
+  RUN_TEST( parseManifestDescriptor_version1 );
+  RUN_TEST( parseManifestDescriptor_version2 );
+  RUN_TEST( parseManifestDescriptor_version3 );
+
+  RUN_TEST( parseManifestDescriptor_input0 );
+  RUN_TEST( parseManifestDescriptor_input1 );
+
+  RUN_TEST( parseManifestDescriptor_path0 );
+  RUN_TEST( parseManifestDescriptor_path1 );
+  RUN_TEST( parseManifestDescriptor_path2 );
+  RUN_TEST( parseManifestDescriptor_path3 );
+  RUN_TEST( parseManifestDescriptor_path4 );
+
+  // TODO: test stability absPath
 
   return ec;
 }

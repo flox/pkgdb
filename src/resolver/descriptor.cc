@@ -9,7 +9,9 @@
  * -------------------------------------------------------------------------- */
 
 #include <regex>
+
 #include "versions.hh"
+#include "flox/core/exceptions.hh"
 #include "flox/resolver/descriptor.hh"
 
 
@@ -32,10 +34,22 @@ initManifestDescriptorVersion(       ManifestDescriptor & desc
                              , const std::string        & version
                              )
 {
-  switch ( version.at( 0 ) )
+  /* Strip leading/trailing whitespace. */
+  std::string trimmed = trim_copy( version );
+
+  /* Empty is recognized as a glob/_any_ range. */
+  if ( trimmed.empty() )
+    {
+      desc.semver = std::move( trimmed );
+      return;
+    }
+
+  /* Try a quick detection based on first character.
+   * We identify `=` as an explicit _exact version_ match. */
+  switch ( trimmed.at( 0 ) )
     {
       case '=':
-        desc.version = version.substr( 1 );
+        desc.version = std::move( trimmed.substr( 1 ) );
         break;
 
       case '*':
@@ -43,18 +57,20 @@ initManifestDescriptorVersion(       ManifestDescriptor & desc
       case '^':
       case '>':
       case '<':
-        desc.semver = version;
+        desc.semver = std::move( trimmed );
         break;
 
       default:
-        /* If it's a valid semver, then it's not a range. */
-        if ( versions::isSemver( version ) )
+        /* If it's a valid semver or a date then it's not a range. */
+        if ( versions::isSemver( trimmed ) || versions::isDate( trimmed ) ||
+             ( ! versions::isSemverRange( trimmed ) )
+           )
           {
-            desc.version = version;
+            desc.version = std::move( trimmed );
           }
         else /* Otherwise, assume a range. */
           {
-            desc.semver = version;
+            desc.semver = std::move( trimmed );
           }
         break;
     }
@@ -106,7 +122,7 @@ initManifestDescriptorAbsPath(       ManifestDescriptor    & desc
 {
   if ( ! raw.absPath.has_value() )
     {
-      throw std::runtime_error(
+      throw FloxException(
         "`absPath' must be set when calling "
         "`flox::resolver::ManifestDescriptor::initManifestDescriptorAbsPath'"
        );
@@ -117,7 +133,7 @@ initManifestDescriptorAbsPath(       ManifestDescriptor    & desc
 
   if ( glob.size() < 3 )
     {
-      throw std::runtime_error(
+      throw FloxException(
         "`absPath' must have at least three parts"
       );
     }
@@ -125,7 +141,7 @@ initManifestDescriptorAbsPath(       ManifestDescriptor    & desc
   const auto & first = glob.front();
   if ( ! first.has_value() )
     {
-      throw std::runtime_error(
+      throw FloxException(
         "`absPath' may only have a glob as its second element"
       );
     }
@@ -133,7 +149,7 @@ initManifestDescriptorAbsPath(       ManifestDescriptor    & desc
 
   if ( raw.stability.has_value() && ( first.value() != "catalog" ) )
     {
-      throw std::runtime_error(
+      throw FloxException(
         "`stability' cannot be used with non-catalog paths"
       );
     }
@@ -142,14 +158,14 @@ initManifestDescriptorAbsPath(       ManifestDescriptor    & desc
     {
       if ( glob.size() < 4 )
         {
-          throw std::runtime_error(
+          throw FloxException(
             "`absPath' must have at least four parts for catalog paths"
           );
         }
       const auto & third = glob.at( 2 );
       if ( ! third.has_value() )
         {
-          throw std::runtime_error(
+          throw FloxException(
             "`absPath' may only have a glob as its second element"
           );
         }
@@ -160,7 +176,7 @@ initManifestDescriptorAbsPath(       ManifestDescriptor    & desc
           const auto & elem = * itr;
           if ( ! elem.has_value() )
             {
-              throw std::runtime_error(
+              throw FloxException(
                 "`absPath' may only have a glob as its second element"
               );
             }
@@ -175,7 +191,7 @@ initManifestDescriptorAbsPath(       ManifestDescriptor    & desc
           const auto & elem = * itr;
           if ( ! elem.has_value() )
             {
-              throw std::runtime_error(
+              throw FloxException(
                 "`absPath' may only have a glob as its second element"
               );
             }
@@ -184,12 +200,14 @@ initManifestDescriptorAbsPath(       ManifestDescriptor    & desc
     }
 
   const auto & second = glob.at( 1 );
-  if ( second.has_value() )
+  if ( second.has_value() &&
+       ( ( * second ) != "null" ) && ( ( * second ) != "*" )
+     )
     {
       desc.systems = std::vector<std::string> { * second };
       if ( raw.systems.has_value() && ( * raw.systems != * desc.systems ) )
         {
-          throw std::runtime_error(
+          throw FloxException(
             "`systems' list conflicts with `absPath' system specification"
           );
         }
@@ -247,7 +265,7 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
         {
           if ( this->path != path )
             {
-              throw std::runtime_error(
+              throw FloxException(
                   "`path' conflicts with with `absPath'"
               );
             }
@@ -262,7 +280,7 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
     {
       if ( raw.input.has_value() )
         {
-          throw std::runtime_error(
+          throw FloxException(
             "`packageRepository' may not be used with `input'"
           );
         }

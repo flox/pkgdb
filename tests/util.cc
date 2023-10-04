@@ -215,6 +215,18 @@ test_variantJSON3()
 
 /* -------------------------------------------------------------------------- */
 
+  bool
+test_hasPrefix0()
+{
+  EXPECT( flox::hasPrefix( "foo", "foobar" ) );
+  EXPECT( ! flox::hasPrefix( "bar", "foobar" ) );
+  EXPECT( ! flox::hasPrefix( "foobar", "foo" ) );
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
   int
 main()
 {
@@ -233,6 +245,8 @@ main()
   RUN_TEST( variantJSON1 );
   RUN_TEST( variantJSON2 );
   RUN_TEST( variantJSON3 );
+
+  RUN_TEST( hasPrefix0 );
 
   return ec;
 }
