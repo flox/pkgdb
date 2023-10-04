@@ -70,7 +70,7 @@ test_parseManifestDescriptor0()
 
   flox::resolver::ManifestDescriptorRaw raw = R"( {
     "name": "foo"
-  , "version": "1.2.3"
+  , "version": "4.2.0"
   , "optional": true
   , "packageGroup": "blue"
   , "packageRepository": "nixpkgs"
@@ -79,7 +79,12 @@ test_parseManifestDescriptor0()
   flox::resolver::ManifestDescriptor descriptor( raw );
 
   EXPECT_EQ( * descriptor.name, "foo" );
-  EXPECT_EQ( * descriptor.version, "1.2.3" );
+
+  /* Ensure this string was detected as an _exact_ version match. */
+  EXPECT( ! descriptor.semver.has_value() );
+  EXPECT( descriptor.version.has_value() );
+  EXPECT_EQ( * descriptor.version, "4.2.0" );
+
   EXPECT_EQ( * descriptor.group, "blue" );
   EXPECT_EQ( descriptor.optional, true );
 
@@ -99,6 +104,52 @@ test_parseManifestDescriptor0()
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief Test descriptor parsing of semver ranges and version matches. */
+  bool
+test_parseManifestDescriptor1()
+{
+
+  flox::resolver::ManifestDescriptorRaw raw = R"( {
+    "name": "foo"
+  , "version": "^4.2.0"
+  } )"_json;
+
+  flox::resolver::ManifestDescriptor descriptor( raw );
+
+  /* Expect detection of semver range. */
+  EXPECT( ! descriptor.version.has_value() );
+  EXPECT( descriptor.semver.has_value() );
+  EXPECT_EQ( * descriptor.semver, "^4.2.0" );
+
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Test descriptor parsing of semver ranges and version matches. */
+  bool
+test_parseManifestDescriptor2()
+{
+
+  flox::resolver::ManifestDescriptorRaw raw = R"( {
+    "name": "foo"
+  , "version": "4.2"
+  } )"_json;
+
+  flox::resolver::ManifestDescriptor descriptor( raw );
+
+  /* Expect detection of semver range. */
+  EXPECT( ! descriptor.version.has_value() );
+  EXPECT( descriptor.semver.has_value() );
+  EXPECT_EQ( * descriptor.semver, "4.2" );
+
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
   int
 main()
 {
@@ -110,6 +161,8 @@ main()
   RUN_TEST( yamlToJSON0 );
 
   RUN_TEST( parseManifestDescriptor0 );
+  RUN_TEST( parseManifestDescriptor1 );
+  RUN_TEST( parseManifestDescriptor2 );
 
   return ec;
 }
