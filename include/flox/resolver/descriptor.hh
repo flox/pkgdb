@@ -76,7 +76,8 @@ struct ManifestDescriptorRaw {
     /** Relative path to a `nix` expression file to be evaluated. */
     std::optional<std::string> input;
 
-};
+
+};  /* End struct `ManifestDescriptorRaw' */
 
 
 /* -------------------------------------------------------------------------- */
@@ -165,7 +166,8 @@ struct ManifestDescriptor {
      */
     pkgdb::PkgQueryArgs & fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
 
-};
+
+};  /* End struct `ManifestDescriptor' */
 
 
 /* -------------------------------------------------------------------------- */
