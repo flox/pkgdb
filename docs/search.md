@@ -240,7 +240,7 @@ Each output line has the following format:
 
 ```
 Result ::= {
-, id           = <INT>
+  id           = <INT>
 , input        = <INPUT-NAME>
 , subtree      = "packages" | "legacyPackages" | "catalog"
 , stability    = null | "stable" | "staging" | "unstable"
