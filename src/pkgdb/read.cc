@@ -417,14 +417,15 @@ PkgDbReadOnly::getPackage( row_id row )
       , 'system',      system
       , 'stability',   stability
       , 'absPath',     json( path )
-      , 'shortRelPath', iif( ( subtree = 'catalog' )
-                           , json_remove( json( relPath )
-                                        , '$[2]'
-                                        , '$[1]'
-                                        , '$[#]'
-                                        )
-                           , json( relPath )
-                           )
+      , 'license',     license
+      , 'pkgSubPath',  iif( ( subtree = 'catalog' )
+                            , json_remove( json( relPath )
+                                         , '$[2]'
+                                         , '$[1]'
+                                         , '$[#]'
+                                         )
+                            , json( relPath )
+                            )
       , 'broken',      iif( ( broken IS NULL )
                           , json( 'null' )
                           , iif( broken, json( 'true' ), json( 'false' ) )
@@ -433,7 +434,6 @@ PkgDbReadOnly::getPackage( row_id row )
                           , json( 'null' )
                           , iif( unfree, json( 'true' ), json( 'false' ) )
                           )
-      , 'license',     license
       ) AS json
       FROM v_PackagesSearch WHERE ( id = ? )
     )SQL"
