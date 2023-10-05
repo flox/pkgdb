@@ -240,14 +240,18 @@ Each output line has the following format:
 
 ```
 Result ::= {
-, input       = <INPUT-NAME>
-, path        = [<STRING>...]
-, pname       = <STRING>
-, version     = null | <STRING>
-, description = null | <STRING>
-, license     = null | License
-  broken      = true | false
-, unfree      = true | false
+, id           = <INT>
+, input        = <INPUT-NAME>
+, subtree      = "packages" | "legacyPackages" | "catalog"
+, stability    = null | "stable" | "staging" | "unstable"
+, absPath      = [<STRING>...]
+, shortRelPath = [<STRING>...]
+, pname        = <STRING>
+, version      = null | <STRING>
+, description  = null | <STRING>
+, license      = null | License
+  broken       = true | false
+, unfree       = true | false
 }
 ```
 
@@ -259,14 +263,9 @@ it is **strongly recommended** that the caller use _locked flake references_.
 
 For the example query parameters given above, we get the following results:
 
-```
-{"broken":false,"description":"A program that produces a familiar, friendly greeting","input":"nixpkgs","license":"GPL-3.0-or-later","path":["legacyPackages","x86_64-linux","hello"],"pname":"hello","unfree":false,"version":"2.12.1"}
-{"broken":false,"description":"A program that produces a familiar, friendly greeting","input":"nixpkgs-flox","license":null,"path":["catalog","x86_64-linux","stable","hello","2_12_1"],"pname":"hello","unfree":false,"version":"2.12.1"}
-{"broken":false,"description":"A program that produces a familiar, friendly greeting","input":"nixpkgs-flox","license":null,"path":["catalog","x86_64-linux","stable","hello","latest"],"pname":"hello","unfree":false,"version":"2.12.1"}
-{"broken":false,"description":"A program that produces a familiar, friendly greeting","input":"nixpkgs-flox","license":null,"path":["catalog","x86_64-linux","stable","hello","2_12"],"pname":"hello","unfree":false,"version":"2.12"}
-{"broken":false,"description":"A program that produces a familiar, friendly greeting","input":"nixpkgs-flox","license":null,"path":["catalog","x86_64-linux","stable","hello","2_10"],"pname":"hello","unfree":false,"version":"2.10"}
-{"broken":false,"description":"A program that produces a familiar, friendly greeting","input":"nixpkgs-flox","license":null,"path":["catalog","x86_64-linux","staging","hello","2_12_1"],"pname":"hello","unfree":false,"version":"2.12.1"}
-{"broken":false,"description":"A program that produces a familiar, friendly greeting","input":"nixpkgs-flox","license":null,"path":["catalog","x86_64-linux","staging","hello","latest"],"pname":"hello","unfree":false,"version":"2.12.1"}
-{"broken":false,"description":"A program that produces a familiar, friendly greeting","input":"nixpkgs-flox","license":null,"path":["catalog","x86_64-linux","staging","hello","2_12"],"pname":"hello","unfree":false,"version":"2.12"}
-{"broken":false,"description":"A program that produces a familiar, friendly greeting","input":"nixpkgs-flox","license":null,"path":["catalog","x86_64-linux","staging","hello","2_10"],"pname":"hello","unfree":false,"version":"2.10"}
+```json
+{"absPath":["legacyPackages","x86_64-linux","hello"],"broken":false,"description":"A program that produces a familiar, friendly greeting","id":6095,"input":"nixpkgs","license":"GPL-3.0-or-later","pname":"hello","shortRelPath":["hello"],"stability":null,"subtree":"legacyPackages","system":"x86_64-linux","unfree":false,"version":"2.12.1"}
+{"absPath":["legacyPackages","x86_64-linux","hello-wayland"],"broken":false,"description":"Hello world Wayland client","id":6097,"input":"nixpkgs","license":"MIT","pname":"hello-wayland","shortRelPath":["hello-wayland"],"stability":null,"subtree":"legacyPackages","system":"x86_64-linux","unfree":false,"version":"unstable-2023-04-23"}
+{"absPath":["legacyPackages","x86_64-linux","javaPackages","mavenHello_1_1"],"broken":false,"description":"Maven Hello World","id":25790,"input":"nixpkgs","license":"Unlicense","pname":"maven-hello","shortRelPath":["javaPackages","mavenHello_1_1"],"stability":null,"subtree":"legacyPackages","system":"x86_64-linux","unfree":false,"version":"1.1"}
+{"absPath":["legacyPackages","x86_64-linux","javaPackages","mavenHello_1_0"],"broken":false,"description":"Maven Hello World","id":25789,"input":"nixpkgs","license":"Unlicense","pname":"maven-hello","shortRelPath":["javaPackages","mavenHello_1_0"],"stability":null,"subtree":"legacyPackages","system":"x86_64-linux","unfree":false,"version":"1.0"}
 ```
