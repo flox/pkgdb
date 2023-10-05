@@ -250,7 +250,7 @@ Result ::= {
 , version      = null | <STRING>
 , description  = null | <STRING>
 , license      = null | License
-  broken       = true | false
+, broken       = true | false
 , unfree       = true | false
 }
 ```
