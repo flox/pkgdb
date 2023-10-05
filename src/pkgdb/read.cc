@@ -409,18 +409,29 @@ PkgDbReadOnly::getPackage( row_id row )
     this->db
   , R"SQL(
       SELECT json_object(
-        'pname',       pname
+        'id',          id
+      , 'pname',       pname
       , 'version',     version
       , 'description', description
-      , 'broken',      iif( broken, json( 'true' ), json( 'false' ) )
-      , 'unfree',      iif( broken, json( 'true' ), json( 'false' ) )
+      , 'subtree',     subtree
+      , 'system',      system
+      , 'stability',   stability
+      , 'absPath',     json( path )
+      , 'shortRelPath', iif( ( subtree = 'catalog' )
+                           , json_remove( relPath, '$[2]', '$[1]', '$[#]' )
+                           , json( relPath )
+                           )
+      , 'broken',      iif( ( broken IS NULL )
+                          , json( 'null' )
+                          , iif( broken, json( 'true' ), json( 'false' ) )
+                          )
+      , 'unfree',      iif( ( unfree IS NULL )
+                          , json( 'null' )
+                          , iif( unfree, json( 'true' ), json( 'false' ) )
+                          )
       , 'license',     license
       ) AS json
-      FROM Packages
-      LEFT OUTER JOIN Descriptions
-        ON ( Packages.descriptionId = Descriptions.id  )
-      WHERE ( Packages.id = ? )
-      LIMIT 1
+      FROM v_PackagesSearch WHERE ( id = ? )
     )SQL"
   );
   qry.bind( 1, static_cast<long long>( row ) );
