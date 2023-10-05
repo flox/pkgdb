@@ -418,7 +418,11 @@ PkgDbReadOnly::getPackage( row_id row )
       , 'stability',   stability
       , 'absPath',     json( path )
       , 'shortRelPath', iif( ( subtree = 'catalog' )
-                           , json_remove( relPath, '$[2]', '$[1]', '$[#]' )
+                           , json_remove( json( relPath )
+                                        , '$[2]'
+                                        , '$[1]'
+                                        , '$[#]'
+                                        )
                            , json( relPath )
                            )
       , 'broken',      iif( ( broken IS NULL )
