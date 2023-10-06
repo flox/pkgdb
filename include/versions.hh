@@ -19,12 +19,14 @@
 
 /* -------------------------------------------------------------------------- */
 
-/** Interfaces for analyzing version numbers */
+/** @brief Interfaces for analyzing version numbers. */
 namespace versions {
 
 /* -------------------------------------------------------------------------- */
 
-/** Typed exception wrapper used for version parsing/comparison errors. */
+/**
+ * @brief Typed exception wrapper used for version parsing/comparison errors.
+ */
 class VersionException : public std::exception {
   private:
     std::string msg;
@@ -69,8 +71,9 @@ bool isSemverRange( const std::string & version );
 /* -------------------------------------------------------------------------- */
 
 /**
- * Attempt to coerce strings such as `"v1.0.2"` or `1.0` to valid semantic
- * version strings.
+ * @brief Attempt to coerce strings such as `"v1.0.2"` or `1.0` to valid
+ *        semantic version strings.
+ *
  * @return `std::nullopt` iff @a version cannot be interpreted as
  *          _semantic version_.
  *          A valid semantic version string otherwise.
@@ -81,14 +84,16 @@ std::optional<std::string> coerceSemver( std::string_view version );
 /* -------------------------------------------------------------------------- */
 
 /**
- * Invokes `node-semver` by `exec`.
+ * @brief Invokes `node-semver` by `exec`.
+ *
  * @param args List of arguments to pass to `semver` executable.
  * @return Pair of error-code and output string.
  */
 std::pair<int, std::string> runSemver( const std::list<std::string> & args );
 
 /**
- * Filter a list of versions by a `node-semver` _semantic version range_.
+ * @brief Filter a list of versions by a `node-semver` _semantic version range_.
+ *
  * @param range A _semantic version range_ as taken by `node-semver`.
  * @param versions A list of _semantic versions_ to filter.
  * @return The list of _semantic versions_ from @a versions which fall in the
