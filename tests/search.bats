@@ -146,6 +146,33 @@ genParamsNixpkgsFlox() {
 
 # ---------------------------------------------------------------------------- #
 
+# bats test_tags=search
+
+# Check output fields.
+# NOTE: `stability' is not `null' in catalogs.
+@test "'pkgdb search' emits expected fields" {
+  run sh -c "$PKGDB search '$(
+    genParams '.systems=["x86_64-linux","x86_64-darwin"]|.query.pname="hello"';
+  )'|head -n1|jq -r 'to_entries|map( .key + \" \" + ( .value|type ) )[]';";
+  assert_success;
+  assert_output --partial 'absPath array';
+  assert_output --partial 'broken boolean';
+  assert_output --partial 'description string';
+  assert_output --partial 'id number';
+  assert_output --partial 'input string';
+  assert_output --partial 'license string';
+  assert_output --partial 'pkgSubPath array';
+  assert_output --partial 'pname string';
+  assert_output --partial 'stability null';
+  assert_output --partial 'subtree string';
+  assert_output --partial 'system string';
+  assert_output --partial 'unfree boolean';
+  assert_output --partial 'version string';
+}
+
+
+# ---------------------------------------------------------------------------- #
+
 # bats test_tags=search:unfree
 
 # Unfree filter
@@ -190,7 +217,9 @@ genParamsNixpkgsFlox() {
 @test "'pkgdb search' systems order" {
   run sh -c "$PKGDB search '$(
     genParams '.systems=["x86_64-linux","x86_64-darwin"]|.query.pname="hello"';
-  )'|jq -rs 'to_entries|map( ( .key|tostring ) + \" \" + .value.path[1] )[]'";
+  )'|jq -rs 'to_entries|map(
+               ( .key|tostring ) + \" \" + .value.absPath[1]
+             )[]'";
   assert_success;
   assert_output --partial '0 x86_64-linux';
   assert_output --partial '1 x86_64-darwin';
@@ -204,7 +233,9 @@ genParamsNixpkgsFlox() {
 @test "'pkgdb search' systems order ( reversed )" {
   run sh -c "$PKGDB search '$(
     genParams '.systems=["x86_64-darwin","x86_64-linux"]|.query.pname="hello"';
-  )'|jq -rs 'to_entries|map( ( .key|tostring ) + \" \" + .value.path[1] )[]'";
+  )'|jq -rs 'to_entries|map(
+               ( .key|tostring ) + \" \" + .value.absPath[1]
+             )[]'";
   assert_success;
   assert_output --partial '0 x86_64-darwin';
   assert_output --partial '1 x86_64-linux';
@@ -222,7 +253,9 @@ genParamsNixpkgsFlox() {
     '.registry.inputs["nixpkgs-flox"].stabilities+=["unstable"]
     |.query.pname|="hello"
     |.query.version|="2.12.1"';
-  )'|jq -rs 'to_entries|map( ( .key|tostring ) + \" \" + .value.path[2] )[]'";
+  )'|jq -rs 'to_entries|map(
+               ( .key|tostring ) + \" \" + .value.absPath[2]
+             )[]'";
   assert_success;
   # catalog.x86_64-linux.stable.hello.2_12_1
   assert_output --partial '0 stable';

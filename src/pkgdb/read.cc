@@ -409,23 +409,11 @@ PkgDbReadOnly::getPackage( row_id row )
     this->db
   , R"SQL(
       SELECT json_object(
-        'id',          id
+        'id',          Packages.id
       , 'pname',       pname
       , 'version',     version
-      , 'description', description
-      , 'subtree',     subtree
-      , 'system',      system
-      , 'stability',   stability
-      , 'absPath',     json( path )
+      , 'description', Descriptions.description
       , 'license',     license
-      , 'pkgSubPath',  iif( ( subtree = 'catalog' )
-                            , json_remove( json( relPath )
-                                         , '$[2]'
-                                         , '$[1]'
-                                         , '$[#]'
-                                         )
-                            , json( relPath )
-                            )
       , 'broken',      iif( ( broken IS NULL )
                           , json( 'null' )
                           , iif( broken, json( 'true' ), json( 'false' ) )
@@ -435,11 +423,36 @@ PkgDbReadOnly::getPackage( row_id row )
                           , iif( unfree, json( 'true' ), json( 'false' ) )
                           )
       ) AS json
-      FROM v_PackagesSearch WHERE ( id = ? )
+      FROM Packages
+           LEFT JOIN Descriptions ON ( descriptionId = Descriptions.id )
+           WHERE ( Packages.id = ? )
     )SQL"
   );
   qry.bind( 1, static_cast<long long>( row ) );
-  return nlohmann::json::parse( ( * qry.begin() ).get<std::string>( 0 ) );
+
+  auto rsl = nlohmann::json::parse( ( * qry.begin() ).get<std::string>( 0 ) );
+
+  /* Add the path related field. */
+  flox::AttrPath path = this->getPackagePath( row );
+  rsl.emplace( "absPath", path );
+  rsl.emplace( "subtree", path.at( 0 ) );
+  rsl.emplace( "system", std::move( path.at( 1 ) ) );
+
+  if ( path.at( 0 ) == "catalog" )
+    {
+      rsl.emplace( "stability", std::move( path.at( 2 ) ) );
+      path.erase( path.begin(), path.begin() + 3 );
+      path.pop_back();
+      rsl.emplace( "pkgSubPath", std::move( path ) );
+    }
+  else
+    {
+      rsl.emplace( "stability", nullptr );
+      path.erase( path.begin(), path.begin() + 2 );
+      rsl.emplace( "pkgSubPath", std::move( path ) );
+    }
+
+  return rsl;
 }
 
 
