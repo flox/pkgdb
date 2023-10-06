@@ -78,6 +78,7 @@ test_parseManifestDescriptor0()
 
   flox::resolver::ManifestDescriptor descriptor( raw );
 
+  EXPECT( descriptor.name.has_value() );
   EXPECT_EQ( * descriptor.name, "foo" );
 
   /* Ensure this string was detected as an _exact_ version match. */
@@ -85,10 +86,12 @@ test_parseManifestDescriptor0()
   EXPECT( descriptor.version.has_value() );
   EXPECT_EQ( * descriptor.version, "4.2.0" );
 
+  EXPECT( descriptor.group.has_value() );
   EXPECT_EQ( * descriptor.group, "blue" );
   EXPECT_EQ( descriptor.optional, true );
 
   /* We expect this to be recognized as an _indirect flake reference_. */
+  EXPECT( descriptor.input.has_value() );
   EXPECT( std::holds_alternative<nix::FlakeRef>( * descriptor.input ) );
   auto flakeRef = std::get<nix::FlakeRef>( * descriptor.input );
 
@@ -397,8 +400,9 @@ test_parseManifestDescriptor_path5()
   int
 main()
 {
-  int ec = EXIT_SUCCESS;
-# define RUN_TEST( ... )  _RUN_TEST( ec, __VA_ARGS__ )
+  int exitCode = EXIT_SUCCESS;
+  //NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+# define RUN_TEST( ... )  _RUN_TEST( exitCode, __VA_ARGS__ )
 
   RUN_TEST( tomlToJSON0 );
 
@@ -421,7 +425,7 @@ main()
   RUN_TEST( parseManifestDescriptor_path4 );
   RUN_TEST( parseManifestDescriptor_path5 );
 
-  return ec;
+  return exitCode;
 }
 
 
