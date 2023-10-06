@@ -185,22 +185,18 @@ GetCommand::runDb()
   int
 GetCommand::runPkg()
 {
-  nlohmann::json rsl;
   if ( ( this->attrPath.size() == 1 ) &&
        ( isUInt( this->attrPath.front() ) )
      )
     {
       this->id = stoull( this->attrPath.front() );
       this->attrPath.clear();
-      rsl = this->db->getPackage( this->id );
-      this->attrPath = this->db->getPackagePath( this->id );
+      std::cout << this->db->getPackage( this->id ) << std::endl;
     }
   else
     {
-      rsl = this->db->getPackage( this->attrPath );
+      std::cout << this->db->getPackage( this->attrPath ) << std::endl;
     }
-  rsl.emplace( "path", this->attrPath );
-  std::cout << rsl << std::endl;
   return EXIT_SUCCESS;
 }
 
