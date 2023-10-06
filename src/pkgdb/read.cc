@@ -38,7 +38,6 @@ isSQLError( int rcode )
 }
 
 
-
 /* -------------------------------------------------------------------------- */
 
   std::ostream &
@@ -106,9 +105,9 @@ PkgDbReadOnly::loadLockedFlake()
     this->db
   , "SELECT fingerprint, string, attrs FROM LockedFlake LIMIT 1"
   );
-  auto rsl = * qry.begin();
-  std::string fingerprintStr = rsl.get<std::string>( 0 );
-  nix::Hash   fingerprint    =
+  auto      rsl            = * qry.begin();
+  auto      fingerprintStr = rsl.get<std::string>( 0 );
+  nix::Hash fingerprint    =
     nix::Hash::parseNonSRIUnprefixed( fingerprintStr, nix::htSHA256 );
   this->lockedRef.string = rsl.get<std::string>( 1 );
   this->lockedRef.attrs  = nlohmann::json::parse( rsl.get<std::string>( 2 ) );
@@ -142,14 +141,17 @@ PkgDbReadOnly::getDbVersion()
   , "SELECT version FROM DbVersions "
     "WHERE name IN ( 'pkgdb_tables_schema', 'pkgdb_views_schema' ) LIMIT 2"
   );
-  auto itr = qry.begin();
-  std::string tables = ( * itr ).get<std::string>( 0 );
-  std::string views  = ( * ++itr ).get<std::string>( 0 );
-  char * end = nullptr;
+  auto   itr    = qry.begin();
+  auto   tables = ( * itr ).get<std::string>( 0 );
+  auto   views  = ( * ++itr ).get<std::string>( 0 );
+  char * end    = nullptr;
+
+  static const int base = 10;
+
   return SqlVersions {
     .tables =
-      static_cast<unsigned>( std::strtoul( tables.c_str(), & end, 10 ) )
-  , .views = static_cast<unsigned>( std::strtoul( views.c_str(), & end, 10 ) )
+      static_cast<unsigned>( std::strtoul( tables.c_str(), & end, base ) )
+  , .views = static_cast<unsigned>( std::strtoul( views.c_str(), & end, base ) )
   };
 }
 
@@ -177,14 +179,14 @@ PkgDbReadOnly::completedAttrSet( const flox::AttrPath & path )
 {
   /* Lookup the `AttrName.id' ( if one exists ) */
   row_id row = 0;
-  for ( const auto & a : path )
+  for ( const auto & part : path )
     {
       sqlite3pp::query qryId(
         this->db
       , "SELECT id, done FROM AttrSets "
         "WHERE ( attrName = ? ) AND ( parent = ? )"
       );
-      qryId.bind( 1, a, sqlite3pp::copy );
+      qryId.bind( 1, part, sqlite3pp::copy );
       qryId.bind( 2, static_cast<long long>( row ) );
       auto itr = qryId.begin();
       if ( itr == qryId.end() ) { return false; }  /* No such path. */
@@ -204,17 +206,17 @@ PkgDbReadOnly::hasAttrSet( const flox::AttrPath & path )
 {
   /* Lookup the `AttrName.id' ( if one exists ) */
   row_id row = 0;
-  for ( const auto & a : path )
+  for ( const auto & part : path )
     {
       sqlite3pp::query qryId(
         this->db
       , "SELECT id FROM AttrSets WHERE ( attrName = ? ) AND ( parent = ? )"
       );
-      qryId.bind( 1, a, sqlite3pp::copy );
+      qryId.bind( 1, part, sqlite3pp::copy );
       qryId.bind( 2, static_cast<long long>( row ) );
-      auto i = qryId.begin();
-      if ( i == qryId.end() ) { return false; }  /* No such path. */
-      row = ( * i ).get<long long>( 0 );
+      auto itr = qryId.begin();
+      if ( itr == qryId.end() ) { return false; }  /* No such path. */
+      row = ( * itr ).get<long long>( 0 );
     }
   return true;
 }
@@ -232,16 +234,16 @@ PkgDbReadOnly::getDescription( row_id descriptionId )
   , "SELECT description FROM Descriptions WHERE id = ?"
   );
   qryId.bind( 1, static_cast<long long>( descriptionId ) );
-  auto i = qryId.begin();
+  auto itr = qryId.begin();
   /* Handle no such path. */
-  if ( i == qryId.end() )
+  if ( itr == qryId.end() )
     {
       throw PkgDbException(
         this->dbPath
       , nix::fmt( "No such Descriptions.id %llu.", descriptionId )
       );
     }
-  return ( * i ).get<std::string>( 0 );
+  return ( * itr ).get<std::string>( 0 );
 }
 
 
@@ -251,19 +253,19 @@ PkgDbReadOnly::getDescription( row_id descriptionId )
 PkgDbReadOnly::hasPackage( const flox::AttrPath & path )
 {
   flox::AttrPath parent;
-  for ( size_t i = 0; i < ( path.size() - 1 ); ++i )
+  for ( size_t idx = 0; idx < ( path.size() - 1 ); ++idx )
     {
-      parent.emplace_back( path[i] );
+      parent.emplace_back( path[idx] );
     }
 
   /* Make sure there are actually packages in the set. */
-  row_id id = this->getAttrSetId( parent );
+  row_id row = this->getAttrSetId( parent );
   sqlite3pp::query qryPkgs(
     this->db
   , "SELECT id FROM Packages WHERE ( parentId = ? ) "
     "AND ( attrName = ? ) LIMIT 1"
   );
-  qryPkgs.bind( 1, static_cast<long long>( id ) );
+  qryPkgs.bind( 1, static_cast<long long>( row ) );
   qryPkgs.bind( 2, std::string( path.back() ), sqlite3pp::copy );
   return ( * qryPkgs.begin() ).get<int>( 0 ) != 0;
 }
@@ -275,19 +277,19 @@ PkgDbReadOnly::hasPackage( const flox::AttrPath & path )
 PkgDbReadOnly::getAttrSetId( const flox::AttrPath & path )
 {
   /* Lookup the `AttrName.id' ( if one exists ) */
-  row_id id = 0;
-  for ( const auto & a : path )
+  row_id row = 0;
+  for ( const auto & part : path )
     {
       sqlite3pp::query qryId(
         this->db
       , "SELECT id FROM AttrSets "
         "WHERE ( attrName = ? ) AND ( parent = ? ) LIMIT 1"
       );
-      qryId.bind( 1, a, sqlite3pp::copy );
-      qryId.bind( 2, static_cast<long long>( id ) );
-      auto i = qryId.begin();
+      qryId.bind( 1, part, sqlite3pp::copy );
+      qryId.bind( 2, static_cast<long long>( row ) );
+      auto itr = qryId.begin();
       /* Handle no such path. */
-      if ( i == qryId.end() )
+      if ( itr == qryId.end() )
         {
           throw PkgDbException(
             this->dbPath
@@ -296,10 +298,10 @@ PkgDbReadOnly::getAttrSetId( const flox::AttrPath & path )
                     )
           );
         }
-      id = ( * i ).get<long long>( 0 );
+      row = ( * itr ).get<long long>( 0 );
     }
 
-  return id;
+  return row;
 }
 
 
@@ -317,17 +319,17 @@ PkgDbReadOnly::getAttrSetPath( row_id row )
       , "SELECT parent, attrName FROM AttrSets WHERE ( id = ? )"
       );
       qry.bind( 1, static_cast<long long>( row ) );
-      auto i = qry.begin();
+      auto itr = qry.begin();
       /* Handle no such path. */
-      if ( i == qry.end() )
+      if ( itr == qry.end() )
         {
           throw PkgDbException(
             this->dbPath
           , nix::fmt( "No such `AttrSet.id' %llu.", row )
           );
         }
-      row = ( * i ).get<long long>( 0 );
-      path.push_front( ( * i ).get<std::string>( 1 ) );
+      row = ( * itr ).get<long long>( 0 );
+      path.push_front( ( * itr ).get<std::string>( 1 ) );
     }
   return flox::AttrPath { std::make_move_iterator( std::begin( path ) )
                         , std::make_move_iterator( std::end( path ) )
@@ -352,16 +354,16 @@ PkgDbReadOnly::getPackageId( const flox::AttrPath & path )
   );
   qry.bind( 1, static_cast<long long>( parent ) );
   qry.bind( 2, path.back(), sqlite3pp::copy );
-  auto i = qry.begin();
+  auto itr = qry.begin();
   /* Handle no such path. */
-  if ( i == qry.end() )
+  if ( itr == qry.end() )
     {
       throw PkgDbException(
         this->dbPath
       , nix::fmt( "No such package %s.", nix::concatStringsSep( ".", path ) )
       );
     }
-  return ( * i ).get<long long>( 0 );
+  return ( * itr ).get<long long>( 0 );
 }
 
 
@@ -376,17 +378,17 @@ PkgDbReadOnly::getPackagePath( row_id row )
   , "SELECT parentId, attrName FROM Packages WHERE ( id = ? )"
   );
   qry.bind( 1, static_cast<long long>( row ) );
-  auto i = qry.begin();
+  auto itr = qry.begin();
   /* Handle no such path. */
-  if ( i == qry.end() )
+  if ( itr == qry.end() )
     {
       throw PkgDbException(
         this->dbPath
       , nix::fmt( "No such `Packages.id' %llu.", row )
       );
     }
-  flox::AttrPath path = this->getAttrSetPath( ( * i ).get<long long>( 0 ) );
-  path.emplace_back( ( * i ).get<std::string>( 1 ) );
+  flox::AttrPath path = this->getAttrSetPath( ( * itr ).get<long long>( 0 ) );
+  path.emplace_back( ( * itr ).get<std::string>( 1 ) );
   return path;
 }
 
@@ -409,22 +411,50 @@ PkgDbReadOnly::getPackage( row_id row )
     this->db
   , R"SQL(
       SELECT json_object(
-        'pname',       pname
+        'id',          Packages.id
+      , 'pname',       pname
       , 'version',     version
-      , 'description', description
-      , 'broken',      iif( broken, json( 'true' ), json( 'false' ) )
-      , 'unfree',      iif( broken, json( 'true' ), json( 'false' ) )
+      , 'description', Descriptions.description
       , 'license',     license
+      , 'broken',      iif( ( broken IS NULL )
+                          , json( 'null' )
+                          , iif( broken, json( 'true' ), json( 'false' ) )
+                          )
+      , 'unfree',      iif( ( unfree IS NULL )
+                          , json( 'null' )
+                          , iif( unfree, json( 'true' ), json( 'false' ) )
+                          )
       ) AS json
       FROM Packages
-      LEFT OUTER JOIN Descriptions
-        ON ( Packages.descriptionId = Descriptions.id  )
-      WHERE ( Packages.id = ? )
-      LIMIT 1
+           LEFT JOIN Descriptions ON ( descriptionId = Descriptions.id )
+           WHERE ( Packages.id = ? )
     )SQL"
   );
   qry.bind( 1, static_cast<long long>( row ) );
-  return nlohmann::json::parse( ( * qry.begin() ).get<std::string>( 0 ) );
+
+  auto rsl = nlohmann::json::parse( ( * qry.begin() ).get<std::string>( 0 ) );
+
+  /* Add the path related field. */
+  flox::AttrPath path = this->getPackagePath( row );
+  rsl.emplace( "absPath", path );
+  rsl.emplace( "subtree", path.at( 0 ) );
+  rsl.emplace( "system", std::move( path.at( 1 ) ) );
+
+  if ( path.at( 0 ) == "catalog" )
+    {
+      rsl.emplace( "stability", std::move( path.at( 2 ) ) );
+      path.erase( path.begin(), path.begin() + 3 );
+      path.pop_back();
+      rsl.emplace( "pkgSubPath", std::move( path ) );
+    }
+  else
+    {
+      rsl.emplace( "stability", nullptr );
+      path.erase( path.begin(), path.begin() + 2 );
+      rsl.emplace( "pkgSubPath", std::move( path ) );
+    }
+
+  return rsl;
 }
 
 

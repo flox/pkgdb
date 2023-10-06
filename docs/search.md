@@ -240,14 +240,18 @@ Each output line has the following format:
 
 ```
 Result ::= {
-, input       = <INPUT-NAME>
-, path        = [<STRING>...]
-, pname       = <STRING>
-, version     = null | <STRING>
-, description = null | <STRING>
-, license     = null | License
-  broken      = true | false
-, unfree      = true | false
+  id           = <INT>
+, input        = <INPUT-NAME>
+, subtree      = "packages" | "legacyPackages" | "catalog"
+, stability    = null | "stable" | "staging" | "unstable"
+, absPath      = [<STRING>...]
+, pkgSubPath   = [<STRING>...]
+, pname        = <STRING>
+, version      = null | <STRING>
+, description  = null | <STRING>
+, license      = null | License
+, broken       = true | false
+, unfree       = true | false
 }
 ```
 
@@ -259,14 +263,14 @@ it is **strongly recommended** that the caller use _locked flake references_.
 
 For the example query parameters given above, we get the following results:
 
-```
-{"broken":false,"description":"A program that produces a familiar, friendly greeting","input":"nixpkgs","license":"GPL-3.0-or-later","path":["legacyPackages","x86_64-linux","hello"],"pname":"hello","unfree":false,"version":"2.12.1"}
-{"broken":false,"description":"A program that produces a familiar, friendly greeting","input":"nixpkgs-flox","license":null,"path":["catalog","x86_64-linux","stable","hello","2_12_1"],"pname":"hello","unfree":false,"version":"2.12.1"}
-{"broken":false,"description":"A program that produces a familiar, friendly greeting","input":"nixpkgs-flox","license":null,"path":["catalog","x86_64-linux","stable","hello","latest"],"pname":"hello","unfree":false,"version":"2.12.1"}
-{"broken":false,"description":"A program that produces a familiar, friendly greeting","input":"nixpkgs-flox","license":null,"path":["catalog","x86_64-linux","stable","hello","2_12"],"pname":"hello","unfree":false,"version":"2.12"}
-{"broken":false,"description":"A program that produces a familiar, friendly greeting","input":"nixpkgs-flox","license":null,"path":["catalog","x86_64-linux","stable","hello","2_10"],"pname":"hello","unfree":false,"version":"2.10"}
-{"broken":false,"description":"A program that produces a familiar, friendly greeting","input":"nixpkgs-flox","license":null,"path":["catalog","x86_64-linux","staging","hello","2_12_1"],"pname":"hello","unfree":false,"version":"2.12.1"}
-{"broken":false,"description":"A program that produces a familiar, friendly greeting","input":"nixpkgs-flox","license":null,"path":["catalog","x86_64-linux","staging","hello","latest"],"pname":"hello","unfree":false,"version":"2.12.1"}
-{"broken":false,"description":"A program that produces a familiar, friendly greeting","input":"nixpkgs-flox","license":null,"path":["catalog","x86_64-linux","staging","hello","2_12"],"pname":"hello","unfree":false,"version":"2.12"}
-{"broken":false,"description":"A program that produces a familiar, friendly greeting","input":"nixpkgs-flox","license":null,"path":["catalog","x86_64-linux","staging","hello","2_10"],"pname":"hello","unfree":false,"version":"2.10"}
+```json
+{"absPath":["legacyPackages","x86_64-linux","hello"],"broken":false,"description":"A program that produces a familiar, friendly greeting","id":6095,"input":"nixpkgs","license":"GPL-3.0-or-later","pname":"hello","pkgSubPath":["hello"],"stability":null,"subtree":"legacyPackages","system":"x86_64-linux","unfree":false,"version":"2.12.1"}
+{"absPath":["catalog","x86_64-linux","stable","hello","2_12_1"],"broken":null,"description":"A program that produces a familiar, friendly greeting","id":19938,"input":"nixpkgs-flox","license":null,"pname":"hello","pkgSubPath":["hello"],"stability":"stable","subtree":"catalog","system":"x86_64-linux","unfree":false,"version":"2.12.1"}
+{"absPath":["catalog","x86_64-linux","stable","hello","latest"],"broken":null,"description":"A program that produces a familiar, friendly greeting","id":19939,"input":"nixpkgs-flox","license":null,"pname":"hello","pkgSubPath":["hello"],"stability":"stable","subtree":"catalog","system":"x86_64-linux","unfree":false,"version":"2.12.1"}
+{"absPath":["catalog","x86_64-linux","stable","hello","2_12"],"broken":null,"description":"A program that produces a familiar, friendly greeting","id":19937,"input":"nixpkgs-flox","license":null,"pname":"hello","pkgSubPath":["hello"],"stability":"stable","subtree":"catalog","system":"x86_64-linux","unfree":false,"version":"2.12"}
+{"absPath":["catalog","x86_64-linux","stable","hello","2_10"],"broken":null,"description":"A program that produces a familiar, friendly greeting","id":19936,"input":"nixpkgs-flox","license":null,"pname":"hello","pkgSubPath":["hello"],"stability":"stable","subtree":"catalog","system":"x86_64-linux","unfree":false,"version":"2.10"}
+{"absPath":["catalog","x86_64-linux","staging","hello","2_12_1"],"broken":null,"description":"A program that produces a familiar, friendly greeting","id":111900,"input":"nixpkgs-flox","license":null,"pname":"hello","pkgSubPath":["hello"],"stability":"staging","subtree":"catalog","system":"x86_64-linux","unfree":false,"version":"2.12.1"}
+{"absPath":["catalog","x86_64-linux","staging","hello","latest"],"broken":null,"description":"A program that produces a familiar, friendly greeting","id":111901,"input":"nixpkgs-flox","license":null,"pname":"hello","pkgSubPath":["hello"],"stability":"staging","subtree":"catalog","system":"x86_64-linux","unfree":false,"version":"2.12.1"}
+{"absPath":["catalog","x86_64-linux","staging","hello","2_12"],"broken":null,"description":"A program that produces a familiar, friendly greeting","id":111899,"input":"nixpkgs-flox","license":null,"pname":"hello","pkgSubPath":["hello"],"stability":"staging","subtree":"catalog","system":"x86_64-linux","unfree":false,"version":"2.12"}
+{"absPath":["catalog","x86_64-linux","staging","hello","2_10"],"broken":null,"description":"A program that produces a familiar, friendly greeting","id":111898,"input":"nixpkgs-flox","license":null,"pname":"hello","pkgSubPath":["hello"],"stability":"staging","subtree":"catalog","system":"x86_64-linux","unfree":false,"version":"2.10"}
 ```

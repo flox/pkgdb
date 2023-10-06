@@ -188,7 +188,6 @@ PkgDbInput::getRowJSON( row_id row )
   auto dbRO = this->getDbReadOnly();
   auto rsl  = dbRO->getPackage( row );
   rsl.emplace( "input", this->getNameOrURL() );
-  rsl.emplace( "path",  dbRO->getPackagePath( row ) );
   return rsl;
 }
 
