@@ -46,7 +46,7 @@ bool isDate( const std::string & version );
 bool isCoercibleToSemver( const std::string & version );
 
 /**
- * @return `true` iff @a version is a valid _semantic version range_ string.
+ * @brief Determine if @a version is a valid _semantic version range_ string.
  *
  * This is far from a complete check, but it should be sufficient for our usage.
  * This essentially checks that the first token of the string is a valid range,
@@ -58,6 +58,8 @@ bool isCoercibleToSemver( const std::string & version );
  *
  * This will count _the empty string_ ( `""` ), `*`,  `any`, and `latest`
  * as ranges ( aligning with `node-semver` ).
+ *
+ * @return `true` iff @a version is a valid _semantic version range_ string.
  *
  * @see flox::resolver::ManifestDescriptor::semver
  */
