@@ -83,12 +83,12 @@ AC_CHECK_FUNCS([
   wcwidth
 ])
 
-PKG_CHECK_MODULES([NIX], [nix-store nix-main nix-cmd nix-expr])
 PKG_CHECK_MODULES([NLJSON], [nlohmann_json])
+PKG_CHECK_MODULES([ARGPARSE], [argparse])
 PKG_CHECK_MODULES([SQLITE3], [sqlite3])
 PKG_CHECK_MODULES([SQLITE3PP], [sqlite3pp])
 PKG_CHECK_MODULES([YAML], [yaml-cpp])
-PKG_CHECK_MODULES([ARGPARSE], [argparse])
+PKG_CHECK_MODULES([NIX], [nix-store nix-main nix-cmd nix-expr])
 
 AC_CONFIG_FILES([config.mk])
 AC_OUTPUT

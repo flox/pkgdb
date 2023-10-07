@@ -11,16 +11,32 @@ argparse_CFLAGS = @ARGPARSE_CFLAGS@
 sqlite3_CFLAGS = @SQLITE3_CFLAGS@
 sqlite3_LDFLAGS = @SQLITE3_LIBS@
 sqlite3pp_CFLAGS = @SQLITE3PP_CFLAGS@
+yaml_CFLAGS = @YAML_CFLAGS@
+yaml_LDFLAGS = @YAML_LIBS@
+nix_CFLAGS = @NIX_CFLAGS@
+nix_LDFLAGS = @NIX_LIBS@ -lnixfetchers
 
 
 # ---------------------------------------------------------------------------- #
 
-.phony: dump
-dump:
+# TODO: SEMVER
+# TODO: BEAR
+# TODO: TIDY ( `clang-tidy' )
+
+
+# ---------------------------------------------------------------------------- #
+
+.phony: dump-config
+dump-config:
 	@echo 'nljson_CFLAGS: $(nljson_CFLAGS)'
 	@echo 'argparse_CFLAGS: $(argparse_CFLAGS)'
 	@echo 'sqlite3_CFLAGS: $(sqlite3_CFLAGS)'
+	@echo 'sqlite3_LDFLAGS: $(sqlite3_LDFLAGS)'
 	@echo 'sqlite3pp_CFLAGS: $(sqlite3pp_CFLAGS)'
+	@echo 'yaml_CFLAGS: $(yaml_CFLAGS)'
+	@echo 'yaml_LDFLAGS: $(yaml_LDFLAGS)'
+	@echo 'nix_CFLAGS: $(nix_CFLAGS)'
+	@echo 'nix_LDFLAGS: $(nix_LDFLAGS)'
 
 
 # ---------------------------------------------------------------------------- #
