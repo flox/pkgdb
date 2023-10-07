@@ -56,3 +56,4 @@ config.status
 configure
 config.h
 config.h.in
+config.mk

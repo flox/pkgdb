@@ -1,0 +1,30 @@
+# ============================================================================ #
+#
+#
+#
+# ---------------------------------------------------------------------------- #
+
+nljson_CFLAGS = @NLJSON_CFLAGS@
+argparse_CFLAGS = @ARGPARSE_CFLAGS@
+# TODO: boost_CFLAGS
+# TODO: toml_CFLAGS
+sqlite3_CFLAGS = @SQLITE3_CFLAGS@
+sqlite3_LDFLAGS = @SQLITE3_LIBS@
+sqlite3pp_CFLAGS = @SQLITE3PP_CFLAGS@
+
+
+# ---------------------------------------------------------------------------- #
+
+.phony: dump
+dump:
+	@echo 'nljson_CFLAGS: $(nljson_CFLAGS)'
+	@echo 'argparse_CFLAGS: $(argparse_CFLAGS)'
+	@echo 'sqlite3_CFLAGS: $(sqlite3_CFLAGS)'
+	@echo 'sqlite3pp_CFLAGS: $(sqlite3pp_CFLAGS)'
+
+
+# ---------------------------------------------------------------------------- #
+#
+#
+#
+# ============================================================================ #
