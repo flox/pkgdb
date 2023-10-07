@@ -1,3 +1,7 @@
+# Build directories
+build/
+out/
+
 # Prerequisites
 *.d
 
@@ -43,3 +47,12 @@ compile_commands.json
 *.gcov
 *.log
 gmon.out
+*~
+
+# Autoconf
+autom4te.cache/
+config.status
+.deps/
+configure
+config.h
+config.h.in
