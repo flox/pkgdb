@@ -53,6 +53,7 @@ bool isCoercibleToSemver( const std::string & version );
  * This is far from a complete check, but it should be sufficient for our usage.
  * This essentially checks that the first token of the string is a valid range,
  * a `4.2.0 - 5.3.1` style range, or a special token.
+ * ( See expanded discussion below for futher details ).
  *
  * Leading and trailing space is ignored.
  *
@@ -60,6 +61,14 @@ bool isCoercibleToSemver( const std::string & version );
  *
  * This will count _the empty string_ ( `""` ), `*`,  `any`, and `latest`
  * as ranges ( aligning with `node-semver` ).
+ *
+ *
+ * Limitations:
+ * This covers the 99% case to distinguish between a range and "static" version.
+ * The main reason to detect this is because from the CLI we can't immediately
+ * tell whether `<NAME>@<VERSION-OR-SEMVER>` is an exact version match
+ * ( like a date ), or a real range.
+ * This does a "best effort" detection which is suitable for our purposes today.
  *
  * @return `true` iff @a version is a valid _semantic version range_ string.
  *
