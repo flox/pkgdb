@@ -39,7 +39,7 @@ static const size_t fullPkgCount     = 64040;
 
 /* -------------------------------------------------------------------------- */
 
-/** Wrap a test function pretty printing its name on failure. */
+/** @brief Wrap a test function pretty printing its name on failure. */
 template <typename F, typename ... Args>
   static int
 runTest( std::string_view name, F f, Args && ... args )
@@ -64,8 +64,9 @@ runTest( std::string_view name, F f, Args && ... args )
 /* -------------------------------------------------------------------------- */
 
 /**
- * Wrap a test routine which returns an exit code, and set a provided variable
- * to the resulting code on failure.
+ * @brief Wrap a test routine which returns an exit code, and set a provided
+ *        variable to the resulting code on failure.
+ *
  * This pattern allows early tests to still run later ones, while preserving
  * a "global" exit status.
  * 
@@ -73,20 +74,21 @@ runTest( std::string_view name, F f, Args && ... args )
  * "must specify at least one argument for '...' parameter of variadic macro"
  * https://github.com/llvm/llvm-project/issues/50951
  */
-#define _RUN_TEST( _EXIT_CODE, _NAME, ... )                     \
-  {                                                             \
-    int exitCode = runTest(             ( # _NAME )             \
-                      ,             ( test_ ## _NAME )          \
-          __VA_OPT__( , ) __VA_ARGS__                           \
-                      );                                        \
-    if ( exitCode != EXIT_SUCCESS ) { _EXIT_CODE = exitCode; }  \
+#define _RUN_TEST( _EXIT_CODE, _NAME, ... )                       \
+  {                                                               \
+    int _exitCode = runTest(             ( # _NAME )              \
+                       ,             ( test_ ## _NAME )           \
+           __VA_OPT__( , ) __VA_ARGS__                            \
+                       );                                         \
+    if ( _exitCode != EXIT_SUCCESS ) { _EXIT_CODE = _exitCode; }  \
   }
 
 
 /* -------------------------------------------------------------------------- */
 
 /**
- * For use inside of a function which returns a boolean.
+ * @brief For use inside of a function which returns a boolean.
+ *
  * Assert that and expression is `true', otherwise print it and return `false'.
  */
 #define EXPECT( EXPR )                      \
@@ -100,7 +102,8 @@ runTest( std::string_view name, F f, Args && ... args )
 
 
 /**
- * For use inside of a function which returns a boolean.
+ * @brief For use inside of a function which returns a boolean.
+ *
  * Assert that two expressions produce equal results, otherwise print them and
  * return `false'.
  */

@@ -99,10 +99,20 @@ concept pkg_descriptor_typename = std::derived_from<T, PkgDescriptorBase>;
  */
 struct PkgQueryArgs : public PkgDescriptorBase {
 
+  /* From `PkgDescriptorBase':
+   *   std::optional<std::string> name;
+   *   std::optional<std::string> pname;
+   *   std::optional<std::string> version;
+   *   std::optional<std::string> semver;
+   */
+
   /** Filter results by partial match on pname, pkgAttrName, or description */
   std::optional<std::string> partialMatch;
 
-  /** Filter results by an exact match on either `pname` or `pkgAttrName`. To match just `pname` see @a flox::pkgdb::PkgDescriptorBase. */
+  /**
+   * Filter results by an exact match on either `pname` or `pkgAttrName`.
+   * To match just `pname` see @a flox::pkgdb::PkgDescriptorBase.
+   */
   std::optional<std::string> pnameOrPkgAttrName;
 
   /** Filter results to those explicitly marked with the given licenses. */

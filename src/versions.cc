@@ -23,15 +23,20 @@ namespace versions {
 
 /* -------------------------------------------------------------------------- */
 
-/* Matches Semantic Version strings, e.g. `4.2.0-pre' */
+/** Matches Semantic Version strings, e.g. `4.2.0-pre'. */
 static const char * const semverREStr =
   "(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[-[:alnum:]_+.]+)?";
 
-/* Coercively matches Semantic Version Strings, e.g. `v1.0-pre' */
+/** Matches _loose_ versions which may omit trailing 0s. */
+static const char * const semverLooseREStr =
+  "(0|[1-9][0-9]*)(\\.(0|[1-9][0-9]*)(\\.(0|[1-9][0-9]*))?)?"
+  "(-[-[:alnum:]_+.]+)?";
+
+/** Coercively matches Semantic Version Strings, e.g. `v1.0-pre'. */
 static const char * const semverCoerceREStr =
   "(.*@)?[vV]?(0*([0-9]+)(\\.0*([0-9]+)(\\.0*([0-9]+))?)?(-[-[:alnum:]_+.]+)?)";
 
-/* Match '-' separated date strings, e.g. `2023-05-31' or `5-1-23' */
+/** Match '-' separated date strings, e.g. `2023-05-31' or `5-1-23'. */
 static const char * const dateREStr =
   "([12][0-9][0-9][0-9]-[0-1]?[0-9]-[0-3]?[0-9]|"  /* Y-M-D */
   "[0-1]?[0-9]-[0-3]?[0-9]-[12][0-9][0-9][0-9])"   /* M-D-Y */
@@ -137,6 +142,28 @@ coerceSemver( std::string_view version )
 
 /* -------------------------------------------------------------------------- */
 
+  bool
+isSemverRange( const std::string & range )
+{
+  /* Check for _modifier_ */
+  static const std::string semverRangeREStr =
+    "\\s*([~^><=]|>=|<=)?\\s*" + std::string( semverLooseREStr ) + ".*";
+  static const std::regex semverRangeRE( semverRangeREStr
+                                       , std::regex::ECMAScript
+                                       );
+
+  /* A few special tokens including the empty string are also valid. */
+  static const std::regex globMatch( "\\s*(\\*|any|latest)?\\s*" );
+
+  return std::regex_match( range, semverRangeRE ) ||
+         std::regex_match( range, globMatch ) ||
+         ( range.find( " - " ) != std::string::npos );
+}
+
+
+
+/* -------------------------------------------------------------------------- */
+
 #ifndef SEMVER_PATH
 #  define SEMVER_PATH  "semver"
 #endif
@@ -173,7 +200,11 @@ semverSat( const std::string & range, const std::list<std::string> & versions )
   };
   for ( const auto & version : versions ) { args.push_back( version ); }
   auto [ec, lines] = runSemver( args );
-  if ( ! nix::statusOk( ec ) ) { return {}; }
+  /* TODO: determine parse error vs. empty list result. */
+  if ( ! nix::statusOk( ec ) )
+    {
+      return {};
+    }
   std::list<std::string> rsl;
   std::stringstream      oss( lines );
   std::string            line;

@@ -78,7 +78,7 @@ install:
   # Resolve this to "packages" or equivalent which is
   # isolated to its own closure and added to PATH only.
   charasay:
-    semver: ^2
+    version: ^2
 
   # 3. If someone's a bit picky they might want to request a specific version:
   # Resolve this to "packages" or equivalent which is isolated

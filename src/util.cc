@@ -179,11 +179,69 @@ isUInt( std::string_view str )
 hasPrefix( std::string_view prefix, std::string_view str )
 {
   if ( str.size() < prefix.size() ) { return false; }
-  for ( size_t i = 0; i < prefix.size(); ++i )
-    {
-      if ( str[i] != prefix[i] ) { return false; }
-    }
-  return true;
+  return str.find( prefix ) == 0;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  std::string &
+ltrim( std::string & str )
+{
+  str.erase(
+    str.begin()
+  , std::find_if( str.begin()
+                , str.end()
+                , []( unsigned char chr ) { return ! std::isspace( chr ); }
+                )
+  );
+  return str;
+}
+
+  std::string &
+rtrim( std::string & str )
+{
+  str.erase(
+    std::find_if( str.rbegin()
+                , str.rend()
+                , []( unsigned char chr ) { return ! std::isspace( chr ); }
+                ).base()
+  , str.end()
+  );
+  return str;
+}
+
+  std::string &
+trim( std::string & str )
+{
+  rtrim( str );
+  ltrim( str );
+  return str;
+}
+
+
+  std::string
+ltrim_copy( std::string_view str )
+{
+  std::string rsl( str );
+  ltrim( rsl );
+  return rsl;
+}
+
+  std::string
+rtrim_copy( std::string_view str )
+{
+  std::string rsl( str );
+  rtrim( rsl );
+  return rsl;
+}
+
+  std::string
+trim_copy( std::string_view str )
+{
+  std::string rsl( str );
+  trim( rsl );
+  return rsl;
 }
 
 
