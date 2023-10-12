@@ -110,7 +110,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT( ManifestDescriptorRaw
 
 /**
  * @brief Extend and remap fields from @a flox::resolver::PkgDescriptorRaw to
- *        those found in a `flox` _manifest_.
+ *        @a flox::pkgdb::PkgQueryArgs
  */
 struct ManifestDescriptor {
 
