@@ -92,8 +92,9 @@ maybeSplitAttrPathGlob( const ManifestDescriptorRaw::AbsPath & absPath )
   size_t         idx  = 0;
   for ( const auto & part : path )
     {
-      /* Treat `null' or `*' in the second element as a glob. */
-      if ( ( idx == 1 ) && ( ( part == "null" ) || ( part == "*" ) ) )
+      /* Treat `null' or `*' as a glob. */
+      /* TODO we verify that only the second option is a glob elsewhere, but we could do that here instead */
+      if ( ( ( part == "null" ) || ( part == "*" ) ) )
         {
           glob.emplace_back( std::nullopt );
         }
