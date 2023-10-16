@@ -8,6 +8,7 @@
  * -------------------------------------------------------------------------- */
 
 #include <iostream>
+#include <fstream>
 
 #include <nix/shared.hh>
 #include <nix/eval.hh>
@@ -197,6 +198,56 @@ AttrPathMixin::fixupAttrPath()
     }
 }
 
+
+/* -------------------------------------------------------------------------- */
+
+  argparse::Argument &
+RegistryFileMixin::addRegistryFileArg( argparse::ArgumentParser & parser )
+{
+  return parser.add_argument( "--registry-file" )
+               .help(
+                  "The path to the 'registry.json' file."
+               )
+               .required()
+               .metavar( "PATH" )
+               .action( [&]( const std::string & strPath )
+                        {
+                          this->setRegistryPath( strPath );
+                        }
+                      );
+}
+
+  void
+RegistryFileMixin::setRegistryPath(const std::filesystem::path & path)
+{
+  this->registryPath = path;
+}
+
+  const RegistryRaw &
+RegistryFileMixin::getRegistryRaw()
+{
+  if ( this->registryRaw.has_value() )
+    {
+      return * this->registryRaw;
+    }
+  this->loadRegistry();
+  return * this->registryRaw;
+}
+
+  void
+RegistryFileMixin::loadRegistry()
+{
+  if ( !this->registryPath.has_value() )
+    {
+      throw FloxException(
+        "You must provide a path to a 'registry.json', "
+        "see the '--registry-file' option."
+      );
+    }
+  std::ifstream f( * ( this->registryPath ) );
+  nlohmann::json json = nlohmann::json::parse( f );
+  json.get_to( this->registryRaw );
+}
 
 /* -------------------------------------------------------------------------- */
 

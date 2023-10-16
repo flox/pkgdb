@@ -121,6 +121,45 @@ struct AttrPathMixin {
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief Extend a command state blob with registry inputs loaded from "path". */
+struct RegistryFileMixin {
+
+  std::optional<std::filesystem::path> registryPath;
+  std::optional<RegistryRaw> registryRaw;
+
+  protected:
+    /**
+     * @brief Loads the registry.
+     * 
+     * Requires that the registry file is already set.
+     * 
+     */
+    void loadRegistry();
+
+  public:
+
+    /**
+     * @brief Sets the path to the registry file to load.
+     *
+     */
+    argparse::Argument & addRegistryFileArg( argparse::ArgumentParser & parser );
+
+    /**
+     * @brief Sets the path to the registry file.
+     * 
+     */
+    void setRegistryPath(const std::filesystem::path & path);
+
+    /**
+     * @brief Returns the @a RegistryRaw from the provided file path.
+     * 
+     */
+    const RegistryRaw & getRegistryRaw();
+
+};  /* End struct `RegistryFileMixin' */
+
+/* -------------------------------------------------------------------------- */
+
 }  /* End namespaces `flox::command' */
 
 

@@ -14,6 +14,7 @@
 #include <nlohmann/json.hpp>
 
 #include "flox/registry.hh"
+#include "flox/core/command.hh"
 #include "test.hh"
 
 
@@ -52,6 +53,61 @@ test_FloxFlakeInputRegistry0()
 
 /* -------------------------------------------------------------------------- */
 
+  bool
+test_RegistryFileMixinHappyPath()
+{
+  using namespace flox;
+
+  flox::command::RegistryFileMixin rfm;
+  rfm.setRegistryPath( TEST_DATA_DIR "/registry/registry0.json" );
+  RegistryRaw regRaw = rfm.getRegistryRaw();
+
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  bool
+test_RegistryFileMixinGetRegWithoutFile()
+{
+  using namespace flox;
+
+  flox::command::RegistryFileMixin rfm;
+  // rfm.setRegistryPath( TEST_DATA_DIR "/registry/registry0.json" );
+  try
+    {
+      RegistryRaw regRaw = rfm.getRegistryRaw();
+      return false;
+    }
+  catch ( FloxException & )
+    {
+      return true;
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  bool
+test_RegistryFileMixinGetRegCached()
+{
+  using namespace flox;
+
+  flox::command::RegistryFileMixin rfm;
+  rfm.setRegistryPath( TEST_DATA_DIR "/registry/registry0.json" );
+  RegistryRaw regRaw = rfm.getRegistryRaw();
+  // You don't need the registry path if the registry is cached. If it's not
+  // cached then you'll get an exception trying to open this file.
+  rfm.registryPath = std::nullopt;
+  RegistryRaw regRawCached = rfm.getRegistryRaw();
+
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
   int
 main( int argc, char * argv[] )
 {
@@ -73,45 +129,7 @@ main( int argc, char * argv[] )
 /* -------------------------------------------------------------------------- */
 
   /* Initialize common registry. */
-  flox::from_json( R"( {
-      "inputs": {
-        "nixpkgs": {
-          "from": {
-            "type": "github"
-          , "owner": "NixOS"
-          , "repo": "nixpkgs"
-          , "rev": "e8039594435c68eb4f780f3e9bf3972a7399c4b1"
-          }
-        , "subtrees": ["legacyPackages"]
-        }
-      , "floco": {
-          "from": {
-            "type": "github"
-          , "owner": "aakropotkin"
-          , "repo": "floco"
-          , "rev": "1e84b4b16bba5746e1195fa3a4d8addaaf2d9ef4"
-          }
-        , "subtrees": ["packages"]
-        }
-      , "nixpkgs-flox": {
-          "from": {
-            "type": "github"
-          , "owner": "flox"
-          , "repo": "nixpkgs-flox"
-          , "rev": "feb593b6844a96dd4e17497edaabac009be05709"
-          }
-        , "subtrees": ["catalog"]
-        , "stabilities": ["stable"]
-        }
-      }
-    , "defaults": {
-        "subtrees": null
-      , "stabilities": ["stable"]
-      }
-    , "priority": ["nixpkgs", "floco", "nixpkgs-flox"]
-    } )"_json
-  , commonRegistry
-  );
+  flox::from_json( TEST_DATA_DIR "/registry/registry0.json", commonRegistry );
 
 
 /* -------------------------------------------------------------------------- */
@@ -119,6 +137,9 @@ main( int argc, char * argv[] )
   {
 
     RUN_TEST( FloxFlakeInputRegistry0 );
+    RUN_TEST( RegistryFileMixinHappyPath );
+    RUN_TEST( RegistryFileMixinGetRegWithoutFile );
+    RUN_TEST( RegistryFileMixinGetRegCached );
 
   }
 
