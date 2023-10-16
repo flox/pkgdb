@@ -9,7 +9,9 @@
  * -------------------------------------------------------------------------- */
 
 #include <regex>
+
 #include "versions.hh"
+#include "flox/core/exceptions.hh"
 #include "flox/resolver/descriptor.hh"
 
 
@@ -47,8 +49,8 @@ initManifestDescriptorVersion(       ManifestDescriptor & desc
         break;
 
       default:
-        /* If it's a valid semver, then it's not a range. */
-        if ( versions::isSemver( version ) )
+        /* If it's a valid semver or a date then it's not a range. */
+        if ( versions::isSemver( version ) || versions::isDate( version ) )
           {
             desc.version = version;
           }
@@ -106,7 +108,7 @@ initManifestDescriptorAbsPath(       ManifestDescriptor    & desc
 {
   if ( ! raw.absPath.has_value() )
     {
-      throw std::runtime_error(
+      throw FloxException(
         "`absPath' must be set when calling "
         "`flox::resolver::ManifestDescriptor::initManifestDescriptorAbsPath'"
        );
@@ -117,7 +119,7 @@ initManifestDescriptorAbsPath(       ManifestDescriptor    & desc
 
   if ( glob.size() < 3 )
     {
-      throw std::runtime_error(
+      throw FloxException(
         "`absPath' must have at least three parts"
       );
     }
@@ -125,7 +127,7 @@ initManifestDescriptorAbsPath(       ManifestDescriptor    & desc
   const auto & first = glob.front();
   if ( ! first.has_value() )
     {
-      throw std::runtime_error(
+      throw FloxException(
         "`absPath' may only have a glob as its second element"
       );
     }
@@ -133,7 +135,7 @@ initManifestDescriptorAbsPath(       ManifestDescriptor    & desc
 
   if ( raw.stability.has_value() && ( first.value() != "catalog" ) )
     {
-      throw std::runtime_error(
+      throw FloxException(
         "`stability' cannot be used with non-catalog paths"
       );
     }
@@ -142,14 +144,14 @@ initManifestDescriptorAbsPath(       ManifestDescriptor    & desc
     {
       if ( glob.size() < 4 )
         {
-          throw std::runtime_error(
+          throw FloxException(
             "`absPath' must have at least four parts for catalog paths"
           );
         }
       const auto & third = glob.at( 2 );
       if ( ! third.has_value() )
         {
-          throw std::runtime_error(
+          throw FloxException(
             "`absPath' may only have a glob as its second element"
           );
         }
@@ -160,7 +162,7 @@ initManifestDescriptorAbsPath(       ManifestDescriptor    & desc
           const auto & elem = * itr;
           if ( ! elem.has_value() )
             {
-              throw std::runtime_error(
+              throw FloxException(
                 "`absPath' may only have a glob as its second element"
               );
             }
@@ -175,7 +177,7 @@ initManifestDescriptorAbsPath(       ManifestDescriptor    & desc
           const auto & elem = * itr;
           if ( ! elem.has_value() )
             {
-              throw std::runtime_error(
+              throw FloxException(
                 "`absPath' may only have a glob as its second element"
               );
             }
@@ -189,7 +191,7 @@ initManifestDescriptorAbsPath(       ManifestDescriptor    & desc
       desc.systems = std::vector<std::string> { * second };
       if ( raw.systems.has_value() && ( * raw.systems != * desc.systems ) )
         {
-          throw std::runtime_error(
+          throw FloxException(
             "`systems' list conflicts with `absPath' system specification"
           );
         }
@@ -247,7 +249,7 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
         {
           if ( this->path != path )
             {
-              throw std::runtime_error(
+              throw FloxException(
                   "`path' conflicts with with `absPath'"
               );
             }
@@ -262,7 +264,7 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
     {
       if ( raw.input.has_value() )
         {
-          throw std::runtime_error(
+          throw FloxException(
             "`packageRepository' may not be used with `input'"
           );
         }
