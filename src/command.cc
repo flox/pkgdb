@@ -220,6 +220,10 @@ RegistryFileMixin::addRegistryFileArg( argparse::ArgumentParser & parser )
   void
 RegistryFileMixin::setRegistryPath(const std::filesystem::path & path)
 {
+  if ( path.empty() )
+    {
+      throw FloxException( "provided registry path is empty" );
+    }
   this->registryPath = path;
 }
 

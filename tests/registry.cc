@@ -26,12 +26,6 @@ using namespace nlohmann::literals;
 
 /* -------------------------------------------------------------------------- */
 
-/* Initialized in `main' */
-// static flox::RegistryRaw commonRegistry;  // NOLINT
-
-
-/* -------------------------------------------------------------------------- */
-
   bool
 test_FloxFlakeInputRegistry0()
 {
@@ -80,9 +74,31 @@ test_RegistryFileMixinGetRegWithoutFile()
   using namespace flox;
 
   flox::command::RegistryFileMixin rfm;
-  // rfm.setRegistryPath( TEST_DATA_DIR "/registry/registry0.json" );
+  // Try loading the registry without setting the path
   try
     {
+      RegistryRaw regRaw = rfm.getRegistryRaw();
+      return false;
+    }
+  catch ( FloxException & )
+    {
+      return true;
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+  bool
+test_RegistryFileMixinEmptyPath()
+{
+  using namespace flox;
+
+  flox::command::RegistryFileMixin rfm;
+  // Try loading the registry without setting the path
+  try
+    {
+      rfm.setRegistryPath( "" );
       RegistryRaw regRaw = rfm.getRegistryRaw();
       return false;
     }
@@ -144,6 +160,7 @@ main( int argc, char * argv[] )
     RUN_TEST( RegistryFileMixinHappyPath );
     RUN_TEST( RegistryFileMixinGetRegWithoutFile );
     RUN_TEST( RegistryFileMixinGetRegCached );
+    RUN_TEST( RegistryFileMixinEmptyPath );
 
   }
 
