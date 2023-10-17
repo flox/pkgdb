@@ -54,6 +54,12 @@ struct InputPreferences {
   InputPreferences()                            = default;
   InputPreferences( const InputPreferences &  ) = default;
   InputPreferences(       InputPreferences && ) = default;
+  InputPreferences( const std::optional<std::vector<Subtree>>     & subtrees
+                  , const std::optional<std::vector<std::string>> & stabilities
+                  )
+    : subtrees( subtrees )
+    , stabilities( stabilities )
+  {}
 
   virtual ~InputPreferences() = default;
 
@@ -120,6 +126,14 @@ struct RegistryInput : public InputPreferences {
   std::shared_ptr<nix::FlakeRef> from;  /**< A parsed flake reference. */
 
   RegistryInput() = default;
+
+  RegistryInput( const std::optional<std::vector<Subtree>>     & subtrees
+               , const std::optional<std::vector<std::string>> & stabilities
+               , const nix::FlakeRef                           & from
+               )
+    : InputPreferences( subtrees, stabilities )
+    , from( std::make_shared<nix::FlakeRef>( from ) )
+  {}
 
   explicit RegistryInput( const nix::FlakeRef & from )
     : from( std::make_shared<nix::FlakeRef>( from ) )
@@ -506,6 +520,13 @@ class Registry {
  */
 class FloxFlakeInput : public RegistryInput {
 
+  /* From `RegistryInput':
+   *   public:
+   *     std::optional<std::vector<Subtree>>     subtrees;
+   *     std::optional<std::vector<std::string>> stabilities;
+   *     std::shared_ptr<nix::FlakeRef>          from;
+   */
+
   private:
 
     nix::ref<nix::Store>       store;     /**< A `nix` store connection. */
@@ -548,6 +569,9 @@ class FloxFlakeInput : public RegistryInput {
     [[nodiscard]] const std::vector<Subtree> & getSubtrees();
 
 
+    [[nodiscard]] RegistryInput getLockedInput();
+
+
 };  /* End struct `FloxFlakeInput' */
 
 
@@ -579,6 +603,11 @@ class FloxFlakeInputFactory : NixStoreMixin  {
 
 
 static_assert( registry_input_factory<FloxFlakeInputFactory> );
+
+
+/* -------------------------------------------------------------------------- */
+
+
 
 
 /* -------------------------------------------------------------------------- */

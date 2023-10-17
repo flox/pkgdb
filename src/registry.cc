@@ -181,6 +181,19 @@ FloxFlakeInput::getSubtrees()
 
 /* -------------------------------------------------------------------------- */
 
+  RegistryInput
+FloxFlakeInput::getLockedInput()
+{
+  return RegistryInput(
+    this->getSubtrees()
+  , this->stabilities
+  , this->getFlake()->lockedFlake.flake.lockedRef
+  );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 }  /* End namespaces `flox' */
 
 
