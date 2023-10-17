@@ -10,6 +10,7 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <fstream>
 
 #include <nlohmann/json.hpp>
 
@@ -26,7 +27,7 @@ using namespace nlohmann::literals;
 /* -------------------------------------------------------------------------- */
 
 /* Initialized in `main' */
-static flox::RegistryRaw commonRegistry;  // NOLINT
+// static flox::RegistryRaw commonRegistry;  // NOLINT
 
 
 /* -------------------------------------------------------------------------- */
@@ -36,8 +37,13 @@ test_FloxFlakeInputRegistry0()
 {
   using namespace flox;
 
+  std::ifstream regFile( TEST_DATA_DIR "/registry/registry0.json" );
+  nlohmann::json json = nlohmann::json::parse( regFile );
+  flox::RegistryRaw regRaw;
+  json.get_to( regRaw );
+
   FloxFlakeInputFactory           factory;
-  Registry<FloxFlakeInputFactory> registry( commonRegistry, factory );
+  Registry<FloxFlakeInputFactory> registry( regRaw, factory );
   size_t count = 0;
   for ( const auto & [name, flake] : registry )
     {
@@ -128,8 +134,6 @@ main( int argc, char * argv[] )
 
 /* -------------------------------------------------------------------------- */
 
-  /* Initialize common registry. */
-  flox::from_json( TEST_DATA_DIR "/registry/registry0.json", commonRegistry );
 
 
 /* -------------------------------------------------------------------------- */
