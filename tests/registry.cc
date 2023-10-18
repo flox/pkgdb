@@ -130,6 +130,27 @@ test_RegistryFileMixinGetRegCached()
 
 /* -------------------------------------------------------------------------- */
 
+  bool
+test_RegistryNoIndirectRefs()
+{
+  using namespace flox;
+
+  flox::command::RegistryFileMixin rfm;
+  rfm.setRegistryPath( TEST_DATA_DIR "/registry/registry1.json" );
+  try
+    {
+       RegistryRaw regRaw = rfm.getRegistryRaw();
+       return false;
+    }
+  catch ( FloxException &)
+    {
+      return true;
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
   int
 main( int argc, char * argv[] )
 {

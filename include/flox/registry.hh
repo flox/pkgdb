@@ -398,6 +398,12 @@ class Registry {
           , [&]( const auto & pair ) { return pair.first == _name.get(); }
           );
 
+          /* Throw an exception if a registry input is an indirect reference. */
+          if ( pair->second.getFlakeRef()->input.getType() == "flake" )
+            {
+              throw FloxException( "registry contained an indirect reference" );
+            }
+
           /* Fill default/fallback values if none are defined. */
           RegistryInput input = pair->second;
           if ( ! input.subtrees.has_value() )
