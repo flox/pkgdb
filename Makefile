@@ -337,8 +337,13 @@ compile_commands.json: $(lastword $(MAKEFILE_LIST))
 compile_commands.json: $(COMMON_HEADERS) $(ALL_SRCS)
 	-$(MAKE) -C $(MAKEFILE_DIR) clean;
 	$(info $$CXX_SYSTEM_INCDIRS is [${CXX_SYSTEM_INCDIRS}])
+
+	$(MKDIR_P) $(MAKEFILE_DIR)/bear.d
+	ln -sf $(shell dirname $(shell which $(BEAR)))/../lib/bear/wrapper bear.d/c++
+
 	EXTRA_CXXFLAGS='$(patsubst %,-isystem %,$(CXX_SYSTEM_INCDIRS))'  \
-	   $(BEAR) --output "$@" -- $(MAKE) -C $(MAKEFILE_DIR) -j all;
+	  PATH="$(MAKEFILE_DIR)/bear.d/:$(PATH)"                         \
+	  $(BEAR) -- $(MAKE) -C $(MAKEFILE_DIR) -j bin;
 
 
 # ---------------------------------------------------------------------------- #
