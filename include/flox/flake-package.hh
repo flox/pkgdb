@@ -206,6 +206,32 @@ public:
 
 }; /* End class `FlakePackage' */
 
+/** @brief An exception thrown when initializing a `FlakePackage` */
+class PackageInitException : public FloxException
+{
+private:
+
+  static constexpr std::string_view categoryMsg
+    = "error initializing FlakePackage";
+
+public:
+
+  explicit PackageInitException( std::string_view contextMsg )
+    : FloxException( contextMsg )
+  {}
+  [[nodiscard]] error_category
+  get_error_code() const noexcept override
+  {
+    return EC_PACKAGE_INIT;
+  }
+  [[nodiscard]] std::string_view
+  category_message() const noexcept override
+  {
+    return this->categoryMsg;
+  }
+
+}; /* End class `PackageInitException' */
+
 
 /* -------------------------------------------------------------------------- */
 

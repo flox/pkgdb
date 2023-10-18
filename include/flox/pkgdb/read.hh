@@ -98,13 +98,27 @@ using sql_rc      = int;                 /**< `SQLITE_*` result code. */
 /* -------------------------------------------------------------------------- */
 
 /** @brief A generic exception thrown by `flox::pkgdb::*` classes. */
-struct PkgDbException : public FloxException
+class PkgDbException : public FloxException
 {
-  std::filesystem::path dbPath;
-  PkgDbException( std::filesystem::path dbPath, std::string_view msg )
-    : FloxException( msg ), dbPath( std::move( dbPath ) )
-  {}
-}; /* End struct `PkgDbException' */
+private:
+
+  static constexpr std::string_view categoryMsg = "error running pkgdb";
+
+public:
+
+  PkgDbException( std::string_view msg ) : FloxException( msg ) {}
+  [[nodiscard]] error_category
+  get_error_code() const noexcept override
+  {
+    return EC_PKG_DB;
+  }
+  [[nodiscard]] std::string_view
+  category_message() const noexcept override
+  {
+    return this->categoryMsg;
+  }
+
+}; /* End class `PkgDbException' */
 
 
 /* -------------------------------------------------------------------------- */
@@ -167,7 +181,6 @@ public:
   {
     explicit NoSuchDatabase( const PkgDbReadOnly & pdb )
       : PkgDbException(
-        pdb.dbPath,
         std::string( "No such database '" + pdb.dbPath.string() + "'." ) )
     {}
   }; /* End struct `NoSuchDatabase' */

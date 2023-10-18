@@ -83,6 +83,31 @@ struct QueryPreferences
 
 }; /* End struct `QueryPreferences' */
 
+/** @brief An exception thrown when parsing `QueryPreferences` from JSON */
+class ParseQueryPreferencesException : public FloxException
+{
+private:
+
+  static constexpr std::string_view categoryMsg
+    = "error parsing query preferences";
+
+public:
+
+  explicit ParseQueryPreferencesException( std::string_view contextMsg )
+    : FloxException( contextMsg )
+  {}
+  [[nodiscard]] error_category
+  get_error_code() const noexcept override
+  {
+    return EC_PARSE_QUERY_PREFERENCES;
+  }
+  [[nodiscard]] std::string_view
+  category_message() const noexcept override
+  {
+    return this->categoryMsg;
+  }
+}; /* End class `ParseQueryPreferencesException' */
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -182,6 +207,32 @@ struct QueryParams : public QueryPreferences
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief An exception thrown when parsing `QueryParams` from JSON */
+class ParseQueryParamsException : public FloxException
+{
+private:
+
+  static constexpr std::string_view categoryMsg
+    = "error parsing query parameters";
+
+public:
+
+  explicit ParseQueryParamsException( std::string_view contextMsg )
+    : FloxException( contextMsg )
+  {}
+  [[nodiscard]] error_category
+  get_error_code() const noexcept override
+  {
+    return EC_PARSE_QUERY_PARAMS;
+  }
+  [[nodiscard]] std::string_view
+  category_message() const noexcept override
+  {
+    return this->categoryMsg;
+  }
+
+}; /* End class `ParseQueryParamsException' */
+
 template<pkg_descriptor_typename QueryType>
 void
 from_json( const nlohmann::json &jfrom, QueryParams<QueryType> &params )
@@ -207,7 +258,8 @@ from_json( const nlohmann::json &jfrom, QueryParams<QueryType> &params )
         }
       else
         {
-          throw FloxException( "Unexpected preferences field '" + key + '\'' );
+          throw ParseQueryParamsException( "Unexpected preferences field '"
+                                           + key + '\'' );
         }
     }
 }

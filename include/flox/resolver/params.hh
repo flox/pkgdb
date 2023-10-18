@@ -110,6 +110,29 @@ struct PkgDescriptorRaw : public pkgdb::PkgDescriptorBase
 
 }; /* End struct `PkgDescriptorRaw' */
 
+/** @brief An exception thrown a PkgDescriptorRaw is invalid */
+class InvalidPkgDescriptorException : public FloxException
+{
+private:
+
+  static constexpr std::string_view categoryMsg = "invalid package query";
+
+public:
+
+  explicit InvalidPkgDescriptorException( std::string_view contextMsg )
+    : FloxException( contextMsg )
+  {}
+  [[nodiscard]] error_category
+  get_error_code() const noexcept override
+  {
+    return EC_INVALID_PKG_DESCRIPTOR;
+  }
+  [[nodiscard]] std::string_view
+  category_message() const noexcept override
+  {
+    return this->categoryMsg;
+  }
+}; /* End class `InvalidPkgDescriptorException' */
 
 /* -------------------------------------------------------------------------- */
 

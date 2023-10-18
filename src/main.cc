@@ -50,10 +50,10 @@ main( int argc, char * argv[] )
     {
       prog.parse_args( argc, argv );
     }
-  catch ( const flox::pkgdb::PkgQuery::InvalidArgException & err )
+  catch ( const flox::pkgdb::PkgQuery::InvalidPkgQueryArgException & err )
     {
       // TODO: DRY ( see search/command.cc )
-      int exitCode = flox::EC_PKG_QUERY_INVALID_ARG;
+      int exitCode = flox::EC_INVALID_PKG_QUERY_ARG;
       exitCode += static_cast<int>( err.errorCode );
       for ( int i = 1; i < argc; ++i )
         {
@@ -97,10 +97,10 @@ main( int argc, char * argv[] )
       if ( prog.is_subcommand_used( "search" ) ) { return cmdSearch.run(); }
       if ( prog.is_subcommand_used( "resolve" ) ) { return cmdResolve.run(); }
     }
-  catch ( const flox::pkgdb::PkgQuery::InvalidArgException & err )
+  catch ( const flox::pkgdb::PkgQuery::InvalidPkgQueryArgException & err )
     {
       // TODO: DRY ( see search/command.cc )
-      int exitCode = flox::EC_PKG_QUERY_INVALID_ARG;
+      int exitCode = flox::EC_INVALID_PKG_QUERY_ARG;
       exitCode += static_cast<int>( err.errorCode );
       for ( int i = 1; i < argc; ++i )
         {

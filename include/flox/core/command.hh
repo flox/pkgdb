@@ -173,6 +173,54 @@ public:
 
 }; /* End struct `RegistryFileMixin' */
 
+/** @brief An exception thrown when the value of registryPath is invalid */
+class InvalidRegistryFileException : public FloxException
+{
+private:
+
+  static constexpr std::string_view categoryMsg
+    = "invalid value for registry file";
+
+public:
+
+  explicit InvalidRegistryFileException( std::string_view contextMsg )
+    : FloxException( contextMsg )
+  {}
+  [[nodiscard]] error_category
+  get_error_code() const noexcept override
+  {
+    return EC_INVALID_REGISTRY_FILE;
+  }
+  [[nodiscard]] std::string_view
+  category_message() const noexcept override
+  {
+    return this->categoryMsg;
+  }
+}; /* End class `InvalidRegistryFileException' */
+
+/** @brief An exception thrown when a command line argument is invalid */
+class InvalidArgException : public FloxException
+{
+private:
+
+  static constexpr std::string_view categoryMsg = "invalid argument";
+
+public:
+
+  explicit InvalidArgException( std::string_view contextMsg )
+    : FloxException( contextMsg )
+  {}
+  [[nodiscard]] error_category
+  get_error_code() const noexcept override
+  {
+    return EC_INVALID_ARG;
+  }
+  [[nodiscard]] std::string_view
+  category_message() const noexcept override
+  {
+    return this->categoryMsg;
+  }
+}; /* End class `InvalidArgException' */
 /* -------------------------------------------------------------------------- */
 
 }  // namespace flox::command

@@ -118,7 +118,6 @@ PkgDbReadOnly::loadLockedFlake()
   else if ( this->fingerprint != fingerprint )
     {
       throw PkgDbException(
-        this->dbPath,
         nix::fmt( "database '%s' fingerprint '%s' does not match expected '%s'",
                   this->dbPath,
                   fingerprintStr,
@@ -226,7 +225,6 @@ PkgDbReadOnly::getDescription( row_id descriptionId )
   if ( itr == qryId.end() )
     {
       throw PkgDbException(
-        this->dbPath,
         nix::fmt( "No such Descriptions.id %llu.", descriptionId ) );
     }
   return ( *itr ).get<std::string>( 0 );
@@ -275,7 +273,6 @@ PkgDbReadOnly::getAttrSetId( const flox::AttrPath & path )
       if ( itr == qryId.end() )
         {
           throw PkgDbException(
-            this->dbPath,
             nix::fmt( "No such AttrSet '%s'.",
                       nix::concatStringsSep( ".", path ) ) );
         }
@@ -303,8 +300,7 @@ PkgDbReadOnly::getAttrSetPath( row_id row )
       /* Handle no such path. */
       if ( itr == qry.end() )
         {
-          throw PkgDbException( this->dbPath,
-                                nix::fmt( "No such `AttrSet.id' %llu.", row ) );
+          throw PkgDbException( nix::fmt( "No such `AttrSet.id' %llu.", row ) );
         }
       row = ( *itr ).get<long long>( 0 );
       path.push_front( ( *itr ).get<std::string>( 1 ) );
@@ -335,7 +331,6 @@ PkgDbReadOnly::getPackageId( const flox::AttrPath & path )
   if ( itr == qry.end() )
     {
       throw PkgDbException(
-        this->dbPath,
         nix::fmt( "No such package %s.", nix::concatStringsSep( ".", path ) ) );
     }
   return ( *itr ).get<long long>( 0 );
@@ -356,8 +351,7 @@ PkgDbReadOnly::getPackagePath( row_id row )
   /* Handle no such path. */
   if ( itr == qry.end() )
     {
-      throw PkgDbException( this->dbPath,
-                            nix::fmt( "No such `Packages.id' %llu.", row ) );
+      throw PkgDbException( nix::fmt( "No such `Packages.id' %llu.", row ) );
     }
   flox::AttrPath path = this->getAttrSetPath( ( *itr ).get<long long>( 0 ) );
   path.emplace_back( ( *itr ).get<std::string>( 1 ) );

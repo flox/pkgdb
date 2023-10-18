@@ -185,7 +185,8 @@ RegistryFileMixin::setRegistryPath( const std::filesystem::path & path )
 {
   if ( path.empty() )
     {
-      throw FloxException( "provided registry path is empty" );
+      throw InvalidRegistryFileException(
+        "provided registry path is empty string" );
     }
   this->registryPath = path;
 }
@@ -203,8 +204,7 @@ RegistryFileMixin::loadRegistry()
 {
   if ( ! this->registryPath.has_value() )
     {
-      throw FloxException( "You must provide a path to a 'registry.json', "
-                           "see the '--registry-file' option." );
+      throw InvalidRegistryFileException( "registry path is null" );
     }
   std::ifstream  f( *( this->registryPath ) );
   nlohmann::json json = nlohmann::json::parse( f );

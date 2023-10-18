@@ -105,7 +105,7 @@ PkgDescriptorRaw::fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const
         {
           if ( this->path->size() < 3 )
             {
-              throw FloxException(
+              throw InvalidPkgDescriptorException(
                 "Absolute attribute paths must have at least three elements" );
             }
           Subtree subtree = Subtree::parseSubtree( *this->path->at( 0 ) );
@@ -118,7 +118,7 @@ PkgDescriptorRaw::fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const
             {
               if ( this->path->size() < 4 )
                 {
-                  throw FloxException(
+                  throw InvalidPkgDescriptorException(
                     "Absolute attribute paths in catalogs must have at "
                     "least four elements" );
                 }
