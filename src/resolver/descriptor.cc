@@ -47,7 +47,7 @@ initManifestDescriptorVersion( ManifestDescriptor & desc,
    * We identify `=` as an explicit _exact version_ match. */
   switch ( trimmed.at( 0 ) )
     {
-      case '=': desc.version = std::move( trimmed.substr( 1 ) ); break;
+      case '=': desc.version = trimmed.substr( 1 ); break;
 
       case '*':
       case '~':
