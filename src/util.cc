@@ -13,8 +13,8 @@
 
 #include <nlohmann/json.hpp>
 
-#include "flox/core/util.hh"
 #include "flox/core/exceptions.hh"
+#include "flox/core/util.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -23,24 +23,24 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
-  bool
+bool
 isSQLiteDb( const std::string & dbPath )
 {
   std::filesystem::path path( dbPath );
-  if ( ! std::filesystem::exists( path ) )     { return false; }
+  if ( ! std::filesystem::exists( path ) ) { return false; }
   if ( std::filesystem::is_directory( path ) ) { return false; }
 
   /* Read file magic */
   static const char expectedMagic[16] = "SQLite format 3";  // NOLINT
 
   char buffer[16];  // NOLINT
-  std::memset( & buffer[0], '\0', sizeof( buffer ) );
+  std::memset( &buffer[0], '\0', sizeof( buffer ) );
   FILE * filep = fopen( dbPath.c_str(), "rb" );
 
   std::clearerr( filep );
 
-  const size_t nread =
-    std::fread( & buffer[0], sizeof( buffer[0] ), sizeof( buffer ), filep );
+  const size_t nread
+    = std::fread( &buffer[0], sizeof( buffer[0] ), sizeof( buffer ), filep );
   if ( nread != sizeof( buffer ) )
     {
       if ( std::feof( filep ) != 0 )
@@ -57,14 +57,14 @@ isSQLiteDb( const std::string & dbPath )
       return false;
     }
   std::fclose( filep );  // NOLINT
-  return std::string_view( & buffer[0] ) ==
-         std::string_view( & expectedMagic[0] );
+  return std::string_view( &buffer[0] )
+         == std::string_view( &expectedMagic[0] );
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-  nlohmann::json
+nlohmann::json
 parseOrReadJSONObject( const std::string & jsonOrPath )
 {
   if ( jsonOrPath.find( '{' ) != std::string::npos )
@@ -78,7 +78,7 @@ parseOrReadJSONObject( const std::string & jsonOrPath )
 
 /* -------------------------------------------------------------------------- */
 
-  std::vector<std::string>
+std::vector<std::string>
 splitAttrPath( std::string_view path )
 {
   std::vector<std::string> parts;
@@ -90,59 +90,49 @@ splitAttrPath( std::string_view path )
 
   /* Remove outer quotes and unescape. */
   auto dequote = [&]( const std::string & part ) -> std::string
-    {
-      auto itr = part.begin();
-      auto end = part.end();
+  {
+    auto itr = part.begin();
+    auto end = part.end();
 
-      /* Remove outer quotes. */
-      if ( ( ( part.front() == '\'' ) && ( part.back() == '\'' ) ) ||
-           ( ( part.front() == '"' )  && ( part.back() == '"' ) )
-         )
-        {
-          ++itr;
-          --end;
-        }
+    /* Remove outer quotes. */
+    if ( ( ( part.front() == '\'' ) && ( part.back() == '\'' ) )
+         || ( ( part.front() == '"' ) && ( part.back() == '"' ) ) )
+      {
+        ++itr;
+        --end;
+      }
 
-      /* Remove escape characters. */
-      std::string rsl;
-      bool        wasEscaped = false;
-      for ( ; itr != end; ++itr )
-        {
-          if ( wasEscaped )
-            {
-              wasEscaped = false;
-            }
-          else if ( ( * itr ) == '\\' )
-            {
-              wasEscaped = true;
-              continue;
-            }
-          rsl.push_back( * itr );
-        }
+    /* Remove escape characters. */
+    std::string rsl;
+    bool        wasEscaped = false;
+    for ( ; itr != end; ++itr )
+      {
+        if ( wasEscaped ) { wasEscaped = false; }
+        else if ( ( *itr ) == '\\' )
+          {
+            wasEscaped = true;
+            continue;
+          }
+        rsl.push_back( *itr );
+      }
 
-      return rsl;
-    };  /* End lambda `dequote' */
+    return rsl;
+  }; /* End lambda `dequote' */
 
   /* Split by dots, handling quotes. */
   for ( auto itr = path.begin(); itr != path.end(); ++itr )
     {
-      if ( wasEscaped )
-        {
-          wasEscaped = false;
-        }
-      else if ( ( * itr ) == '\\' )
-        {
-          wasEscaped = true;
-        }
-      else if ( ( ( * itr ) == '\'' ) && ( ! inDoubleQuote ) )
+      if ( wasEscaped ) { wasEscaped = false; }
+      else if ( ( *itr ) == '\\' ) { wasEscaped = true; }
+      else if ( ( ( *itr ) == '\'' ) && ( ! inDoubleQuote ) )
         {
           inSingleQuote = ! inSingleQuote;
         }
-      else if ( ( ( * itr ) == '"' ) && ( ! inSingleQuote ) )
+      else if ( ( ( *itr ) == '"' ) && ( ! inSingleQuote ) )
         {
           inDoubleQuote = ! inDoubleQuote;
         }
-      else if ( * itr == '.' && ( ! inSingleQuote ) && ( ! inDoubleQuote ) )
+      else if ( *itr == '.' && ( ! inSingleQuote ) && ( ! inDoubleQuote ) )
         {
           parts.emplace_back( dequote( std::string( start, itr ) ) );
           start = itr + 1;
@@ -160,22 +150,21 @@ splitAttrPath( std::string_view path )
 
 /* -------------------------------------------------------------------------- */
 
-  bool
+bool
 isUInt( std::string_view str )
 {
-  return ( ! str.empty() ) &&
-         ( std::find_if(
-             str.begin()
-           , str.end()
-           , []( unsigned char chr ) { return std::isdigit( chr ) == 0; }
-           ) == str.end()
-         );
+  return ( ! str.empty() )
+         && ( std::find_if( str.begin(),
+                            str.end(),
+                            []( unsigned char chr )
+                            { return std::isdigit( chr ) == 0; } )
+              == str.end() );
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-  bool
+bool
 hasPrefix( std::string_view prefix, std::string_view str )
 {
   if ( str.size() < prefix.size() ) { return false; }
@@ -185,33 +174,30 @@ hasPrefix( std::string_view prefix, std::string_view str )
 
 /* -------------------------------------------------------------------------- */
 
-  std::string &
+std::string &
 ltrim( std::string & str )
 {
-  str.erase(
-    str.begin()
-  , std::find_if( str.begin()
-                , str.end()
-                , []( unsigned char chr ) { return ! std::isspace( chr ); }
-                )
-  );
+  str.erase( str.begin(),
+             std::find_if( str.begin(),
+                           str.end(),
+                           []( unsigned char chr )
+                           { return ! std::isspace( chr ); } ) );
   return str;
 }
 
-  std::string &
+std::string &
 rtrim( std::string & str )
 {
-  str.erase(
-    std::find_if( str.rbegin()
-                , str.rend()
-                , []( unsigned char chr ) { return ! std::isspace( chr ); }
-                ).base()
-  , str.end()
-  );
+  str.erase( std::find_if( str.rbegin(),
+                           str.rend(),
+                           []( unsigned char chr )
+                           { return ! std::isspace( chr ); } )
+               .base(),
+             str.end() );
   return str;
 }
 
-  std::string &
+std::string &
 trim( std::string & str )
 {
   rtrim( str );
@@ -220,7 +206,7 @@ trim( std::string & str )
 }
 
 
-  std::string
+std::string
 ltrim_copy( std::string_view str )
 {
   std::string rsl( str );
@@ -228,7 +214,7 @@ ltrim_copy( std::string_view str )
   return rsl;
 }
 
-  std::string
+std::string
 rtrim_copy( std::string_view str )
 {
   std::string rsl( str );
@@ -236,7 +222,7 @@ rtrim_copy( std::string_view str )
   return rsl;
 }
 
-  std::string
+std::string
 trim_copy( std::string_view str )
 {
   std::string rsl( str );
@@ -247,7 +233,7 @@ trim_copy( std::string_view str )
 
 /* -------------------------------------------------------------------------- */
 
-}    /* End namespace `flox' */
+}  // namespace flox
 
 
 /* -------------------------------------------------------------------------- *

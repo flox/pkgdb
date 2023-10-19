@@ -7,12 +7,12 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include <sstream>
-#include <set>
 #include <list>
+#include <set>
+#include <sstream>
 
-#include "flox/pkgdb/write.hh"
 #include "flox/pkgdb/pkg-query.hh"
+#include "flox/pkgdb/write.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -21,7 +21,7 @@ namespace flox::pkgdb {
 
 /* -------------------------------------------------------------------------- */
 
-  void
+void
 PkgDescriptorBase::clear()
 {
   this->name    = std::nullopt;
@@ -33,10 +33,9 @@ PkgDescriptorBase::clear()
 
 /* -------------------------------------------------------------------------- */
 
-  std::string
+std::string
 PkgQueryArgs::InvalidArgException::errorMessage(
-  const PkgQueryArgs::InvalidArgException::error_code & ecode
-)
+  const PkgQueryArgs::InvalidArgException::error_code & ecode )
 {
   switch ( ecode )
     {
@@ -47,9 +46,7 @@ PkgQueryArgs::InvalidArgException::errorMessage(
       case PQEC_MIX_VERSION_SEMVER:
         return "Queries may not mix `version' and `semver' parameters";
         break;
-      case PQEC_INVALID_SEMVER:
-        return "Semver Parse Error";
-        break;
+      case PQEC_INVALID_SEMVER: return "Semver Parse Error"; break;
       case PQEC_INVALID_LICENSE:
         return "Query `license' parameter contains invalid character \"'\"";
         break;
@@ -79,17 +76,14 @@ PkgQueryArgs::InvalidArgException::errorMessage(
 
 /* -------------------------------------------------------------------------- */
 
-  std::optional<PkgQueryArgs::InvalidArgException::error_code>
+std::optional<PkgQueryArgs::InvalidArgException::error_code>
 PkgQueryArgs::validate() const
 {
   using error_code = PkgQueryArgs::InvalidArgException::error_code;
 
-  if ( this->name.has_value() &&
-       ( this->pname.has_value()   ||
-         this->version.has_value() ||
-         this->semver.has_value()
-       )
-     )
+  if ( this->name.has_value()
+       && ( this->pname.has_value() || this->version.has_value()
+            || this->semver.has_value() ) )
     {
       return error_code::PQEC_MIX_NAME;
     }
@@ -102,7 +96,7 @@ PkgQueryArgs::validate() const
   /* Check licenses don't contain the ' character */
   if ( this->licenses.has_value() )
     {
-      for ( const auto & license : * this->licenses )
+      for ( const auto & license : *this->licenses )
         {
           if ( license.find( '\'' ) != std::string::npos )
             {
@@ -114,12 +108,10 @@ PkgQueryArgs::validate() const
   /* Systems */
   for ( const auto & system : this->systems )
     {
-      if ( std::find( flox::getDefaultSystems().begin()
-                    , flox::getDefaultSystems().end()
-                    , system
-                    )
-           == flox::getDefaultSystems().end()
-         )
+      if ( std::find( flox::getDefaultSystems().begin(),
+                      flox::getDefaultSystems().end(),
+                      system )
+           == flox::getDefaultSystems().end() )
         {
           return error_code::PQEC_INVALID_SYSTEM;
         }
@@ -128,14 +120,12 @@ PkgQueryArgs::validate() const
   /* Stabilities */
   if ( this->stabilities.has_value() )
     {
-      for ( const auto & stability : * this->stabilities )
+      for ( const auto & stability : *this->stabilities )
         {
-          if ( std::find( flox::getDefaultCatalogStabilities().begin()
-                        , flox::getDefaultCatalogStabilities().end()
-                        , stability
-                        )
-               == flox::getDefaultCatalogStabilities().end()
-             )
+          if ( std::find( flox::getDefaultCatalogStabilities().begin(),
+                          flox::getDefaultCatalogStabilities().end(),
+                          stability )
+               == flox::getDefaultCatalogStabilities().end() )
             {
               return error_code::PQEC_INVALID_STABILITY;
             }
@@ -148,7 +138,7 @@ PkgQueryArgs::validate() const
 
 /* -------------------------------------------------------------------------- */
 
-  void
+void
 PkgQueryArgs::clear()
 {
   this->PkgDescriptorBase::clear();
@@ -167,34 +157,34 @@ PkgQueryArgs::clear()
 
 /* -------------------------------------------------------------------------- */
 
-  void
+void
 PkgQuery::addSelection( std::string_view column )
 {
   if ( this->firstSelect ) { this->firstSelect = false; }
-  else                     { this->selects << ", ";     }
+  else { this->selects << ", "; }
   this->selects << column;
 }
 
-  void
+void
 PkgQuery::addOrderBy( std::string_view order )
 {
   if ( this->firstOrder ) { this->firstOrder = false; }
-  else                    { this->orders << ", ";     }
+  else { this->orders << ", "; }
   this->orders << order;
 }
 
-  void
+void
 PkgQuery::addWhere( std::string_view cond )
 {
   if ( this->firstWhere ) { this->firstWhere = false; }
-  else                    { this->wheres << " AND ";     }
+  else { this->wheres << " AND "; }
   this->wheres << "( " << cond << " )";
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-  void
+void
 PkgQuery::clearBuilt()
 {
   this->selects.clear();
@@ -209,14 +199,15 @@ PkgQuery::clearBuilt()
 
 /* -------------------------------------------------------------------------- */
 
-  static void
+static void
 addIn( std::stringstream & oss, const std::vector<std::string> & elems )
 {
   oss << " IN ( ";
   bool first = true;
   for ( const auto & elem : elems )
     {
-      if ( first ) { first = false; } else { oss << ", "; }
+      if ( first ) { first = false; }
+      else { oss << ", "; }
       oss << '\'' << elem << '\'';
     }
   oss << " )";
@@ -225,21 +216,17 @@ addIn( std::stringstream & oss, const std::vector<std::string> & elems )
 
 /* -------------------------------------------------------------------------- */
 
-  void
+void
 PkgQuery::initMatch()
 {
   /* Filter by exact matches on `pname' or `pkgAttrName'. */
-  if ( this->pnameOrPkgAttrName.has_value() &&
-       ( ! this->pnameOrPkgAttrName->empty() )
-     )
+  if ( this->pnameOrPkgAttrName.has_value()
+       && ( ! this->pnameOrPkgAttrName->empty() ) )
     {
+      this->addSelection( "( :pnameOrPkgAttrName = pname ) AS exactPname" );
       this->addSelection(
-        "( :pnameOrPkgAttrName = pname ) AS exactPname"
-      );
-      this->addSelection(
-        "( :pnameOrPkgAttrName = pkgAttrName ) AS exactPkgAttrName"
-      );
-      binds.emplace( ":pnameOrPkgAttrName", * this->pnameOrPkgAttrName );
+        "( :pnameOrPkgAttrName = pkgAttrName ) AS exactPkgAttrName" );
+      binds.emplace( ":pnameOrPkgAttrName", *this->pnameOrPkgAttrName );
       this->addWhere( "( exactPname OR exactPkgAttrName )" );
     }
   else
@@ -256,27 +243,21 @@ PkgQuery::initMatch()
        * use with `LIKE'. */
       this->addSelection(
         "( ( '%' || LOWER( pname ) || '%' ) = LOWER( :partialMatch ) ) "
-        "AS matchExactPname"
-      );
+        "AS matchExactPname" );
       this->addSelection(
         "( ( '%' || LOWER( pkgAttrName ) || '%' ) = LOWER( :partialMatch ) ) "
-        "AS matchExactPkgAttrName"
-      );
+        "AS matchExactPkgAttrName" );
       this->addSelection( "( pname LIKE :partialMatch ) AS matchPartialPname" );
       this->addSelection(
-        "( pkgAttrName LIKE :partialMatch ) AS matchPartialPkgAttrName"
-      );
+        "( pkgAttrName LIKE :partialMatch ) AS matchPartialPkgAttrName" );
       this->addSelection(
-        "( description LIKE :partialMatch ) AS matchPartialDescription"
-      );
+        "( description LIKE :partialMatch ) AS matchPartialDescription" );
       /* Add `%` before binding so `LIKE` works. */
-      binds.emplace( ":partialMatch", "%" +  ( * this->partialMatch ) + "%" );
-      this->addWhere(
-        "( matchExactPname OR matchExactPkgAttrName OR"
-        "  matchPartialPname OR matchPartialPkgAttrName OR"
-        "  matchPartialDescription "
-        ")"
-      );
+      binds.emplace( ":partialMatch", "%" + ( *this->partialMatch ) + "%" );
+      this->addWhere( "( matchExactPname OR matchExactPkgAttrName OR"
+                      "  matchPartialPname OR matchPartialPkgAttrName OR"
+                      "  matchPartialDescription "
+                      ")" );
     }
   else
     {
@@ -292,16 +273,16 @@ PkgQuery::initMatch()
 
 /* -------------------------------------------------------------------------- */
 
-  void
+void
 PkgQuery::initSubtrees()
 {
   /* Handle `subtrees' filtering. */
   if ( this->subtrees.has_value() )
     {
-      size_t                   idx  = 0;
+      size_t                   idx = 0;
       std::vector<std::string> lst;
       std::stringstream        rank;
-      for ( const auto subtree : * this->subtrees )
+      for ( const auto subtree : *this->subtrees )
         {
           lst.emplace_back( to_string( subtree ) );
           rank << "iif( ( subtree = '" << lst.back() << "' ), " << idx << ", ";
@@ -336,7 +317,7 @@ PkgQuery::initSubtrees()
 
 /* -------------------------------------------------------------------------- */
 
-  void
+void
 PkgQuery::initSystems()
 {
   /* Handle `systems' filtering. */
@@ -348,7 +329,7 @@ PkgQuery::initSystems()
   }
   if ( 1 < this->systems.size() )
     {
-      size_t            idx  = 0;
+      size_t            idx = 0;
       std::stringstream rank;
       for ( const auto & system : this->systems )
         {
@@ -370,7 +351,7 @@ PkgQuery::initSystems()
 
 /* -------------------------------------------------------------------------- */
 
-  void
+void
 PkgQuery::initStabilities()
 {
   /* Handle `stabilities' filtering. */
@@ -378,15 +359,15 @@ PkgQuery::initStabilities()
     {
       std::stringstream cond;
       cond << "( stability IS NULL ) OR ( stability ";
-      addIn( cond, * this->stabilities );
+      addIn( cond, *this->stabilities );
       cond << " )";
       this->addWhere( cond.str() );
       if ( 1 < this->stabilities->size() )
         {
-          size_t            idx  = 0;
+          size_t            idx = 0;
           std::stringstream rank;
           rank << "iif( ( stability IS NULL ), NULL, ";
-          for ( const auto & stability : * this->stabilities )
+          for ( const auto & stability : *this->stabilities )
             {
               rank << "iif( ( stability = '" << stability << "' ), " << idx;
               rank << ", ";
@@ -413,7 +394,7 @@ PkgQuery::initStabilities()
 
 /* -------------------------------------------------------------------------- */
 
-  void
+void
 PkgQuery::initOrderBy()
 {
   /* Establish ordering. */
@@ -467,7 +448,7 @@ PkgQuery::initOrderBy()
 
 /* -------------------------------------------------------------------------- */
 
-  void
+void
 PkgQuery::init()
 {
   this->clearBuilt();
@@ -475,7 +456,7 @@ PkgQuery::init()
   /* Validate parameters */
   if ( auto maybe_ec = this->validate(); maybe_ec != std::nullopt )
     {
-      throw PkgQueryArgs::InvalidArgException( * maybe_ec );
+      throw PkgQueryArgs::InvalidArgException( *maybe_ec );
     }
 
   this->addSelection( "*" );
@@ -487,21 +468,21 @@ PkgQuery::init()
   if ( this->name.has_value() )
     {
       this->addWhere( "name = :name" );
-      this->binds.emplace( ":name", * this->name );
+      this->binds.emplace( ":name", *this->name );
     }
 
   /* Handle `pname' filtering. */
   if ( this->pname.has_value() )
     {
       this->addWhere( "pname = :pname" );
-      this->binds.emplace( ":pname", * this->pname );
+      this->binds.emplace( ":pname", *this->pname );
     }
 
   /* Handle `version' and `semver' filtering.  */
   if ( this->version.has_value() )
     {
       this->addWhere( "version = :version" );
-      this->binds.emplace( ":version", * this->version );
+      this->binds.emplace( ":version", *this->version );
     }
   else if ( this->semver.has_value() )
     {
@@ -515,7 +496,7 @@ PkgQuery::init()
       /* licenses IN ( ... ) */
       std::stringstream cond;
       cond << "license";
-      addIn( cond, * this->licenses );
+      addIn( cond, *this->licenses );
       this->addWhere( cond.str() );
     }
 
@@ -535,7 +516,7 @@ PkgQuery::init()
   if ( this->relPath.has_value() )
     {
       this->addWhere( "relPath = :relPath" );
-      nlohmann::json relPath = * this->relPath;
+      nlohmann::json relPath = *this->relPath;
       this->binds.emplace( ":relPath", relPath.dump() );
     }
 
@@ -543,13 +524,12 @@ PkgQuery::init()
   this->initSystems();
   this->initStabilities();
   this->initOrderBy();
-
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-  std::string
+std::string
 PkgQuery::str() const
 {
   std::stringstream qry;
@@ -557,12 +537,13 @@ PkgQuery::str() const
   bool firstExport = true;
   for ( const auto & column : this->exportedColumns )
     {
-      if ( firstExport ) { firstExport = false; } else { qry << ", "; }
+      if ( firstExport ) { firstExport = false; }
+      else { qry << ", "; }
       qry << column;
     }
   qry << " FROM ( SELECT ";
   if ( this->firstSelect ) { qry << "*"; }
-  else                     { qry << this->selects.str(); }
+  else { qry << this->selects.str(); }
   qry << " FROM v_PackagesSearch";
   if ( ! this->firstWhere ) { qry << " WHERE " << this->wheres.str(); }
   if ( ! this->firstOrder ) { qry << " ORDER BY " << this->orders.str(); }
@@ -573,25 +554,21 @@ PkgQuery::str() const
 
 /* -------------------------------------------------------------------------- */
 
-  std::unordered_set<std::string>
+std::unordered_set<std::string>
 PkgQuery::filterSemvers(
-  const std::unordered_set<std::string> & versions
-) const
+  const std::unordered_set<std::string> & versions ) const
 {
-  static const std::vector<std::string> ignores = {
-    "", "*", "any", "^*", "~*", "x", "X"
-  };
-  if ( ( ! this->semver.has_value() ) ||
-       ( std::find( ignores.begin(), ignores.end(), * this->semver )
-         != ignores.end()
-       )
-     )
+  static const std::vector<std::string> ignores
+    = { "", "*", "any", "^*", "~*", "x", "X" };
+  if ( ( ! this->semver.has_value() )
+       || ( std::find( ignores.begin(), ignores.end(), *this->semver )
+            != ignores.end() ) )
     {
       return versions;
     }
   std::list<std::string>          args( versions.begin(), versions.end() );
   std::unordered_set<std::string> rsl;
-  for ( auto & version : versions::semverSat( * this->semver, args ) )
+  for ( auto & version : versions::semverSat( *this->semver, args ) )
     {
       rsl.emplace( std::move( version ) );
     }
@@ -601,12 +578,12 @@ PkgQuery::filterSemvers(
 
 /* -------------------------------------------------------------------------- */
 
-  std::shared_ptr<sqlite3pp::query>
+std::shared_ptr<sqlite3pp::query>
 PkgQuery::bind( sqlite3pp::database & pdb ) const
 {
-  std::string stmt = this->str();
-  std::shared_ptr<sqlite3pp::query> qry =
-    std::make_shared<sqlite3pp::query>( pdb, stmt.c_str() );
+  std::string                       stmt = this->str();
+  std::shared_ptr<sqlite3pp::query> qry
+    = std::make_shared<sqlite3pp::query>( pdb, stmt.c_str() );
   for ( const auto & [var, val] : this->binds )
     {
       qry->bind( var.c_str(), val, sqlite3pp::copy );
@@ -617,7 +594,7 @@ PkgQuery::bind( sqlite3pp::database & pdb ) const
 
 /* -------------------------------------------------------------------------- */
 
-  std::vector<row_id>
+std::vector<row_id>
 PkgQuery::execute( sqlite3pp::database & pdb ) const
 {
   std::shared_ptr<sqlite3pp::query> qry = this->bind( pdb );
@@ -626,7 +603,7 @@ PkgQuery::execute( sqlite3pp::database & pdb ) const
   /* If we don't need to handle `semver' this is easy. */
   if ( ! this->semver.has_value() )
     {
-      for ( const auto & row : * qry )
+      for ( const auto & row : *qry )
         {
           rsl.push_back( row.get<long long>( 0 ) );
         }
@@ -639,11 +616,10 @@ PkgQuery::execute( sqlite3pp::database & pdb ) const
   std::unordered_set<std::string> versions;
   /* Use a vector to preserve ordering original ordering. */
   std::vector<std::pair<row_id, std::string>> idVersions;
-  for ( const auto & row : * qry )
+  for ( const auto & row : *qry )
     {
       const auto & [_, version] = idVersions.emplace_back(
-        std::make_pair( row.get<long long>( 0 ), row.get<std::string>( 1 ) )
-      );
+        std::make_pair( row.get<long long>( 0 ), row.get<std::string>( 1 ) ) );
       versions.emplace( version );
     }
   versions = this->filterSemvers( versions );
@@ -661,7 +637,7 @@ PkgQuery::execute( sqlite3pp::database & pdb ) const
 
 /* -------------------------------------------------------------------------- */
 
-}  /* End Namespace `flox::pkgdb' */
+}  // namespace flox::pkgdb
 
 
 /* -------------------------------------------------------------------------- *

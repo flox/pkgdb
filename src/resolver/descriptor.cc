@@ -10,9 +10,9 @@
 
 #include <regex>
 
-#include "versions.hh"
 #include "flox/core/exceptions.hh"
 #include "flox/resolver/descriptor.hh"
+#include "versions.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -29,10 +29,9 @@ namespace flox::resolver {
  * @param desc The descriptor to initialize.
  * @param version The version description to parse.
  */
-  static void
-initManifestDescriptorVersion(       ManifestDescriptor & desc
-                             , const std::string        & version
-                             )
+static void
+initManifestDescriptorVersion( ManifestDescriptor & desc,
+                               const std::string &  version )
 {
   /* Strip leading/trailing whitespace. */
   std::string trimmed = trim_copy( version );
@@ -48,23 +47,18 @@ initManifestDescriptorVersion(       ManifestDescriptor & desc
    * We identify `=` as an explicit _exact version_ match. */
   switch ( trimmed.at( 0 ) )
     {
-      case '=':
-        desc.version = std::move( trimmed.substr( 1 ) );
-        break;
+      case '=': desc.version = std::move( trimmed.substr( 1 ) ); break;
 
       case '*':
       case '~':
       case '^':
       case '>':
-      case '<':
-        desc.semver = std::move( trimmed );
-        break;
+      case '<': desc.semver = std::move( trimmed ); break;
 
       default:
         /* If it's a valid semver or a date then it's not a range. */
-        if ( versions::isSemver( trimmed ) || versions::isDate( trimmed ) ||
-             ( ! versions::isSemverRange( trimmed ) )
-           )
+        if ( versions::isSemver( trimmed ) || versions::isDate( trimmed )
+             || ( ! versions::isSemverRange( trimmed ) ) )
           {
             desc.version = std::move( trimmed );
           }
@@ -80,7 +74,7 @@ initManifestDescriptorVersion(       ManifestDescriptor & desc
 /* -------------------------------------------------------------------------- */
 
 /** @brief Get a `flox::resolver::AttrPathGlob` from a string if necessary. */
-  static AttrPathGlob
+static AttrPathGlob
 maybeSplitAttrPathGlob( const ManifestDescriptorRaw::AbsPath & absPath )
 {
   if ( std::holds_alternative<AttrPathGlob>( absPath ) )
@@ -93,15 +87,13 @@ maybeSplitAttrPathGlob( const ManifestDescriptorRaw::AbsPath & absPath )
   for ( const auto & part : path )
     {
       /* Treat `null' or `*' as a glob. */
-      /* TODO we verify that only the second option is a glob elsewhere, but we could do that here instead */
+      /* TODO we verify that only the second option is a glob elsewhere, but we
+       * could do that here instead */
       if ( ( ( part == "null" ) || ( part == "*" ) ) )
         {
           glob.emplace_back( std::nullopt );
         }
-      else
-        {
-          glob.emplace_back( part );
-        }
+      else { glob.emplace_back( part ); }
       ++idx;
     }
   return glob;
@@ -116,43 +108,37 @@ maybeSplitAttrPathGlob( const ManifestDescriptorRaw::AbsPath & absPath )
  * @param desc The descriptor to initialize.
  * @param raw The raw description to parse.
  */
-  static void
-initManifestDescriptorAbsPath(       ManifestDescriptor    & desc
-                             , const ManifestDescriptorRaw & raw
-                             )
+static void
+initManifestDescriptorAbsPath( ManifestDescriptor &          desc,
+                               const ManifestDescriptorRaw & raw )
 {
   if ( ! raw.absPath.has_value() )
     {
       throw FloxException(
         "`absPath' must be set when calling "
-        "`flox::resolver::ManifestDescriptor::initManifestDescriptorAbsPath'"
-       );
+        "`flox::resolver::ManifestDescriptor::initManifestDescriptorAbsPath'" );
     }
 
   /* You might need to parse a globbed attr path, so handle that first. */
-  AttrPathGlob glob = maybeSplitAttrPathGlob( * raw.absPath );
+  AttrPathGlob glob = maybeSplitAttrPathGlob( *raw.absPath );
 
   if ( glob.size() < 3 )
     {
-      throw FloxException(
-        "`absPath' must have at least three parts"
-      );
+      throw FloxException( "`absPath' must have at least three parts" );
     }
 
   const auto & first = glob.front();
   if ( ! first.has_value() )
     {
       throw FloxException(
-        "`absPath' may only have a glob as its second element"
-      );
+        "`absPath' may only have a glob as its second element" );
     }
-  desc.subtree = Subtree( * first );
+  desc.subtree = Subtree( *first );
 
   if ( raw.stability.has_value() && ( first.value() != "catalog" ) )
     {
       throw FloxException(
-        "`stability' cannot be used with non-catalog paths"
-      );
+        "`stability' cannot be used with non-catalog paths" );
     }
 
   if ( first.value() == "catalog" )
@@ -160,28 +146,25 @@ initManifestDescriptorAbsPath(       ManifestDescriptor    & desc
       if ( glob.size() < 4 )
         {
           throw FloxException(
-            "`absPath' must have at least four parts for catalog paths"
-          );
+            "`absPath' must have at least four parts for catalog paths" );
         }
       const auto & third = glob.at( 2 );
       if ( ! third.has_value() )
         {
           throw FloxException(
-            "`absPath' may only have a glob as its second element"
-          );
+            "`absPath' may only have a glob as its second element" );
         }
-      desc.stability = * third;
+      desc.stability = *third;
       desc.path      = AttrPath {};
       for ( auto itr = glob.begin() + 3; itr != glob.end(); ++itr )
         {
-          const auto & elem = * itr;
+          const auto & elem = *itr;
           if ( ! elem.has_value() )
             {
               throw FloxException(
-                "`absPath' may only have a glob as its second element"
-              );
+                "`absPath' may only have a glob as its second element" );
             }
-          desc.path->emplace_back( * elem );
+          desc.path->emplace_back( *elem );
         }
     }
   else
@@ -189,28 +172,25 @@ initManifestDescriptorAbsPath(       ManifestDescriptor    & desc
       desc.path = AttrPath {};
       for ( auto itr = glob.begin() + 2; itr != glob.end(); ++itr )
         {
-          const auto & elem = * itr;
+          const auto & elem = *itr;
           if ( ! elem.has_value() )
             {
               throw FloxException(
-                "`absPath' may only have a glob as its second element"
-              );
+                "`absPath' may only have a glob as its second element" );
             }
-          desc.path->emplace_back( * elem );
+          desc.path->emplace_back( *elem );
         }
     }
 
   const auto & second = glob.at( 1 );
-  if ( second.has_value() &&
-       ( ( * second ) != "null" ) && ( ( * second ) != "*" )
-     )
+  if ( second.has_value() && ( ( *second ) != "null" )
+       && ( ( *second ) != "*" ) )
     {
-      desc.systems = std::vector<std::string> { * second };
-      if ( raw.systems.has_value() && ( * raw.systems != * desc.systems ) )
+      desc.systems = std::vector<std::string> { *second };
+      if ( raw.systems.has_value() && ( *raw.systems != *desc.systems ) )
         {
           throw FloxException(
-            "`systems' list conflicts with `absPath' system specification"
-          );
+            "`systems' list conflicts with `absPath' system specification" );
         }
     }
 }
@@ -219,9 +199,7 @@ initManifestDescriptorAbsPath(       ManifestDescriptor    & desc
 /* -------------------------------------------------------------------------- */
 
 ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
-  : name( raw.name )
-  , optional( raw.optional )
-  , group( raw.packageGroup )
+  : name( raw.name ), optional( raw.optional ), group( raw.packageGroup )
 {
   /* Determine if `version' was a range or not.
    * NOTE: The string "4.2.0" is not a range, but "4.2" is!
@@ -229,13 +207,13 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
    *       you need to use "=4.2". */
   if ( raw.version.has_value() )
     {
-      initManifestDescriptorVersion( * this, * raw.version );
+      initManifestDescriptorVersion( *this, *raw.version );
     }
 
   /* You have to split `absPath' before doing most other fields. */
   if ( raw.absPath.has_value() )
     {
-      initManifestDescriptorAbsPath( * this, raw );
+      initManifestDescriptorAbsPath( *this, raw );
     }
   else if ( raw.stability.has_value() )
     {
@@ -246,35 +224,27 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
   /* Only set if it wasn't handled by `absPath`. */
   if ( ( ! this->systems.has_value() ) && raw.systems.has_value() )
     {
-      this->systems = * raw.systems;
+      this->systems = *raw.systems;
     }
 
   if ( raw.path.has_value() )
     {
       /* Split relative path */
       flox::AttrPath path;
-      if ( std::holds_alternative<std::string>( * raw.path ) )
+      if ( std::holds_alternative<std::string>( *raw.path ) )
         {
-          path = splitAttrPath( std::get<std::string>( * raw.path ) );
+          path = splitAttrPath( std::get<std::string>( *raw.path ) );
         }
-      else
-        {
-          path = std::get<AttrPath>( * raw.path );
-        }
+      else { path = std::get<AttrPath>( *raw.path ); }
 
       if ( this->path.has_value() )
         {
           if ( this->path != path )
             {
-              throw FloxException(
-                  "`path' conflicts with with `absPath'"
-              );
+              throw FloxException( "`path' conflicts with with `absPath'" );
             }
         }
-      else
-        {
-          this->path = path;
-        }
+      else { this->path = path; }
     }
 
   if ( raw.packageRepository.has_value() )
@@ -282,34 +252,28 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
       if ( raw.input.has_value() )
         {
           throw FloxException(
-            "`packageRepository' may not be used with `input'"
-          );
+            "`packageRepository' may not be used with `input'" );
         }
 
-      if ( std::holds_alternative<std::string>( * raw.packageRepository ) )
+      if ( std::holds_alternative<std::string>( *raw.packageRepository ) )
         {
-          this->input =
-            parseFlakeRef( std::get<std::string>( * raw.packageRepository ) );
+          this->input
+            = parseFlakeRef( std::get<std::string>( *raw.packageRepository ) );
         }
       else
         {
           this->input = nix::FlakeRef::fromAttrs(
-            std::get<nix::fetchers::Attrs>( * raw.packageRepository )
-          );
+            std::get<nix::fetchers::Attrs>( *raw.packageRepository ) );
         }
-      assert( std::holds_alternative<nix::FlakeRef>( * this->input ) );
+      assert( std::holds_alternative<nix::FlakeRef>( *this->input ) );
     }
-  else if ( raw.input.has_value() )
-    {
-      this->input = * raw.input;
-    }
-
+  else if ( raw.input.has_value() ) { this->input = *raw.input; }
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-  void
+void
 ManifestDescriptor::clear()
 {
   this->name      = std::nullopt;
@@ -327,42 +291,35 @@ ManifestDescriptor::clear()
 
 /* -------------------------------------------------------------------------- */
 
-  pkgdb::PkgQueryArgs &
+pkgdb::PkgQueryArgs &
 ManifestDescriptor::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 {
   /* Must exactly match either `pname' or `pkgAttrName'. */
-  if ( this->name.has_value() )
-    {
-      pqa.pnameOrPkgAttrName = * this->name;
-    }
+  if ( this->name.has_value() ) { pqa.pnameOrPkgAttrName = *this->name; }
 
-  if ( this->version.has_value() )
-    {
-      pqa.version = * this->version;
-    }
+  if ( this->version.has_value() ) { pqa.version = *this->version; }
   else if ( this->semver.has_value() )
     {
-      pqa.semver = * this->semver;
+      pqa.semver = *this->semver;
       /* Use `preferPreRelease' on `~<VERSION>-<TAG>' ranges. */
       if ( this->semver->at( 0 ) == '~' )
         {
           pqa.preferPreReleases = std::regex_match(
-            * this->semver
-          , std::regex( "~[^ ]+-.*", std::regex::ECMAScript )
-          );
+            *this->semver,
+            std::regex( "~[^ ]+-.*", std::regex::ECMAScript ) );
         }
     }
 
   if ( this->subtree.has_value() )
     {
-      pqa.subtrees = std::vector<Subtree> { * this->subtree };
+      pqa.subtrees = std::vector<Subtree> { *this->subtree };
     }
 
-  if ( this->systems.has_value() ) { pqa.systems = * this->systems; }
+  if ( this->systems.has_value() ) { pqa.systems = *this->systems; }
 
   if ( this->stability.has_value() )
     {
-      pqa.stabilities = std::vector<std::string> { * this->stability };
+      pqa.stabilities = std::vector<std::string> { *this->stability };
     }
 
   pqa.relPath = this->path;
@@ -373,7 +330,7 @@ ManifestDescriptor::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 
 /* -------------------------------------------------------------------------- */
 
-}  /* End namespaces `flox::resolver' */
+}  // namespace flox::resolver
 
 
 /* -------------------------------------------------------------------------- *

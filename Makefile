@@ -30,6 +30,7 @@ TEST       ?= test
 DOXYGEN    ?= doxygen
 BEAR       ?= bear
 TIDY       ?= clang-tidy
+FMT        ?= clang-format
 
 
 # ---------------------------------------------------------------------------- #
@@ -423,6 +424,12 @@ ignores: tests/.gitignore
 tests/.gitignore: FORCE
 	$(MKDIR_P) $(@D)
 	printf '%s\n' $(patsubst tests/%,%,$(test_SRCS:.cc=)) > $@
+
+# ---------------------------------------------------------------------------- #
+
+.PHONY: fmt
+fmt: $(COMMON_HEADERS) $(ALL_SRCS)
+	$(FMT) -i $^
 
 
 # ---------------------------------------------------------------------------- #

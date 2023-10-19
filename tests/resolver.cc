@@ -8,13 +8,13 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
 
 #include <nlohmann/json.hpp>
 
-#include "test.hh"
 #include "flox/resolver/resolve.hh"
+#include "test.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -79,7 +79,7 @@ static const nlohmann::json commonPreferences = R"( {
 /* -------------------------------------------------------------------------- */
 
 /** @brief Test basic resolution for `hello`. */
-  bool
+bool
 test_resolve0()
 {
   flox::RegistryRaw             registry    = commonRegistry;
@@ -101,13 +101,12 @@ test_resolve0()
 /* -------------------------------------------------------------------------- */
 
 /** @brief Expand number of stabilites and ensure `nixpkgs` is still scanned. */
-  bool
+bool
 test_resolveStabilities()
 {
   nlohmann::json registryJSON = commonRegistry;
-  registryJSON["inputs"]["nixpkgs-flox"]["stabilities"] = {
-    "stable", "staging", "unstable"
-  };
+  registryJSON["inputs"]["nixpkgs-flox"]["stabilities"]
+    = { "stable", "staging", "unstable" };
   flox::RegistryRaw registry = registryJSON;
 
   flox::pkgdb::QueryPreferences preferences = commonPreferences;
@@ -128,7 +127,7 @@ test_resolveStabilities()
 /* -------------------------------------------------------------------------- */
 
 /** @brief Limit resolution to a single input. */
-  bool
+bool
 test_resolveInput()
 {
   flox::RegistryRaw             registry    = commonRegistry;
@@ -151,22 +150,24 @@ test_resolveInput()
 
 /* -------------------------------------------------------------------------- */
 
-  int
+int
 main( int argc, char * argv[] )
 {
   int exitCode = EXIT_SUCCESS;
-# define RUN_TEST( ... )  _RUN_TEST( exitCode, __VA_ARGS__ )
+#define RUN_TEST( ... ) _RUN_TEST( exitCode, __VA_ARGS__ )
 
-/* -------------------------------------------------------------------------- */
+  /* --------------------------------------------------------------------------
+   */
 
   nix::verbosity = nix::lvlWarn;
-  if ( ( 1 < argc ) && ( std::string_view( argv[1] ) == "-v" ) ) // NOLINT
+  if ( ( 1 < argc ) && ( std::string_view( argv[1] ) == "-v" ) )  // NOLINT
     {
       nix::verbosity = nix::lvlDebug;
     }
 
 
-/* -------------------------------------------------------------------------- */
+  /* --------------------------------------------------------------------------
+   */
 
   /* Make a temporary directory for cache DBs to ensure tests
    * are reproducible. */
@@ -174,21 +175,20 @@ main( int argc, char * argv[] )
   setenv( "PKGDB_CACHEDIR", cacheDir.c_str(), 1 );
 
 
-/* -------------------------------------------------------------------------- */
+  /* --------------------------------------------------------------------------
+   */
 
   {
 
     RUN_TEST( resolve0 );
     RUN_TEST( resolveStabilities );
     RUN_TEST( resolveInput );
-
   }
 
   /* Cleanup the temporary directory. */
   nix::deletePath( cacheDir );
 
   return exitCode;
-
 }
 
 
