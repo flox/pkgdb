@@ -257,7 +257,8 @@ private:
    *   std::shared_ptr<nix::Store> store
    */
 
-  bool force = false; /**< Whether to force re-evaluation of flakes. */
+  [[maybe_unused]] bool force
+    = false; /**< Whether to force re-evaluation of flakes. */
 
   std::shared_ptr<Registry<PkgDbInputFactory>> registry;
 
