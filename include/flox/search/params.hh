@@ -38,7 +38,8 @@ namespace flox::search {
  * This is essentially a reorganized form of @a flox::pkgdb::PkgQueryArgs
  * that is suited for JSON input.
  */
-struct SearchQuery : public pkgdb::PkgDescriptorBase {
+struct SearchQuery : public pkgdb::PkgDescriptorBase
+{
 
   /* From `pkgdb::PkgDescriptorBase`:
    *   std::optional<std::string> name;

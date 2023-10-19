@@ -18,7 +18,8 @@ namespace flox::pkgdb {
 
 // TODO: Conversion by JSON isn't efficient. Read values directly.
 void
-DbPackage::initRawPackage( PkgDbReadOnly &pkgdb ) {
+DbPackage::initRawPackage( PkgDbReadOnly &pkgdb )
+{
   sqlite3pp::query qry( pkgdb.db, R"SQL(
       SELECT json_object(
         'name',             name

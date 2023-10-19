@@ -80,7 +80,8 @@ static const nlohmann::json commonPreferences = R"( {
 
 /** @brief Test basic resolution for `hello`. */
 bool
-test_resolve0() {
+test_resolve0()
+{
   flox::RegistryRaw             registry    = commonRegistry;
   flox::pkgdb::QueryPreferences preferences = commonPreferences;
 
@@ -101,7 +102,8 @@ test_resolve0() {
 
 /** @brief Expand number of stabilites and ensure `nixpkgs` is still scanned. */
 bool
-test_resolveStabilities() {
+test_resolveStabilities()
+{
   nlohmann::json registryJSON                           = commonRegistry;
   registryJSON["inputs"]["nixpkgs-flox"]["stabilities"] = { "stable",
                                                             "staging",
@@ -127,7 +129,8 @@ test_resolveStabilities() {
 
 /** @brief Limit resolution to a single input. */
 bool
-test_resolveInput() {
+test_resolveInput()
+{
   flox::RegistryRaw             registry    = commonRegistry;
   flox::pkgdb::QueryPreferences preferences = commonPreferences;
 
@@ -149,7 +152,8 @@ test_resolveInput() {
 /* -------------------------------------------------------------------------- */
 
 int
-main( int argc, char * argv[] ) {
+main( int argc, char * argv[] )
+{
   int exitCode = EXIT_SUCCESS;
 #define RUN_TEST( ... ) _RUN_TEST( exitCode, __VA_ARGS__ )
 
@@ -158,9 +162,9 @@ main( int argc, char * argv[] ) {
 
   nix::verbosity = nix::lvlWarn;
   if ( ( 1 < argc ) && ( std::string_view( argv[1] ) == "-v" ) )  // NOLINT
-  {
-    nix::verbosity = nix::lvlDebug;
-  }
+    {
+      nix::verbosity = nix::lvlDebug;
+    }
 
 
   /* --------------------------------------------------------------------------

@@ -20,7 +20,8 @@ namespace flox::pkgdb {
 /* -------------------------------------------------------------------------- */
 
 /** @brief A @a RegistryInput that opens a @a PkgDb associated with a flake. */
-class PkgDbInput : public FloxFlakeInput {
+class PkgDbInput : public FloxFlakeInput
+{
 
 private:
   /* Provided by `FloxFlakeInput':
@@ -71,7 +72,8 @@ public:
    * @brief Tag used to disambiguate construction with database path and
    *        cache directory path.
    */
-  struct db_path_tag {};
+  struct db_path_tag
+  {};
 
 
   /**
@@ -92,7 +94,8 @@ public:
               const std::string & name = "" )
     : FloxFlakeInput( store, input )
     , dbPath( std::move( dbPath ) )
-    , name( name.empty() ? std::nullopt : std::make_optional( name ) ) {
+    , name( name.empty() ? std::nullopt : std::make_optional( name ) )
+  {
     this->init();
   }
 
@@ -112,7 +115,8 @@ public:
     : FloxFlakeInput( store, input )
     , dbPath( genPkgDbName( this->getFlake()->lockedFlake.getFingerprint(),
                             cacheDir ) )
-    , name( name.empty() ? std::nullopt : std::make_optional( name ) ) {
+    , name( name.empty() ? std::nullopt : std::make_optional( name ) )
+  {
     this->init();
   }
 
@@ -120,7 +124,8 @@ public:
    * @return The read-only database connection handle.
    */
   [[nodiscard]] nix::ref<PkgDbReadOnly>
-  getDbReadOnly() const {
+  getDbReadOnly() const
+  {
     return static_cast<nix::ref<PkgDbReadOnly>>( this->dbRO );
   }
 
@@ -133,13 +138,15 @@ public:
 
   /** @brief Close the read/write database connection if it is open. */
   void
-  closeDbReadWrite() {
+  closeDbReadWrite()
+  {
     this->dbRW = nullptr;
   }
 
   /** @return Filesystem path to the flake's package database. */
   [[nodiscard]] std::filesystem::path
-  getDbPath() const {
+  getDbPath() const
+  {
     return this->dbPath;
   }
 
@@ -167,7 +174,8 @@ public:
 
   /** @brief Add/set a shortname for this input. */
   void
-  setName( std::string_view name ) {
+  setName( std::string_view name )
+  {
     this->name = name;
   }
 
@@ -176,7 +184,8 @@ public:
    * @return The shortname of this input, or its locked flake-ref.
    */
   [[nodiscard]] std::string
-  getNameOrURL() {
+  getNameOrURL()
+  {
     return this->name.value_or(
       this->getFlake()->lockedFlake.flake.lockedRef.to_string() );
   }
@@ -192,7 +201,8 @@ public:
 /* -------------------------------------------------------------------------- */
 
 /** @brief Factory for @a PkgDbInput. */
-class PkgDbInputFactory {
+class PkgDbInputFactory
+{
 
 private:
   nix::ref<nix::Store>  store;    /**< `nix` store connection. */
@@ -206,11 +216,13 @@ public:
   explicit PkgDbInputFactory(
     nix::ref<nix::Store> & store,
     std::filesystem::path  cacheDir = getPkgDbCachedir() )
-    : store( store ), cacheDir( std::move( cacheDir ) ) {}
+    : store( store ), cacheDir( std::move( cacheDir ) )
+  {}
 
   /** @brief Construct an input from a @a RegistryInput. */
   [[nodiscard]] std::shared_ptr<PkgDbInput>
-  mkInput( const std::string & name, const RegistryInput & input ) {
+  mkInput( const std::string & name, const RegistryInput & input )
+  {
     return std::make_shared<PkgDbInput>( this->store,
                                          input,
                                          this->cacheDir,
@@ -232,7 +244,8 @@ static_assert( registry_input_factory<PkgDbInputFactory> );
  * Derived classes must provide their own @a getRegistryRaw and @a getSystems
  * implementations to support @a initRegistry and @a scrapeIfNeeded.
  */
-class PkgDbRegistryMixin : virtual protected NixStoreMixin {
+class PkgDbRegistryMixin : virtual protected NixStoreMixin
+{
 
 private:
   /* From `NixStoreMixin':

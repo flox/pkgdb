@@ -25,7 +25,8 @@ using namespace nlohmann::literals;
 /* -------------------------------------------------------------------------- */
 
 void
-printInput( const auto &pair ) {
+printInput( const auto &pair )
+{
   const std::string         &name   = pair.first;
   const flox::RegistryInput &params = pair.second;
   std::cout << "    " << name << std::endl
@@ -42,11 +43,13 @@ printInput( const auto &pair ) {
 /* -------------------------------------------------------------------------- */
 
 int
-main( int argc, char *argv[] ) {
+main( int argc, char *argv[] )
+{
   flox::resolver::ResolveOneParams params;
 
-  if ( argc < 2 ) {
-    nlohmann::json::parse( R"( {
+  if ( argc < 2 )
+    {
+      nlohmann::json::parse( R"( {
         "registry": {
           "inputs": {
             "nixpkgs": {
@@ -84,10 +87,9 @@ main( int argc, char *argv[] ) {
         , "semver": ">=2"
         }
       } )" )
-      .get_to( params );
-  } else {
-    nlohmann::json::parse( argv[1] ).get_to( params );
-  }
+        .get_to( params );
+    }
+  else { nlohmann::json::parse( argv[1] ).get_to( params ); }
 
   auto state = flox::resolver::ResolverState(
     params.registry,
@@ -95,10 +97,10 @@ main( int argc, char *argv[] ) {
 
   auto descriptor = params.query;
 
-  for ( const auto &resolved :
-        flox::resolver::resolve_v0( state, descriptor ) ) {
-    std::cout << nlohmann::json( resolved ).dump() << std::endl;
-  }
+  for ( const auto &resolved : flox::resolver::resolve_v0( state, descriptor ) )
+    {
+      std::cout << nlohmann::json( resolved ).dump() << std::endl;
+    }
 
 
   std::cout << std::endl;

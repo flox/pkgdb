@@ -43,7 +43,8 @@ namespace flox::pkgdb {
 /* -------------------------------------------------------------------------- */
 
 /** @brief SQLite3 schema versions. */
-struct SqlVersions {
+struct SqlVersions
+{
 
   /**
    * The SQLite3 tables schema version for the package database.
@@ -60,13 +61,15 @@ struct SqlVersions {
 
   /** @return Whether two version sets are equal. */
   constexpr bool
-  operator==( const SqlVersions & other ) const {
+  operator==( const SqlVersions & other ) const
+  {
     return ( this->tables == other.tables ) && ( this->views == other.views );
   }
 
   /** @return Whether two version sets are NOT equal. */
   constexpr bool
-  operator!=( const SqlVersions & other ) const {
+  operator!=( const SqlVersions & other ) const
+  {
     return ! ( ( *this ) == other );
   }
 
@@ -95,10 +98,12 @@ using sql_rc      = int;                 /**< `SQLITE_*` result code. */
 /* -------------------------------------------------------------------------- */
 
 /** @brief A generic exception thrown by `flox::pkgdb::*` classes. */
-struct PkgDbException : public FloxException {
+struct PkgDbException : public FloxException
+{
   std::filesystem::path dbPath;
   PkgDbException( std::filesystem::path dbPath, std::string_view msg )
-    : FloxException( msg ), dbPath( std::move( dbPath ) ) {}
+    : FloxException( msg ), dbPath( std::move( dbPath ) )
+  {}
 }; /* End struct `PkgDbException' */
 
 
@@ -126,7 +131,8 @@ genPkgDbName( const Fingerprint &           fingerprint,
  * @brief A SQLite3 database used to cache derivation/package information about
  *        a single locked flake.
  */
-class PkgDbReadOnly {
+class PkgDbReadOnly
+{
 
   /* --------------------------------------------------------------------------
    */
@@ -139,7 +145,8 @@ public:
   SQLiteDb              db;          /**< SQLite3 database handle. */
 
   /** @brief Locked _flake reference_ for database's flake. */
-  struct LockedFlakeRef {
+  struct LockedFlakeRef
+  {
     std::string string; /**< Locked URI string.  */
     /** Exploded form of URI as an attr-set. */
     nlohmann::json attrs = nlohmann::json::object();
@@ -155,11 +162,13 @@ public:
   // public:
 
   /** @brief Thrown when a database is not found. */
-  struct NoSuchDatabase : PkgDbException {
+  struct NoSuchDatabase : PkgDbException
+  {
     explicit NoSuchDatabase( const PkgDbReadOnly & pdb )
       : PkgDbException(
           pdb.dbPath,
-          std::string( "No such database '" + pdb.dbPath.string() + "'." ) ) {}
+          std::string( "No such database '" + pdb.dbPath.string() + "'." ) )
+    {}
   }; /* End struct `NoSuchDatabase' */
 
 
@@ -208,7 +217,8 @@ public:
    */
   explicit PkgDbReadOnly( std::string_view dbPath )
     : fingerprint( nix::htSHA256 ) /* Filled by `loadLockedFlake' later */
-    , dbPath( dbPath ) {
+    , dbPath( dbPath )
+  {
     this->init();
   }
 
@@ -220,7 +230,8 @@ public:
    * @param dbPath Absolute path to database file.
    */
   PkgDbReadOnly( const Fingerprint & fingerprint, std::string_view dbPath )
-    : fingerprint( fingerprint ), dbPath( dbPath ) {
+    : fingerprint( fingerprint ), dbPath( dbPath )
+  {
     this->init();
   }
 
@@ -231,7 +242,8 @@ public:
    * @param fingerprint Unique hash associated with locked flake.
    */
   explicit PkgDbReadOnly( const Fingerprint & fingerprint )
-    : PkgDbReadOnly( fingerprint, genPkgDbName( fingerprint ).string() ) {}
+    : PkgDbReadOnly( fingerprint, genPkgDbName( fingerprint ).string() )
+  {}
 
 
   /* --------------------------------------------------------------------------
@@ -369,7 +381,8 @@ public:
 
 
   nix::FlakeRef
-  getLockedFlakeRef() const {
+  getLockedFlakeRef() const
+  {
     return nix::FlakeRef::fromAttrs(
       nix::fetchers::jsonToAttrs( this->lockedRef.attrs ) );
   }

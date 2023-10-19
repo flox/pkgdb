@@ -45,7 +45,8 @@ using AttrPathGlob = std::vector<std::optional<std::string>>;
  * down into the descriptor, and do not attempt to distinguish from relative or
  * absolute attribute paths in the @a path field.
  */
-struct PkgDescriptorRaw : public pkgdb::PkgDescriptorBase {
+struct PkgDescriptorRaw : public pkgdb::PkgDescriptorBase
+{
 
   /* From `pkgdb::PkgDescriptorBase':
    *   std::optional<std::string> name;

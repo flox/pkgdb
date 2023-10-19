@@ -21,7 +21,8 @@ namespace flox::pkgdb {
 /* -------------------------------------------------------------------------- */
 
 /** @brief Adds a single package database path to a state blob. */
-struct DbPathMixin {
+struct DbPathMixin
+{
 
   std::optional<std::filesystem::path> dbPath;
 
@@ -42,7 +43,8 @@ struct DbPathMixin {
 template<pkgdb_typename T>
 struct PkgDbMixin
   : virtual public DbPathMixin
-  , virtual public command::InlineInputMixin {
+  , virtual public command::InlineInputMixin
+{
 
   std::shared_ptr<FloxFlake> flake;
   std::shared_ptr<T>         db;
@@ -74,7 +76,8 @@ struct PkgDbMixin
 class ScrapeCommand
   : public DbPathMixin
   , public command::AttrPathMixin
-  , public command::InlineInputMixin {
+  , public command::InlineInputMixin
+{
 
 private:
   command::VerboseParser    parser;
@@ -91,7 +94,8 @@ public:
   ScrapeCommand();
 
   [[nodiscard]] command::VerboseParser &
-  getParser() {
+  getParser()
+  {
     return this->parser;
   }
 
@@ -126,7 +130,8 @@ public:
  */
 class GetCommand
   : public PkgDbMixin<PkgDbReadOnly>
-  , public command::AttrPathMixin {
+  , public command::AttrPathMixin
+{
 
 private:
   command::VerboseParser parser; /**< `get`       parser */
@@ -186,7 +191,8 @@ public:
   GetCommand();
 
   [[nodiscard]] command::VerboseParser &
-  getParser() {
+  getParser()
+  {
     return this->parser;
   }
 
@@ -203,7 +209,8 @@ public:
 
 /* -------------------------------------------------------------------------- */
 
-class ListCommand {
+class ListCommand
+{
 
 private:
   command::VerboseParser               parser;
@@ -216,7 +223,8 @@ public:
   ListCommand();
 
   [[nodiscard]] command::VerboseParser &
-  getParser() {
+  getParser()
+  {
     return this->parser;
   }
 

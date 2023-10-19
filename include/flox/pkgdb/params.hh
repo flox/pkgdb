@@ -24,7 +24,8 @@ namespace flox::pkgdb {
 /**
  * @brief Global preferences used for resolution/search with multiple queries.
  */
-struct QueryPreferences {
+struct QueryPreferences
+{
 
   /**
    * Ordered list of systems to be searched.
@@ -34,7 +35,8 @@ struct QueryPreferences {
 
 
   /** @brief Allow/disallow packages with certain metadata. */
-  struct Allows {
+  struct Allows
+  {
 
     /** Whether to include packages which are explicitly marked `unfree`. */
     bool unfree = true;
@@ -56,7 +58,8 @@ struct QueryPreferences {
    * These act as the _global_ default, but may be overridden by
    * individual descriptors.
    */
-  struct Semver {
+  struct Semver
+  {
     /** Whether pre-release versions should be ordered before releases. */
     bool preferPreReleases = false;
   }; /* End struct `QueryPreferences::Semver' */
@@ -116,7 +119,8 @@ to_json( nlohmann::json &jto, const QueryPreferences &prefs );
  * @see flox::search::SearchParams
  */
 template<pkg_descriptor_typename QueryType>
-struct QueryParams : public QueryPreferences {
+struct QueryParams : public QueryPreferences
+{
 
   using query_type = QueryType;
 
@@ -145,7 +149,8 @@ struct QueryParams : public QueryPreferences {
 
   /** @brief Reset to default/empty state. */
   virtual void
-  clear() override {
+  clear() override
+  {
     this->pkgdb::QueryPreferences::clear();
     this->registry.clear();
     this->query.clear();
@@ -160,7 +165,8 @@ struct QueryParams : public QueryPreferences {
    *         searched, `false` otherwise.
    */
   virtual bool
-  fillPkgQueryArgs( const std::string &input, pkgdb::PkgQueryArgs &pqa ) const {
+  fillPkgQueryArgs( const std::string &input, pkgdb::PkgQueryArgs &pqa ) const
+  {
     /* Fill from globals */
     this->pkgdb::QueryPreferences::fillPkgQueryArgs( pqa );
     /* Fill from input */
@@ -178,23 +184,32 @@ struct QueryParams : public QueryPreferences {
 
 template<pkg_descriptor_typename QueryType>
 void
-from_json( const nlohmann::json &jfrom, QueryParams<QueryType> &params ) {
+from_json( const nlohmann::json &jfrom, QueryParams<QueryType> &params )
+{
   pkgdb::from_json( jfrom, dynamic_cast<pkgdb::QueryPreferences &>( params ) );
-  for ( const auto &[key, value] : jfrom.items() ) {
-    if ( key == "registry" ) {
-      if ( value.is_null() ) { continue; }
-      value.get_to( params.registry );
-    } else if ( key == "query" ) {
-      if ( value.is_null() ) { continue; }
-      value.get_to( params.query );
-    } else if ( ( key == "systems" ) || ( key == "allow" ) ||
-                ( key == "semver" ) ) {
-      /* Handled by `QueryPreferences::from_json' */
-      continue;
-    } else {
-      throw FloxException( "Unexpected preferences field '" + key + '\'' );
+  for ( const auto &[key, value] : jfrom.items() )
+    {
+      if ( key == "registry" )
+        {
+          if ( value.is_null() ) { continue; }
+          value.get_to( params.registry );
+        }
+      else if ( key == "query" )
+        {
+          if ( value.is_null() ) { continue; }
+          value.get_to( params.query );
+        }
+      else if ( ( key == "systems" ) || ( key == "allow" ) ||
+                ( key == "semver" ) )
+        {
+          /* Handled by `QueryPreferences::from_json' */
+          continue;
+        }
+      else
+        {
+          throw FloxException( "Unexpected preferences field '" + key + '\'' );
+        }
     }
-  }
 }
 
 
@@ -202,7 +217,8 @@ from_json( const nlohmann::json &jfrom, QueryParams<QueryType> &params ) {
 
 template<pkg_descriptor_typename QueryType>
 void
-to_json( nlohmann::json &jto, const QueryParams<QueryType> &params ) {
+to_json( nlohmann::json &jto, const QueryParams<QueryType> &params )
+{
   pkgdb::to_json( jto,
                   dynamic_cast<const pkgdb::QueryPreferences &>( params ) );
   jto["registry"] = params.registry;

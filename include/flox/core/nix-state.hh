@@ -44,7 +44,8 @@ initNix();
 /* -------------------------------------------------------------------------- */
 
 /** @brief Mixin which provides a lazy handle to a `nix` store connection. */
-class NixStoreMixin {
+class NixStoreMixin
+{
 
 private:
   std::shared_ptr<nix::Store> store; /**< `nix` store connection.   */
@@ -70,7 +71,8 @@ public:
    * @param store An open `nix` store connection.
    */
   explicit NixStoreMixin( const nix::ref<nix::Store> & store )
-    : store( static_cast<std::shared_ptr<nix::Store>>( store ) ) {
+    : store( static_cast<std::shared_ptr<nix::Store>>( store ) )
+  {
     initNix();
   }
 
@@ -86,7 +88,8 @@ public:
    * Connection remains open for lifetime of object.
    */
   nix::ref<nix::Store>
-  getStore() {
+  getStore()
+  {
     if ( this->store == nullptr ) { this->store = nix::openStore(); }
     return static_cast<nix::ref<nix::Store>>( this->store );
   }
@@ -101,7 +104,8 @@ public:
  * @brief Runtime state containing a `nix` store connection and a
  *        `nix` evaluator.
  */
-class NixState : public NixStoreMixin {
+class NixState : public NixStoreMixin
+{
 
 private:
   /* From `NixStoreMixin':
@@ -130,13 +134,16 @@ public:
    * Evaluator remains open for lifetime of object.
    */
   nix::ref<nix::EvalState>
-  getState() {
-    if ( this->state == nullptr ) {
-      this->state = std::make_shared<nix::EvalState>( std::list<std::string> {},
-                                                      this->getStore(),
-                                                      this->getStore() );
-      this->state->repair = nix::NoRepair;
-    }
+  getState()
+  {
+    if ( this->state == nullptr )
+      {
+        this->state =
+          std::make_shared<nix::EvalState>( std::list<std::string> {},
+                                            this->getStore(),
+                                            this->getStore() );
+        this->state->repair = nix::NoRepair;
+      }
     return static_cast<nix::ref<nix::EvalState>>( this->state );
   }
 

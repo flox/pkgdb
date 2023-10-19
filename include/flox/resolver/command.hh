@@ -24,7 +24,8 @@ namespace flox::resolver {
  * @brief Resolve a set of package requirements to a set of
  *        satisfactory installables.
  */
-class ResolveCommand : pkgdb::PkgDbRegistryMixin {
+class ResolveCommand : pkgdb::PkgDbRegistryMixin
+{
 
 private:
   ResolveOneParams       params; /**< Query arguments and inputs */
@@ -41,17 +42,20 @@ private:
   getResolverState() const;
 
   [[nodiscard]] PkgDescriptorRaw
-  getQuery() const {
+  getQuery() const
+  {
     return this->params.query;
   }
 
   [[nodiscard]] RegistryRaw
-  getRegistryRaw() override {
+  getRegistryRaw() override
+  {
     return this->params.registry;
   }
 
   [[nodiscard]] std::vector<std::string> &
-  getSystems() override {
+  getSystems() override
+  {
     return this->params.systems;
   }
 
@@ -60,7 +64,8 @@ public:
   ResolveCommand();
 
   [[nodiscard]] command::VerboseParser &
-  getParser() {
+  getParser()
+  {
     return this->parser;
   }
 

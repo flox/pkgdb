@@ -18,7 +18,8 @@ namespace flox::search {
 /* -------------------------------------------------------------------------- */
 
 void
-SearchQuery::clear() {
+SearchQuery::clear()
+{
   this->pkgdb::PkgDescriptorBase::clear();
   this->partialMatch = std::nullopt;
 }
@@ -27,42 +28,47 @@ SearchQuery::clear() {
 /* -------------------------------------------------------------------------- */
 
 void
-from_json( const nlohmann::json &jfrom, SearchQuery &qry ) {
+from_json( const nlohmann::json &jfrom, SearchQuery &qry )
+{
   auto getOrFail =
-    [&]( const std::string &key, const nlohmann::json &from, auto &sink ) {
-      if ( from.is_null() ) { return; }
-      try {
+    [&]( const std::string &key, const nlohmann::json &from, auto &sink )
+  {
+    if ( from.is_null() ) { return; }
+    try
+      {
         from.get_to( sink );
-      } catch ( const nlohmann::json::exception &err ) {
+      }
+    catch ( const nlohmann::json::exception &err )
+      {
         throw FloxException( "Failed to parse search query field: 'query." +
                              key + "':\n  " + err.what() );
-      } catch ( ... ) {
+      }
+    catch ( ... )
+      {
         throw FloxException( "Failed to parse search query field: 'query." +
                              key + "'." );
       }
-    };
+  };
 
-  for ( const auto &[key, value] : jfrom.items() ) {
-    if ( key == "name" ) {
-      getOrFail( key, value, qry.name );
-    } else if ( key == "pname" ) {
-      getOrFail( key, value, qry.pname );
-    } else if ( key == "version" ) {
-      getOrFail( key, value, qry.version );
-    } else if ( key == "semver" ) {
-      getOrFail( key, value, qry.semver );
-    } else if ( key == "match" ) {
-      getOrFail( key, value, qry.partialMatch );
-    } else {
-      throw FloxException( "Unrecognized search query key: 'query." + key +
-                           "'." );
+  for ( const auto &[key, value] : jfrom.items() )
+    {
+      if ( key == "name" ) { getOrFail( key, value, qry.name ); }
+      else if ( key == "pname" ) { getOrFail( key, value, qry.pname ); }
+      else if ( key == "version" ) { getOrFail( key, value, qry.version ); }
+      else if ( key == "semver" ) { getOrFail( key, value, qry.semver ); }
+      else if ( key == "match" ) { getOrFail( key, value, qry.partialMatch ); }
+      else
+        {
+          throw FloxException( "Unrecognized search query key: 'query." + key +
+                               "'." );
+        }
     }
-  }
 }
 
 
 void
-to_json( nlohmann::json &jto, const SearchQuery &qry ) {
+to_json( nlohmann::json &jto, const SearchQuery &qry )
+{
   pkgdb::to_json( jto, dynamic_cast<const pkgdb::PkgDescriptorBase &>( qry ) );
   jto["match"] = qry.partialMatch;
 }
@@ -71,7 +77,8 @@ to_json( nlohmann::json &jto, const SearchQuery &qry ) {
 /* -------------------------------------------------------------------------- */
 
 pkgdb::PkgQueryArgs &
-SearchQuery::fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const {
+SearchQuery::fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const
+{
   /* XXX: DOES NOT CLEAR FIRST! We are called after global preferences. */
   pqa.name         = this->name;
   pqa.pname        = this->pname;

@@ -22,7 +22,8 @@ namespace flox {
 /* -------------------------------------------------------------------------- */
 
 void
-initNix() {
+initNix()
+{
   static bool didNixInit = false;
   if ( didNixInit ) { return; }
 

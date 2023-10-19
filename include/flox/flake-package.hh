@@ -42,7 +42,8 @@ class PkgDb;
  * @brief A @a flox::Package implementation which are pulled from evaluation of
  *        a `nix` flake.
  */
-class FlakePackage : public Package {
+class FlakePackage : public Package
+{
 
 public:
   friend class pkgdb::PkgDb;
@@ -75,7 +76,8 @@ public:
   FlakePackage( Cursor cursor, const AttrPath & path, bool checkDrv = true )
     : _cursor( cursor )
     , _pathS( path )
-    , _fullName( cursor->getAttr( "name" )->getString() ) {
+    , _fullName( cursor->getAttr( "name" )->getString() )
+  {
     {
       nix::DrvName dname( this->_fullName );
       this->_pname   = dname.name;
@@ -86,15 +88,17 @@ public:
 
 
   FlakePackage( Cursor cursor, nix::SymbolTable * symtab, bool checkDrv = true )
-    : _cursor( cursor ), _fullName( cursor->getAttr( "name" )->getString() ) {
+    : _cursor( cursor ), _fullName( cursor->getAttr( "name" )->getString() )
+  {
     {
       nix::DrvName dname( this->_fullName );
       this->_pname   = dname.name;
       this->_version = dname.version;
     }
-    for ( auto & p : symtab->resolve( cursor->getAttrPath() ) ) {
-      this->_pathS.push_back( p );
-    }
+    for ( auto & p : symtab->resolve( cursor->getAttrPath() ) )
+      {
+        this->_pathS.push_back( p );
+      }
     this->init( checkDrv );
   }
 
@@ -110,79 +114,87 @@ public:
   isUnfree() const override;
 
   AttrPath
-  getPathStrs() const override {
+  getPathStrs() const override
+  {
     return this->_pathS;
   }
   std::string
-  getFullName() const override {
+  getFullName() const override
+  {
     return this->_fullName;
   }
   std::string
-  getPname() const override {
+  getPname() const override
+  {
     return this->_pname;
   }
   Cursor
-  getCursor() const {
+  getCursor() const
+  {
     return this->_cursor;
   }
   Subtree
-  getSubtreeType() const override {
+  getSubtreeType() const override
+  {
     return this->_subtree;
   }
 
   nix::DrvName
-  getParsedDrvName() const override {
+  getParsedDrvName() const override
+  {
     return nix::DrvName( this->_fullName );
   }
 
   std::optional<std::string>
-  getVersion() const override {
-    if ( this->_version.empty() ) {
-      return std::nullopt;
-    } else {
-      return this->_version;
-    }
+  getVersion() const override
+  {
+    if ( this->_version.empty() ) { return std::nullopt; }
+    else { return this->_version; }
   }
 
   std::optional<std::string>
-  getSemver() const override {
+  getSemver() const override
+  {
     return this->_semver;
   }
 
   std::optional<std::string>
-  getStability() const override {
+  getStability() const override
+  {
     if ( this->_subtree != ST_CATALOG ) { return std::nullopt; }
     return this->_pathS[2];
   }
 
   std::optional<std::string>
-  getLicense() const override {
-    if ( this->_license.has_value() ) {
-      return this->_license;
-    } else {
-      return std::nullopt;
-    }
+  getLicense() const override
+  {
+    if ( this->_license.has_value() ) { return this->_license; }
+    else { return std::nullopt; }
   }
 
   std::vector<std::string>
-  getOutputs() const override {
+  getOutputs() const override
+  {
     MaybeCursor o = this->_cursor->maybeGetAttr( "outputs" );
-    if ( o == nullptr ) {
-      return { "out" };
-    } else {
-      return o->getListOfStrings();
-    }
+    if ( o == nullptr ) { return { "out" }; }
+    else { return o->getListOfStrings(); }
   }
 
   std::optional<std::string>
-  getDescription() const override {
+  getDescription() const override
+  {
     if ( ! this->_hasMetaAttr ) { return std::nullopt; }
     MaybeCursor l =
       this->_cursor->getAttr( "meta" )->maybeGetAttr( "description" );
     if ( l == nullptr ) { return std::nullopt; }
-    try {
-      return l->getString();
-    } catch ( ... ) { return std::nullopt; }
+    try
+      {
+        return l->getString();
+      }
+    catch ( ... )
+      {
+        return std::nullopt;
+      }
   }
 
 

@@ -49,7 +49,8 @@ using flox::pkgdb::row_id;
 /* -------------------------------------------------------------------------- */
 
 static row_id
-getRowCount( flox::pkgdb::PkgDb &db, const std::string table ) {
+getRowCount( flox::pkgdb::PkgDb &db, const std::string table )
+{
   std::string qryS = "SELECT COUNT( * ) FROM ";
   qryS += table;
   sqlite3pp::query qry( db.db, qryS.c_str() );
@@ -60,7 +61,8 @@ getRowCount( flox::pkgdb::PkgDb &db, const std::string table ) {
 /* -------------------------------------------------------------------------- */
 
 static inline void
-clearTables( flox::pkgdb::PkgDb &db ) {
+clearTables( flox::pkgdb::PkgDb &db )
+{
   /* Clear DB */
   db.execute_all(
     "DELETE FROM Packages; DELETE FROM AttrSets; DELETE FROM Descriptions" );
@@ -75,7 +77,8 @@ clearTables( flox::pkgdb::PkgDb &db ) {
  * `AttrSets` to be empty.
  */
 bool
-test_addOrGetAttrSetId0( flox::pkgdb::PkgDb &db ) {
+test_addOrGetAttrSetId0( flox::pkgdb::PkgDb &db )
+{
   clearTables( db );
 
   /* Make sure `AttrSets` is empty. */
@@ -97,18 +100,24 @@ test_addOrGetAttrSetId0( flox::pkgdb::PkgDb &db ) {
 
 /** Ensure we throw an error for undefined `AttrSet.id' parents. */
 bool
-test_addOrGetAttrSetId1( flox::pkgdb::PkgDb &db ) {
+test_addOrGetAttrSetId1( flox::pkgdb::PkgDb &db )
+{
   clearTables( db );
 
-  try {
-    /* Ensure we throw an error for undefined `AttrSet.id' parents. */
-    db.addOrGetAttrSetId( "phony", 1 );
-    return false;
-  } catch ( const flox::pkgdb::PkgDbException &e ) { /* Expected */
-  } catch ( const std::exception &e ) {
-    std::cerr << e.what() << std::endl;
-    return false;
-  }
+  try
+    {
+      /* Ensure we throw an error for undefined `AttrSet.id' parents. */
+      db.addOrGetAttrSetId( "phony", 1 );
+      return false;
+    }
+  catch ( const flox::pkgdb::PkgDbException &e )
+    { /* Expected */
+    }
+  catch ( const std::exception &e )
+    {
+      std::cerr << e.what() << std::endl;
+      return false;
+    }
   return true;
 }
 
@@ -117,7 +126,8 @@ test_addOrGetAttrSetId1( flox::pkgdb::PkgDb &db ) {
 
 /** Ensure database version matches our header's version */
 bool
-test_getDbVersion0( flox::pkgdb::PkgDb &db ) {
+test_getDbVersion0( flox::pkgdb::PkgDb &db )
+{
   EXPECT_EQ( db.getDbVersion(), flox::pkgdb::sqlVersions );
   return true;
 }
@@ -130,7 +140,8 @@ test_getDbVersion0( flox::pkgdb::PkgDb &db ) {
  * an `AttrSet`.
  */
 bool
-test_hasAttrSet0( flox::pkgdb::PkgDb &db ) {
+test_hasAttrSet0( flox::pkgdb::PkgDb &db )
+{
   clearTables( db );
 
   /* Make sure the attr-set exists, and clear it. */
@@ -154,7 +165,8 @@ test_hasAttrSet0( flox::pkgdb::PkgDb &db ) {
  * such that attribute sets with packages are identified as "Package Sets".
  */
 bool
-test_hasAttrSet1( flox::pkgdb::PkgDb &db ) {
+test_hasAttrSet1( flox::pkgdb::PkgDb &db )
+{
   clearTables( db );
 
   /* Make sure the attr-set exists. */
@@ -181,7 +193,8 @@ test_hasAttrSet1( flox::pkgdb::PkgDb &db ) {
  * returned by @a flox::pkgdb::PkgDb::getAttrSetId.
  */
 bool
-test_getAttrSetId0( flox::pkgdb::PkgDb &db ) {
+test_getAttrSetId0( flox::pkgdb::PkgDb &db )
+{
   clearTables( db );
 
   /* Make sure the attr-set exists. */
@@ -200,7 +213,8 @@ test_getAttrSetId0( flox::pkgdb::PkgDb &db ) {
  * Ensure we properly reconstruct an attribute path from the `AttrSets` table.
  */
 bool
-test_getAttrSetPath0( flox::pkgdb::PkgDb &db ) {
+test_getAttrSetPath0( flox::pkgdb::PkgDb &db )
+{
   clearTables( db );
 
   /* Make sure the attr-set exists. */
@@ -215,7 +229,8 @@ test_getAttrSetPath0( flox::pkgdb::PkgDb &db ) {
 /* -------------------------------------------------------------------------- */
 
 bool
-test_hasPackage0( flox::pkgdb::PkgDb &db ) {
+test_hasPackage0( flox::pkgdb::PkgDb &db )
+{
   clearTables( db );
 
   /* Make sure the attr-set exists. */
@@ -241,7 +256,8 @@ test_hasPackage0( flox::pkgdb::PkgDb &db ) {
  * Tests `addOrGetDesciptionId` and `getDescription`.
  */
 bool
-test_descriptions0( flox::pkgdb::PkgDb &db ) {
+test_descriptions0( flox::pkgdb::PkgDb &db )
+{
   row_id id = db.addOrGetDescriptionId( "Hello, World!" );
   /* Ensure we get the same `id`. */
   EXPECT_EQ( id, db.addOrGetDescriptionId( "Hello, World!" ) );
@@ -255,7 +271,8 @@ test_descriptions0( flox::pkgdb::PkgDb &db ) {
 
 /* Tests `systems', `name', `pname', `version', and `subtree' filtering. */
 bool
-test_PkgQuery0( flox::pkgdb::PkgDb &db ) {
+test_PkgQuery0( flox::pkgdb::PkgDb &db )
+{
   clearTables( db );
 
   /* Make a package */
@@ -272,13 +289,14 @@ test_PkgQuery0( flox::pkgdb::PkgDb &db ) {
   )SQL" );
   cmd.bind( ":parentId", static_cast<long long>( linux ) );
   cmd.bind( ":descriptionId", static_cast<long long>( desc ) );
-  if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) ) {
-    throw flox::pkgdb::PkgDbException(
-      db.dbPath,
-      nix::fmt( "Failed to write Package 'hello':(%d) %s",
-                rc,
-                db.db.error_msg() ) );
-  }
+  if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
+    {
+      throw flox::pkgdb::PkgDbException(
+        db.dbPath,
+        nix::fmt( "Failed to write Package 'hello':(%d) %s",
+                  rc,
+                  db.db.error_msg() ) );
+    }
   flox::pkgdb::PkgQueryArgs qargs;
   qargs.systems = std::vector<std::string> { "x86_64-linux" };
 
@@ -333,7 +351,8 @@ test_PkgQuery0( flox::pkgdb::PkgDb &db ) {
 
 /* Tests `license', `allowBroken', and `allowUnfree' filtering. */
 bool
-test_PkgQuery1( flox::pkgdb::PkgDb &db ) {
+test_PkgQuery1( flox::pkgdb::PkgDb &db )
+{
   clearTables( db );
 
   /* Make a package */
@@ -361,11 +380,12 @@ test_PkgQuery1( flox::pkgdb::PkgDb &db ) {
   )SQL" );
   cmd.bind( ":parentId", static_cast<long long>( linux ) );
   cmd.bind( ":descriptionId", static_cast<long long>( desc ) );
-  if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) ) {
-    throw flox::pkgdb::PkgDbException(
-      db.dbPath,
-      nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
-  }
+  if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
+    {
+      throw flox::pkgdb::PkgDbException(
+        db.dbPath,
+        nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
+    }
   flox::pkgdb::PkgQueryArgs qargs;
   qargs.systems = std::vector<std::string> { "x86_64-linux" };
 
@@ -426,7 +446,8 @@ test_PkgQuery1( flox::pkgdb::PkgDb &db ) {
 
 /* Tests `partialMatch' and `pnameOrPkgAttrName' filtering. */
 bool
-test_PkgQuery2( flox::pkgdb::PkgDb &db ) {
+test_PkgQuery2( flox::pkgdb::PkgDb &db )
+{
   clearTables( db );
 
   /* Make a package */
@@ -453,11 +474,12 @@ test_PkgQuery2( flox::pkgdb::PkgDb &db ) {
   cmd.bind( ":parentId", static_cast<long long>( linux ) );
   cmd.bind( ":descGreetId", static_cast<long long>( descGreet ) );
   cmd.bind( ":descFarewellId", static_cast<long long>( descFarewell ) );
-  if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) ) {
-    throw flox::pkgdb::PkgDbException(
-      db.dbPath,
-      nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
-  }
+  if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
+    {
+      throw flox::pkgdb::PkgDbException(
+        db.dbPath,
+        nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
+    }
   flox::pkgdb::PkgQueryArgs qargs;
   qargs.systems = std::vector<std::string> { "x86_64-linux" };
 
@@ -471,16 +493,20 @@ test_PkgQuery2( flox::pkgdb::PkgDb &db ) {
     qargs.partialMatch = std::nullopt;
     size_t count       = 0;
     auto   bound       = qry.bind( db.db );
-    for ( const auto &row : *bound ) {
-      ++count;
-      if ( count == 1 ) {
-        EXPECT( row.get<bool>( 0 ) );
-        EXPECT( row.get<bool>( 1 ) );
-      } else {
-        EXPECT( ! row.get<bool>( 0 ) );
-        EXPECT( row.get<bool>( 1 ) );
+    for ( const auto &row : *bound )
+      {
+        ++count;
+        if ( count == 1 )
+          {
+            EXPECT( row.get<bool>( 0 ) );
+            EXPECT( row.get<bool>( 1 ) );
+          }
+        else
+          {
+            EXPECT( ! row.get<bool>( 0 ) );
+            EXPECT( row.get<bool>( 1 ) );
+          }
       }
-    }
     EXPECT_EQ( count, std::size_t( 2 ) );
   }
 
@@ -493,10 +519,11 @@ test_PkgQuery2( flox::pkgdb::PkgDb &db ) {
     qargs.partialMatch = std::nullopt;
     size_t count       = 0;
     auto   bound       = qry.bind( db.db );
-    for ( const auto &row : *bound ) {
-      ++count;
-      EXPECT( row.get<bool>( 0 ) );
-    }
+    for ( const auto &row : *bound )
+      {
+        ++count;
+        EXPECT( row.get<bool>( 0 ) );
+      }
     EXPECT_EQ( count, std::size_t( 2 ) );
   }
 
@@ -510,16 +537,20 @@ test_PkgQuery2( flox::pkgdb::PkgDb &db ) {
     qargs.partialMatch = std::nullopt;
     size_t count       = 0;
     auto   bound       = qry.bind( db.db );
-    for ( const auto &row : *bound ) {
-      ++count;
-      if ( count == 1 ) {
-        EXPECT( row.get<bool>( 0 ) );
-        EXPECT( row.get<bool>( 1 ) );
-      } else {
-        EXPECT( ! row.get<bool>( 0 ) );
-        EXPECT( row.get<bool>( 1 ) );
+    for ( const auto &row : *bound )
+      {
+        ++count;
+        if ( count == 1 )
+          {
+            EXPECT( row.get<bool>( 0 ) );
+            EXPECT( row.get<bool>( 1 ) );
+          }
+        else
+          {
+            EXPECT( ! row.get<bool>( 0 ) );
+            EXPECT( row.get<bool>( 1 ) );
+          }
       }
-    }
     EXPECT_EQ( count, std::size_t( 2 ) );
   }
 
@@ -532,13 +563,14 @@ test_PkgQuery2( flox::pkgdb::PkgDb &db ) {
     qargs.pnameOrPkgAttrName = std::nullopt;
     size_t count             = 0;
     auto   bound             = qry.bind( db.db );
-    for ( const auto &row : *bound ) {
-      ++count;
-      // exactPname is true
-      EXPECT( row.get<bool>( 0 ) );
-      // exactPkgAttrName is false
-      EXPECT( ! row.get<bool>( 1 ) );
-    }
+    for ( const auto &row : *bound )
+      {
+        ++count;
+        // exactPname is true
+        EXPECT( row.get<bool>( 0 ) );
+        // exactPkgAttrName is false
+        EXPECT( ! row.get<bool>( 1 ) );
+      }
     EXPECT_EQ( count, std::size_t( 1 ) );
   }
 
@@ -559,13 +591,14 @@ test_PkgQuery2( flox::pkgdb::PkgDb &db ) {
     qargs.pnameOrPkgAttrName = std::nullopt;
     size_t count             = 0;
     auto   bound             = qry.bind( db.db );
-    for ( const auto &row : *bound ) {
-      ++count;
-      // exactPname is false
-      EXPECT( ! row.get<bool>( 0 ) );
-      // exactPkgAttrName is true
-      EXPECT( row.get<bool>( 1 ) );
-    }
+    for ( const auto &row : *bound )
+      {
+        ++count;
+        // exactPname is false
+        EXPECT( ! row.get<bool>( 0 ) );
+        // exactPkgAttrName is true
+        EXPECT( row.get<bool>( 1 ) );
+      }
     EXPECT_EQ( count, std::size_t( 1 ) );
   }
 
@@ -577,7 +610,8 @@ test_PkgQuery2( flox::pkgdb::PkgDb &db ) {
 
 /* Tests `getPackages', particularly `semver' filtering. */
 bool
-test_getPackages0( flox::pkgdb::PkgDb &db ) {
+test_getPackages0( flox::pkgdb::PkgDb &db )
+{
   clearTables( db );
 
   /* Make a package */
@@ -601,11 +635,12 @@ test_getPackages0( flox::pkgdb::PkgDb &db ) {
   )SQL" );
   cmd.bind( ":parentId", static_cast<long long>( linux ) );
   cmd.bind( ":descriptionId", static_cast<long long>( desc ) );
-  if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) ) {
-    throw flox::pkgdb::PkgDbException(
-      db.dbPath,
-      nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
-  }
+  if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
+    {
+      throw flox::pkgdb::PkgDbException(
+        db.dbPath,
+        nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
+    }
 
   flox::pkgdb::PkgQueryArgs qargs;
   qargs.systems = std::vector<std::string> { "x86_64-linux" };
@@ -644,7 +679,8 @@ test_getPackages0( flox::pkgdb::PkgDb &db ) {
  * Tests `getPackages', particularly `stability', `subtree`, and
  * `system` ordering. */
 bool
-test_getPackages1( flox::pkgdb::PkgDb &db ) {
+test_getPackages1( flox::pkgdb::PkgDb &db )
+{
   clearTables( db );
 
   /* Make a package */
@@ -678,11 +714,12 @@ test_getPackages1( flox::pkgdb::PkgDb &db ) {
   cmd.bind( ":packagesLinuxId", static_cast<long long>( packagesLinux ) );
   cmd.bind( ":legacyDarwinId", static_cast<long long>( legacyDarwin ) );
   cmd.bind( ":packagesDarwinId", static_cast<long long>( packagesDarwin ) );
-  if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) ) {
-    throw flox::pkgdb::PkgDbException(
-      db.dbPath,
-      nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
-  }
+  if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
+    {
+      throw flox::pkgdb::PkgDbException(
+        db.dbPath,
+        nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
+    }
 
   flox::pkgdb::PkgQueryArgs qargs;
   qargs.systems = std::vector<std::string> {};
@@ -734,7 +771,8 @@ test_getPackages1( flox::pkgdb::PkgDb &db ) {
 
 /** Tests `getPackages', particularly `version' ordering. */
 bool
-test_getPackages2( flox::pkgdb::PkgDb &db ) {
+test_getPackages2( flox::pkgdb::PkgDb &db )
+{
   clearTables( db );
 
   /* Make a package */
@@ -761,11 +799,12 @@ test_getPackages2( flox::pkgdb::PkgDb &db ) {
       , '["out"]' )
   )SQL" );
   cmd.bind( ":parentId", static_cast<long long>( linux ) );
-  if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) ) {
-    throw flox::pkgdb::PkgDbException(
-      db.dbPath,
-      nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
-  }
+  if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
+    {
+      throw flox::pkgdb::PkgDbException(
+        db.dbPath,
+        nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
+    }
 
   flox::pkgdb::PkgQueryArgs qargs;
   qargs.subtrees = std::vector<flox::Subtree> { flox::ST_PACKAGES };
@@ -788,7 +827,8 @@ test_getPackages2( flox::pkgdb::PkgDb &db ) {
 /* -------------------------------------------------------------------------- */
 
 bool
-test_DbPackage0( flox::pkgdb::PkgDb &db ) {
+test_DbPackage0( flox::pkgdb::PkgDb &db )
+{
   clearTables( db );
 
   /* Make a package */
@@ -807,11 +847,12 @@ test_DbPackage0( flox::pkgdb::PkgDb &db ) {
   )SQL" );
   cmd.bind( ":parentId", static_cast<long long>( linux ) );
   cmd.bind( ":descriptionId", static_cast<long long>( desc ) );
-  if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) ) {
-    throw flox::pkgdb::PkgDbException(
-      db.dbPath,
-      nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
-  }
+  if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
+    {
+      throw flox::pkgdb::PkgDbException(
+        db.dbPath,
+        nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
+    }
   row_id pkgId = db.db.last_insert_rowid();
   auto   pkg =
     flox::pkgdb::DbPackage( static_cast<flox::pkgdb::PkgDbReadOnly &>( db ),
@@ -841,7 +882,8 @@ test_DbPackage0( flox::pkgdb::PkgDb &db ) {
 /* -------------------------------------------------------------------------- */
 
 bool
-test_getPackages_semver0( flox::pkgdb::PkgDb &db ) {
+test_getPackages_semver0( flox::pkgdb::PkgDb &db )
+{
   clearTables( db );
 
   /* Make packages */
@@ -875,11 +917,12 @@ test_getPackages_semver0( flox::pkgdb::PkgDb &db ) {
   )SQL" );
   cmd.bind( ":parentId", static_cast<long long>( linux ) );
   cmd.bind( ":descriptionId", static_cast<long long>( desc ) );
-  if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) ) {
-    throw flox::pkgdb::PkgDbException(
-      db.dbPath,
-      nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
-  }
+  if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
+    {
+      throw flox::pkgdb::PkgDbException(
+        db.dbPath,
+        nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
+    }
 
   flox::pkgdb::PkgQueryArgs qargs;
   qargs.subtrees = std::vector<flox::Subtree> { flox::ST_LEGACY };
@@ -887,16 +930,17 @@ test_getPackages_semver0( flox::pkgdb::PkgDb &db ) {
   qargs.pname    = "hello";
 
   auto getSemvers =
-    [&](
-      const std::string &semver ) -> std::vector<std::optional<std::string>> {
+    [&]( const std::string &semver ) -> std::vector<std::optional<std::string>>
+  {
     std::vector<std::optional<std::string>> rsl;
     qargs.semver = { semver };
-    for ( flox::pkgdb::row_id rowId : db.getPackages( qargs ) ) {
-      rsl.emplace_back(
-        flox::pkgdb::DbPackage( static_cast<flox::pkgdb::PkgDbReadOnly &>( db ),
-                                rowId )
-          .getSemver() );
-    }
+    for ( flox::pkgdb::row_id rowId : db.getPackages( qargs ) )
+      {
+        rsl.emplace_back( flox::pkgdb::DbPackage(
+                            static_cast<flox::pkgdb::PkgDbReadOnly &>( db ),
+                            rowId )
+                            .getSemver() );
+      }
     return rsl;
   };
 
@@ -905,17 +949,14 @@ test_getPackages_semver0( flox::pkgdb::PkgDb &db ) {
     auto semvers = getSemvers( "^2" );
     EXPECT_EQ( semvers.size(), std::size_t( 3 ) );
     size_t idx = 0;
-    for ( const std::optional<std::string> &maybeSemver : semvers ) {
-      EXPECT( maybeSemver.has_value() );
-      if ( idx == 0 ) {
-        EXPECT_EQ( *maybeSemver, "2.14.1" );
-      } else if ( idx == 1 ) {
-        EXPECT_EQ( *maybeSemver, "2.13.1" );
-      } else if ( idx == 2 ) {
-        EXPECT_EQ( *maybeSemver, "2.12.0" );
+    for ( const std::optional<std::string> &maybeSemver : semvers )
+      {
+        EXPECT( maybeSemver.has_value() );
+        if ( idx == 0 ) { EXPECT_EQ( *maybeSemver, "2.14.1" ); }
+        else if ( idx == 1 ) { EXPECT_EQ( *maybeSemver, "2.13.1" ); }
+        else if ( idx == 2 ) { EXPECT_EQ( *maybeSemver, "2.12.0" ); }
+        ++idx;
       }
-      ++idx;
-    }
   }
 
   /* ^2.13.1 : 2.13.1 <= VERSION < 3.0.0 */
@@ -923,24 +964,23 @@ test_getPackages_semver0( flox::pkgdb::PkgDb &db ) {
     auto semvers = getSemvers( "^2.13.1" );
     EXPECT_EQ( semvers.size(), std::size_t( 2 ) );
     size_t idx = 0;
-    for ( const std::optional<std::string> &maybeSemver : semvers ) {
-      EXPECT( maybeSemver.has_value() );
-      if ( idx == 0 ) {
-        EXPECT_EQ( *maybeSemver, "2.14.1" );
-      } else if ( idx == 1 ) {
-        EXPECT_EQ( *maybeSemver, "2.13.1" );
+    for ( const std::optional<std::string> &maybeSemver : semvers )
+      {
+        EXPECT( maybeSemver.has_value() );
+        if ( idx == 0 ) { EXPECT_EQ( *maybeSemver, "2.14.1" ); }
+        else if ( idx == 1 ) { EXPECT_EQ( *maybeSemver, "2.13.1" ); }
+        ++idx;
       }
-      ++idx;
-    }
   }
 
   /* '*' : Any semantic version, should omit `hello-no-version' */
   {
     auto semvers = getSemvers( "*" );
     EXPECT_EQ( semvers.size(), std::size_t( 5 ) );
-    for ( const auto &maybeSemver : semvers ) {
-      EXPECT( maybeSemver.has_value() );
-    }
+    for ( const auto &maybeSemver : semvers )
+      {
+        EXPECT( maybeSemver.has_value() );
+      }
   }
 
   return true;
@@ -950,7 +990,8 @@ test_getPackages_semver0( flox::pkgdb::PkgDb &db ) {
 /* -------------------------------------------------------------------------- */
 
 int
-main( int argc, char *argv[] ) {
+main( int argc, char *argv[] )
+{
   int ec = EXIT_SUCCESS;
 #define RUN_TEST( ... ) _RUN_TEST( ec, __VA_ARGS__ )
 
@@ -958,9 +999,10 @@ main( int argc, char *argv[] ) {
    */
 
   nix::verbosity = nix::lvlWarn;
-  if ( ( 1 < argc ) && ( std::string_view( argv[1] ) == "-v" ) ) {
-    nix::verbosity = nix::lvlDebug;
-  }
+  if ( ( 1 < argc ) && ( std::string_view( argv[1] ) == "-v" ) )
+    {
+      nix::verbosity = nix::lvlDebug;
+    }
 
   /* Initialize `nix' */
   flox::NixState nstate;

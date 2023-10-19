@@ -26,7 +26,8 @@ namespace flox {
  *
  * This form largely exists for testing purposes.
  */
-class RawPackage : public Package {
+class RawPackage : public Package
+{
 
 protected:
   AttrPath                   path;
@@ -67,64 +68,76 @@ public:
     , outputsToInstall( outputsToInstall )
     , broken( broken )
     , unfree( unfree )
-    , description( description ) {}
+    , description( description )
+  {}
 
 
   /* --------------------------------------------------------------------------
    */
 
   AttrPath
-  getPathStrs() const override {
+  getPathStrs() const override
+  {
     return this->path;
   }
 
   std::string
-  getFullName() const override {
+  getFullName() const override
+  {
     return this->name;
   }
 
   std::string
-  getPname() const override {
+  getPname() const override
+  {
     return this->pname;
   }
 
   std::optional<std::string>
-  getVersion() const override {
+  getVersion() const override
+  {
     return this->version;
   }
 
   std::optional<std::string>
-  getSemver() const override {
+  getSemver() const override
+  {
     return this->semver;
   }
 
   std::optional<std::string>
-  getLicense() const override {
+  getLicense() const override
+  {
     return this->license;
   }
 
   std::vector<std::string>
-  getOutputs() const override {
+  getOutputs() const override
+  {
     return this->outputs;
   }
 
   std::vector<std::string>
-  getOutputsToInstall() const override {
+  getOutputsToInstall() const override
+  {
     return this->outputsToInstall;
   }
 
   std::optional<bool>
-  isBroken() const override {
+  isBroken() const override
+  {
     return this->broken;
   }
 
   std::optional<bool>
-  isUnfree() const override {
+  isUnfree() const override
+  {
     return this->unfree;
   }
 
   std::optional<std::string>
-  getDescription() const override {
+  getDescription() const override
+  {
     return this->description;
   }
 

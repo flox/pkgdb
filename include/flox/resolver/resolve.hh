@@ -26,10 +26,12 @@ namespace flox::resolver {
 /* -------------------------------------------------------------------------- */
 
 /** @brief A _resolved_ installable resulting from resolution. */
-struct Resolved {
+struct Resolved
+{
 
   /** @brief A registry input. */
-  struct Input {
+  struct Input
+  {
     std::string    name;   /**< Registry input name/id. */
     nlohmann::json locked; /**< Locked flake ref attributes. */
   };                       /* End struct `Resolved::Input' */
@@ -101,7 +103,8 @@ resolve_v0( ResolverState &    state,
  * @return The best resolved installable or `std:nullopt` if resolution failed.
  */
 std::optional<Resolved>
-resolveOne_v0( ResolverState & state, const Descriptor & descriptor ) {
+resolveOne_v0( ResolverState & state, const Descriptor & descriptor )
+{
   auto resolved = resolve( state, descriptor, true );
   if ( resolved.empty() ) { return std::nullopt; }
   return resolved[0];

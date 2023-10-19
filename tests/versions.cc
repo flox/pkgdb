@@ -11,7 +11,8 @@
 /* -------------------------------------------------------------------------- */
 
 bool
-test_semverSat1() {
+test_semverSat1()
+{
   std::list<std::string> sats = versions::semverSat(
     "^4.2.0",
     { "4.0.0", "4.2.0", "4.2.1", "4.3.0", "5.0.0", "3.9.9" } );
@@ -25,7 +26,8 @@ test_semverSat1() {
 /* -------------------------------------------------------------------------- */
 
 bool
-test_isSemver0() {
+test_isSemver0()
+{
   EXPECT( versions::isSemver( "4.2.0" ) );
   EXPECT( versions::isSemver( "4.2.0-pre" ) );
   EXPECT( ! versions::isSemver( "v4.2.0" ) );
@@ -38,7 +40,8 @@ test_isSemver0() {
 
 /** @brief `%Y-%m-%d` or `%m-%d-%Y` but may contain trailing characters. */
 bool
-test_isDate0() {
+test_isDate0()
+{
   EXPECT( versions::isDate( "10-25-1917" ) );
   EXPECT( versions::isDate( "1917-10-25" ) );
   EXPECT( ! versions::isDate( "1917-25-10" ) );
@@ -58,7 +61,8 @@ test_isDate0() {
 /* -------------------------------------------------------------------------- */
 
 bool
-test_isSemverRange0() {
+test_isSemverRange0()
+{
   EXPECT( versions::isSemverRange( "^4.2.0" ) );
   EXPECT( versions::isSemverRange( "4.2.0" ) );
   EXPECT( versions::isSemverRange( "4.2" ) );
@@ -81,7 +85,8 @@ test_isSemverRange0() {
 /* -------------------------------------------------------------------------- */
 
 int
-main() {
+main()
+{
   int ec = EXIT_SUCCESS;
 #define RUN_TEST( ... ) _RUN_TEST( ec, __VA_ARGS__ )
 

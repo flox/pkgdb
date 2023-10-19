@@ -40,7 +40,8 @@ namespace flox {
  * This abstraction provides a common base for various backends that store,
  * evaluate, and communicate package definitions.
  */
-class Package {
+class Package
+{
 
 public:
   /** @return attribute path where package is defined */
@@ -106,7 +107,8 @@ public:
    *         `legacyPackages`, `packages`, or `catalog`.
    */
   virtual Subtree
-  getSubtreeType() const {
+  getSubtreeType() const
+  {
     return Subtree( this->getPathStrs().front() );
   }
 
@@ -116,7 +118,8 @@ public:
    *         `staging`, or `unstable`.
    */
   virtual std::optional<std::string>
-  getStability() const {
+  getStability() const
+  {
     if ( this->getSubtreeType() != ST_CATALOG ) { return std::nullopt; }
     return this->getPathStrs().at( 2 );
   }
@@ -126,7 +129,8 @@ public:
    *         `name` field.
    */
   virtual nix::DrvName
-  getParsedDrvName() const {
+  getParsedDrvName() const
+  {
     return nix::DrvName( this->getFullName() );
   }
 
@@ -136,7 +140,8 @@ public:
    *         coerces from @a this package's `version` information.
    */
   virtual std::optional<std::string>
-  getSemver() const {
+  getSemver() const
+  {
     std::optional<std::string> version = this->getVersion();
     if ( ! version.has_value() ) { return std::nullopt; }
     return versions::coerceSemver( *version );
@@ -150,14 +155,16 @@ public:
    * @return An installable URI string associated with this package using.
    */
   virtual std::string
-  toURIString( const nix::FlakeRef & ref ) const {
+  toURIString( const nix::FlakeRef & ref ) const
+  {
     std::stringstream uri;
     uri << ref.to_string() << "#";
     AttrPath pathS = this->getPathStrs();
-    for ( size_t i = 0; i < pathS.size(); ++i ) {
-      uri << '"' << pathS.at( i );
-      if ( ( i + 1 ) < pathS.size() ) { uri << "."; }
-    }
+    for ( size_t i = 0; i < pathS.size(); ++i )
+      {
+        uri << '"' << pathS.at( i );
+        if ( ( i + 1 ) < pathS.size() ) { uri << "."; }
+      }
     return uri.str();
   }
 
@@ -169,58 +176,42 @@ public:
    * @return A JSON object with notable package metadata.
    */
   virtual nlohmann::json
-  getInfo( bool withDescription = false ) const {
+  getInfo( bool withDescription = false ) const
+  {
     std::string                system = this->getPathStrs().at( 1 );
     nlohmann::json             j      = { { system,
                                             { { "name", this->getFullName() },
                                               { "pname", this->getPname() } } } };
     std::optional<std::string> os     = this->getVersion();
 
-    if ( os.has_value() ) {
-      j[system].emplace( "version", *os );
-    } else {
-      j[system].emplace( "version", nlohmann::json() );
-    }
+    if ( os.has_value() ) { j[system].emplace( "version", *os ); }
+    else { j[system].emplace( "version", nlohmann::json() ); }
 
     os = this->getSemver();
-    if ( os.has_value() ) {
-      j[system].emplace( "semver", *os );
-    } else {
-      j[system].emplace( "semver", nlohmann::json() );
-    }
+    if ( os.has_value() ) { j[system].emplace( "semver", *os ); }
+    else { j[system].emplace( "semver", nlohmann::json() ); }
 
     j[system].emplace( "outputs", this->getOutputs() );
     j[system].emplace( "outputsToInstall", this->getOutputsToInstall() );
 
     os = this->getLicense();
-    if ( os.has_value() ) {
-      j[system].emplace( "license", *os );
-    } else {
-      j[system].emplace( "license", nlohmann::json() );
-    }
+    if ( os.has_value() ) { j[system].emplace( "license", *os ); }
+    else { j[system].emplace( "license", nlohmann::json() ); }
 
     std::optional<bool> ob = this->isBroken();
-    if ( ob.has_value() ) {
-      j[system].emplace( "broken", *ob );
-    } else {
-      j[system].emplace( "broken", nlohmann::json() );
-    }
+    if ( ob.has_value() ) { j[system].emplace( "broken", *ob ); }
+    else { j[system].emplace( "broken", nlohmann::json() ); }
 
     ob = this->isUnfree();
-    if ( ob.has_value() ) {
-      j[system].emplace( "unfree", *ob );
-    } else {
-      j[system].emplace( "unfree", nlohmann::json() );
-    }
+    if ( ob.has_value() ) { j[system].emplace( "unfree", *ob ); }
+    else { j[system].emplace( "unfree", nlohmann::json() ); }
 
-    if ( withDescription ) {
-      std::optional<std::string> od = this->getDescription();
-      if ( od.has_value() ) {
-        j[system].emplace( "description", *od );
-      } else {
-        j[system].emplace( "description", nlohmann::json() );
+    if ( withDescription )
+      {
+        std::optional<std::string> od = this->getDescription();
+        if ( od.has_value() ) { j[system].emplace( "description", *od ); }
+        else { j[system].emplace( "description", nlohmann::json() ); }
       }
-    }
 
     return j;
   }

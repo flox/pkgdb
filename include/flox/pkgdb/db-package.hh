@@ -25,7 +25,8 @@ namespace flox::pkgdb {
 /* -------------------------------------------------------------------------- */
 
 /** @brief Package metadata loaded from a `PkgDb' cache. */
-class DbPackage : public RawPackage {
+class DbPackage : public RawPackage
+{
 
 protected:
   /* From `RawPackage':
@@ -53,32 +54,37 @@ private:
 
 public:
   DbPackage( PkgDbReadOnly & pkgdb, row_id pkgId )
-    : pkgId( pkgId ), dbPath( pkgdb.dbPath ) {
+    : pkgId( pkgId ), dbPath( pkgdb.dbPath )
+  {
     this->path = pkgdb.getPackagePath( pkgId );
     this->initRawPackage( pkgdb );
   }
 
   DbPackage( PkgDbReadOnly & pkgdb, const AttrPath & path )
-    : pkgId( pkgdb.getPackageId( path ) ), dbPath( pkgdb.dbPath ) {
+    : pkgId( pkgdb.getPackageId( path ) ), dbPath( pkgdb.dbPath )
+  {
     this->path = path;
     this->initRawPackage( pkgdb );
   }
 
   /** @return The `Packages.id` of the package. */
   row_id
-  getPackageId() const {
+  getPackageId() const
+  {
     return this->pkgId;
   }
 
   /** @return The path to the database. */
   std::filesystem::path
-  getDbPath() const {
+  getDbPath() const
+  {
     return this->dbPath;
   }
 
   /** @return The locked _flake reference_ where the package is defined. */
   nix::FlakeRef
-  getLockedFlakeRef() const {
+  getLockedFlakeRef() const
+  {
     return PkgDbReadOnly( this->dbPath.string() ).getLockedFlakeRef();
   }
 

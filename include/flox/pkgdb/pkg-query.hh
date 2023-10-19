@@ -40,7 +40,8 @@ using row_id = uint64_t; /**< A _row_ index in a SQLite3 table. */
 /* -------------------------------------------------------------------------- */
 
 /** @brief Minimal set of query parameters related to a single package. */
-struct PkgDescriptorBase {
+struct PkgDescriptorBase
+{
 
   std::optional<std::string> name;    /**< Filter results by exact `name`. */
   std::optional<std::string> pname;   /**< Filter results by exact `pname`. */
@@ -99,7 +100,8 @@ concept pkg_descriptor_typename = std::derived_from<T, PkgDescriptorBase>;
  * These use a combination of SQL statements and post processing with
  * `node-semver` to produce a list of satisfactory packages.
  */
-struct PkgQueryArgs : public PkgDescriptorBase {
+struct PkgQueryArgs : public PkgDescriptorBase
+{
 
   /* From `PkgDescriptorBase':
    *   std::optional<std::string> name;
@@ -147,7 +149,8 @@ struct PkgQueryArgs : public PkgDescriptorBase {
 
 
   /** @brief Errors concerning validity of package query parameters. */
-  struct InvalidArgException : public flox::FloxException {
+  struct InvalidArgException : public flox::FloxException
+  {
 
   public:
     enum error_code {
@@ -180,7 +183,8 @@ struct PkgQueryArgs : public PkgDescriptorBase {
   public:
     explicit InvalidArgException( const error_code & ecode = PQEC_ERROR )
       : flox::FloxException( InvalidArgException::errorMessage( ecode ) )
-      , errorCode( ecode ) {}
+      , errorCode( ecode )
+    {}
 
   }; /* End struct `PkgDbQueryInvalidArgException' */
 
@@ -213,7 +217,8 @@ struct PkgQueryArgs : public PkgDescriptorBase {
  * This uses a combination of SQL statements and post processing with
  * `node-semver` to produce a list of satisfactory packages.
  */
-class PkgQuery : public PkgQueryArgs {
+class PkgQuery : public PkgQueryArgs
+{
 
 private:
   /** Stream used to build up the `SELECT` block. */
@@ -330,13 +335,15 @@ private:
 public:
   PkgQuery() { this->init(); }
 
-  explicit PkgQuery( const PkgQueryArgs & params ) : PkgQueryArgs( params ) {
+  explicit PkgQuery( const PkgQueryArgs & params ) : PkgQueryArgs( params )
+  {
     this->init();
   }
 
   PkgQuery( const PkgQueryArgs &     params,
             std::vector<std::string> exportedColumns )
-    : PkgQueryArgs( params ), exportedColumns( std::move( exportedColumns ) ) {
+    : PkgQueryArgs( params ), exportedColumns( std::move( exportedColumns ) )
+  {
     this->init();
   }
 

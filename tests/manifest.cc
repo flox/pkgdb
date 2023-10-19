@@ -23,7 +23,8 @@ using namespace nlohmann::literals;
 
 /** @brief test the conversion of an example manifest from TOML to JSON. */
 bool
-test_tomlToJSON0() {
+test_tomlToJSON0()
+{
   std::ifstream ifs( TEST_DATA_DIR "/manifest/manifest0.toml" );
   std::string   toml( ( std::istreambuf_iterator<char>( ifs ) ),
                     ( std::istreambuf_iterator<char>() ) );
@@ -41,7 +42,8 @@ test_tomlToJSON0() {
 
 /** @brief test the conversion of an example manifest from YAML to JSON. */
 bool
-test_yamlToJSON0() {
+test_yamlToJSON0()
+{
   std::ifstream ifs( TEST_DATA_DIR "/manifest/manifest0.yaml" );
   std::string   yaml( ( std::istreambuf_iterator<char>( ifs ) ),
                     ( std::istreambuf_iterator<char>() ) );
@@ -59,7 +61,8 @@ test_yamlToJSON0() {
 
 /** @brief Test that a simple descriptor can be parsed from JSON. */
 bool
-test_parseManifestDescriptor0() {
+test_parseManifestDescriptor0()
+{
 
   flox::resolver::ManifestDescriptorRaw raw = R"( {
     "name": "foo"
@@ -102,7 +105,8 @@ test_parseManifestDescriptor0() {
 
 /** @brief Test descriptor parsing of semver ranges and version matches. */
 bool
-test_parseManifestDescriptor_version0() {
+test_parseManifestDescriptor_version0()
+{
 
   flox::resolver::ManifestDescriptorRaw raw = R"( {
     "name": "foo"
@@ -124,7 +128,8 @@ test_parseManifestDescriptor_version0() {
 
 /** @brief Test descriptor parsing of semver ranges and version matches. */
 bool
-test_parseManifestDescriptor_version1() {
+test_parseManifestDescriptor_version1()
+{
 
   flox::resolver::ManifestDescriptorRaw raw = R"( {
     "name": "foo"
@@ -146,7 +151,8 @@ test_parseManifestDescriptor_version1() {
 
 /** @brief Test descriptor parsing of semver ranges and version matches. */
 bool
-test_parseManifestDescriptor_version2() {
+test_parseManifestDescriptor_version2()
+{
 
   flox::resolver::ManifestDescriptorRaw raw = R"( {
     "name": "foo"
@@ -169,7 +175,8 @@ test_parseManifestDescriptor_version2() {
 
 /** @brief Test descriptor parsing of semver ranges and version matches. */
 bool
-test_parseManifestDescriptor_version3() {
+test_parseManifestDescriptor_version3()
+{
 
   flox::resolver::ManifestDescriptorRaw raw = R"( {
     "name": "foo"
@@ -191,7 +198,8 @@ test_parseManifestDescriptor_version3() {
 
 /** @brief Test descriptor parsing inline inputs. */
 bool
-test_parseManifestDescriptor_input0() {
+test_parseManifestDescriptor_input0()
+{
 
   flox::resolver::ManifestDescriptorRaw raw = R"( {
     "name": "foo"
@@ -215,7 +223,8 @@ test_parseManifestDescriptor_input0() {
 
 /** @brief Test descriptor parsing inline inputs. */
 bool
-test_parseManifestDescriptor_input1() {
+test_parseManifestDescriptor_input1()
+{
 
   flox::resolver::ManifestDescriptorRaw raw = R"( {
     "name": "foo"
@@ -235,7 +244,8 @@ test_parseManifestDescriptor_input1() {
 
 /** @brief Test descriptor `path`/`absPath` parsing. */
 bool
-test_parseManifestDescriptor_path0() {
+test_parseManifestDescriptor_path0()
+{
 
   flox::resolver::ManifestDescriptorRaw raw = R"( {
     "absPath": "legacyPackages.null.hello"
@@ -258,7 +268,8 @@ test_parseManifestDescriptor_path0() {
 
 /** @brief Test descriptor `path`/`absPath` parsing. */
 bool
-test_parseManifestDescriptor_path1() {
+test_parseManifestDescriptor_path1()
+{
 
   flox::resolver::ManifestDescriptorRaw raw = R"( {
     "absPath": "legacyPackages.*.hello"
@@ -281,7 +292,8 @@ test_parseManifestDescriptor_path1() {
 
 /** @brief Test descriptor `path`/`absPath` parsing. */
 bool
-test_parseManifestDescriptor_path2() {
+test_parseManifestDescriptor_path2()
+{
 
   flox::resolver::ManifestDescriptorRaw raw = R"( {
     "absPath": ["legacyPackages", null, "hello"]
@@ -304,7 +316,8 @@ test_parseManifestDescriptor_path2() {
 
 /** @brief Test descriptor `path`/`absPath` parsing. */
 bool
-test_parseManifestDescriptor_path3() {
+test_parseManifestDescriptor_path3()
+{
 
   flox::resolver::ManifestDescriptorRaw raw = R"( {
     "absPath": ["legacyPackages", "*", "hello"]
@@ -327,7 +340,8 @@ test_parseManifestDescriptor_path3() {
 
 /** @brief Test descriptor `path`/`absPath` parsing. */
 bool
-test_parseManifestDescriptor_path4() {
+test_parseManifestDescriptor_path4()
+{
 
   flox::resolver::ManifestDescriptorRaw raw = R"( {
     "absPath": ["legacyPackages", "x86_64-linux", "hello"]
@@ -352,7 +366,8 @@ test_parseManifestDescriptor_path4() {
 
 /** @brief Test descriptor `path`/`absPath` parsing. */
 bool
-test_parseManifestDescriptor_path5() {
+test_parseManifestDescriptor_path5()
+{
 
   flox::resolver::ManifestDescriptorRaw raw = R"( {
     "absPath": ["catalog", "x86_64-linux", "stable", "hello", "4.2.0"]
@@ -377,7 +392,8 @@ test_parseManifestDescriptor_path5() {
 /* -------------------------------------------------------------------------- */
 
 int
-main() {
+main()
+{
   int exitCode = EXIT_SUCCESS;
   // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define RUN_TEST( ... ) _RUN_TEST( exitCode, __VA_ARGS__ )

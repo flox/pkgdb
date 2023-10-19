@@ -27,7 +27,8 @@ GetCommand::GetCommand()
   , pDone( "done" )
   , pFlake( "flake" )
   , pDb( "db" )
-  , pPkg( "pkg" ) {
+  , pPkg( "pkg" )
+{
   this->parser.add_description( "Get metadata from Package DB" );
 
   this->pId.add_description( "Lookup an attribute set or package row `id`" );
@@ -55,8 +56,8 @@ GetCommand::GetCommand()
   this->pPath.add_argument( "id" )
     .help( "Row `id' to lookup" )
     .nargs( 1 )
-    .action(
-      [&]( const std::string & rowId ) { this->id = std::stoull( rowId ); } );
+    .action( [&]( const std::string & rowId )
+             { this->id = std::stoull( rowId ); } );
   this->parser.add_subparser( this->pPath );
 
   this->pFlake.add_description( "Get flake metadata from Package DB" );
@@ -75,9 +76,8 @@ GetCommand::GetCommand()
     .help( "Attribute path to package, or `Packages.id`" )
     .metavar( "<ID|ATTRS...>" )
     .remaining()
-    .action( [&]( const std::string & idOrPath ) {
-      this->attrPath.emplace_back( idOrPath );
-    } );
+    .action( [&]( const std::string & idOrPath )
+             { this->attrPath.emplace_back( idOrPath ); } );
   this->parser.add_subparser( this->pPkg );
 }
 
@@ -85,12 +85,13 @@ GetCommand::GetCommand()
 /* -------------------------------------------------------------------------- */
 
 int
-GetCommand::runId() {
-  if ( this->isPkg ) {
-    std::cout << this->db->getPackageId( this->attrPath ) << std::endl;
-  } else {
-    std::cout << this->db->getAttrSetId( this->attrPath ) << std::endl;
-  }
+GetCommand::runId()
+{
+  if ( this->isPkg )
+    {
+      std::cout << this->db->getPackageId( this->attrPath ) << std::endl;
+    }
+  else { std::cout << this->db->getAttrSetId( this->attrPath ) << std::endl; }
   return EXIT_SUCCESS;
 }
 
@@ -98,11 +99,16 @@ GetCommand::runId() {
 /* -------------------------------------------------------------------------- */
 
 int
-GetCommand::runDone() {
-  if ( this->db->completedAttrSet( this->attrPath ) ) {
-    if ( nix::lvlNotice < nix::verbosity ) { std::cout << "true" << std::endl; }
-    return EXIT_SUCCESS;
-  }
+GetCommand::runDone()
+{
+  if ( this->db->completedAttrSet( this->attrPath ) )
+    {
+      if ( nix::lvlNotice < nix::verbosity )
+        {
+          std::cout << "true" << std::endl;
+        }
+      return EXIT_SUCCESS;
+    }
   if ( nix::lvlNotice < nix::verbosity ) { std::cout << "false" << std::endl; }
   return EXIT_FAILURE;
 }
@@ -111,14 +117,18 @@ GetCommand::runDone() {
 /* -------------------------------------------------------------------------- */
 
 int
-GetCommand::runPath() {
-  if ( this->isPkg ) {
-    std::cout << nlohmann::json( this->db->getPackagePath( this->id ) ).dump()
-              << std::endl;
-  } else {
-    std::cout << nlohmann::json( this->db->getAttrSetPath( this->id ) ).dump()
-              << std::endl;
-  }
+GetCommand::runPath()
+{
+  if ( this->isPkg )
+    {
+      std::cout << nlohmann::json( this->db->getPackagePath( this->id ) ).dump()
+                << std::endl;
+    }
+  else
+    {
+      std::cout << nlohmann::json( this->db->getAttrSetPath( this->id ) ).dump()
+                << std::endl;
+    }
   return EXIT_SUCCESS;
 }
 
@@ -126,7 +136,8 @@ GetCommand::runPath() {
 /* -------------------------------------------------------------------------- */
 
 int
-GetCommand::runFlake() {
+GetCommand::runFlake()
+{
   nlohmann::json flakeInfo = {
     { "string", this->db->lockedRef.string },
     { "attrs", this->db->lockedRef.attrs },
@@ -140,14 +151,18 @@ GetCommand::runFlake() {
 /* -------------------------------------------------------------------------- */
 
 int
-GetCommand::runDb() {
-  if ( this->dbPath.has_value() ) {
-    std::cout << static_cast<std::string>( *this->dbPath ) << std::endl;
-  } else {
-    std::string dbPath(
-      pkgdb::genPkgDbName( this->flake->lockedFlake.getFingerprint() ) );
-    std::cout << dbPath << std::endl;
-  }
+GetCommand::runDb()
+{
+  if ( this->dbPath.has_value() )
+    {
+      std::cout << static_cast<std::string>( *this->dbPath ) << std::endl;
+    }
+  else
+    {
+      std::string dbPath(
+        pkgdb::genPkgDbName( this->flake->lockedFlake.getFingerprint() ) );
+      std::cout << dbPath << std::endl;
+    }
   return EXIT_SUCCESS;
 }
 
@@ -155,15 +170,15 @@ GetCommand::runDb() {
 /* -------------------------------------------------------------------------- */
 
 int
-GetCommand::runPkg() {
-  if ( ( this->attrPath.size() == 1 ) &&
-       ( isUInt( this->attrPath.front() ) ) ) {
-    this->id = stoull( this->attrPath.front() );
-    this->attrPath.clear();
-    std::cout << this->db->getPackage( this->id ) << std::endl;
-  } else {
-    std::cout << this->db->getPackage( this->attrPath ) << std::endl;
-  }
+GetCommand::runPkg()
+{
+  if ( ( this->attrPath.size() == 1 ) && ( isUInt( this->attrPath.front() ) ) )
+    {
+      this->id = stoull( this->attrPath.front() );
+      this->attrPath.clear();
+      std::cout << this->db->getPackage( this->id ) << std::endl;
+    }
+  else { std::cout << this->db->getPackage( this->attrPath ) << std::endl; }
   return EXIT_SUCCESS;
 }
 
@@ -171,7 +186,8 @@ GetCommand::runPkg() {
 /* -------------------------------------------------------------------------- */
 
 int
-GetCommand::run() {
+GetCommand::run()
+{
   if ( this->parser.is_subcommand_used( "db" ) ) { return this->runDb(); }
 
   this->openPkgDb();

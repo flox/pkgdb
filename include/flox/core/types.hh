@@ -69,7 +69,8 @@ NLOHMANN_JSON_SERIALIZE_ENUM( subtree_type,
 
 /** @brief A strongly typed wrapper over an attribute path _subtree_ name, which
  * is the first element of an attribute path. */
-struct Subtree {
+struct Subtree
+{
 
   subtree_type subtree = ST_NONE;
 
@@ -83,12 +84,14 @@ struct Subtree {
     : subtree( ( str == "legacyPackages" ) ? ST_LEGACY
                : ( str == "packages" )     ? ST_PACKAGES
                : ( str == "catalog" )      ? ST_CATALOG
-                                           : ST_NONE ) {}
+                                           : ST_NONE )
+  {}
 
 
   /** @brief Parse a string into a @a flox::Subtree. */
   [[nodiscard]] static Subtree
-  parseSubtree( std::string_view str ) {
+  parseSubtree( std::string_view str )
+  {
     return Subtree { ( str == "legacyPackages" ) ? ST_LEGACY
                      : ( str == "packages" )     ? ST_PACKAGES
                      : ( str == "catalog" )
@@ -100,17 +103,20 @@ struct Subtree {
 
   /** @brief Convert a @a flox::Subtree to a string. */
   [[nodiscard]] friend constexpr std::string_view
-  to_string( const Subtree & subtree ) {
-    switch ( subtree.subtree ) {
-      case ST_LEGACY: return "legacyPackages";
-      case ST_PACKAGES: return "packages";
-      case ST_CATALOG: return "catalog";
-      default: return "ST_NONE";
-    }
+  to_string( const Subtree & subtree )
+  {
+    switch ( subtree.subtree )
+      {
+        case ST_LEGACY: return "legacyPackages";
+        case ST_PACKAGES: return "packages";
+        case ST_CATALOG: return "catalog";
+        default: return "ST_NONE";
+      }
   }
 
   /** @brief Implicitly convert a @a flox::Subtree to a string. */
-  constexpr explicit operator std::string_view() const {
+  constexpr explicit operator std::string_view() const
+  {
     return to_string( *this );
   }
 
@@ -127,13 +133,15 @@ struct Subtree {
 
   /** @brief Compare with a @a flox::subtree_type for equality. */
   [[nodiscard]] constexpr bool
-  operator==( const subtree_type & other ) const {
+  operator==( const subtree_type & other ) const
+  {
     return this->subtree == other;
   }
 
   /** @brief Compare with a @a flox::subtree_type for inequality. */
   [[nodiscard]] constexpr bool
-  operator!=( const subtree_type & other ) const {
+  operator!=( const subtree_type & other ) const
+  {
     return this->subtree != other;
   }
 
@@ -144,13 +152,15 @@ struct Subtree {
 
 /** @brief Convert a JSON string to a @a flox::Subtree. */
 inline void
-from_json( const nlohmann::json & jfrom, Subtree & subtree ) {
+from_json( const nlohmann::json & jfrom, Subtree & subtree )
+{
   jfrom.get_to( subtree.subtree );
 }
 
 /** @brief Convert a @a flox::Subtree to a JSON string. */
 inline void
-to_json( nlohmann::json & jto, const Subtree & subtree ) {
+to_json( nlohmann::json & jto, const Subtree & subtree )
+{
   to_json( jto, subtree.subtree );
 }
 

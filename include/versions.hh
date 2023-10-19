@@ -27,14 +27,16 @@ namespace versions {
 /**
  * @brief Typed exception wrapper used for version parsing/comparison errors.
  */
-class VersionException : public std::exception {
+class VersionException : public std::exception
+{
 private:
   std::string msg;
 
 public:
   VersionException( std::string_view msg ) : msg( msg ) {}
   const char *
-  what() const noexcept override {
+  what() const noexcept override
+  {
     return this->msg.c_str();
   }
 };

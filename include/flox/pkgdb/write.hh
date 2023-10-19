@@ -33,7 +33,8 @@ using Todos = std::queue<Target, std::list<Target>>;
  * @brief A SQLite3 database used to cache derivation/package information about
  *        a single locked flake.
  */
-class PkgDb : public PkgDbReadOnly {
+class PkgDb : public PkgDbReadOnly
+{
 
   /* --------------------------------------------------------------------------
    */
@@ -95,12 +96,14 @@ public:
    * Does NOT attempt to create a database if one does not exist.
    * @param dbPath Absolute path to database file.
    */
-  explicit PkgDb( std::string_view dbPath ) {
+  explicit PkgDb( std::string_view dbPath )
+  {
     this->dbPath = dbPath;
-    if ( ! std::filesystem::exists( this->dbPath ) ) {
-      throw PkgDbReadOnly::NoSuchDatabase(
-        *dynamic_cast<PkgDbReadOnly *>( this ) );
-    }
+    if ( ! std::filesystem::exists( this->dbPath ) )
+      {
+        throw PkgDbReadOnly::NoSuchDatabase(
+          *dynamic_cast<PkgDbReadOnly *>( this ) );
+      }
     this->db.connect( this->dbPath.c_str(),
                       SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE );
     this->init();
@@ -114,13 +117,15 @@ public:
    * @param fingerprint Unique hash associated with locked flake.
    * @param dbPath Absolute path to database file.
    */
-  PkgDb( const Fingerprint &fingerprint, std::string_view dbPath ) {
+  PkgDb( const Fingerprint &fingerprint, std::string_view dbPath )
+  {
     this->dbPath      = dbPath;
     this->fingerprint = fingerprint;
-    if ( ! std::filesystem::exists( this->dbPath ) ) {
-      throw PkgDbReadOnly::NoSuchDatabase(
-        *dynamic_cast<PkgDbReadOnly *>( this ) );
-    }
+    if ( ! std::filesystem::exists( this->dbPath ) )
+      {
+        throw PkgDbReadOnly::NoSuchDatabase(
+          *dynamic_cast<PkgDbReadOnly *>( this ) );
+      }
     this->db.connect( this->dbPath.c_str(),
                       SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE );
     this->init();
@@ -134,7 +139,8 @@ public:
    * @param fingerprint Unique hash associated with locked flake.
    */
   explicit PkgDb( const Fingerprint &fingerprint )
-    : PkgDb( fingerprint, genPkgDbName( fingerprint ).string() ) {}
+    : PkgDb( fingerprint, genPkgDbName( fingerprint ).string() )
+  {}
 
   /**
    * @brief Opens a DB associated with a locked flake.
@@ -143,7 +149,8 @@ public:
    * @param flake Flake associated with the db. Used to write input metadata.
    * @param dbPath Absolute path to database file.
    */
-  PkgDb( const nix::flake::LockedFlake &flake, std::string_view dbPath ) {
+  PkgDb( const nix::flake::LockedFlake &flake, std::string_view dbPath )
+  {
     this->dbPath      = dbPath;
     this->fingerprint = flake.getFingerprint();
     this->db.connect( this->dbPath.c_str(),
@@ -162,7 +169,8 @@ public:
    * @param flake Flake associated with the db. Used to write input metadata.
    */
   explicit PkgDb( const nix::flake::LockedFlake &flake )
-    : PkgDb( flake, genPkgDbName( flake.getFingerprint() ).string() ) {}
+    : PkgDb( flake, genPkgDbName( flake.getFingerprint() ).string() )
+  {}
 
 
   /* --------------------------------------------------------------------------
@@ -178,7 +186,8 @@ public:
    * @return `SQLITE_*` [error code](https://www.sqlite.org/rescode.html).
    */
   inline sql_rc
-  execute( const char *stmt ) {
+  execute( const char *stmt )
+  {
     sqlite3pp::command cmd( this->db, stmt );
     return cmd.execute();
   }
@@ -189,7 +198,8 @@ public:
    * @return `SQLITE_*` [error code](https://www.sqlite.org/rescode.html).
    */
   inline sql_rc
-  execute_all( const char *stmt ) {
+  execute_all( const char *stmt )
+  {
     sqlite3pp::command cmd( this->db, stmt );
     return cmd.execute_all();
   }

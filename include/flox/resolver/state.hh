@@ -30,7 +30,8 @@ namespace flox::resolver {
  * This comprises a set of inputs with @a flox::pkgdb::PkgDbInput handles and
  * a set of descriptors to be resolved.
  */
-class ResolverState : public pkgdb::PkgDbRegistryMixin {
+class ResolverState : public pkgdb::PkgDbRegistryMixin
+{
 
 private:
   RegistryRaw registryRaw; /**< Flake inputs to resolve in. */
@@ -46,7 +47,8 @@ protected:
    */
 
   [[nodiscard]] std::vector<std::string> &
-  getSystems() override {
+  getSystems() override
+  {
     return this->preferences.systems;
   }
 
@@ -54,12 +56,14 @@ protected:
 public:
   ResolverState( RegistryRaw registry, pkgdb::QueryPreferences preferences )
     : registryRaw( std::move( registry ) )
-    , preferences( std::move( preferences ) ) {}
+    , preferences( std::move( preferences ) )
+  {}
 
 
   /** @brief Get the _raw_ registry declaration. */
   [[nodiscard]] RegistryRaw
-  getRegistryRaw() override {
+  getRegistryRaw() override
+  {
     return this->registryRaw;
   }
 
@@ -69,7 +73,8 @@ public:
    *        @a name and declared @a preferences.
    */
   [[nodiscard]] pkgdb::PkgQueryArgs
-  getPkgQueryArgs( const std::string & name ) {
+  getPkgQueryArgs( const std::string & name )
+  {
     pkgdb::PkgQueryArgs args;
     this->preferences.fillPkgQueryArgs( args );
     this->getPkgDbRegistry()->at( name )->fillPkgQueryArgs( args );

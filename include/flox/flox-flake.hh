@@ -67,7 +67,8 @@ static const nix::flake::LockFlags defaultLockFlags = {
  * It is recommended that only one `FloxFlake` be created for a unique `flake`
  * to avoid synchronization slowdowns with its databases.
  */
-class FloxFlake : public std::enable_shared_from_this<FloxFlake> {
+class FloxFlake : public std::enable_shared_from_this<FloxFlake>
+{
 
 private:
   /**

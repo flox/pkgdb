@@ -34,7 +34,8 @@ namespace flox::resolver {
  * This _raw_ struct is defined to generate parsers.
  * The _real_ form is @a flox::resolver::ManifestDescriptor.
  */
-struct ManifestDescriptorRaw {
+struct ManifestDescriptorRaw
+{
 
 public:
   /** Match `name`, `pname`, or `pkgAttrName` */
@@ -110,7 +111,8 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT( ManifestDescriptorRaw,
  * @brief Extend and remap fields from @a flox::resolver::PkgDescriptorRaw to
  *        @a flox::pkgdb::PkgQueryArgs
  */
-struct ManifestDescriptor {
+struct ManifestDescriptor
+{
 
 public:
   /** Match `name`, `pname`, or `pkgAttrName` */

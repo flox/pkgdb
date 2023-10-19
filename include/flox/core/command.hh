@@ -44,7 +44,8 @@ namespace flox::command {
  *   , lvlVomit       ( -vvvv | --debug -v )
  *   } Verbosity;
  */
-struct VerboseParser : public argparse::ArgumentParser {
+struct VerboseParser : public argparse::ArgumentParser
+{
   explicit VerboseParser( const std::string & name,
                           const std::string & version = "0.1.0" );
 }; /* End struct `VerboseParser' */
@@ -53,7 +54,8 @@ struct VerboseParser : public argparse::ArgumentParser {
 /* -------------------------------------------------------------------------- */
 
 /** @brief Extend a command's state blob with a single @a RegistryInput. */
-class InlineInputMixin : virtual public NixState {
+class InlineInputMixin : virtual public NixState
+{
 
 private:
   RegistryInput registryInput;
@@ -64,7 +66,8 @@ protected:
    * @param flakeRef A flake reference as a URL string or JSON attribute set.
    */
   void
-  parseFlakeRef( const std::string & flakeRef ) {
+  parseFlakeRef( const std::string & flakeRef )
+  {
     this->registryInput.from =
       std::make_shared<nix::FlakeRef>( flox::parseFlakeRef( flakeRef ) );
   }
@@ -83,7 +86,8 @@ public:
    * @return The parsed @a RegistryInput.
    */
   [[nodiscard]] const RegistryInput &
-  getRegistryInput() {
+  getRegistryInput()
+  {
     return this->registryInput;
   }
 
@@ -93,7 +97,8 @@ public:
 /* -------------------------------------------------------------------------- */
 
 /** @brief Extend a command state blob with an attribute path to "target". */
-struct AttrPathMixin {
+struct AttrPathMixin
+{
 
   flox::AttrPath attrPath;
 
@@ -123,7 +128,8 @@ struct AttrPathMixin {
 
 /** @brief Extend a command state blob with registry inputs loaded from "path".
  */
-struct RegistryFileMixin {
+struct RegistryFileMixin
+{
 
   std::optional<std::filesystem::path> registryPath;
   std::optional<RegistryRaw>           registryRaw;

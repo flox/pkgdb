@@ -21,7 +21,8 @@ namespace flox {
 /* -------------------------------------------------------------------------- */
 
 void
-InputPreferences::clear() {
+InputPreferences::clear()
+{
   this->subtrees    = std::nullopt;
   this->stabilities = std::nullopt;
 }
@@ -30,7 +31,8 @@ InputPreferences::clear() {
 /* -------------------------------------------------------------------------- */
 
 pkgdb::PkgQueryArgs &
-InputPreferences::fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const {
+InputPreferences::fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const
+{
   pqa.subtrees    = this->subtrees;
   pqa.stabilities = this->stabilities;
   return pqa;
@@ -40,7 +42,8 @@ InputPreferences::fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const {
 /* -------------------------------------------------------------------------- */
 
 void
-RegistryRaw::clear() {
+RegistryRaw::clear()
+{
   this->inputs.clear();
   this->priority.clear();
   this->defaults.clear();
@@ -50,16 +53,19 @@ RegistryRaw::clear() {
 /* -------------------------------------------------------------------------- */
 
 std::vector<std::reference_wrapper<const std::string>>
-RegistryRaw::getOrder() const {
+RegistryRaw::getOrder() const
+{
   std::vector<std::reference_wrapper<const std::string>> order(
     this->priority.cbegin(),
     this->priority.cend() );
-  for ( const auto &[key, _] : this->inputs ) {
-    if ( std::find( this->priority.begin(), this->priority.end(), key ) ==
-         this->priority.end() ) {
-      order.emplace_back( key );
+  for ( const auto &[key, _] : this->inputs )
+    {
+      if ( std::find( this->priority.begin(), this->priority.end(), key ) ==
+           this->priority.end() )
+        {
+          order.emplace_back( key );
+        }
     }
-  }
   return order;
 }
 
@@ -67,7 +73,8 @@ RegistryRaw::getOrder() const {
 /* -------------------------------------------------------------------------- */
 
 void
-from_json( const nlohmann::json &jfrom, RegistryInput &rip ) {
+from_json( const nlohmann::json &jfrom, RegistryInput &rip )
+{
   from_json( jfrom, dynamic_cast<InputPreferences &>( rip ) );
   rip.from =
     std::make_shared<nix::FlakeRef>( jfrom.at( "from" ).get<nix::FlakeRef>() );
@@ -75,13 +82,14 @@ from_json( const nlohmann::json &jfrom, RegistryInput &rip ) {
 
 
 void
-to_json( nlohmann::json &jto, const RegistryInput &rip ) {
+to_json( nlohmann::json &jto, const RegistryInput &rip )
+{
   to_json( jto, dynamic_cast<const InputPreferences &>( rip ) );
-  if ( rip.from == nullptr ) {
-    jto.emplace( "from", nullptr );
-  } else {
-    jto.emplace( "from", nix::fetchers::attrsToJSON( rip.from->toAttrs() ) );
-  }
+  if ( rip.from == nullptr ) { jto.emplace( "from", nullptr ); }
+  else
+    {
+      jto.emplace( "from", nix::fetchers::attrsToJSON( rip.from->toAttrs() ) );
+    }
 }
 
 
@@ -89,20 +97,24 @@ to_json( nlohmann::json &jto, const RegistryInput &rip ) {
 
 pkgdb::PkgQueryArgs &
 RegistryRaw::fillPkgQueryArgs( const std::string   &input,
-                               pkgdb::PkgQueryArgs &pqa ) const {
+                               pkgdb::PkgQueryArgs &pqa ) const
+{
   /* Look for the named input and our fallbacks/default in the inputs list.
    * then fill input specific settings. */
-  try {
-    const RegistryInput &minput = this->inputs.at( input );
-    pqa.subtrees =
-      minput.subtrees.has_value() ? minput.subtrees : this->defaults.subtrees;
-    pqa.stabilities = minput.stabilities.has_value()
-                        ? minput.stabilities
-                        : this->defaults.stabilities;
-  } catch ( ... ) {
-    pqa.subtrees    = this->defaults.subtrees;
-    pqa.stabilities = this->defaults.stabilities;
-  }
+  try
+    {
+      const RegistryInput &minput = this->inputs.at( input );
+      pqa.subtrees =
+        minput.subtrees.has_value() ? minput.subtrees : this->defaults.subtrees;
+      pqa.stabilities = minput.stabilities.has_value()
+                          ? minput.stabilities
+                          : this->defaults.stabilities;
+    }
+  catch ( ... )
+    {
+      pqa.subtrees    = this->defaults.subtrees;
+      pqa.stabilities = this->defaults.stabilities;
+    }
   return pqa;
 }
 
@@ -110,12 +122,14 @@ RegistryRaw::fillPkgQueryArgs( const std::string   &input,
 /* -------------------------------------------------------------------------- */
 
 nix::ref<FloxFlake>
-FloxFlakeInput::getFlake() {
-  if ( this->flake == nullptr ) {
-    this->flake =
-      std::make_shared<FloxFlake>( NixState( this->store ).getState(),
-                                   *this->getFlakeRef() );
-  }
+FloxFlakeInput::getFlake()
+{
+  if ( this->flake == nullptr )
+    {
+      this->flake =
+        std::make_shared<FloxFlake>( NixState( this->store ).getState(),
+                                     *this->getFlakeRef() );
+    }
   return static_cast<nix::ref<FloxFlake>>( this->flake );
 }
 
@@ -123,23 +137,32 @@ FloxFlakeInput::getFlake() {
 /* -------------------------------------------------------------------------- */
 
 const std::vector<Subtree> &
-FloxFlakeInput::getSubtrees() {
-  if ( ! this->enabledSubtrees.has_value() ) {
-    if ( this->subtrees.has_value() ) {
-      this->enabledSubtrees = *this->subtrees;
-    } else {
-      auto root = this->getFlake()->openEvalCache()->getRoot();
-      if ( root->maybeGetAttr( "catalog" ) != nullptr ) {
-        this->enabledSubtrees = std::vector<Subtree> { ST_CATALOG };
-      } else if ( root->maybeGetAttr( "packages" ) != nullptr ) {
-        this->enabledSubtrees = std::vector<Subtree> { ST_PACKAGES };
-      } else if ( root->maybeGetAttr( "legacyPackages" ) != nullptr ) {
-        this->enabledSubtrees = std::vector<Subtree> { ST_LEGACY };
-      } else {
-        this->enabledSubtrees = std::vector<Subtree> {};
-      }
+FloxFlakeInput::getSubtrees()
+{
+  if ( ! this->enabledSubtrees.has_value() )
+    {
+      if ( this->subtrees.has_value() )
+        {
+          this->enabledSubtrees = *this->subtrees;
+        }
+      else
+        {
+          auto root = this->getFlake()->openEvalCache()->getRoot();
+          if ( root->maybeGetAttr( "catalog" ) != nullptr )
+            {
+              this->enabledSubtrees = std::vector<Subtree> { ST_CATALOG };
+            }
+          else if ( root->maybeGetAttr( "packages" ) != nullptr )
+            {
+              this->enabledSubtrees = std::vector<Subtree> { ST_PACKAGES };
+            }
+          else if ( root->maybeGetAttr( "legacyPackages" ) != nullptr )
+            {
+              this->enabledSubtrees = std::vector<Subtree> { ST_LEGACY };
+            }
+          else { this->enabledSubtrees = std::vector<Subtree> {}; }
+        }
     }
-  }
   return *this->enabledSubtrees;
 }
 

@@ -28,7 +28,8 @@ namespace flox::search {
 /* -------------------------------------------------------------------------- */
 
 /** @brief Package query parser. */
-struct PkgQueryMixin {
+struct PkgQueryMixin
+{
 
   pkgdb::PkgQuery query;
 
@@ -56,7 +57,8 @@ struct PkgQueryMixin {
 /** @brief Search flakes for packages satisfying a set of filters. */
 class SearchCommand
   : pkgdb::PkgDbRegistryMixin
-  , PkgQueryMixin {
+  , PkgQueryMixin
+{
 
 private:
   SearchParams           params; /**< Query arguments and inputs */
@@ -70,12 +72,14 @@ private:
   addSearchParamArgs( argparse::ArgumentParser & parser );
 
   [[nodiscard]] RegistryRaw
-  getRegistryRaw() override {
+  getRegistryRaw() override
+  {
     return this->params.registry;
   }
 
   [[nodiscard]] std::vector<std::string> &
-  getSystems() override {
+  getSystems() override
+  {
     return this->params.systems;
   }
 
@@ -85,12 +89,14 @@ public:
 
   /** @brief Display a single row from the given @a input. */
   static void
-  showRow( pkgdb::PkgDbInput & input, pkgdb::row_id row ) {
+  showRow( pkgdb::PkgDbInput & input, pkgdb::row_id row )
+  {
     std::cout << input.getRowJSON( row ).dump() << std::endl;
   }
 
   [[nodiscard]] command::VerboseParser &
-  getParser() {
+  getParser()
+  {
     return this->parser;
   }
 

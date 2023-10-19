@@ -20,7 +20,8 @@
 /* -------------------------------------------------------------------------- */
 
 int
-main( int argc, char * argv[] ) {
+main( int argc, char * argv[] )
+{
 
   /* Define arg parsers. */
 
@@ -45,72 +46,92 @@ main( int argc, char * argv[] ) {
 
   /* Parse Args */
 
-  try {
-    prog.parse_args( argc, argv );
-  } catch ( const flox::pkgdb::PkgQuery::InvalidArgException & err ) {
-    // TODO: DRY ( see search/command.cc )
-    int exitCode = flox::EC_PKG_QUERY_INVALID_ARG;
-    exitCode += static_cast<int>( err.errorCode );
-    for ( int i = 1; i < argc; ++i ) {
-      if ( std::string_view( argv[i] ) == "search" ) {
-        std::cout << "{ \"error\": \"" << err.what()
-                  << "\", \"code\": " << exitCode << " }" << std::endl;
-        return exitCode;
-      }
+  try
+    {
+      prog.parse_args( argc, argv );
     }
-    std::cerr << "ERROR: " << err.what() << std::endl;
-    std::cerr << prog << std::endl;
-    return exitCode;
-  } catch ( const std::exception & err ) {
-    // TODO: DRY ( see search/command.cc )
-    for ( int i = 1; i < argc; ++i ) {
-      if ( std::string_view( argv[i] ) == "search" ) {
-        std::cout << "{ \"error\": \"" << err.what()
-                  << "\", \"code\": " << flox::EC_FAILURE << " }" << std::endl;
-        return flox::EC_FAILURE;
-      }
+  catch ( const flox::pkgdb::PkgQuery::InvalidArgException & err )
+    {
+      // TODO: DRY ( see search/command.cc )
+      int exitCode = flox::EC_PKG_QUERY_INVALID_ARG;
+      exitCode += static_cast<int>( err.errorCode );
+      for ( int i = 1; i < argc; ++i )
+        {
+          if ( std::string_view( argv[i] ) == "search" )
+            {
+              std::cout << "{ \"error\": \"" << err.what()
+                        << "\", \"code\": " << exitCode << " }" << std::endl;
+              return exitCode;
+            }
+        }
+      std::cerr << "ERROR: " << err.what() << std::endl;
+      std::cerr << prog << std::endl;
+      return exitCode;
     }
-    std::cerr << "ERROR: " << err.what() << std::endl;
-    std::cerr << prog << std::endl;
-    return flox::EC_FAILURE;
-  }
+  catch ( const std::exception & err )
+    {
+      // TODO: DRY ( see search/command.cc )
+      for ( int i = 1; i < argc; ++i )
+        {
+          if ( std::string_view( argv[i] ) == "search" )
+            {
+              std::cout << "{ \"error\": \"" << err.what()
+                        << "\", \"code\": " << flox::EC_FAILURE << " }"
+                        << std::endl;
+              return flox::EC_FAILURE;
+            }
+        }
+      std::cerr << "ERROR: " << err.what() << std::endl;
+      std::cerr << prog << std::endl;
+      return flox::EC_FAILURE;
+    }
 
 
   /* Run subcommand */
 
-  try {
-    if ( prog.is_subcommand_used( "scrape" ) ) { return cmdScrape.run(); }
-    if ( prog.is_subcommand_used( "get" ) ) { return cmdGet.run(); }
-    if ( prog.is_subcommand_used( "list" ) ) { return cmdList.run(); }
-    if ( prog.is_subcommand_used( "search" ) ) { return cmdSearch.run(); }
-    if ( prog.is_subcommand_used( "resolve" ) ) { return cmdResolve.run(); }
-  } catch ( const flox::pkgdb::PkgQuery::InvalidArgException & err ) {
-    // TODO: DRY ( see search/command.cc )
-    int exitCode = flox::EC_PKG_QUERY_INVALID_ARG;
-    exitCode += static_cast<int>( err.errorCode );
-    for ( int i = 1; i < argc; ++i ) {
-      if ( std::string_view( argv[i] ) == "search" ) {
-        std::cout << "{ \"error\": \"" << err.what()
-                  << "\", \"code\": " << exitCode << " }" << std::endl;
-        return exitCode;
-      }
+  try
+    {
+      if ( prog.is_subcommand_used( "scrape" ) ) { return cmdScrape.run(); }
+      if ( prog.is_subcommand_used( "get" ) ) { return cmdGet.run(); }
+      if ( prog.is_subcommand_used( "list" ) ) { return cmdList.run(); }
+      if ( prog.is_subcommand_used( "search" ) ) { return cmdSearch.run(); }
+      if ( prog.is_subcommand_used( "resolve" ) ) { return cmdResolve.run(); }
     }
-    std::cerr << "ERROR: " << err.what() << std::endl;
-    std::cerr << prog << std::endl;
-    return exitCode;
-  } catch ( const std::exception & err ) {
-    // TODO: DRY ( see search/command.cc )
-    for ( int i = 1; i < argc; ++i ) {
-      if ( std::string_view( argv[i] ) == "search" ) {
-        std::cout << "{ \"error\": \"" << err.what()
-                  << "\", \"code\": " << flox::EC_FAILURE << " }" << std::endl;
-        return flox::EC_FAILURE;
-      }
+  catch ( const flox::pkgdb::PkgQuery::InvalidArgException & err )
+    {
+      // TODO: DRY ( see search/command.cc )
+      int exitCode = flox::EC_PKG_QUERY_INVALID_ARG;
+      exitCode += static_cast<int>( err.errorCode );
+      for ( int i = 1; i < argc; ++i )
+        {
+          if ( std::string_view( argv[i] ) == "search" )
+            {
+              std::cout << "{ \"error\": \"" << err.what()
+                        << "\", \"code\": " << exitCode << " }" << std::endl;
+              return exitCode;
+            }
+        }
+      std::cerr << "ERROR: " << err.what() << std::endl;
+      std::cerr << prog << std::endl;
+      return exitCode;
     }
-    std::cerr << "ERROR: " << err.what() << std::endl;
-    std::cerr << prog << std::endl;
-    return flox::EC_FAILURE;
-  }
+  catch ( const std::exception & err )
+    {
+      // TODO: DRY ( see search/command.cc )
+      for ( int i = 1; i < argc; ++i )
+        {
+          if ( std::string_view( argv[i] ) == "search" )
+            {
+              std::cout << "{ \"error\": \"" << err.what()
+                        << "\", \"code\": " << flox::EC_FAILURE << " }"
+                        << std::endl;
+              return flox::EC_FAILURE;
+            }
+        }
+      std::cerr << "ERROR: " << err.what() << std::endl;
+      std::cerr << prog << std::endl;
+      return flox::EC_FAILURE;
+    }
 
   return EXIT_FAILURE;
 }

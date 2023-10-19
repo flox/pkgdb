@@ -20,21 +20,25 @@ namespace flox::resolver {
 /* -------------------------------------------------------------------------- */
 
 argparse::Argument &
-ResolveCommand::addResolveParamArgs( argparse::ArgumentParser &parser ) {
+ResolveCommand::addResolveParamArgs( argparse::ArgumentParser &parser )
+{
   return parser.add_argument( "parameters" )
     .help( "resolution paramaters as inline JSON or a path to a file" )
     .required()
     .metavar( "PARAMS" )
-    .action( [&]( const std::string &params ) {
-      nlohmann::json paramsJSON = parseOrReadJSONObject( params );
-      paramsJSON.get_to( this->params );
-    } );
+    .action(
+      [&]( const std::string &params )
+      {
+        nlohmann::json paramsJSON = parseOrReadJSONObject( params );
+        paramsJSON.get_to( this->params );
+      } );
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-ResolveCommand::ResolveCommand() : parser( "resolve" ) {
+ResolveCommand::ResolveCommand() : parser( "resolve" )
+{
   this->parser.add_description(
     "Resolve a descriptor in a set of flakes and emit a list "
     "satisfactory packages" );
@@ -45,7 +49,8 @@ ResolveCommand::ResolveCommand() : parser( "resolve" ) {
 /* -------------------------------------------------------------------------- */
 
 ResolverState
-ResolveCommand::getResolverState() const {
+ResolveCommand::getResolverState() const
+{
   return { this->params.registry,
            dynamic_cast<const pkgdb::QueryPreferences &>( this->params ) };
 }
@@ -54,7 +59,8 @@ ResolveCommand::getResolverState() const {
 /* -------------------------------------------------------------------------- */
 
 int
-ResolveCommand::run() {
+ResolveCommand::run()
+{
   auto state = this->getResolverState();
   auto rsl   = resolve( state, this->getQuery() );
   std::cout << nlohmann::json( rsl ).dump() << std::endl;

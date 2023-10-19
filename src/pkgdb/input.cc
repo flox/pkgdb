@@ -17,15 +17,17 @@ namespace flox::pkgdb {
 /* -------------------------------------------------------------------------- */
 
 void
-PkgDbInput::init() {
+PkgDbInput::init()
+{
   /* Initialize DB if missing. */
-  if ( ! std::filesystem::exists( this->dbPath ) ) {
-    std::filesystem::create_directories( this->dbPath.parent_path() );
-    nix::logger->log(
-      nix::lvlTalkative,
-      nix::fmt( "Creating database '%s'", this->dbPath.string() ) );
-    PkgDb( this->getFlake()->lockedFlake, this->dbPath.string() );
-  }
+  if ( ! std::filesystem::exists( this->dbPath ) )
+    {
+      std::filesystem::create_directories( this->dbPath.parent_path() );
+      nix::logger->log(
+        nix::lvlTalkative,
+        nix::fmt( "Creating database '%s'", this->dbPath.string() ) );
+      PkgDb( this->getFlake()->lockedFlake, this->dbPath.string() );
+    }
 
   this->dbRO = std::make_shared<PkgDbReadOnly>(
     this->getFlake()->lockedFlake.getFingerprint(),
@@ -33,40 +35,46 @@ PkgDbInput::init() {
 
   /* If the schema version is bad, delete the DB so it will be recreated. */
   SqlVersions dbVersions = this->dbRO->getDbVersion();
-  if ( dbVersions.tables != sqlVersions.tables ) {
-    nix::logger->log(
-      nix::lvlTalkative,
-      nix::fmt( "Clearing outdated database '%s'", this->dbPath.string() ) );
-    std::filesystem::remove( this->dbPath );
-    PkgDb( this->getFlake()->lockedFlake, this->dbPath.string() );
-  } else if ( dbVersions.views != sqlVersions.views ) {
-    nix::logger->log( nix::lvlTalkative,
-                      nix::fmt( "Updating outdated database views '%s'",
-                                this->dbPath.string() ) );
-    PkgDb( this->getFlake()->lockedFlake, this->dbPath.string() );
-  }
+  if ( dbVersions.tables != sqlVersions.tables )
+    {
+      nix::logger->log(
+        nix::lvlTalkative,
+        nix::fmt( "Clearing outdated database '%s'", this->dbPath.string() ) );
+      std::filesystem::remove( this->dbPath );
+      PkgDb( this->getFlake()->lockedFlake, this->dbPath.string() );
+    }
+  else if ( dbVersions.views != sqlVersions.views )
+    {
+      nix::logger->log( nix::lvlTalkative,
+                        nix::fmt( "Updating outdated database views '%s'",
+                                  this->dbPath.string() ) );
+      PkgDb( this->getFlake()->lockedFlake, this->dbPath.string() );
+    }
 
   /* If the schema version is still wrong throw an error, but we don't
    * expect this to actually occur. */
   dbVersions = this->dbRO->getDbVersion();
-  if ( dbVersions != sqlVersions ) {
-    throw PkgDbException(
-      this->dbPath,
-      nix::fmt( "Incompatible Flox PkgDb schema versions ( %u, %u )",
-                dbVersions.tables,
-                dbVersions.views ) );
-  }
+  if ( dbVersions != sqlVersions )
+    {
+      throw PkgDbException(
+        this->dbPath,
+        nix::fmt( "Incompatible Flox PkgDb schema versions ( %u, %u )",
+                  dbVersions.tables,
+                  dbVersions.views ) );
+    }
 }
 
 
 /* -------------------------------------------------------------------------- */
 
 nix::ref<PkgDb>
-PkgDbInput::getDbReadWrite() {
-  if ( this->dbRW == nullptr ) {
-    this->dbRW = std::make_shared<PkgDb>( this->getFlake()->lockedFlake,
-                                          this->dbPath.string() );
-  }
+PkgDbInput::getDbReadWrite()
+{
+  if ( this->dbRW == nullptr )
+    {
+      this->dbRW = std::make_shared<PkgDb>( this->getFlake()->lockedFlake,
+                                            this->dbPath.string() );
+    }
   return static_cast<nix::ref<PkgDb>>( this->dbRW );
 }
 
@@ -74,7 +82,8 @@ PkgDbInput::getDbReadWrite() {
 /* -------------------------------------------------------------------------- */
 
 void
-PkgDbInput::scrapePrefix( const flox::AttrPath & prefix ) {
+PkgDbInput::scrapePrefix( const flox::AttrPath & prefix )
+{
   if ( this->getDbReadOnly()->completedAttrSet( prefix ) ) { return; }
 
   Todos       todo;
@@ -92,20 +101,24 @@ PkgDbInput::scrapePrefix( const flox::AttrPath & prefix ) {
 
   /* Start a transaction */
   sqlite3pp::transaction txn( dbRW->db );
-  try {
-    while ( ! todo.empty() ) {
-      dbRW->scrape( this->getFlake()->state->symbols, todo.front(), todo );
-      todo.pop();
-    }
+  try
+    {
+      while ( ! todo.empty() )
+        {
+          dbRW->scrape( this->getFlake()->state->symbols, todo.front(), todo );
+          todo.pop();
+        }
 
-    /* Mark the prefix and its descendants as "done" */
-    dbRW->setPrefixDone( row, true );
-  } catch ( const nix::EvalError & ) {
-    txn.rollback();
-    /* Close the r/w connection if we opened it. */
-    if ( ! wasRW ) { this->closeDbReadWrite(); }
-    throw;
-  }
+      /* Mark the prefix and its descendants as "done" */
+      dbRW->setPrefixDone( row, true );
+    }
+  catch ( const nix::EvalError & )
+    {
+      txn.rollback();
+      /* Close the r/w connection if we opened it. */
+      if ( ! wasRW ) { this->closeDbReadWrite(); }
+      throw;
+    }
 
   /* Close the transaction. */
   txn.commit();
@@ -118,36 +131,41 @@ PkgDbInput::scrapePrefix( const flox::AttrPath & prefix ) {
 /* -------------------------------------------------------------------------- */
 
 void
-PkgDbInput::scrapeSystems( const std::vector<std::string> & systems ) {
+PkgDbInput::scrapeSystems( const std::vector<std::string> & systems )
+{
   /* Set fallbacks */
   std::vector<std::string> stabilities =
     this->stabilities.value_or( std::vector<std::string> { "stable" } );
 
   /* Loop and scrape over `subtrees', `systems', and `stabilities'. */
-  for ( const auto & subtree : this->getSubtrees() ) {
-    flox::AttrPath prefix = { static_cast<std::string>(
-      to_string( subtree ) ) };
-    for ( const auto & system : systems ) {
-      prefix.emplace_back( system );
-      if ( subtree != ST_CATALOG ) {
-        this->scrapePrefix( prefix );
-      } else {
-        for ( const auto & stability : stabilities ) {
-          prefix.emplace_back( stability );
-          this->scrapePrefix( prefix );
+  for ( const auto & subtree : this->getSubtrees() )
+    {
+      flox::AttrPath prefix = { static_cast<std::string>(
+        to_string( subtree ) ) };
+      for ( const auto & system : systems )
+        {
+          prefix.emplace_back( system );
+          if ( subtree != ST_CATALOG ) { this->scrapePrefix( prefix ); }
+          else
+            {
+              for ( const auto & stability : stabilities )
+                {
+                  prefix.emplace_back( stability );
+                  this->scrapePrefix( prefix );
+                  prefix.pop_back();
+                }
+            }
           prefix.pop_back();
         }
-      }
-      prefix.pop_back();
     }
-  }
 }
 
 
 /* -------------------------------------------------------------------------- */
 
 nlohmann::json
-PkgDbInput::getRowJSON( row_id row ) {
+PkgDbInput::getRowJSON( row_id row )
+{
   auto dbRO = this->getDbReadOnly();
   auto rsl  = dbRO->getPackage( row );
   rsl.emplace( "input", this->getNameOrURL() );
@@ -158,33 +176,38 @@ PkgDbInput::getRowJSON( row_id row ) {
 /* -------------------------------------------------------------------------- */
 
 void
-PkgDbRegistryMixin::initRegistry() {
-  if ( this->registry == nullptr ) {
-    nix::ref<nix::Store>     store = this->getStore();
-    pkgdb::PkgDbInputFactory factory( store );  // TODO: cacheDir
-    this->registry =
-      std::make_shared<Registry<PkgDbInputFactory>>( this->getRegistryRaw(),
-                                                     factory );
-  }
+PkgDbRegistryMixin::initRegistry()
+{
+  if ( this->registry == nullptr )
+    {
+      nix::ref<nix::Store>     store = this->getStore();
+      pkgdb::PkgDbInputFactory factory( store );  // TODO: cacheDir
+      this->registry =
+        std::make_shared<Registry<PkgDbInputFactory>>( this->getRegistryRaw(),
+                                                       factory );
+    }
 }
 
 
 /* -------------------------------------------------------------------------- */
 
 void
-PkgDbRegistryMixin::scrapeIfNeeded() {
+PkgDbRegistryMixin::scrapeIfNeeded()
+{
   this->initRegistry();
   assert( this->registry != nullptr );
-  for ( auto & [name, input] : *this->registry ) {
-    input->scrapeSystems( this->getSystems() );
-  }
+  for ( auto & [name, input] : *this->registry )
+    {
+      input->scrapeSystems( this->getSystems() );
+    }
 }
 
 
 /* -------------------------------------------------------------------------- */
 
 nix::ref<Registry<PkgDbInputFactory>>
-PkgDbRegistryMixin::getPkgDbRegistry() {
+PkgDbRegistryMixin::getPkgDbRegistry()
+{
   if ( this->registry == nullptr ) { this->scrapeIfNeeded(); }
   assert( this->registry != nullptr );
   return static_cast<nix::ref<Registry<PkgDbInputFactory>>>( this->registry );

@@ -46,7 +46,8 @@ static const char * const dateREStr =
 /* -------------------------------------------------------------------------- */
 
 bool
-isSemver( const std::string & version ) {
+isSemver( const std::string & version )
+{
   static const std::regex semverRE( semverREStr, std::regex::ECMAScript );
   return std::regex_match( version, semverRE );
 }
@@ -55,7 +56,8 @@ isSemver( const std::string & version ) {
 /* -------------------------------------------------------------------------- */
 
 bool
-isDate( const std::string & version ) {
+isDate( const std::string & version )
+{
   static const std::regex dateRE( dateREStr, std::regex::ECMAScript );
   return std::regex_match( version, dateRE );
 }
@@ -64,7 +66,8 @@ isDate( const std::string & version ) {
 /* -------------------------------------------------------------------------- */
 
 bool
-isCoercibleToSemver( const std::string & version ) {
+isCoercibleToSemver( const std::string & version )
+{
   static const std::regex dateRE( dateREStr, std::regex::ECMAScript );
   static const std::regex semverCoerceRE( semverCoerceREStr,
                                           std::regex::ECMAScript );
@@ -76,7 +79,8 @@ isCoercibleToSemver( const std::string & version ) {
 /* -------------------------------------------------------------------------- */
 
 std::optional<std::string>
-coerceSemver( std::string_view version ) {
+coerceSemver( std::string_view version )
+{
   static const std::regex semverRE( semverREStr, std::regex::ECMAScript );
   static const std::regex semverCoerceRE( semverCoerceREStr,
                                           std::regex::ECMAScript );
@@ -86,9 +90,10 @@ coerceSemver( std::string_view version ) {
 
   /* Try try matching the coercive pattern. */
   std::smatch match;
-  if ( isDate( vsn ) || ( ! std::regex_match( vsn, match, semverCoerceRE ) ) ) {
-    return std::nullopt;
-  }
+  if ( isDate( vsn ) || ( ! std::regex_match( vsn, match, semverCoerceRE ) ) )
+    {
+      return std::nullopt;
+    }
 
   /**
    * Capture Groups Example:
@@ -120,17 +125,11 @@ coerceSemver( std::string_view version ) {
 
   std::string rsl( match[majorIdx].str() + "." );
 
-  if ( minor.empty() ) {
-    rsl += "0.";
-  } else {
-    rsl += minor + ".";
-  }
+  if ( minor.empty() ) { rsl += "0."; }
+  else { rsl += minor + "."; }
 
-  if ( patch.empty() ) {
-    rsl += "0";
-  } else {
-    rsl += patch;
-  }
+  if ( patch.empty() ) { rsl += "0"; }
+  else { rsl += patch; }
 
   if ( ! tag.empty() ) { rsl += tag; }
 
@@ -141,7 +140,8 @@ coerceSemver( std::string_view version ) {
 /* -------------------------------------------------------------------------- */
 
 bool
-isSemverRange( const std::string & range ) {
+isSemverRange( const std::string & range )
+{
   /* Check for _modifier_ */
   static const std::string semverRangeREStr =
     "\\s*([~^><=]|>=|<=)?\\s*" + std::string( semverLooseREStr ) + ".*";
@@ -164,7 +164,8 @@ isSemverRange( const std::string & range ) {
 #endif
 
 std::pair<int, std::string>
-runSemver( const std::list<std::string> & args ) {
+runSemver( const std::list<std::string> & args )
+{
   static const std::string semverProg =
     nix::getEnv( "SEMVER" ).value_or( SEMVER_PATH );
   static const std::map<std::string, std::string> env = nix::getEnv();
@@ -185,8 +186,8 @@ runSemver( const std::list<std::string> & args ) {
 /* -------------------------------------------------------------------------- */
 
 std::list<std::string>
-semverSat( const std::string &            range,
-           const std::list<std::string> & versions ) {
+semverSat( const std::string & range, const std::list<std::string> & versions )
+{
   std::list<std::string> args = { "--include-prerelease",
                                   "--loose",
                                   "--range",
@@ -198,9 +199,10 @@ semverSat( const std::string &            range,
   std::list<std::string> rsl;
   std::stringstream      oss( lines );
   std::string            line;
-  while ( std::getline( oss, line, '\n' ) ) {
-    if ( ! line.empty() ) { rsl.push_back( std::move( line ) ); }
-  }
+  while ( std::getline( oss, line, '\n' ) )
+    {
+      if ( ! line.empty() ) { rsl.push_back( std::move( line ) ); }
+    }
   return rsl;
 }
 

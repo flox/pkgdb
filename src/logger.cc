@@ -26,7 +26,8 @@ namespace flox {
  * `NOCOLOR` environment variable ( `nix::shouldANSI` only checks `NO_COLOR` ).
  */
 static bool
-shouldANSI() {
+shouldANSI()
+{
   return isatty( STDERR_FILENO ) &&
          ( nix::getEnv( "TERM" ).value_or( "dumb" ) != "dumb" ) &&
          ( ! ( nix::getEnv( "NO_COLOR" ).has_value() ||
@@ -42,7 +43,8 @@ shouldANSI() {
  * This is an exact copy of `nix::SimpleLogger` with the addition of filtering
  * in the `log` routine.
  */
-class FilteredLogger : public nix::Logger {
+class FilteredLogger : public nix::Logger
+{
 
 protected:
   /**
@@ -53,16 +55,18 @@ protected:
    * handle them here.
    */
   bool
-  shouldIgnoreWarning( const std::string & str ) {
+  shouldIgnoreWarning( const std::string & str )
+  {
     /* Ignore warnings about overrides for missing indirect inputs.
      * These can come up when an indirect input drops a dependendency
      * between different revisions and isn't particularly interesting
      * to users. */
     if ( str.find( " has an override for a non-existent input " ) !=
-         std::string::npos ) {
-      /* Don't ignore with `-v' or if we are dumping logs to a file. */
-      return ( ! this->tty ) || ( nix::verbosity < nix::lvlTalkative );
-    }
+         std::string::npos )
+      {
+        /* Don't ignore with `-v' or if we are dumping logs to a file. */
+        return ( ! this->tty ) || ( nix::verbosity < nix::lvlTalkative );
+      }
 
     return false;
   }
@@ -70,7 +74,8 @@ protected:
 
   /** @brief Detect ignored messages. */
   bool
-  shouldIgnoreMsg( std::string_view str ) {
+  shouldIgnoreMsg( std::string_view str )
+  {
     (void) str;
     return false;
   }
@@ -86,31 +91,35 @@ public:
     : systemd( nix::getEnv( "IN_SYSTEMD" ) == "1" )
     , tty( isatty( STDERR_FILENO ) )
     , color( shouldANSI() )
-    , printBuildLogs( printBuildLogs ) {}
+    , printBuildLogs( printBuildLogs )
+  {}
 
 
   /** @brief Whether the logger prints the whole build log. */
   bool
-  isVerbose() override {
+  isVerbose() override
+  {
     return this->printBuildLogs;
   }
 
 
   /** @brief Emit a log message with a colored "warning:" prefix. */
   void
-  warn( const std::string & msg ) override {
-    if ( ! this->shouldIgnoreWarning( msg ) ) {
-      /* NOTE: The `nix' definitions of `ANSI_WARNING' and `ANSI_NORMAL'
-       *       use `\e###` escapes, but `gcc' will gripe at you for not
-       *       following ISO standard.
-       *       We use equivalent `\033###' sequences instead.' */
-      this->log( nix::lvlWarn,
-                 /* ANSI_WARNING */ "\033[35;1m"
-                                    "warning:"
-                                    /* ANSI_NORMAL */ "\033[0m"
-                                    " " +
-                   msg );
-    }
+  warn( const std::string & msg ) override
+  {
+    if ( ! this->shouldIgnoreWarning( msg ) )
+      {
+        /* NOTE: The `nix' definitions of `ANSI_WARNING' and `ANSI_NORMAL'
+         *       use `\e###` escapes, but `gcc' will gripe at you for not
+         *       following ISO standard.
+         *       We use equivalent `\033###' sequences instead.' */
+        this->log( nix::lvlWarn,
+                   /* ANSI_WARNING */ "\033[35;1m"
+                                      "warning:"
+                                      /* ANSI_NORMAL */ "\033[0m"
+                                      " " +
+                     msg );
+      }
   }
 
 
@@ -120,33 +129,36 @@ public:
    * @param str The message to emit.
    */
   void
-  log( nix::Verbosity lvl, std::string_view str ) override {
+  log( nix::Verbosity lvl, std::string_view str ) override
+  {
     if ( ( nix::verbosity < lvl ) || this->shouldIgnoreMsg( str ) ) { return; }
 
     /* Handle `systemd' style log level prefixes. */
     std::string prefix;
-    if ( systemd ) {
-      char levelChar;
-      switch ( lvl ) {
-        case nix::lvlError: levelChar = '3'; break;
+    if ( systemd )
+      {
+        char levelChar;
+        switch ( lvl )
+          {
+            case nix::lvlError: levelChar = '3'; break;
 
-        case nix::lvlWarn: levelChar = '4'; break;
+            case nix::lvlWarn: levelChar = '4'; break;
 
-        case nix::lvlNotice:
-        case nix::lvlInfo: levelChar = '5'; break;
+            case nix::lvlNotice:
+            case nix::lvlInfo: levelChar = '5'; break;
 
-        case nix::lvlTalkative:
-        case nix::lvlChatty: levelChar = '6'; break;
+            case nix::lvlTalkative:
+            case nix::lvlChatty: levelChar = '6'; break;
 
-        case nix::lvlDebug:
-        case nix::lvlVomit: levelChar = '7'; break;
+            case nix::lvlDebug:
+            case nix::lvlVomit: levelChar = '7'; break;
 
-        /* Should not happen, and missing enum case is reported
-         * by `-Werror=switch-enum' */
-        default: levelChar = '7'; break;
+            /* Should not happen, and missing enum case is reported
+             * by `-Werror=switch-enum' */
+            default: levelChar = '7'; break;
+          }
+        prefix = std::string( "<" ) + levelChar + ">";
       }
-      prefix = std::string( "<" ) + levelChar + ">";
-    }
 
     nix::writeToStderr( prefix + nix::filterANSIEscapes( str, ! this->color ) +
                         "\n" );
@@ -155,7 +167,8 @@ public:
 
   /** @brief Emit error information. */
   void
-  logEI( const nix::ErrorInfo & einfo ) override {
+  logEI( const nix::ErrorInfo & einfo ) override
+  {
     std::stringstream oss;
     /* From `nix/error.hh' */
     showErrorInfo( oss, einfo, nix::loggerSettings.showTrace.get() );
@@ -175,10 +188,12 @@ public:
                  const Fields & /* fields ( unused ) */
                  ,
                  nix::ActivityId /* parent ( unused ) */
-                 ) override {
-    if ( ( lvl <= nix::verbosity ) && ( ! str.empty() ) ) {
-      this->log( lvl, str + "..." );
-    }
+                 ) override
+  {
+    if ( ( lvl <= nix::verbosity ) && ( ! str.empty() ) )
+      {
+        this->log( lvl, str + "..." );
+      }
   }
 
 
@@ -187,13 +202,17 @@ public:
   result( nix::ActivityId /* act ( unused ) */
           ,
           nix::ResultType type,
-          const Fields &  fields ) override {
+          const Fields &  fields ) override
+  {
     if ( ! this->printBuildLogs ) { return; }
-    if ( type == nix::resBuildLogLine ) {
-      this->log( nix::lvlError, fields[0].s );
-    } else if ( type == nix::resPostBuildLogLine ) {
-      this->log( nix::lvlError, "post-build-hook: " + fields[0].s );
-    }
+    if ( type == nix::resBuildLogLine )
+      {
+        this->log( nix::lvlError, fields[0].s );
+      }
+    else if ( type == nix::resPostBuildLogLine )
+      {
+        this->log( nix::lvlError, "post-build-hook: " + fields[0].s );
+      }
   }
 
 
@@ -203,7 +222,8 @@ public:
 /* -------------------------------------------------------------------------- */
 
 nix::Logger *
-makeFilteredLogger( bool printBuildLogs ) {
+makeFilteredLogger( bool printBuildLogs )
+{
   return new FilteredLogger( printBuildLogs );
 }
 
