@@ -340,7 +340,7 @@ compile_commands.json: $(COMMON_HEADERS) $(ALL_SRCS)
 	$(info $$CXX_SYSTEM_INCDIRS is [${CXX_SYSTEM_INCDIRS}])
 
 	$(MKDIR_P) $(MAKEFILE_DIR)/bear.d
-	ln -sf $(shell dirname $(shell which $(BEAR)))/../lib/bear/wrapper bear.d/c++
+	ln -sf $(shell dirname $(shell command -v $(BEAR)))/../lib/bear/wrapper bear.d/c++
 
 	EXTRA_CXXFLAGS='$(patsubst %,-isystem %,$(CXX_SYSTEM_INCDIRS))'  \
 	  PATH="$(MAKEFILE_DIR)/bear.d/:$(PATH)"                         \
