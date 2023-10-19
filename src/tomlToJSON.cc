@@ -27,7 +27,6 @@ struct TOMLToJSONException : public FloxException
   static constexpr std::string_view categoryMsg
     = "error converting TOML to JSON";
 
-  std::filesystem::path dbPath;
   TOMLToJSONException( std::string_view contextMsg )
     : FloxException( contextMsg )
   {}
@@ -37,7 +36,7 @@ struct TOMLToJSONException : public FloxException
   error_category
   error_code() const noexcept override
   {
-    return TOML_TO_JSON;
+    return EC_TOML_TO_JSON;
   }
   std::string_view
   category_message() const noexcept override

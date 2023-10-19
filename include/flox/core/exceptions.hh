@@ -22,11 +22,13 @@ namespace flox {
 /* -------------------------------------------------------------------------- */
 
 enum error_category {
-  EC_OKAY                  = 0,
+  EC_OKAY = 0,
+  // Returned for any exception that doesn't have an error_code(), i.e.
+  // exceptions we haven't wrapped in a custom exception
   EC_FAILURE               = 1,
-  FLOX_EXCEPTION           = 100,
+  EC_FLOX_EXCEPTION        = 100,
   EC_PKG_QUERY_INVALID_ARG = 101,
-  TOML_TO_JSON             = 102
+  EC_TOML_TO_JSON          = 102
 }; /* End enum `error_category' */
 
 
@@ -37,13 +39,13 @@ class FloxException : public std::exception
 {
 private:
 
-  // corresponds to an error_category, in this case FLOX_EXCEPTION
+  // Corresponds to an error_category, in this case EC_FLOX_EXCEPTION
   static constexpr std::string_view categoryMsg
     = "error encountered running pkgdb";
-  // additional context added when the error is thrown
+  // Additional context added when the error is thrown
   std::optional<std::string> contextMsg;
-  // if some other exception was caught before throwing this one, caughtMsg
-  // contains what() of that exception
+  // If some other exception was caught before throwing this one, caughtMsg
+  // contains what() of that exception.
   std::optional<std::string> caughtMsg;
 
 public:
@@ -57,7 +59,7 @@ public:
   [[nodiscard]] virtual error_category
   error_code() const noexcept
   {
-    return FLOX_EXCEPTION;
+    return EC_FLOX_EXCEPTION;
   };
   [[nodiscard]] virtual std::string_view
   category_message() const noexcept
