@@ -7,15 +7,15 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
 
 #include "flox/core/util.hh"
 
 
 /* -------------------------------------------------------------------------- */
 
-  int
+int
 main( int argc, char * argv[] )
 {
   if ( argc < 2 )

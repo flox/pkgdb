@@ -9,9 +9,9 @@
 
 #pragma once
 
+#include <optional>
 #include <string>
 #include <vector>
-#include <optional>
 
 #include <nlohmann/json.hpp>
 
@@ -26,22 +26,25 @@ namespace flox::resolver {
 /* -------------------------------------------------------------------------- */
 
 /** @brief A _resolved_ installable resulting from resolution. */
-struct Resolved {
+struct Resolved
+{
 
   /** @brief A registry input. */
-  struct Input {
-    std::string    name;    /**< Registry input name/id. */
-    nlohmann::json locked;  /**< Locked flake ref attributes. */
-  };  /* End struct `Resolved::Input' */
+  struct Input
+  {
+    std::string    name;   /**< Registry input name/id. */
+    nlohmann::json locked; /**< Locked flake ref attributes. */
+  };                       /* End struct `Resolved::Input' */
 
-  Input          input;  /**< Registry input. */
-  AttrPath       path;   /**< Attribute path to the package. */
-  nlohmann::json info;   /**< Package information. */
+  Input          input; /**< Registry input. */
+  AttrPath       path;  /**< Attribute path to the package. */
+  nlohmann::json info;  /**< Package information. */
 
   /**@brief Reset to default/empty state. */
-  void clear();
+  void
+  clear();
 
-};  /* End struct `Resolved' */
+}; /* End struct `Resolved' */
 
 /**
  * @fn void from_json( const nlohmann::json & j, Resolved::Input & pdb )
@@ -75,10 +78,10 @@ using Descriptor = PkgDescriptorRaw;
  * @param one If `true`, return only the first result.
  * @return A list of resolved packages.
  */
-std::vector<Resolved> resolve_v0(       ResolverState & state
-                                , const Descriptor    & descriptor
-                                ,       bool            one        = false
-                                );
+std::vector<Resolved>
+resolve_v0( ResolverState &    state,
+            const Descriptor & descriptor,
+            bool               one = false );
 
 
 /**
@@ -88,7 +91,7 @@ std::vector<Resolved> resolve_v0(       ResolverState & state
  * @param one If `true`, return only the first result.
  * @return A list of resolved packages.
  */
-#define resolve( ... )  resolve_v0( __VA_ARGS__ )
+#define resolve( ... ) resolve_v0( __VA_ARGS__ )
 
 
 /* -------------------------------------------------------------------------- */
@@ -99,10 +102,8 @@ std::vector<Resolved> resolve_v0(       ResolverState & state
  * @param descriptor The package descriptor.
  * @return The best resolved installable or `std:nullopt` if resolution failed.
  */
-  std::optional<Resolved>
-resolveOne_v0(       ResolverState & state
-             , const Descriptor    & descriptor
-             )
+std::optional<Resolved>
+resolveOne_v0( ResolverState & state, const Descriptor & descriptor )
 {
   auto resolved = resolve( state, descriptor, true );
   if ( resolved.empty() ) { return std::nullopt; }
@@ -116,12 +117,12 @@ resolveOne_v0(       ResolverState & state
  * @param descriptor The package descriptor.
  * @return The best resolved installable or `std:nullopt` if resolution failed.
  */
-#define resolveOne( ... )  resolveOne_v0( __VA_ARGS__ )
+#define resolveOne( ... ) resolveOne_v0( __VA_ARGS__ )
 
 
 /* -------------------------------------------------------------------------- */
 
-}  /* End Namespace `flox::resolver' */
+}  // namespace flox::resolver
 
 
 /* -------------------------------------------------------------------------- *
