@@ -10,16 +10,16 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
+#include <nix/eval-cache.hh>
+#include <nix/fetchers.hh>
+#include <nix/flake/flake.hh>
+#include <nix/names.hh>
+#include <nlohmann/json.hpp>
+#include <optional>
 #include <string>
 #include <vector>
-#include <optional>
-#include <functional>
-#include <nlohmann/json.hpp>
-#include <nix/flake/flake.hh>
-#include <nix/fetchers.hh>
-#include <nix/eval-cache.hh>
-#include <nix/names.hh>
 
 #include "flox/core/types.hh"
 #include "flox/package.hh"
@@ -31,8 +31,10 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
-  /* Forward declare a friend. */
-  namespace pkgdb { class PkgDb; }
+/* Forward declare a friend. */
+namespace pkgdb {
+class PkgDb;
+}
 
 /* -------------------------------------------------------------------------- */
 
@@ -40,144 +42,174 @@ namespace flox {
  * @brief A @a flox::Package implementation which are pulled from evaluation of
  *        a `nix` flake.
  */
-class FlakePackage : public Package {
+class FlakePackage : public Package
+{
 
-  public:
-    friend class pkgdb::PkgDb;
+public:
 
-  private:
-    Cursor   _cursor;
-    AttrPath _pathS;
+  friend class pkgdb::PkgDb;
 
-    bool _hasMetaAttr    = false;
-    bool _hasPnameAttr   = false;
-    bool _hasVersionAttr = false;
+private:
 
-    std::string                _fullName;
-    std::string                _pname;
-    std::string                _version;
-    std::optional<std::string> _semver;
-    std::string                _system;
-    Subtree                    _subtree;
-    std::optional<std::string> _license;
+  Cursor   _cursor;
+  AttrPath _pathS;
+
+  bool _hasMetaAttr    = false;
+  bool _hasPnameAttr   = false;
+  bool _hasVersionAttr = false;
+
+  std::string                _fullName;
+  std::string                _pname;
+  std::string                _version;
+  std::optional<std::string> _semver;
+  std::string                _system;
+  Subtree                    _subtree;
+  std::optional<std::string> _license;
 
 
-    void init( bool checkDrv = true );
+  void
+  init( bool checkDrv = true );
 
 
-/* -------------------------------------------------------------------------- */
+  /* --------------------------------------------------------------------------
+   */
 
-  public:
+public:
 
-    FlakePackage(       Cursor     cursor
-                , const AttrPath & path
-                ,       bool       checkDrv = true
-                )
-      : _cursor( cursor )
-      , _pathS( path )
-      , _fullName( cursor->getAttr( "name" )->getString() )
+  FlakePackage( Cursor cursor, const AttrPath & path, bool checkDrv = true )
+    : _cursor( cursor )
+    , _pathS( path )
+    , _fullName( cursor->getAttr( "name" )->getString() )
+  {
     {
+      nix::DrvName dname( this->_fullName );
+      this->_pname   = dname.name;
+      this->_version = dname.version;
+    }
+    this->init( checkDrv );
+  }
+
+
+  FlakePackage( Cursor cursor, nix::SymbolTable * symtab, bool checkDrv = true )
+    : _cursor( cursor ), _fullName( cursor->getAttr( "name" )->getString() )
+  {
+    {
+      nix::DrvName dname( this->_fullName );
+      this->_pname   = dname.name;
+      this->_version = dname.version;
+    }
+    for ( auto & p : symtab->resolve( cursor->getAttrPath() ) )
       {
-        nix::DrvName dname( this->_fullName );
-        this->_pname   = dname.name;
-        this->_version = dname.version;
+        this->_pathS.push_back( p );
       }
-      this->init( checkDrv );
-    }
+    this->init( checkDrv );
+  }
 
 
-    FlakePackage( Cursor             cursor
-                , nix::SymbolTable * symtab
-                , bool               checkDrv = true
-                )
-      : _cursor( cursor )
-      , _fullName( cursor->getAttr( "name" )->getString() )
-    {
+  /* --------------------------------------------------------------------------
+   */
+
+  std::vector<std::string>
+  getOutputsToInstall() const override;
+  std::optional<bool>
+  isBroken() const override;
+  std::optional<bool>
+  isUnfree() const override;
+
+  AttrPath
+  getPathStrs() const override
+  {
+    return this->_pathS;
+  }
+  std::string
+  getFullName() const override
+  {
+    return this->_fullName;
+  }
+  std::string
+  getPname() const override
+  {
+    return this->_pname;
+  }
+  Cursor
+  getCursor() const
+  {
+    return this->_cursor;
+  }
+  Subtree
+  getSubtreeType() const override
+  {
+    return this->_subtree;
+  }
+
+  nix::DrvName
+  getParsedDrvName() const override
+  {
+    return nix::DrvName( this->_fullName );
+  }
+
+  std::optional<std::string>
+  getVersion() const override
+  {
+    if ( this->_version.empty() ) { return std::nullopt; }
+    else { return this->_version; }
+  }
+
+  std::optional<std::string>
+  getSemver() const override
+  {
+    return this->_semver;
+  }
+
+  std::optional<std::string>
+  getStability() const override
+  {
+    if ( this->_subtree != ST_CATALOG ) { return std::nullopt; }
+    return this->_pathS[2];
+  }
+
+  std::optional<std::string>
+  getLicense() const override
+  {
+    if ( this->_license.has_value() ) { return this->_license; }
+    else { return std::nullopt; }
+  }
+
+  std::vector<std::string>
+  getOutputs() const override
+  {
+    MaybeCursor o = this->_cursor->maybeGetAttr( "outputs" );
+    if ( o == nullptr ) { return { "out" }; }
+    else { return o->getListOfStrings(); }
+  }
+
+  std::optional<std::string>
+  getDescription() const override
+  {
+    if ( ! this->_hasMetaAttr ) { return std::nullopt; }
+    MaybeCursor l
+      = this->_cursor->getAttr( "meta" )->maybeGetAttr( "description" );
+    if ( l == nullptr ) { return std::nullopt; }
+    try
       {
-        nix::DrvName dname( this->_fullName );
-        this->_pname   = dname.name;
-        this->_version = dname.version;
+        return l->getString();
       }
-      for ( auto & p : symtab->resolve( cursor->getAttrPath() ) )
-        {
-          this->_pathS.push_back( p );
-        }
-      this->init( checkDrv );
-    }
+    catch ( ... )
+      {
+        return std::nullopt;
+      }
+  }
+
+
+  /* --------------------------------------------------------------------------
+   */
+
+}; /* End class `FlakePackage' */
 
 
 /* -------------------------------------------------------------------------- */
 
-    std::vector<std::string> getOutputsToInstall() const override;
-    std::optional<bool>      isBroken()            const override;
-    std::optional<bool>      isUnfree()            const override;
-
-    AttrPath    getPathStrs()    const override { return this->_pathS;    }
-    std::string getFullName()    const override { return this->_fullName; }
-    std::string getPname()       const override { return this->_pname;    }
-    Cursor      getCursor()      const          { return this->_cursor;   }
-    Subtree     getSubtreeType() const override { return this->_subtree;  }
-
-      nix::DrvName
-    getParsedDrvName() const override
-    {
-      return nix::DrvName( this->_fullName );
-    }
-
-      std::optional<std::string>
-    getVersion() const override
-    {
-      if ( this->_version.empty() ) { return std::nullopt;   }
-      else                          { return this->_version; }
-    }
-
-      std::optional<std::string>
-    getSemver() const override
-    {
-      return this->_semver;
-    }
-
-      std::optional<std::string>
-    getStability() const override
-    {
-      if ( this->_subtree != ST_CATALOG ) { return std::nullopt; }
-      return this->_pathS[2];
-    }
-
-      std::optional<std::string>
-    getLicense() const override
-    {
-      if ( this->_license.has_value() ) { return this->_license; }
-      else                              { return std::nullopt;   }
-    }
-
-      std::vector<std::string>
-    getOutputs() const override
-    {
-      MaybeCursor o = this->_cursor->maybeGetAttr( "outputs" );
-      if ( o == nullptr ) { return { "out" };             }
-      else                { return o->getListOfStrings(); }
-    }
-
-      std::optional<std::string>
-    getDescription() const override
-    {
-      if ( ! this->_hasMetaAttr ) { return std::nullopt; }
-      MaybeCursor l =
-        this->_cursor->getAttr( "meta" )->maybeGetAttr( "description" );
-      if ( l == nullptr ) { return std::nullopt; }
-      try { return l->getString(); } catch( ... ) { return std::nullopt; }
-    }
-
-
-/* -------------------------------------------------------------------------- */
-
-};  /* End class `FlakePackage' */
-
-
-/* -------------------------------------------------------------------------- */
-
-}  /* End Namespace `flox' */
+}  // namespace flox
 
 
 /* -------------------------------------------------------------------------- *

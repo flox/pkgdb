@@ -11,18 +11,18 @@
 #pragma once
 
 #include <functional>
-#include <vector>
 #include <map>
+#include <vector>
 
-#include <nlohmann/json.hpp>
-#include <nix/flake/flakeref.hh>
 #include <nix/fetchers.hh>
+#include <nix/flake/flakeref.hh>
+#include <nlohmann/json.hpp>
 
 #include "flox/core/exceptions.hh"
 #include "flox/core/types.hh"
 #include "flox/core/util.hh"
-#include "flox/pkgdb/pkg-query.hh"
 #include "flox/pkgdb/params.hh"
+#include "flox/pkgdb/pkg-query.hh"
 #include "flox/registry.hh"
 
 
@@ -38,7 +38,8 @@ namespace flox::search {
  * This is essentially a reorganized form of @a flox::pkgdb::PkgQueryArgs
  * that is suited for JSON input.
  */
-struct SearchQuery : public pkgdb::PkgDescriptorBase {
+struct SearchQuery : public pkgdb::PkgDescriptorBase
+{
 
   /* From `pkgdb::PkgDescriptorBase`:
    *   std::optional<std::string> name;
@@ -51,7 +52,8 @@ struct SearchQuery : public pkgdb::PkgDescriptorBase {
   std::optional<std::string> partialMatch;
 
   /** @brief Reset to default state. */
-  virtual void clear() override;
+  virtual void
+  clear() override;
 
   /**
    * @brief Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to
@@ -62,18 +64,21 @@ struct SearchQuery : public pkgdb::PkgDescriptorBase {
    * @param pqa A set of query args to _fill_ with preferences.
    * @return A reference to the modified query args.
    */
-  pkgdb::PkgQueryArgs & fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
+  pkgdb::PkgQueryArgs &
+  fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
 
-};  /* End struct "SearchQuery' */
+}; /* End struct "SearchQuery' */
 
 
 /* -------------------------------------------------------------------------- */
 
 /** @brief Convert a JSON object to a @a flox::search::SearchQuery. */
-void from_json( const nlohmann::json & jfrom, SearchQuery & qry );
+void
+from_json( const nlohmann::json & jfrom, SearchQuery & qry );
 
 /** @brief Convert a @a flox::search::SearchQuery to a JSON object. */
-void to_json( nlohmann::json & jto, const SearchQuery & qry );
+void
+to_json( nlohmann::json & jto, const SearchQuery & qry );
 
 
 /* -------------------------------------------------------------------------- */
@@ -130,7 +135,7 @@ using SearchParams = pkgdb::QueryParams<SearchQuery>;
 
 /* -------------------------------------------------------------------------- */
 
-}  /* End namespaces `flox::search' */
+}  // namespace flox::search
 
 
 /* -------------------------------------------------------------------------- *

@@ -7,94 +7,87 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
 
-#include "test.hh"
-#include "flox/core/util.hh"
 #include "flox/core/types.hh"
+#include "flox/core/util.hh"
+#include "test.hh"
 
 
 /* -------------------------------------------------------------------------- */
 
-  bool
+bool
 test_splitAttrPath0()
 {
-  EXPECT( flox::splitAttrPath( "a.b.c" ) ==
-          ( flox::AttrPath { "a", "b", "c" } )
-        );
+  EXPECT( flox::splitAttrPath( "a.b.c" )
+          == ( flox::AttrPath { "a", "b", "c" } ) );
   return true;
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-  bool
+bool
 test_splitAttrPath1()
 {
-  EXPECT( flox::splitAttrPath( "a.'b.c'.d" ) ==
-          ( flox::AttrPath { "a", "b.c", "d" } )
-        );
+  EXPECT( flox::splitAttrPath( "a.'b.c'.d" )
+          == ( flox::AttrPath { "a", "b.c", "d" } ) );
   return true;
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-  bool
+bool
 test_splitAttrPath2()
 {
-  EXPECT( flox::splitAttrPath( "a.\"b.c\".d" ) ==
-          ( flox::AttrPath { "a", "b.c", "d" } )
-        );
+  EXPECT( flox::splitAttrPath( "a.\"b.c\".d" )
+          == ( flox::AttrPath { "a", "b.c", "d" } ) );
   return true;
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-  bool
+bool
 test_splitAttrPath3()
 {
-  EXPECT( flox::splitAttrPath( "a.\"b.'c.d'.e\".f" ) ==
-          ( flox::AttrPath { "a", "b.'c.d'.e", "f" } )
-        );
+  EXPECT( flox::splitAttrPath( "a.\"b.'c.d'.e\".f" )
+          == ( flox::AttrPath { "a", "b.'c.d'.e", "f" } ) );
   return true;
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-  bool
+bool
 test_splitAttrPath4()
 {
-  EXPECT( flox::splitAttrPath( "a.\\\"b.c" ) ==
-          ( flox::AttrPath { "a", "\"b", "c" } )
-        );
+  EXPECT( flox::splitAttrPath( "a.\\\"b.c" )
+          == ( flox::AttrPath { "a", "\"b", "c" } ) );
   return true;
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-  bool
+bool
 test_splitAttrPath5()
 {
-  EXPECT( flox::splitAttrPath( "a.'\"b'.c" ) ==
-          ( flox::AttrPath { "a", "\"b", "c" } )
-        );
+  EXPECT( flox::splitAttrPath( "a.'\"b'.c" )
+          == ( flox::AttrPath { "a", "\"b", "c" } ) );
   return true;
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-  bool
+bool
 test_splitAttrPath6()
 {
-  EXPECT( flox::splitAttrPath( "a.\\\\\\..c" ) ==
-          ( flox::AttrPath { "a", "\\.", "c" } )
-        );
+  EXPECT( flox::splitAttrPath( "a.\\\\\\..c" )
+          == ( flox::AttrPath { "a", "\\.", "c" } ) );
   return true;
 }
 
@@ -102,14 +95,14 @@ test_splitAttrPath6()
 /* -------------------------------------------------------------------------- */
 
 /** @brief Test conversion of variants with 2 options. */
-  bool
+bool
 test_variantJSON0()
 {
   using Trivial = std::variant<bool, std::string>;
 
-  Trivial tbool      = true;
-  Trivial tstr       = "Howdy";
-  nlohmann::json jto = tbool;
+  Trivial        tbool = true;
+  Trivial        tstr  = "Howdy";
+  nlohmann::json jto   = tbool;
 
   EXPECT_EQ( jto, true );
 
@@ -123,15 +116,15 @@ test_variantJSON0()
 /* -------------------------------------------------------------------------- */
 
 /** @brief Test conversion of variants with 3 options. */
-  bool
+bool
 test_variantJSON1()
 {
   using Trivial = std::variant<int, bool, std::string>;
 
-  Trivial tint       = 420;
-  Trivial tbool      = true;
-  Trivial tstr       = "Howdy";
-  nlohmann::json jto = tint;
+  Trivial        tint  = 420;
+  Trivial        tbool = true;
+  Trivial        tstr  = "Howdy";
+  nlohmann::json jto   = tint;
 
   EXPECT_EQ( jto, 420 );
 
@@ -148,7 +141,7 @@ test_variantJSON1()
 /* -------------------------------------------------------------------------- */
 
 /** @brief Test conversion of variants with 2 options in a vector. */
-  bool
+bool
 test_variantJSON2()
 {
   using Trivial = std::variant<bool, std::string>;
@@ -168,9 +161,8 @@ test_variantJSON2()
   EXPECT_EQ( std::get<bool>( back.at( 0 ) ), std::get<bool>( tvec.at( 0 ) ) );
 
   EXPECT( std::holds_alternative<std::string>( back.at( 1 ) ) );
-  EXPECT_EQ( std::get<std::string>( back.at( 1 ) )
-           , std::get<std::string>( tvec.at( 1 ) )
-           );
+  EXPECT_EQ( std::get<std::string>( back.at( 1 ) ),
+             std::get<std::string>( tvec.at( 1 ) ) );
 
   return true;
 }
@@ -179,7 +171,7 @@ test_variantJSON2()
 /* -------------------------------------------------------------------------- */
 
 /** @brief Test conversion of variants with 3 options in a vector. */
-  bool
+bool
 test_variantJSON3()
 {
   /* NOTE: `bool` MUST come before `int` to avoid coercion!
@@ -202,9 +194,8 @@ test_variantJSON3()
   EXPECT_EQ( std::get<bool>( back.at( 0 ) ), std::get<bool>( tvec.at( 0 ) ) );
 
   EXPECT( std::holds_alternative<std::string>( back.at( 1 ) ) );
-  EXPECT_EQ( std::get<std::string>( back.at( 1 ) )
-           , std::get<std::string>( tvec.at( 1 ) )
-           );
+  EXPECT_EQ( std::get<std::string>( back.at( 1 ) ),
+             std::get<std::string>( tvec.at( 1 ) ) );
 
   EXPECT( std::holds_alternative<int>( back.at( 2 ) ) );
   EXPECT_EQ( std::get<int>( back.at( 2 ) ), std::get<int>( tvec.at( 2 ) ) );
@@ -215,7 +206,7 @@ test_variantJSON3()
 
 /* -------------------------------------------------------------------------- */
 
-  bool
+bool
 test_hasPrefix0()
 {
   EXPECT( flox::hasPrefix( "foo", "foobar" ) );
@@ -227,11 +218,11 @@ test_hasPrefix0()
 
 /* -------------------------------------------------------------------------- */
 
-  int
+int
 main()
 {
   int ec = EXIT_SUCCESS;
-# define RUN_TEST( ... )  _RUN_TEST( ec, __VA_ARGS__ )
+#define RUN_TEST( ... ) _RUN_TEST( ec, __VA_ARGS__ )
 
   RUN_TEST( splitAttrPath0 );
   RUN_TEST( splitAttrPath1 );

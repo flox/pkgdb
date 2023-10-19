@@ -8,14 +8,14 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include <iostream>
 #include <cstdlib>
 #include <fstream>
+#include <iostream>
 
 #include <nlohmann/json.hpp>
 
-#include "flox/registry.hh"
 #include "flox/core/command.hh"
+#include "flox/registry.hh"
 #include "test.hh"
 
 
@@ -26,20 +26,20 @@ using namespace nlohmann::literals;
 
 /* -------------------------------------------------------------------------- */
 
-  bool
+bool
 test_FloxFlakeInputRegistry0()
 {
   using namespace flox;
 
-  std::ifstream regFile( TEST_DATA_DIR "/registry/registry0.json" );
-  nlohmann::json json = nlohmann::json::parse( regFile );
+  std::ifstream     regFile( TEST_DATA_DIR "/registry/registry0.json" );
+  nlohmann::json    json = nlohmann::json::parse( regFile );
   flox::RegistryRaw regRaw;
   json.get_to( regRaw );
 
   FloxFlakeInputFactory           factory;
   Registry<FloxFlakeInputFactory> registry( regRaw, factory );
-  size_t count = 0;
-  for ( const auto & [name, flake] : registry )
+  size_t                          count = 0;
+  for ( const auto &[name, flake] : registry )
     {
       (void) flake->getFlakeRef();
       ++count;
@@ -53,7 +53,7 @@ test_FloxFlakeInputRegistry0()
 
 /* -------------------------------------------------------------------------- */
 
-  bool
+bool
 test_RegistryFileMixinHappyPath()
 {
   using namespace flox;
@@ -68,7 +68,7 @@ test_RegistryFileMixinHappyPath()
 
 /* -------------------------------------------------------------------------- */
 
-  bool
+bool
 test_RegistryFileMixinGetRegWithoutFile()
 {
   using namespace flox;
@@ -89,7 +89,7 @@ test_RegistryFileMixinGetRegWithoutFile()
 
 /* -------------------------------------------------------------------------- */
 
-  bool
+bool
 test_RegistryFileMixinEmptyPath()
 {
   using namespace flox;
@@ -111,7 +111,7 @@ test_RegistryFileMixinEmptyPath()
 
 /* -------------------------------------------------------------------------- */
 
-  bool
+bool
 test_RegistryFileMixinGetRegCached()
 {
   using namespace flox;
@@ -121,7 +121,7 @@ test_RegistryFileMixinGetRegCached()
   RegistryRaw regRaw = rfm.getRegistryRaw();
   // You don't need the registry path if the registry is cached. If it's not
   // cached then you'll get an exception trying to open this file.
-  rfm.registryPath = std::nullopt;
+  rfm.registryPath         = std::nullopt;
   RegistryRaw regRawCached = rfm.getRegistryRaw();
 
   return true;
@@ -130,7 +130,7 @@ test_RegistryFileMixinGetRegCached()
 
 /* -------------------------------------------------------------------------- */
 
-  bool
+bool
 test_RegistryNoIndirectRefs()
 {
   using namespace flox;
@@ -139,10 +139,10 @@ test_RegistryNoIndirectRefs()
   rfm.setRegistryPath( TEST_DATA_DIR "/registry/registry1.json" );
   try
     {
-       RegistryRaw regRaw = rfm.getRegistryRaw();
-       return false;
+      RegistryRaw regRaw = rfm.getRegistryRaw();
+      return false;
     }
-  catch ( FloxException &)
+  catch ( FloxException & )
     {
       return true;
     }
@@ -151,16 +151,17 @@ test_RegistryNoIndirectRefs()
 
 /* -------------------------------------------------------------------------- */
 
-  int
-main( int argc, char * argv[] )
+int
+main( int argc, char *argv[] )
 {
   int exitCode = EXIT_SUCCESS;
-# define RUN_TEST( ... )  _RUN_TEST( exitCode, __VA_ARGS__ )
+#define RUN_TEST( ... ) _RUN_TEST( exitCode, __VA_ARGS__ )
 
-/* -------------------------------------------------------------------------- */
+  /* --------------------------------------------------------------------------
+   */
 
   nix::verbosity = nix::lvlWarn;
-  if ( ( 1 < argc ) && ( std::string_view( argv[1] ) == "-v" ) ) // NOLINT
+  if ( ( 1 < argc ) && ( std::string_view( argv[1] ) == "-v" ) )  // NOLINT
     {
       nix::verbosity = nix::lvlDebug;
     }
@@ -169,11 +170,12 @@ main( int argc, char * argv[] )
   flox::NixState nstate;
 
 
-/* -------------------------------------------------------------------------- */
+  /* --------------------------------------------------------------------------
+   */
 
 
-
-/* -------------------------------------------------------------------------- */
+  /* --------------------------------------------------------------------------
+   */
 
   {
 
@@ -182,12 +184,10 @@ main( int argc, char * argv[] )
     RUN_TEST( RegistryFileMixinGetRegWithoutFile );
     RUN_TEST( RegistryFileMixinGetRegCached );
     RUN_TEST( RegistryFileMixinEmptyPath );
-
   }
 
 
   return exitCode;
-
 }
 
 

@@ -19,7 +19,7 @@ namespace flox::pkgdb {
 
 /* -------------------------------------------------------------------------- */
 
-  void
+void
 QueryPreferences::clear()
 {
   this->systems                  = { nix::settings.thisSystem.get() };
@@ -32,7 +32,7 @@ QueryPreferences::clear()
 
 /* -------------------------------------------------------------------------- */
 
-  pkgdb::PkgQueryArgs &
+pkgdb::PkgQueryArgs &
 QueryPreferences::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 {
   pqa.clear();
@@ -47,7 +47,7 @@ QueryPreferences::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 
 /* -------------------------------------------------------------------------- */
 
-  void
+void
 from_json( const nlohmann::json & jfrom, QueryPreferences & prefs )
 {
   prefs.clear();
@@ -80,9 +80,8 @@ from_json( const nlohmann::json & jfrom, QueryPreferences & prefs )
                 }
               else
                 {
-                  throw FloxException(
-                    "Unexpected preferences field 'allow." + akey + '\''
-                  );
+                  throw FloxException( "Unexpected preferences field 'allow."
+                                       + akey + '\'' );
                 }
             }
         }
@@ -98,9 +97,8 @@ from_json( const nlohmann::json & jfrom, QueryPreferences & prefs )
                 }
               else
                 {
-                  throw FloxException(
-                    "Unexpected preferences field 'semver." + skey + '\''
-                  );
+                  throw FloxException( "Unexpected preferences field 'semver."
+                                       + skey + '\'' );
                 }
             }
         }
@@ -108,28 +106,23 @@ from_json( const nlohmann::json & jfrom, QueryPreferences & prefs )
 }
 
 
-  void
+void
 to_json( nlohmann::json & jto, const QueryPreferences & prefs )
 {
-  jto = {
-    { "systems", prefs.systems }
-  , { "allow",   nlohmann::json {
-                   { "unfree",   prefs.allow.unfree   }
-                 , { "broken",   prefs.allow.broken   }
-                 , { "licenses", prefs.allow.licenses }
-                 }
-    }
-  , { "semver", nlohmann::json {
-                  { "preferPreReleases", prefs.semver.preferPreReleases }
-                }
-    }
-  };
+  jto = { { "systems", prefs.systems },
+          { "allow",
+            nlohmann::json { { "unfree", prefs.allow.unfree },
+                             { "broken", prefs.allow.broken },
+                             { "licenses", prefs.allow.licenses } } },
+          { "semver",
+            nlohmann::json {
+              { "preferPreReleases", prefs.semver.preferPreReleases } } } };
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-}  /* End namespaces `flox::pkgdb' */
+}  // namespace flox::pkgdb
 
 
 /* -------------------------------------------------------------------------- *

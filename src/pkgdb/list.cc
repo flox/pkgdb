@@ -25,33 +25,30 @@ ListCommand::ListCommand() : parser( "list" )
   this->parser.add_description( "Summarize available Package DBs" );
 
   this->parser.add_argument( "-c", "--cachedir" )
-              .help( "Summarize databases in a given directory" )
-              .metavar( "PATH" )
-              .nargs( 1 )
-              .action( [&]( const std::string & cacheDir )
-                       {
-                         this->cacheDir = nix::absPath( cacheDir );
-                       }
-                     );
+    .help( "Summarize databases in a given directory" )
+    .metavar( "PATH" )
+    .nargs( 1 )
+    .action( [&]( const std::string & cacheDir )
+             { this->cacheDir = nix::absPath( cacheDir ); } );
 
   this->parser.add_argument( "-j", "--json" )
-              .help( "Output as JSON" )
-              .nargs( 0 )
-              .action( [&]( const std::string & ) { this->json = true; } );
+    .help( "Output as JSON" )
+    .nargs( 0 )
+    .action( [&]( const std::string & ) { this->json = true; } );
 
   this->parser.add_argument( "-b", "--basenames" )
-              .help( "Print basenames of databases instead of absolute paths" )
-              .nargs( 0 )
-              .action( [&]( const std::string & ) { this->basenames = true; } );
+    .help( "Print basenames of databases instead of absolute paths" )
+    .nargs( 0 )
+    .action( [&]( const std::string & ) { this->basenames = true; } );
 }
 
 
 /* -------------------------------------------------------------------------- */
-  int
+int
 ListCommand::run()
 {
-  std::filesystem::path cacheDir =
-    this->cacheDir.value_or( getPkgDbCachedir() );
+  std::filesystem::path cacheDir
+    = this->cacheDir.value_or( getPkgDbCachedir() );
 
   /* Make sure the cache directory exists. */
   if ( ! std::filesystem::exists( cacheDir ) )
@@ -81,21 +78,17 @@ ListCommand::run()
 
       PkgDbReadOnly db( entry.path().string() );
 
-      std::string dbPath = this->basenames ? entry.path().filename().string() :
-                                             entry.path().string();
+      std::string dbPath = this->basenames ? entry.path().filename().string()
+                                           : entry.path().string();
 
       if ( this->json )
         {
-          dbs[dbPath] = {
-            { "string",      db.lockedRef.string                            }
-          , { "attrs",       db.lockedRef.attrs                             }
-          , { "fingerprint", db.fingerprint.to_string( nix::Base16, false ) }
-          };
+          dbs[dbPath] = { { "string", db.lockedRef.string },
+                          { "attrs", db.lockedRef.attrs },
+                          { "fingerprint",
+                            db.fingerprint.to_string( nix::Base16, false ) } };
         }
-      else
-        {
-          std::cout << db.lockedRef.string << ' ' << dbPath << std::endl;
-        }
+      else { std::cout << db.lockedRef.string << ' ' << dbPath << std::endl; }
     }
 
   return EXIT_SUCCESS;
@@ -104,7 +97,7 @@ ListCommand::run()
 
 /* -------------------------------------------------------------------------- */
 
-}  /* End namespaces `flox::command' */
+}  // namespace flox::pkgdb
 
 
 /* -------------------------------------------------------------------------- *

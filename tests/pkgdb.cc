@@ -18,26 +18,26 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include <limits>
-#include <iostream>
-#include <cstdlib>
-#include <list>
 #include <assert.h>
+#include <cstdlib>
+#include <iostream>
+#include <limits>
+#include <list>
 #include <queue>
 
-#include <nix/shared.hh>
-#include <nix/eval.hh>
 #include <nix/eval-cache.hh>
-#include <nix/store-api.hh>
+#include <nix/eval.hh>
 #include <nix/flake/flake.hh>
+#include <nix/shared.hh>
+#include <nix/store-api.hh>
 #include <sqlite3pp.hh>
 
-#include "flox/flox-flake.hh"
 #include "flox/core/nix-state.hh"
 #include "flox/core/types.hh"
-#include "flox/pkgdb/write.hh"
-#include "flox/pkgdb/pkg-query.hh"
+#include "flox/flox-flake.hh"
 #include "flox/pkgdb/db-package.hh"
+#include "flox/pkgdb/pkg-query.hh"
+#include "flox/pkgdb/write.hh"
 #include "test.hh"
 
 
@@ -48,25 +48,24 @@ using flox::pkgdb::row_id;
 
 /* -------------------------------------------------------------------------- */
 
-  static row_id
-getRowCount( flox::pkgdb::PkgDb & db, const std::string table )
+static row_id
+getRowCount( flox::pkgdb::PkgDb &db, const std::string table )
 {
   std::string qryS = "SELECT COUNT( * ) FROM ";
   qryS += table;
   sqlite3pp::query qry( db.db, qryS.c_str() );
-  return ( * qry.begin() ).get<long long int>( 0 );
+  return ( *qry.begin() ).get<long long int>( 0 );
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-  static inline void
-clearTables( flox::pkgdb::PkgDb & db )
+static inline void
+clearTables( flox::pkgdb::PkgDb &db )
 {
   /* Clear DB */
   db.execute_all(
-    "DELETE FROM Packages; DELETE FROM AttrSets; DELETE FROM Descriptions"
-  );
+    "DELETE FROM Packages; DELETE FROM AttrSets; DELETE FROM Descriptions" );
 }
 
 
@@ -77,8 +76,8 @@ clearTables( flox::pkgdb::PkgDb & db )
  * This test should run before all others since it essentially expects
  * `AttrSets` to be empty.
  */
-  bool
-test_addOrGetAttrSetId0( flox::pkgdb::PkgDb & db )
+bool
+test_addOrGetAttrSetId0( flox::pkgdb::PkgDb &db )
 {
   clearTables( db );
 
@@ -100,8 +99,8 @@ test_addOrGetAttrSetId0( flox::pkgdb::PkgDb & db )
 /* -------------------------------------------------------------------------- */
 
 /** Ensure we throw an error for undefined `AttrSet.id' parents. */
-  bool
-test_addOrGetAttrSetId1( flox::pkgdb::PkgDb & db )
+bool
+test_addOrGetAttrSetId1( flox::pkgdb::PkgDb &db )
 {
   clearTables( db );
 
@@ -111,8 +110,10 @@ test_addOrGetAttrSetId1( flox::pkgdb::PkgDb & db )
       db.addOrGetAttrSetId( "phony", 1 );
       return false;
     }
-  catch( const flox::pkgdb::PkgDbException & e ) { /* Expected */ }
-  catch( const std::exception & e )
+  catch ( const flox::pkgdb::PkgDbException &e )
+    { /* Expected */
+    }
+  catch ( const std::exception &e )
     {
       std::cerr << e.what() << std::endl;
       return false;
@@ -124,8 +125,8 @@ test_addOrGetAttrSetId1( flox::pkgdb::PkgDb & db )
 /* -------------------------------------------------------------------------- */
 
 /** Ensure database version matches our header's version */
-  bool
-test_getDbVersion0( flox::pkgdb::PkgDb & db )
+bool
+test_getDbVersion0( flox::pkgdb::PkgDb &db )
 {
   EXPECT_EQ( db.getDbVersion(), flox::pkgdb::sqlVersions );
   return true;
@@ -138,25 +139,21 @@ test_getDbVersion0( flox::pkgdb::PkgDb & db )
  * Ensure `PkgDb::hasAttrSet` works regardless of whether `Packages` exist in
  * an `AttrSet`.
  */
-  bool
-test_hasAttrSet0( flox::pkgdb::PkgDb & db )
+bool
+test_hasAttrSet0( flox::pkgdb::PkgDb &db )
 {
   clearTables( db );
 
   /* Make sure the attr-set exists, and clear it. */
-  row_id id = db.addOrGetAttrSetId( "x86_64-linux"
-                                  , db.addOrGetAttrSetId( "legacyPackages" )
-                                  );
-  sqlite3pp::command cmd( db.db
-                        , "DELETE FROM Packages WHERE ( parentId = :id )"
-                        );
+  row_id             id = db.addOrGetAttrSetId( "x86_64-linux",
+                                    db.addOrGetAttrSetId( "legacyPackages" ) );
+  sqlite3pp::command cmd( db.db,
+                          "DELETE FROM Packages WHERE ( parentId = :id )" );
   cmd.bind( ":id", static_cast<long long int>( id ) );
   cmd.execute();
 
   EXPECT( db.hasAttrSet(
-            std::vector<std::string> { "legacyPackages", "x86_64-linux" }
-          )
-        );
+    std::vector<std::string> { "legacyPackages", "x86_64-linux" } ) );
   return true;
 }
 
@@ -167,30 +164,24 @@ test_hasAttrSet0( flox::pkgdb::PkgDb & db )
  * Ensure `PkgDb::hasAttrSet` works when `Packages` exist in an `AttrSet`
  * such that attribute sets with packages are identified as "Package Sets".
  */
-  bool
-test_hasAttrSet1( flox::pkgdb::PkgDb & db )
+bool
+test_hasAttrSet1( flox::pkgdb::PkgDb &db )
 {
   clearTables( db );
 
   /* Make sure the attr-set exists. */
-  row_id id = db.addOrGetAttrSetId( "x86_64-linux"
-                                  , db.addOrGetAttrSetId( "legacyPackages" )
-                                  );
+  row_id id = db.addOrGetAttrSetId( "x86_64-linux",
+                                    db.addOrGetAttrSetId( "legacyPackages" ) );
   /* Add a minimal package with this `id` as its parent. */
-  sqlite3pp::command cmd(
-    db.db
-  , R"SQL(
+  sqlite3pp::command cmd( db.db, R"SQL(
       INSERT OR IGNORE INTO Packages ( parentId, attrName, name, outputs )
       VALUES ( :id, 'phony', 'phony', '["out"]' )
-    )SQL"
-  );
+    )SQL" );
   cmd.bind( ":id", static_cast<long long>( id ) );
   cmd.execute();
 
   EXPECT( db.hasAttrSet(
-            std::vector<std::string> { "legacyPackages", "x86_64-linux" }
-          )
-        );
+    std::vector<std::string> { "legacyPackages", "x86_64-linux" } ) );
   return true;
 }
 
@@ -201,20 +192,17 @@ test_hasAttrSet1( flox::pkgdb::PkgDb & db )
  * Ensure the `row_id` returned when adding an `AttrSet` matches the one
  * returned by @a flox::pkgdb::PkgDb::getAttrSetId.
  */
-  bool
-test_getAttrSetId0( flox::pkgdb::PkgDb & db )
+bool
+test_getAttrSetId0( flox::pkgdb::PkgDb &db )
 {
   clearTables( db );
 
   /* Make sure the attr-set exists. */
-  row_id id = db.addOrGetAttrSetId( "x86_64-linux"
-                                  , db.addOrGetAttrSetId( "legacyPackages" )
-                                  );
-  EXPECT_EQ( id
-           , db.getAttrSetId(
-               std::vector<std::string> { "legacyPackages", "x86_64-linux" }
-             )
-           );
+  row_id id = db.addOrGetAttrSetId( "x86_64-linux",
+                                    db.addOrGetAttrSetId( "legacyPackages" ) );
+  EXPECT_EQ( id,
+             db.getAttrSetId( std::vector<std::string> { "legacyPackages",
+                                                         "x86_64-linux" } ) );
   return true;
 }
 
@@ -224,15 +212,14 @@ test_getAttrSetId0( flox::pkgdb::PkgDb & db )
 /**
  * Ensure we properly reconstruct an attribute path from the `AttrSets` table.
  */
-  bool
-test_getAttrSetPath0( flox::pkgdb::PkgDb & db )
+bool
+test_getAttrSetPath0( flox::pkgdb::PkgDb &db )
 {
   clearTables( db );
 
   /* Make sure the attr-set exists. */
-  row_id id = db.addOrGetAttrSetId( "x86_64-linux"
-                                  , db.addOrGetAttrSetId( "legacyPackages" )
-                                  );
+  row_id                   id = db.addOrGetAttrSetId( "x86_64-linux",
+                                    db.addOrGetAttrSetId( "legacyPackages" ) );
   std::vector<std::string> path { "legacyPackages", "x86_64-linux" };
   EXPECT( path == db.getAttrSetPath( id ) );
   return true;
@@ -241,31 +228,24 @@ test_getAttrSetPath0( flox::pkgdb::PkgDb & db )
 
 /* -------------------------------------------------------------------------- */
 
-  bool
-test_hasPackage0( flox::pkgdb::PkgDb & db )
+bool
+test_hasPackage0( flox::pkgdb::PkgDb &db )
 {
   clearTables( db );
 
   /* Make sure the attr-set exists. */
-  row_id id = db.addOrGetAttrSetId( "x86_64-linux"
-                                  , db.addOrGetAttrSetId( "legacyPackages" )
-                                  );
+  row_id id = db.addOrGetAttrSetId( "x86_64-linux",
+                                    db.addOrGetAttrSetId( "legacyPackages" ) );
   /* Add a minimal package with this `id` as its parent. */
-  sqlite3pp::command cmd(
-    db.db
-  , R"SQL(
+  sqlite3pp::command cmd( db.db, R"SQL(
       INSERT OR IGNORE INTO Packages ( parentId, attrName, name, outputs )
       VALUES ( :id, 'phony', 'phony', '["out"]' )
-    )SQL"
-  );
+    )SQL" );
   cmd.bind( ":id", static_cast<long long>( id ) );
   cmd.execute();
 
-  EXPECT(
-    db.hasPackage(
-      flox::AttrPath { "legacyPackages", "x86_64-linux", "phony" }
-    )
-  );
+  EXPECT( db.hasPackage(
+    flox::AttrPath { "legacyPackages", "x86_64-linux", "phony" } ) );
   return true;
 }
 
@@ -275,8 +255,8 @@ test_hasPackage0( flox::pkgdb::PkgDb & db )
 /**
  * Tests `addOrGetDesciptionId` and `getDescription`.
  */
-  bool
-test_descriptions0( flox::pkgdb::PkgDb & db )
+bool
+test_descriptions0( flox::pkgdb::PkgDb &db )
 {
   row_id id = db.addOrGetDescriptionId( "Hello, World!" );
   /* Ensure we get the same `id`. */
@@ -290,16 +270,16 @@ test_descriptions0( flox::pkgdb::PkgDb & db )
 /* -------------------------------------------------------------------------- */
 
 /* Tests `systems', `name', `pname', `version', and `subtree' filtering. */
-  bool
-test_PkgQuery0( flox::pkgdb::PkgDb & db )
+bool
+test_PkgQuery0( flox::pkgdb::PkgDb &db )
 {
   clearTables( db );
 
   /* Make a package */
-  row_id linux =
-    db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-linux" } );
-  row_id desc =
-    db.addOrGetDescriptionId( "A program with a friendly greeting" );
+  row_id linux = db.addOrGetAttrSetId(
+    flox::AttrPath { "legacyPackages", "x86_64-linux" } );
+  row_id desc
+    = db.addOrGetDescriptionId( "A program with a friendly greeting" );
   sqlite3pp::command cmd( db.db, R"SQL(
     INSERT INTO Packages (
       parentId, attrName, name, pname, version, semver, outputs, descriptionId
@@ -307,17 +287,15 @@ test_PkgQuery0( flox::pkgdb::PkgDb & db )
              , '["out"]', :descriptionId
              )
   )SQL" );
-  cmd.bind( ":parentId",      static_cast<long long>( linux ) );
-  cmd.bind( ":descriptionId", static_cast<long long>( desc  ) );
+  cmd.bind( ":parentId", static_cast<long long>( linux ) );
+  cmd.bind( ":descriptionId", static_cast<long long>( desc ) );
   if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
     {
       throw flox::pkgdb::PkgDbException(
-        db.dbPath
-      , nix::fmt( "Failed to write Package 'hello':(%d) %s"
-                , rc
-                , db.db.error_msg()
-                )
-      );
+        db.dbPath,
+        nix::fmt( "Failed to write Package 'hello':(%d) %s",
+                  rc,
+                  db.db.error_msg() ) );
     }
   flox::pkgdb::PkgQueryArgs qargs;
   qargs.systems = std::vector<std::string> { "x86_64-linux" };
@@ -333,7 +311,7 @@ test_PkgQuery0( flox::pkgdb::PkgDb & db )
   {
     qargs.pname = "hello";
     flox::pkgdb::PkgQuery query( qargs );
-    qargs.pname = std::nullopt;
+    qargs.pname                          = std::nullopt;
     std::vector<flox::pkgdb::row_id> rsl = query.execute( db.db );
     EXPECT( ( rsl.size() == 1 ) && ( 0 < rsl.at( 0 ) ) );
   }
@@ -342,7 +320,7 @@ test_PkgQuery0( flox::pkgdb::PkgDb & db )
   {
     qargs.version = "2.12.1";
     flox::pkgdb::PkgQuery query( qargs );
-    qargs.version = std::nullopt;
+    qargs.version                        = std::nullopt;
     std::vector<flox::pkgdb::row_id> rsl = query.execute( db.db );
     EXPECT( ( rsl.size() == 1 ) && ( 0 < rsl.at( 0 ) ) );
   }
@@ -351,7 +329,7 @@ test_PkgQuery0( flox::pkgdb::PkgDb & db )
   {
     qargs.name = "hello-2.12.1";
     flox::pkgdb::PkgQuery query( qargs );
-    qargs.name = std::nullopt;
+    qargs.name                           = std::nullopt;
     std::vector<flox::pkgdb::row_id> rsl = query.execute( db.db );
     EXPECT( ( rsl.size() == 1 ) && ( 0 < rsl.at( 0 ) ) );
   }
@@ -360,7 +338,7 @@ test_PkgQuery0( flox::pkgdb::PkgDb & db )
   {
     qargs.subtrees = std::vector<flox::Subtree> { flox::ST_LEGACY };
     flox::pkgdb::PkgQuery query( qargs );
-    qargs.subtrees = std::nullopt;
+    qargs.subtrees                       = std::nullopt;
     std::vector<flox::pkgdb::row_id> rsl = query.execute( db.db );
     EXPECT( ( rsl.size() == 1 ) && ( 0 < rsl.at( 0 ) ) );
   }
@@ -372,16 +350,16 @@ test_PkgQuery0( flox::pkgdb::PkgDb & db )
 /* -------------------------------------------------------------------------- */
 
 /* Tests `license', `allowBroken', and `allowUnfree' filtering. */
-  bool
-test_PkgQuery1( flox::pkgdb::PkgDb & db )
+bool
+test_PkgQuery1( flox::pkgdb::PkgDb &db )
 {
   clearTables( db );
 
   /* Make a package */
-  row_id linux =
-    db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-linux" } );
-  row_id desc =
-    db.addOrGetDescriptionId( "A program with a friendly greeting/farewell" );
+  row_id linux = db.addOrGetAttrSetId(
+    flox::AttrPath { "legacyPackages", "x86_64-linux" } );
+  row_id desc
+    = db.addOrGetDescriptionId( "A program with a friendly greeting/farewell" );
   sqlite3pp::command cmd( db.db, R"SQL(
     INSERT INTO Packages (
       parentId, attrName, name, pname, version, semver, outputs, license
@@ -400,19 +378,13 @@ test_PkgQuery1( flox::pkgdb::PkgDb & db )
       , '["out"]', NULL, TRUE, FALSE, :descriptionId
       )
   )SQL" );
-  cmd.bind( ":parentId",      static_cast<long long>( linux ) );
-  cmd.bind( ":descriptionId", static_cast<long long>( desc  ) );
-  if ( flox::pkgdb::sql_rc rc = cmd.execute();
-       flox::pkgdb::isSQLError( rc )
-     )
+  cmd.bind( ":parentId", static_cast<long long>( linux ) );
+  cmd.bind( ":descriptionId", static_cast<long long>( desc ) );
+  if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
     {
       throw flox::pkgdb::PkgDbException(
-        db.dbPath
-      , nix::fmt( "Failed to write Packages:(%d) %s"
-                , rc
-                , db.db.error_msg()
-                )
-      );
+        db.dbPath,
+        nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
     }
   flox::pkgdb::PkgQueryArgs qargs;
   qargs.systems = std::vector<std::string> { "x86_64-linux" };
@@ -449,9 +421,8 @@ test_PkgQuery1( flox::pkgdb::PkgDb & db )
 
   /* Run `licenses = ["GPL-3.0-or-later", "BUSL-1.1", "MIT"]' query */
   {
-    qargs.licenses = std::vector<std::string> {
-      "GPL-3.0-or-later", "BUSL-1.1", "MIT"
-    };
+    qargs.licenses
+      = std::vector<std::string> { "GPL-3.0-or-later", "BUSL-1.1", "MIT" };
     flox::pkgdb::PkgQuery qry( qargs );
     qargs.licenses = std::nullopt;
     /* omits NULL licenses */
@@ -474,18 +445,18 @@ test_PkgQuery1( flox::pkgdb::PkgDb & db )
 /* -------------------------------------------------------------------------- */
 
 /* Tests `partialMatch' and `pnameOrPkgAttrName' filtering. */
-  bool
-test_PkgQuery2( flox::pkgdb::PkgDb & db )
+bool
+test_PkgQuery2( flox::pkgdb::PkgDb &db )
 {
   clearTables( db );
 
   /* Make a package */
-  row_id linux =
-    db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-linux" } );
-  row_id descGreet =
-    db.addOrGetDescriptionId( "A program with a friendly hello" );
-  row_id descFarewell =
-    db.addOrGetDescriptionId( "A program with a friendly farewell" );
+  row_id linux = db.addOrGetAttrSetId(
+    flox::AttrPath { "legacyPackages", "x86_64-linux" } );
+  row_id descGreet
+    = db.addOrGetDescriptionId( "A program with a friendly hello" );
+  row_id descFarewell
+    = db.addOrGetDescriptionId( "A program with a friendly farewell" );
   sqlite3pp::command cmd( db.db, R"SQL(
     INSERT INTO Packages (
       parentId, attrName, name, pname, outputs, descriptionId
@@ -500,18 +471,14 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
     , ( :parentId, 'pkg3', 'ciao-2.12.1', 'ciao', '["out"]', :descFarewellId
       )
   )SQL" );
-  cmd.bind( ":parentId",       static_cast<long long>( linux )        );
-  cmd.bind( ":descGreetId",    static_cast<long long>( descGreet )    );
+  cmd.bind( ":parentId", static_cast<long long>( linux ) );
+  cmd.bind( ":descGreetId", static_cast<long long>( descGreet ) );
   cmd.bind( ":descFarewellId", static_cast<long long>( descFarewell ) );
   if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
     {
       throw flox::pkgdb::PkgDbException(
-        db.dbPath
-      , nix::fmt( "Failed to write Packages:(%d) %s"
-                , rc
-                , db.db.error_msg()
-                )
-      );
+        db.dbPath,
+        nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
     }
   flox::pkgdb::PkgQueryArgs qargs;
   qargs.systems = std::vector<std::string> { "x86_64-linux" };
@@ -519,16 +486,14 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
   /* Run `partialMatch = "hello"' query */
   {
     qargs.partialMatch = "hello";
-    flox::pkgdb::PkgQuery qry( qargs
-                             , std::vector<std::string> {
-                                 "matchExactPname"
-                               , "matchPartialDescription"
-                               }
-                             );
+    flox::pkgdb::PkgQuery qry(
+      qargs,
+      std::vector<std::string> { "matchExactPname",
+                                 "matchPartialDescription" } );
     qargs.partialMatch = std::nullopt;
-    size_t count = 0;
-    auto   bound = qry.bind( db.db );
-    for ( const auto & row : * bound )
+    size_t count       = 0;
+    auto   bound       = qry.bind( db.db );
+    for ( const auto &row : *bound )
       {
         ++count;
         if ( count == 1 )
@@ -547,16 +512,14 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
 
   /* Run `partialMatch = "farewell"' query */
   {
-    qargs.partialMatch      = "farewell";
-    flox::pkgdb::PkgQuery qry( qargs
-                             , std::vector<std::string> {
-                                 "matchPartialDescription"
-                               }
-                             );
+    qargs.partialMatch = "farewell";
+    flox::pkgdb::PkgQuery qry(
+      qargs,
+      std::vector<std::string> { "matchPartialDescription" } );
     qargs.partialMatch = std::nullopt;
-    size_t count = 0;
-    auto   bound = qry.bind( db.db );
-    for ( const auto & row : * bound )
+    size_t count       = 0;
+    auto   bound       = qry.bind( db.db );
+    for ( const auto &row : *bound )
       {
         ++count;
         EXPECT( row.get<bool>( 0 ) );
@@ -567,16 +530,14 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
   /* Run `partialMatch = "hel"' query */
   {
     qargs.partialMatch = "hel";
-    flox::pkgdb::PkgQuery qry( qargs
-                             , std::vector<std::string> {
-                                 "matchPartialPname"
-                               , "matchPartialDescription"
-                               }
-                             );
+    flox::pkgdb::PkgQuery qry(
+      qargs,
+      std::vector<std::string> { "matchPartialPname",
+                                 "matchPartialDescription" } );
     qargs.partialMatch = std::nullopt;
-    size_t count = 0;
-    auto   bound = qry.bind( db.db );
-    for ( const auto & row : * bound )
+    size_t count       = 0;
+    auto   bound       = qry.bind( db.db );
+    for ( const auto &row : *bound )
       {
         ++count;
         if ( count == 1 )
@@ -588,7 +549,7 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
           {
             EXPECT( ! row.get<bool>( 0 ) );
             EXPECT( row.get<bool>( 1 ) );
-     }
+          }
       }
     EXPECT_EQ( count, std::size_t( 2 ) );
   }
@@ -596,16 +557,13 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
   /* Run `pnameOrPkgAttrName = "hello"' query, which matches pname */
   {
     qargs.pnameOrPkgAttrName = "hello";
-    flox::pkgdb::PkgQuery qry( qargs
-                             , std::vector<std::string> {
-                                 "exactPname"
-                               , "exactPkgAttrName"
-                               }
-                             );
+    flox::pkgdb::PkgQuery qry(
+      qargs,
+      std::vector<std::string> { "exactPname", "exactPkgAttrName" } );
     qargs.pnameOrPkgAttrName = std::nullopt;
-    size_t count = 0;
-    auto   bound = qry.bind( db.db );
-    for ( const auto & row : * bound )
+    size_t count             = 0;
+    auto   bound             = qry.bind( db.db );
+    for ( const auto &row : *bound )
       {
         ++count;
         // exactPname is true
@@ -627,16 +585,13 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
   /* Run `pnameOrPkgAttrName = "pkg0"' query, which matches attrName */
   {
     qargs.pnameOrPkgAttrName = "pkg0";
-    flox::pkgdb::PkgQuery qry( qargs
-                             , std::vector<std::string> {
-                                 "exactPname"
-                               , "exactPkgAttrName"
-                               }
-                             );
+    flox::pkgdb::PkgQuery qry(
+      qargs,
+      std::vector<std::string> { "exactPname", "exactPkgAttrName" } );
     qargs.pnameOrPkgAttrName = std::nullopt;
-    size_t count = 0;
-    auto   bound = qry.bind( db.db );
-    for ( const auto & row : * bound )
+    size_t count             = 0;
+    auto   bound             = qry.bind( db.db );
+    for ( const auto &row : *bound )
       {
         ++count;
         // exactPname is false
@@ -654,16 +609,16 @@ test_PkgQuery2( flox::pkgdb::PkgDb & db )
 /* -------------------------------------------------------------------------- */
 
 /* Tests `getPackages', particularly `semver' filtering. */
-  bool
-test_getPackages0( flox::pkgdb::PkgDb & db )
+bool
+test_getPackages0( flox::pkgdb::PkgDb &db )
 {
   clearTables( db );
 
   /* Make a package */
-  row_id linux =
-    db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-linux" } );
-  row_id desc =
-    db.addOrGetDescriptionId( "A program with a friendly greeting/farewell" );
+  row_id linux = db.addOrGetAttrSetId(
+    flox::AttrPath { "legacyPackages", "x86_64-linux" } );
+  row_id desc
+    = db.addOrGetDescriptionId( "A program with a friendly greeting/farewell" );
   sqlite3pp::command cmd( db.db, R"SQL(
     INSERT INTO Packages (
       parentId, attrName, name, pname, version, semver, outputs, descriptionId
@@ -678,17 +633,13 @@ test_getPackages0( flox::pkgdb::PkgDb & db )
       , '["out"]', :descriptionId
       )
   )SQL" );
-  cmd.bind( ":parentId",      static_cast<long long>( linux ) );
-  cmd.bind( ":descriptionId", static_cast<long long>( desc )  );
+  cmd.bind( ":parentId", static_cast<long long>( linux ) );
+  cmd.bind( ":descriptionId", static_cast<long long>( desc ) );
   if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
     {
       throw flox::pkgdb::PkgDbException(
-        db.dbPath
-      , nix::fmt( "Failed to write Packages:(%d) %s"
-                , rc
-                , db.db.error_msg()
-                )
-      );
+        db.dbPath,
+        nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
     }
 
   flox::pkgdb::PkgQueryArgs qargs;
@@ -727,27 +678,25 @@ test_getPackages0( flox::pkgdb::PkgDb & db )
 /**
  * Tests `getPackages', particularly `stability', `subtree`, and
  * `system` ordering. */
-  bool
-test_getPackages1( flox::pkgdb::PkgDb & db )
+bool
+test_getPackages1( flox::pkgdb::PkgDb &db )
 {
   clearTables( db );
 
   /* Make a package */
   row_id stableLinux = db.addOrGetAttrSetId(
-    flox::AttrPath { "catalog", "x86_64-linux", "stable" }
-  );
+    flox::AttrPath { "catalog", "x86_64-linux", "stable" } );
   row_id unstableLinux = db.addOrGetAttrSetId(
-    flox::AttrPath { "catalog", "x86_64-linux", "unstable" }
-  );
-  row_id packagesLinux =
-    db.addOrGetAttrSetId( flox::AttrPath { "packages", "x86_64-linux" } );
-  row_id legacyDarwin =
-    db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-darwin" } );
-  row_id packagesDarwin =
-    db.addOrGetAttrSetId( flox::AttrPath { "packages", "x86_64-darwin" } );
+    flox::AttrPath { "catalog", "x86_64-linux", "unstable" } );
+  row_id packagesLinux
+    = db.addOrGetAttrSetId( flox::AttrPath { "packages", "x86_64-linux" } );
+  row_id legacyDarwin = db.addOrGetAttrSetId(
+    flox::AttrPath { "legacyPackages", "x86_64-darwin" } );
+  row_id packagesDarwin
+    = db.addOrGetAttrSetId( flox::AttrPath { "packages", "x86_64-darwin" } );
 
-  row_id desc =
-    db.addOrGetDescriptionId( "A program with a friendly greeting/farewell" );
+  row_id desc
+    = db.addOrGetDescriptionId( "A program with a friendly greeting/farewell" );
 
   sqlite3pp::command cmd( db.db, R"SQL(
     INSERT INTO Packages (
@@ -759,21 +708,17 @@ test_getPackages1( flox::pkgdb::PkgDb & db )
     , ( 4, :legacyDarwinId,   'hello', 'hello', '["out"]', :descriptionId )
     , ( 5, :packagesDarwinId, 'hello', 'hello', '["out"]', :descriptionId )
   )SQL" );
-  cmd.bind( ":descriptionId",    static_cast<long long>( desc )  );
-  cmd.bind( ":stableLinuxId",    static_cast<long long>( stableLinux ) );
-  cmd.bind( ":unstableLinuxId",  static_cast<long long>( unstableLinux ) );
-  cmd.bind( ":packagesLinuxId",  static_cast<long long>( packagesLinux ) );
-  cmd.bind( ":legacyDarwinId",   static_cast<long long>( legacyDarwin ) );
+  cmd.bind( ":descriptionId", static_cast<long long>( desc ) );
+  cmd.bind( ":stableLinuxId", static_cast<long long>( stableLinux ) );
+  cmd.bind( ":unstableLinuxId", static_cast<long long>( unstableLinux ) );
+  cmd.bind( ":packagesLinuxId", static_cast<long long>( packagesLinux ) );
+  cmd.bind( ":legacyDarwinId", static_cast<long long>( legacyDarwin ) );
   cmd.bind( ":packagesDarwinId", static_cast<long long>( packagesDarwin ) );
   if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
     {
       throw flox::pkgdb::PkgDbException(
-        db.dbPath
-      , nix::fmt( "Failed to write Packages:(%d) %s"
-                , rc
-                , db.db.error_msg()
-                )
-      );
+        db.dbPath,
+        nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
     }
 
   flox::pkgdb::PkgQueryArgs qargs;
@@ -781,14 +726,12 @@ test_getPackages1( flox::pkgdb::PkgDb & db )
 
   /* Test `subtrees` ordering */
   {
-    qargs.systems  = std::vector<std::string> { "x86_64-darwin" };
-    qargs.subtrees = std::vector<flox::Subtree> {
-      flox::ST_PACKAGES, flox::ST_LEGACY
-    };
+    qargs.systems = std::vector<std::string> { "x86_64-darwin" };
+    qargs.subtrees
+      = std::vector<flox::Subtree> { flox::ST_PACKAGES, flox::ST_LEGACY };
     EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 5, 4 } ) );
-    qargs.subtrees = std::vector<flox::Subtree> {
-      flox::ST_LEGACY, flox::ST_PACKAGES
-    };
+    qargs.subtrees
+      = std::vector<flox::Subtree> { flox::ST_LEGACY, flox::ST_PACKAGES };
     EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 4, 5 } ) );
     qargs.subtrees = std::nullopt;
     qargs.systems  = std::vector<std::string> {};
@@ -797,13 +740,11 @@ test_getPackages1( flox::pkgdb::PkgDb & db )
   /* Test `systems` ordering */
   {
     qargs.subtrees = std::vector<flox::Subtree> { flox::ST_PACKAGES };
-    qargs.systems  = std::vector<std::string> {
-      "x86_64-linux", "x86_64-darwin"
-    };
+    qargs.systems
+      = std::vector<std::string> { "x86_64-linux", "x86_64-darwin" };
     EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 3, 5 } ) );
-    qargs.systems = std::vector<std::string> {
-      "x86_64-darwin", "x86_64-linux"
-    };
+    qargs.systems
+      = std::vector<std::string> { "x86_64-darwin", "x86_64-linux" };
     EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 5, 3 } ) );
     qargs.systems  = std::vector<std::string> {};
     qargs.subtrees = std::nullopt;
@@ -829,15 +770,14 @@ test_getPackages1( flox::pkgdb::PkgDb & db )
 /* -------------------------------------------------------------------------- */
 
 /** Tests `getPackages', particularly `version' ordering. */
-  bool
-test_getPackages2( flox::pkgdb::PkgDb & db )
+bool
+test_getPackages2( flox::pkgdb::PkgDb &db )
 {
   clearTables( db );
 
   /* Make a package */
-  row_id linux = db.addOrGetAttrSetId(
-    flox::AttrPath { "packages", "x86_64-linux" }
-  );
+  row_id linux
+    = db.addOrGetAttrSetId( flox::AttrPath { "packages", "x86_64-linux" } );
 
   sqlite3pp::command cmd( db.db, R"SQL(
     INSERT INTO Packages (
@@ -862,12 +802,8 @@ test_getPackages2( flox::pkgdb::PkgDb & db )
   if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
     {
       throw flox::pkgdb::PkgDbException(
-        db.dbPath
-      , nix::fmt( "Failed to write Packages:(%d) %s"
-                , rc
-                , db.db.error_msg()
-                )
-      );
+        db.dbPath,
+        nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
     }
 
   flox::pkgdb::PkgQueryArgs qargs;
@@ -876,15 +812,13 @@ test_getPackages2( flox::pkgdb::PkgDb & db )
 
   /* Test `preferPreReleases = false' ordering */
   qargs.preferPreReleases = false;
-  EXPECT( db.getPackages( qargs ) ==
-          ( std::vector<row_id> { 3, 1, 2, 5, 6, 7, 8, 4 } )
-        );
+  EXPECT( db.getPackages( qargs )
+          == ( std::vector<row_id> { 3, 1, 2, 5, 6, 7, 8, 4 } ) );
 
   qargs.preferPreReleases = true;
   /* Test `preferPreReleases = true' ordering */
-  EXPECT( db.getPackages( qargs ) ==
-          ( std::vector<row_id> { 3, 2, 1, 5, 6, 7, 8, 4 } )
-        );
+  EXPECT( db.getPackages( qargs )
+          == ( std::vector<row_id> { 3, 2, 1, 5, 6, 7, 8, 4 } ) );
 
   return true;
 }
@@ -892,16 +826,16 @@ test_getPackages2( flox::pkgdb::PkgDb & db )
 
 /* -------------------------------------------------------------------------- */
 
-  bool
-test_DbPackage0( flox::pkgdb::PkgDb & db )
+bool
+test_DbPackage0( flox::pkgdb::PkgDb &db )
 {
   clearTables( db );
 
   /* Make a package */
-  row_id linux =
-    db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-linux" } );
-  row_id desc =
-    db.addOrGetDescriptionId( "A program with a friendly greeting/farewell" );
+  row_id linux = db.addOrGetAttrSetId(
+    flox::AttrPath { "legacyPackages", "x86_64-linux" } );
+  row_id desc
+    = db.addOrGetDescriptionId( "A program with a friendly greeting/farewell" );
   sqlite3pp::command cmd( db.db, R"SQL(
     INSERT INTO Packages (
       parentId, attrName, name, pname, version, semver, license, outputs
@@ -911,60 +845,52 @@ test_DbPackage0( flox::pkgdb::PkgDb & db )
       , 'GPL-3.0-or-later', '["out"]', '["out"]', false, false, :descriptionId
       )
   )SQL" );
-  cmd.bind( ":parentId",      static_cast<long long>( linux ) );
-  cmd.bind( ":descriptionId", static_cast<long long>( desc )  );
+  cmd.bind( ":parentId", static_cast<long long>( linux ) );
+  cmd.bind( ":descriptionId", static_cast<long long>( desc ) );
   if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
     {
       throw flox::pkgdb::PkgDbException(
-        db.dbPath
-      , nix::fmt( "Failed to write Packages:(%d) %s"
-                , rc
-                , db.db.error_msg()
-                )
-      );
+        db.dbPath,
+        nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
     }
   row_id pkgId = db.db.last_insert_rowid();
-  auto   pkg   = flox::pkgdb::DbPackage(
-                   static_cast<flox::pkgdb::PkgDbReadOnly &>( db )
-                 , pkgId
-                 );
+  auto   pkg
+    = flox::pkgdb::DbPackage( static_cast<flox::pkgdb::PkgDbReadOnly &>( db ),
+                              pkgId );
 
-  EXPECT( pkg.getPathStrs() ==
-          ( flox::AttrPath { "legacyPackages", "x86_64-linux", "hello" } )
-        );
+  EXPECT( pkg.getPathStrs()
+          == ( flox::AttrPath { "legacyPackages", "x86_64-linux", "hello" } ) );
   EXPECT_EQ( pkg.getFullName(), "hello-2.12" );
   EXPECT_EQ( pkg.getPname(), "hello" );
-  EXPECT_EQ( * pkg.getVersion(), "2.12" );
-  EXPECT_EQ( * pkg.getSemver(), "2.12.0" );
-  EXPECT_EQ( * pkg.getLicense(), "GPL-3.0-or-later" );
+  EXPECT_EQ( *pkg.getVersion(), "2.12" );
+  EXPECT_EQ( *pkg.getSemver(), "2.12.0" );
+  EXPECT_EQ( *pkg.getLicense(), "GPL-3.0-or-later" );
   EXPECT( pkg.getOutputs() == ( std::vector<std::string> { "out" } ) );
   EXPECT( pkg.getOutputsToInstall() == ( std::vector<std::string> { "out" } ) );
-  EXPECT_EQ( * pkg.isBroken(), false );
-  EXPECT_EQ( * pkg.isUnfree(), false );
-  EXPECT_EQ( * pkg.getDescription()
-           , "A program with a friendly greeting/farewell"
-           );
+  EXPECT_EQ( *pkg.isBroken(), false );
+  EXPECT_EQ( *pkg.isUnfree(), false );
+  EXPECT_EQ( *pkg.getDescription(),
+             "A program with a friendly greeting/farewell" );
   EXPECT_EQ( pkgId, pkg.getPackageId() );
   EXPECT_EQ( pkg.getDbPath(), db.dbPath );
-  EXPECT_EQ( nix::parseFlakeRef( nixpkgsRef ).to_string()
-           , pkg.getLockedFlakeRef().to_string()
-           );
+  EXPECT_EQ( nix::parseFlakeRef( nixpkgsRef ).to_string(),
+             pkg.getLockedFlakeRef().to_string() );
   return true;
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-  bool
-test_getPackages_semver0( flox::pkgdb::PkgDb & db )
+bool
+test_getPackages_semver0( flox::pkgdb::PkgDb &db )
 {
   clearTables( db );
 
   /* Make packages */
-  row_id linux =
-    db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-linux" } );
-  row_id desc =
-    db.addOrGetDescriptionId( "A program with a friendly greeting/farewell" );
+  row_id linux = db.addOrGetAttrSetId(
+    flox::AttrPath { "legacyPackages", "x86_64-linux" } );
+  row_id desc
+    = db.addOrGetDescriptionId( "A program with a friendly greeting/farewell" );
   sqlite3pp::command cmd( db.db, R"SQL(
     INSERT INTO Packages (
       parentId, attrName, name, pname, version, semver, license, outputs
@@ -989,17 +915,13 @@ test_getPackages_semver0( flox::pkgdb::PkgDb & db )
       , 'GPL-3.0-or-later', '["out"]', '["out"]', false, false, :descriptionId
       )
   )SQL" );
-  cmd.bind( ":parentId",      static_cast<long long>( linux ) );
-  cmd.bind( ":descriptionId", static_cast<long long>( desc )  );
+  cmd.bind( ":parentId", static_cast<long long>( linux ) );
+  cmd.bind( ":descriptionId", static_cast<long long>( desc ) );
   if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
     {
       throw flox::pkgdb::PkgDbException(
-        db.dbPath
-      , nix::fmt( "Failed to write Packages:(%d) %s"
-                , rc
-                , db.db.error_msg()
-                )
-      );
+        db.dbPath,
+        nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
     }
 
   flox::pkgdb::PkgQueryArgs qargs;
@@ -1008,42 +930,31 @@ test_getPackages_semver0( flox::pkgdb::PkgDb & db )
   qargs.pname    = "hello";
 
   auto getSemvers =
-    [&]( const std::string & semver ) -> std::vector<std::optional<std::string>>
-    {
-      std::vector<std::optional<std::string>> rsl;
-      qargs.semver = { semver };
-      for( flox::pkgdb::row_id rowId : db.getPackages( qargs ) )
-        {
-          rsl.emplace_back(
-            flox::pkgdb::DbPackage(
-              static_cast<flox::pkgdb::PkgDbReadOnly &>( db )
-            , rowId
-            ).getSemver()
-          );
-        }
-      return rsl;
-    };
+    [&]( const std::string &semver ) -> std::vector<std::optional<std::string>>
+  {
+    std::vector<std::optional<std::string>> rsl;
+    qargs.semver = { semver };
+    for ( flox::pkgdb::row_id rowId : db.getPackages( qargs ) )
+      {
+        rsl.emplace_back( flox::pkgdb::DbPackage(
+                            static_cast<flox::pkgdb::PkgDbReadOnly &>( db ),
+                            rowId )
+                            .getSemver() );
+      }
+    return rsl;
+  };
 
   /* ^2 : 2.0.0 <= VERSION < 3.0.0 */
   {
     auto semvers = getSemvers( "^2" );
     EXPECT_EQ( semvers.size(), std::size_t( 3 ) );
     size_t idx = 0;
-    for ( const std::optional<std::string> & maybeSemver : semvers )
+    for ( const std::optional<std::string> &maybeSemver : semvers )
       {
         EXPECT( maybeSemver.has_value() );
-        if ( idx == 0 )
-          {
-            EXPECT_EQ( * maybeSemver, "2.14.1" );
-          }
-        else if ( idx == 1 )
-          {
-            EXPECT_EQ( * maybeSemver, "2.13.1" );
-          }
-        else if ( idx == 2 )
-          {
-            EXPECT_EQ( * maybeSemver, "2.12.0" );
-          }
+        if ( idx == 0 ) { EXPECT_EQ( *maybeSemver, "2.14.1" ); }
+        else if ( idx == 1 ) { EXPECT_EQ( *maybeSemver, "2.13.1" ); }
+        else if ( idx == 2 ) { EXPECT_EQ( *maybeSemver, "2.12.0" ); }
         ++idx;
       }
   }
@@ -1053,17 +964,11 @@ test_getPackages_semver0( flox::pkgdb::PkgDb & db )
     auto semvers = getSemvers( "^2.13.1" );
     EXPECT_EQ( semvers.size(), std::size_t( 2 ) );
     size_t idx = 0;
-    for ( const std::optional<std::string> & maybeSemver : semvers )
+    for ( const std::optional<std::string> &maybeSemver : semvers )
       {
         EXPECT( maybeSemver.has_value() );
-        if ( idx == 0 )
-          {
-            EXPECT_EQ( * maybeSemver, "2.14.1" );
-          }
-        else if ( idx == 1 )
-          {
-            EXPECT_EQ( * maybeSemver, "2.13.1" );
-          }
+        if ( idx == 0 ) { EXPECT_EQ( *maybeSemver, "2.14.1" ); }
+        else if ( idx == 1 ) { EXPECT_EQ( *maybeSemver, "2.13.1" ); }
         ++idx;
       }
   }
@@ -1072,8 +977,8 @@ test_getPackages_semver0( flox::pkgdb::PkgDb & db )
   {
     auto semvers = getSemvers( "*" );
     EXPECT_EQ( semvers.size(), std::size_t( 5 ) );
-    for ( const auto & maybeSemver : semvers )
-      { 
+    for ( const auto &maybeSemver : semvers )
+      {
         EXPECT( maybeSemver.has_value() );
       }
   }
@@ -1084,15 +989,16 @@ test_getPackages_semver0( flox::pkgdb::PkgDb & db )
 
 /* -------------------------------------------------------------------------- */
 
-  int
-main( int argc, char * argv[] )
+int
+main( int argc, char *argv[] )
 {
   int ec = EXIT_SUCCESS;
-# define RUN_TEST( ... )  _RUN_TEST( ec, __VA_ARGS__ )
+#define RUN_TEST( ... ) _RUN_TEST( ec, __VA_ARGS__ )
 
-/* -------------------------------------------------------------------------- */
+  /* --------------------------------------------------------------------------
+   */
 
-    nix::verbosity = nix::lvlWarn;
+  nix::verbosity = nix::lvlWarn;
   if ( ( 1 < argc ) && ( std::string_view( argv[1] ) == "-v" ) )
     {
       nix::verbosity = nix::lvlDebug;
@@ -1102,7 +1008,8 @@ main( int argc, char * argv[] )
   flox::NixState nstate;
 
 
-/* -------------------------------------------------------------------------- */
+  /* --------------------------------------------------------------------------
+   */
 
   auto [fd, path] = nix::createTempFile( "test-pkgdb.sql" );
   fd.close();
@@ -1112,7 +1019,8 @@ main( int argc, char * argv[] )
   flox::FloxFlake flake( nstate.getState(), ref );
 
 
-/* -------------------------------------------------------------------------- */
+  /* --------------------------------------------------------------------------
+   */
 
   {
 
@@ -1145,19 +1053,20 @@ main( int argc, char * argv[] )
     RUN_TEST( DbPackage0, db );
 
     RUN_TEST( getPackages_semver0, db );
-
   }
 
 
-/* -------------------------------------------------------------------------- */
+  /* --------------------------------------------------------------------------
+   */
 
   /* XXX: You may find it useful to preserve the file and print it for some
    *      debugging efforts. */
   std::filesystem::remove( path );
-  //std::cerr << path << std::endl;
+  // std::cerr << path << std::endl;
 
 
-/* -------------------------------------------------------------------------- */
+  /* --------------------------------------------------------------------------
+   */
 
   return ec;
 }
