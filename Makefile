@@ -30,6 +30,7 @@ TEST       ?= test
 DOXYGEN    ?= doxygen
 BEAR       ?= bear
 TIDY       ?= clang-tidy
+FMT        ?= clang-format
 
 
 # ---------------------------------------------------------------------------- #
