@@ -17,12 +17,9 @@ namespace flox::pkgdb {
 /* -------------------------------------------------------------------------- */
 
 // TODO: Conversion by JSON isn't efficient. Read values directly.
-  void
-DbPackage::initRawPackage( PkgDbReadOnly & pkgdb )
-{
-  sqlite3pp::query qry(
-    pkgdb.db
-  , R"SQL(
+void
+DbPackage::initRawPackage( PkgDbReadOnly &pkgdb ) {
+  sqlite3pp::query qry( pkgdb.db, R"SQL(
       SELECT json_object(
         'name',             name
       , 'pname',            pname
@@ -39,13 +36,12 @@ DbPackage::initRawPackage( PkgDbReadOnly & pkgdb )
       LEFT OUTER JOIN Descriptions
         ON ( Packages.descriptionId = Descriptions.id  )
       WHERE ( Packages.id = ? )
-    )SQL"
-  );
+    )SQL" );
   qry.bind( 1, static_cast<long long>( this->pkgId ) );
-  auto json = nlohmann::json::parse( ( * qry.begin() ).get<std::string>( 0 ) );
+  auto json = nlohmann::json::parse( ( *qry.begin() ).get<std::string>( 0 ) );
   /* We have to stash our `path' because `from_json' would clear it. */
   auto pathTmp = std::move( this->path );
-  from_json( json, dynamic_cast<RawPackage &>( * this ) );
+  from_json( json, dynamic_cast<RawPackage &>( *this ) );
   /* Restore original `path'. */
   this->path = std::move( pathTmp );
 }
@@ -53,7 +49,7 @@ DbPackage::initRawPackage( PkgDbReadOnly & pkgdb )
 
 /* -------------------------------------------------------------------------- */
 
-}  /* End Namespace `flox::pkgdb' */
+}  // namespace flox::pkgdb
 
 
 /* -------------------------------------------------------------------------- *

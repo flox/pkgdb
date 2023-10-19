@@ -8,10 +8,10 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include <string>
-#include <regex>
 #include <optional>
+#include <regex>
 #include <stdexcept>
+#include <string>
 
 #include "versions.hh"
 
@@ -38,17 +38,15 @@ static const char * const semverCoerceREStr =
 
 /** Match '-' separated date strings, e.g. `2023-05-31' or `5-1-23'. */
 static const char * const dateREStr =
-  "([12][0-9][0-9][0-9]-[0-1]?[0-9]-[0-3]?[0-9]|"  /* Y-M-D */
-  "[0-1]?[0-9]-[0-3]?[0-9]-[12][0-9][0-9][0-9])"   /* M-D-Y */
-  "(-[-[:alnum:]_+.]+)?"
-  ;
+  "([12][0-9][0-9][0-9]-[0-1]?[0-9]-[0-3]?[0-9]|" /* Y-M-D */
+  "[0-1]?[0-9]-[0-3]?[0-9]-[12][0-9][0-9][0-9])"  /* M-D-Y */
+  "(-[-[:alnum:]_+.]+)?";
 
 
 /* -------------------------------------------------------------------------- */
 
-  bool
-isSemver( const std::string & version )
-{
+bool
+isSemver( const std::string & version ) {
   static const std::regex semverRE( semverREStr, std::regex::ECMAScript );
   return std::regex_match( version, semverRE );
 }
@@ -56,9 +54,8 @@ isSemver( const std::string & version )
 
 /* -------------------------------------------------------------------------- */
 
-  bool
-isDate( const std::string & version )
-{
+bool
+isDate( const std::string & version ) {
   static const std::regex dateRE( dateREStr, std::regex::ECMAScript );
   return std::regex_match( version, dateRE );
 }
@@ -66,13 +63,11 @@ isDate( const std::string & version )
 
 /* -------------------------------------------------------------------------- */
 
-  bool
-isCoercibleToSemver( const std::string & version )
-{
+bool
+isCoercibleToSemver( const std::string & version ) {
   static const std::regex dateRE( dateREStr, std::regex::ECMAScript );
-  static const std::regex semverCoerceRE( semverCoerceREStr
-                                        , std::regex::ECMAScript
-                                        );
+  static const std::regex semverCoerceRE( semverCoerceREStr,
+                                          std::regex::ECMAScript );
   return ( ! std::regex_match( version, dateRE ) ) &&
          std::regex_match( version, semverCoerceRE );
 }
@@ -80,23 +75,20 @@ isCoercibleToSemver( const std::string & version )
 
 /* -------------------------------------------------------------------------- */
 
-  std::optional<std::string>
-coerceSemver( std::string_view version )
-{
+std::optional<std::string>
+coerceSemver( std::string_view version ) {
   static const std::regex semverRE( semverREStr, std::regex::ECMAScript );
-  static const std::regex semverCoerceRE( semverCoerceREStr
-                                        , std::regex::ECMAScript
-                                        );
-  std::string vsn( version );
+  static const std::regex semverCoerceRE( semverCoerceREStr,
+                                          std::regex::ECMAScript );
+  std::string             vsn( version );
   /* If it's already a match for a proper semver we're done. */
   if ( std::regex_match( vsn, semverRE ) ) { return { vsn }; }
 
   /* Try try matching the coercive pattern. */
   std::smatch match;
-  if ( isDate( vsn ) || ( ! std::regex_match( vsn, match, semverCoerceRE ) ) )
-    {
-      return std::nullopt;
-    }
+  if ( isDate( vsn ) || ( ! std::regex_match( vsn, match, semverCoerceRE ) ) ) {
+    return std::nullopt;
+  }
 
   /**
    * Capture Groups Example:
@@ -128,11 +120,17 @@ coerceSemver( std::string_view version )
 
   std::string rsl( match[majorIdx].str() + "." );
 
-  if ( minor.empty() ) { rsl += "0."; }
-  else                 { rsl += minor + "."; }
+  if ( minor.empty() ) {
+    rsl += "0.";
+  } else {
+    rsl += minor + ".";
+  }
 
-  if ( patch.empty() ) { rsl += "0"; }
-  else                 { rsl += patch; }
+  if ( patch.empty() ) {
+    rsl += "0";
+  } else {
+    rsl += patch;
+  }
 
   if ( ! tag.empty() ) { rsl += tag; }
 
@@ -142,15 +140,13 @@ coerceSemver( std::string_view version )
 
 /* -------------------------------------------------------------------------- */
 
-  bool
-isSemverRange( const std::string & range )
-{
+bool
+isSemverRange( const std::string & range ) {
   /* Check for _modifier_ */
   static const std::string semverRangeREStr =
     "\\s*([~^><=]|>=|<=)?\\s*" + std::string( semverLooseREStr ) + ".*";
-  static const std::regex semverRangeRE( semverRangeREStr
-                                       , std::regex::ECMAScript
-                                       );
+  static const std::regex semverRangeRE( semverRangeREStr,
+                                         std::regex::ECMAScript );
 
   /* A few special tokens including the empty string are also valid. */
   static const std::regex globMatch( "\\s*(\\*|any|latest)?\\s*" );
@@ -161,64 +157,57 @@ isSemverRange( const std::string & range )
 }
 
 
-
 /* -------------------------------------------------------------------------- */
 
 #ifndef SEMVER_PATH
-#  define SEMVER_PATH  "semver"
+#  define SEMVER_PATH "semver"
 #endif
 
-  std::pair<int, std::string>
-runSemver( const std::list<std::string> & args )
-{
+std::pair<int, std::string>
+runSemver( const std::list<std::string> & args ) {
   static const std::string semverProg =
     nix::getEnv( "SEMVER" ).value_or( SEMVER_PATH );
   static const std::map<std::string, std::string> env = nix::getEnv();
-  return nix::runProgram( nix::RunOptions {
-    .program             = semverProg
-  , .searchPath          = true
-  , .args                = args
-  , .uid                 = std::nullopt
-  , .gid                 = std::nullopt
-  , .chdir               = std::nullopt
-  , .environment         = env
-  , .input               = std::nullopt
-  , .standardIn          = nullptr
-  , .standardOut         = nullptr
-  , .mergeStderrToStdout = false
-  } );
+  return nix::runProgram( nix::RunOptions { .program             = semverProg,
+                                            .searchPath          = true,
+                                            .args                = args,
+                                            .uid                 = std::nullopt,
+                                            .gid                 = std::nullopt,
+                                            .chdir               = std::nullopt,
+                                            .environment         = env,
+                                            .input               = std::nullopt,
+                                            .standardIn          = nullptr,
+                                            .standardOut         = nullptr,
+                                            .mergeStderrToStdout = false } );
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-  std::list<std::string>
-semverSat( const std::string & range, const std::list<std::string> & versions )
-{
-  std::list<std::string> args = {
-    "--include-prerelease", "--loose", "--range", range
-  };
+std::list<std::string>
+semverSat( const std::string &            range,
+           const std::list<std::string> & versions ) {
+  std::list<std::string> args = { "--include-prerelease",
+                                  "--loose",
+                                  "--range",
+                                  range };
   for ( const auto & version : versions ) { args.push_back( version ); }
   auto [ec, lines] = runSemver( args );
   /* TODO: determine parse error vs. empty list result. */
-  if ( ! nix::statusOk( ec ) )
-    {
-      return {};
-    }
+  if ( ! nix::statusOk( ec ) ) { return {}; }
   std::list<std::string> rsl;
   std::stringstream      oss( lines );
   std::string            line;
-  while ( std::getline( oss, line, '\n' ) )
-    {
-      if ( ! line.empty() ) { rsl.push_back( std::move( line ) ); }
-    }
+  while ( std::getline( oss, line, '\n' ) ) {
+    if ( ! line.empty() ) { rsl.push_back( std::move( line ) ); }
+  }
   return rsl;
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-}  /* End namespace `versions' */
+}  // namespace versions
 
 
 /* -------------------------------------------------------------------------- *

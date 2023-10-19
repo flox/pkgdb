@@ -9,8 +9,8 @@
 
 #include <stddef.h>
 
-#include <nix/shared.hh>
 #include <nix/eval.hh>
+#include <nix/shared.hh>
 
 #include "flox/core/nix-state.hh"
 
@@ -21,9 +21,8 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
-  void
-initNix()
-{
+void
+initNix() {
   static bool didNixInit = false;
   if ( didNixInit ) { return; }
 
@@ -33,7 +32,7 @@ initNix()
   nix::initGC();
   /* Suppress benign warnings about `nix.conf'. */
   nix::Verbosity oldVerbosity = nix::verbosity;
-  nix::verbosity = nix::lvlError;
+  nix::verbosity              = nix::lvlError;
   nix::initPlugins();
   /* Restore verbosity to `nix' global setting */
   nix::verbosity = oldVerbosity;
@@ -53,7 +52,7 @@ initNix()
 
 /* -------------------------------------------------------------------------- */
 
-}    /* End namespace `flox' */
+}  // namespace flox
 
 
 /* -------------------------------------------------------------------------- *

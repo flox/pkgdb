@@ -10,11 +10,11 @@
 
 #pragma once
 
-#include <string>
-#include <regex>
-#include <optional>
 #include <list>
 #include <nix/util.hh>
+#include <optional>
+#include <regex>
+#include <string>
 
 
 /* -------------------------------------------------------------------------- */
@@ -28,24 +28,31 @@ namespace versions {
  * @brief Typed exception wrapper used for version parsing/comparison errors.
  */
 class VersionException : public std::exception {
-  private:
-    std::string msg;
-  public:
-    VersionException( std::string_view msg ) : msg( msg ) {}
-    const char * what() const noexcept override { return this->msg.c_str(); }
+private:
+  std::string msg;
+
+public:
+  VersionException( std::string_view msg ) : msg( msg ) {}
+  const char *
+  what() const noexcept override {
+    return this->msg.c_str();
+  }
 };
 
 
 /* -------------------------------------------------------------------------- */
 
 /** @return `true` iff @a version is a valid _semantic version_ string. */
-bool isSemver( const std::string & version );
+bool
+isSemver( const std::string & version );
 
 /** @return `true` iff @a version is a _datestamp-like_ version string. */
-bool isDate( const std::string & version );
+bool
+isDate( const std::string & version );
 
 /** @return `true` iff @a version can be interpreted as _semantic version_. */
-bool isCoercibleToSemver( const std::string & version );
+bool
+isCoercibleToSemver( const std::string & version );
 
 /**
  * @brief Determine if @a version is a valid _semantic version range_ string.
@@ -74,7 +81,8 @@ bool isCoercibleToSemver( const std::string & version );
  *
  * @see flox::resolver::ManifestDescriptor::semver
  */
-bool isSemverRange( const std::string & version );
+bool
+isSemverRange( const std::string & version );
 
 
 /* -------------------------------------------------------------------------- */
@@ -87,7 +95,8 @@ bool isSemverRange( const std::string & version );
  *          _semantic version_.
  *          A valid semantic version string otherwise.
  */
-std::optional<std::string> coerceSemver( std::string_view version );
+std::optional<std::string>
+coerceSemver( std::string_view version );
 
 
 /* -------------------------------------------------------------------------- */
@@ -98,7 +107,8 @@ std::optional<std::string> coerceSemver( std::string_view version );
  * @param args List of arguments to pass to `semver` executable.
  * @return Pair of error-code and output string.
  */
-std::pair<int, std::string> runSemver( const std::list<std::string> & args );
+std::pair<int, std::string>
+runSemver( const std::list<std::string> & args );
 
 /**
  * @brief Filter a list of versions by a `node-semver` _semantic version range_.
@@ -108,14 +118,13 @@ std::pair<int, std::string> runSemver( const std::list<std::string> & args );
  * @return The list of _semantic versions_ from @a versions which fall in the
  *         range specified by @a range.
  */
-std::list<std::string> semverSat( const std::string            &  range
-                                , const std::list<std::string> & versions
-                                );
+std::list<std::string>
+semverSat( const std::string & range, const std::list<std::string> & versions );
 
 
 /* -------------------------------------------------------------------------- */
 
-}  /* End namespace `versions' */
+}  // namespace versions
 
 
 /* -------------------------------------------------------------------------- *

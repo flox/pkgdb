@@ -20,9 +20,8 @@ namespace flox::resolver {
 
 /* -------------------------------------------------------------------------- */
 
-  void
-PkgDescriptorRaw::clear()
-{
+void
+PkgDescriptorRaw::clear() {
   this->pkgdb::PkgDescriptorBase::clear();
   this->input             = std::nullopt;
   this->path              = std::nullopt;
@@ -34,34 +33,34 @@ PkgDescriptorRaw::clear()
 
 /* -------------------------------------------------------------------------- */
 
-  void
-from_json( const nlohmann::json & jfrom, PkgDescriptorRaw & desc )
-{
+void
+from_json( const nlohmann::json &jfrom, PkgDescriptorRaw &desc ) {
   pkgdb::from_json( jfrom, dynamic_cast<pkgdb::PkgDescriptorBase &>( desc ) );
-  try { jfrom.at( "pnameOrPkgAttrName" ).get_to( desc.pnameOrPkgAttrName ); }
-  catch( const nlohmann::json::out_of_range & ) {}
-  try { jfrom.at( "preferPreReleases" ).get_to( desc.preferPreReleases ); }
-  catch( const nlohmann::json::out_of_range & ) {}
-  try { jfrom.at( "path" ).get_to( desc.path ); }
-  catch( const nlohmann::json::out_of_range & ) {}
+  try {
+    jfrom.at( "pnameOrPkgAttrName" ).get_to( desc.pnameOrPkgAttrName );
+  } catch ( const nlohmann::json::out_of_range & ) {}
+  try {
+    jfrom.at( "preferPreReleases" ).get_to( desc.preferPreReleases );
+  } catch ( const nlohmann::json::out_of_range & ) {}
+  try {
+    jfrom.at( "path" ).get_to( desc.path );
+  } catch ( const nlohmann::json::out_of_range & ) {}
 }
 
 
-  void
-to_json( nlohmann::json & jto, const PkgDescriptorRaw & desc )
-{
+void
+to_json( nlohmann::json &jto, const PkgDescriptorRaw &desc ) {
   pkgdb::to_json( jto, dynamic_cast<const pkgdb::PkgDescriptorBase &>( desc ) );
   jto["pnameOrPkgAttrName"] = desc.pnameOrPkgAttrName;
-  jto["preferPreReleases"] = desc.preferPreReleases;
-  jto["path"] = desc.path;
+  jto["preferPreReleases"]  = desc.preferPreReleases;
+  jto["path"]               = desc.path;
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-  pkgdb::PkgQueryArgs &
-PkgDescriptorRaw::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
-{
+pkgdb::PkgQueryArgs &
+PkgDescriptorRaw::fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const {
   /* XXX: DOES NOT CLEAR FIRST! We are called after global preferences. */
   pqa.name    = this->name;
   pqa.pname   = this->pname;
@@ -69,67 +68,49 @@ PkgDescriptorRaw::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
   pqa.semver  = this->semver;
 
   /* Set pre-release preference. We get priority over _global_ preferences. */
-  if ( this->preferPreReleases.has_value() )
-    {
-      pqa.preferPreReleases = * this->preferPreReleases;
-    }
+  if ( this->preferPreReleases.has_value() ) {
+    pqa.preferPreReleases = *this->preferPreReleases;
+  }
 
   /* Handle `path' parameter. */
-  if ( this->path.has_value() && ( ! this->path->empty() ) )
-    {
-      flox::AttrPath relPath;
-      auto fillRelPath = [&]( int start )
-        {
-          std::transform( this->path->begin() + start
-                        , this->path->end()
-                        , std::back_inserter( relPath )
-                        , []( const auto & s ) { return * s; }
-                        );
-        };
-      /* If path is absolute set `subtree', `systems', and `stabilities'. */
-      if ( std::find( getDefaultSubtrees().begin()
-                    , getDefaultSubtrees().end()
-                    , this->path->front()
-                    ) != getDefaultSubtrees().end()
-         )
-        {
-          if ( this->path->size() < 3 )
-            {
-              throw FloxException(
-                "Absolute attribute paths must have at least three elements"
-              );
-            }
-          Subtree subtree = Subtree::parseSubtree( * this->path->at( 0 ) );
-          if ( this->path->at( 1 ).has_value() )
-            {
-              pqa.systems = std::vector<std::string> { * this->path->at( 1 ) };
-            }
+  if ( this->path.has_value() && ( ! this->path->empty() ) ) {
+    flox::AttrPath relPath;
+    auto           fillRelPath = [&]( int start ) {
+      std::transform( this->path->begin() + start,
+                      this->path->end(),
+                      std::back_inserter( relPath ),
+                      []( const auto &s ) { return *s; } );
+    };
+    /* If path is absolute set `subtree', `systems', and `stabilities'. */
+    if ( std::find( getDefaultSubtrees().begin(),
+                    getDefaultSubtrees().end(),
+                    this->path->front() ) != getDefaultSubtrees().end() ) {
+      if ( this->path->size() < 3 ) {
+        throw FloxException(
+          "Absolute attribute paths must have at least three elements" );
+      }
+      Subtree subtree = Subtree::parseSubtree( *this->path->at( 0 ) );
+      if ( this->path->at( 1 ).has_value() ) {
+        pqa.systems = std::vector<std::string> { *this->path->at( 1 ) };
+      }
 
-          if ( subtree == ST_CATALOG )
-            {
-              if ( this->path->size() < 4 )
-                {
-                  throw FloxException(
-                    "Absolute attribute paths in catalogs must have at "
-                    "least four elements"
-                  );
-                }
-              pqa.stabilities =
-                std::vector<std::string> { * this->path->at( 2 ) };
-              fillRelPath( 3 );
-            }
-          else
-            {
-              fillRelPath( 2 );
-            }
-          pqa.subtrees = std::vector<Subtree> { subtree };
+      if ( subtree == ST_CATALOG ) {
+        if ( this->path->size() < 4 ) {
+          throw FloxException(
+            "Absolute attribute paths in catalogs must have at "
+            "least four elements" );
         }
-      else
-        {
-          fillRelPath( 0 );
-        }
-      pqa.relPath = std::move( relPath );
+        pqa.stabilities = std::vector<std::string> { *this->path->at( 2 ) };
+        fillRelPath( 3 );
+      } else {
+        fillRelPath( 2 );
+      }
+      pqa.subtrees = std::vector<Subtree> { subtree };
+    } else {
+      fillRelPath( 0 );
     }
+    pqa.relPath = std::move( relPath );
+  }
 
   return pqa;
 }
@@ -137,14 +118,14 @@ PkgDescriptorRaw::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 
 /* -------------------------------------------------------------------------- */
 
-}  /* End namespaces `flox::resolver' */
+}  // namespace flox::resolver
 
 /* -------------------------------------------------------------------------- */
 
 /* Instantiate templates. */
 namespace flox::pkgdb {
-  template struct QueryParams<resolver::PkgDescriptorRaw>;
-}  /* End namespaces `flox::pkgdb' */
+template struct QueryParams<resolver::PkgDescriptorRaw>;
+}  // namespace flox::pkgdb
 
 
 /* -------------------------------------------------------------------------- *

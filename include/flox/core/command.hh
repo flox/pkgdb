@@ -10,13 +10,13 @@
 #pragma once
 
 #include <filesystem>
-#include <optional>
 #include <memory>
+#include <optional>
 
 #include <argparse/argparse.hpp>
 
-#include "flox/core/types.hh"
 #include "flox/core/nix-state.hh"
+#include "flox/core/types.hh"
 #include "flox/core/util.hh"
 #include "flox/flox-flake.hh"
 #include "flox/registry.hh"
@@ -45,51 +45,49 @@ namespace flox::command {
  *   } Verbosity;
  */
 struct VerboseParser : public argparse::ArgumentParser {
-  explicit VerboseParser( const std::string & name
-                        , const std::string & version = "0.1.0"
-                        );
-};  /* End struct `VerboseParser' */
+  explicit VerboseParser( const std::string & name,
+                          const std::string & version = "0.1.0" );
+}; /* End struct `VerboseParser' */
 
 
 /* -------------------------------------------------------------------------- */
 
 /** @brief Extend a command's state blob with a single @a RegistryInput. */
-class InlineInputMixin : virtual public NixState
-{
+class InlineInputMixin : virtual public NixState {
 
-  private:
+private:
+  RegistryInput registryInput;
 
-    RegistryInput registryInput;
-
-  protected:
-
-    /**
-     * @brief Fill @a registryInput by parsing a flake ref.
-     * @param flakeRef A flake reference as a URL string or JSON attribute set.
-     */
-      void
-    parseFlakeRef( const std::string & flakeRef )
-    {
-      this->registryInput.from = std::make_shared<nix::FlakeRef>(
-        flox::parseFlakeRef( flakeRef )
-      );
-    }
+protected:
+  /**
+   * @brief Fill @a registryInput by parsing a flake ref.
+   * @param flakeRef A flake reference as a URL string or JSON attribute set.
+   */
+  void
+  parseFlakeRef( const std::string & flakeRef ) {
+    this->registryInput.from =
+      std::make_shared<nix::FlakeRef>( flox::parseFlakeRef( flakeRef ) );
+  }
 
 
-  public:
+public:
+  argparse::Argument &
+  addSubtreeArg( argparse::ArgumentParser & parser );
+  argparse::Argument &
+  addStabilityArg( argparse::ArgumentParser & parser );
+  argparse::Argument &
+  addFlakeRefArg( argparse::ArgumentParser & parser );
 
-    argparse::Argument & addSubtreeArg(   argparse::ArgumentParser & parser );
-    argparse::Argument & addStabilityArg( argparse::ArgumentParser & parser );
-    argparse::Argument & addFlakeRefArg(  argparse::ArgumentParser & parser );
+  /**
+   * @brief Return the parsed @a RegistryInput.
+   * @return The parsed @a RegistryInput.
+   */
+  [[nodiscard]] const RegistryInput &
+  getRegistryInput() {
+    return this->registryInput;
+  }
 
-    /**
-     * @brief Return the parsed @a RegistryInput.
-     * @return The parsed @a RegistryInput.
-     */
-    [[nodiscard]]
-    const RegistryInput & getRegistryInput() { return this->registryInput; }
-
-};  /* End struct `InlineInputMixin' */
+}; /* End struct `InlineInputMixin' */
 
 
 /* -------------------------------------------------------------------------- */
@@ -105,7 +103,8 @@ struct AttrPathMixin {
    * If no system is given use the current system.
    * If we're searching a catalog and no stability is given, use "stable".
    */
-  argparse::Argument & addAttrPathArgs( argparse::ArgumentParser & parser );
+  argparse::Argument &
+  addAttrPathArgs( argparse::ArgumentParser & parser );
 
   /**
    * @brief Sets fallback `attrPath` to a package set.
@@ -114,53 +113,58 @@ struct AttrPathMixin {
    * If `attrPath` is one element then add "current system" as `<SYSTEM>`.
    * If `attrPath` is a catalog with no stability use `stable`.
    */
-  void fixupAttrPath();
+  void
+  fixupAttrPath();
 
-};  /* End struct `AttrPathMixin' */
+}; /* End struct `AttrPathMixin' */
 
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief Extend a command state blob with registry inputs loaded from "path". */
+/** @brief Extend a command state blob with registry inputs loaded from "path".
+ */
 struct RegistryFileMixin {
 
   std::optional<std::filesystem::path> registryPath;
-  std::optional<RegistryRaw> registryRaw;
+  std::optional<RegistryRaw>           registryRaw;
 
-  protected:
-    /**
-     * @brief Loads the registry.
-     * 
-     * Requires that the registry file is already set.
-     * 
-     */
-    void loadRegistry();
+protected:
+  /**
+   * @brief Loads the registry.
+   *
+   * Requires that the registry file is already set.
+   *
+   */
+  void
+  loadRegistry();
 
-  public:
+public:
+  /**
+   * @brief Sets the path to the registry file to load.
+   *
+   */
+  argparse::Argument &
+  addRegistryFileArg( argparse::ArgumentParser & parser );
 
-    /**
-     * @brief Sets the path to the registry file to load.
-     *
-     */
-    argparse::Argument & addRegistryFileArg( argparse::ArgumentParser & parser );
+  /**
+   * @brief Sets the path to the registry file.
+   *
+   */
+  void
+  setRegistryPath( const std::filesystem::path & path );
 
-    /**
-     * @brief Sets the path to the registry file.
-     * 
-     */
-    void setRegistryPath(const std::filesystem::path & path);
+  /**
+   * @brief Returns the @a RegistryRaw from the provided file path.
+   *
+   */
+  const RegistryRaw &
+  getRegistryRaw();
 
-    /**
-     * @brief Returns the @a RegistryRaw from the provided file path.
-     * 
-     */
-    const RegistryRaw & getRegistryRaw();
-
-};  /* End struct `RegistryFileMixin' */
+}; /* End struct `RegistryFileMixin' */
 
 /* -------------------------------------------------------------------------- */
 
-}  /* End namespaces `flox::command' */
+}  // namespace flox::command
 
 
 /* -------------------------------------------------------------------------- *

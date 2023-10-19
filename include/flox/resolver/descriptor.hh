@@ -10,15 +10,15 @@
 
 #pragma once
 
-#include <string>
 #include <functional>
+#include <string>
 #include <vector>
 
 #include <nlohmann/json.hpp>
 
 #include "flox/pkgdb/pkg-query.hh"
-#include "flox/resolver/params.hh"
 #include "flox/registry.hh"
+#include "flox/resolver/params.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -36,48 +36,47 @@ namespace flox::resolver {
  */
 struct ManifestDescriptorRaw {
 
-  public:
+public:
+  /** Match `name`, `pname`, or `pkgAttrName` */
+  std::optional<std::string> name;
 
-    /** Match `name`, `pname`, or `pkgAttrName` */
-    std::optional<std::string> name;
+  /** Match `version` or `semver` if a modifier is present. */
+  std::optional<std::string> version;
 
-    /** Match `version` or `semver` if a modifier is present. */
-    std::optional<std::string> version;
+  /** Match a catalog stability. */
+  std::optional<std::string> stability;
 
-    /** Match a catalog stability. */
-    std::optional<std::string> stability;
+  /** @brief A dot separated attribut path, or list representation. */
+  using Path = std::variant<std::string, flox::AttrPath>;
+  /** Match a relative path. */
+  std::optional<Path> path;
 
-    /** @brief A dot separated attribut path, or list representation. */
-    using Path = std::variant<std::string, flox::AttrPath>;
-    /** Match a relative path. */
-    std::optional<Path> path;
+  /**
+   * @brief A dot separated attribut path, or list representation.
+   *        May contain `null` members to represent _globs_.
+   */
+  using AbsPath = std::variant<std::string, AttrPathGlob>;
+  /** Match an absolute path, allowing globs for `system`. */
+  std::optional<AbsPath> absPath;
 
-    /**
-     * @brief A dot separated attribut path, or list representation.
-     *        May contain `null` members to represent _globs_.
-     */
-    using AbsPath = std::variant<std::string, AttrPathGlob>;
-    /** Match an absolute path, allowing globs for `system`. */
-    std::optional<AbsPath> absPath;
+  /** Only resolve for a given set of systems. */
+  std::optional<std::vector<std::string>> systems;
 
-    /** Only resolve for a given set of systems. */
-    std::optional<std::vector<std::string>> systems;
+  /** Whether resoution is allowed to fail without producing errors. */
+  std::optional<bool> optional;
 
-    /** Whether resoution is allowed to fail without producing errors. */
-    std::optional<bool> optional;
+  /** Named _group_ that the package is a member of. */
+  std::optional<std::string> packageGroup;
 
-    /** Named _group_ that the package is a member of. */
-    std::optional<std::string> packageGroup;
-
-    /** Force resolution is a given input or _flake reference_. */
-      std::optional<std::variant<std::string, nix::fetchers::Attrs>>
+  /** Force resolution is a given input or _flake reference_. */
+  std::optional<std::variant<std::string, nix::fetchers::Attrs>>
     packageRepository;
 
-    /** Relative path to a `nix` expression file to be evaluated. */
-    std::optional<std::string> input;
+  /** Relative path to a `nix` expression file to be evaluated. */
+  std::optional<std::string> input;
 
 
-};  /* End struct `ManifestDescriptorRaw' */
+}; /* End struct `ManifestDescriptorRaw' */
 
 
 /* -------------------------------------------------------------------------- */
@@ -92,18 +91,17 @@ struct ManifestDescriptorRaw {
  * @brief Convert an @a flox::resolver::ManifestDescriptorRaw to a JSON object.
  */
 /* Generate to_json/from_json functions. */
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT( ManifestDescriptorRaw
-                                               , name
-                                               , version
-                                               , stability
-                                               , path
-                                               , absPath
-                                               , systems
-                                               , optional
-                                               , packageGroup
-                                               , packageRepository
-                                               , input
-                                               )
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT( ManifestDescriptorRaw,
+                                                 name,
+                                                 version,
+                                                 stability,
+                                                 path,
+                                                 absPath,
+                                                 systems,
+                                                 optional,
+                                                 packageGroup,
+                                                 packageRepository,
+                                                 input )
 
 
 /* -------------------------------------------------------------------------- */
@@ -114,65 +112,66 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT( ManifestDescriptorRaw
  */
 struct ManifestDescriptor {
 
-  public:
+public:
+  /** Match `name`, `pname`, or `pkgAttrName` */
+  std::optional<std::string> name;
 
-    /** Match `name`, `pname`, or `pkgAttrName` */
-    std::optional<std::string> name;
+  /** Whether resoution is allowed to fail without producing errors. */
+  bool optional = false;
 
-    /** Whether resoution is allowed to fail without producing errors. */
-    bool optional = false;
+  /** Named _group_ that the package is a member of. */
+  std::optional<std::string> group;
 
-    /** Named _group_ that the package is a member of. */
-    std::optional<std::string> group;
+  /** Match `version`. */
+  std::optional<std::string> version;
 
-    /** Match `version`. */
-    std::optional<std::string> version;
+  /** Match a semantic version range. */
+  std::optional<std::string> semver;
 
-    /** Match a semantic version range. */
-    std::optional<std::string> semver;
+  /** Match a subtree. */
+  std::optional<Subtree> subtree;
 
-    /** Match a subtree. */
-    std::optional<Subtree> subtree;
+  /** Only resolve for a given set of systems. */
+  std::optional<std::vector<std::string>> systems;
 
-    /** Only resolve for a given set of systems. */
-    std::optional<std::vector<std::string>> systems;
+  /** Match a catalog stability. */
+  std::optional<std::string> stability;
 
-    /** Match a catalog stability. */
-    std::optional<std::string> stability;
+  /** Match a relative attribute path. */
+  std::optional<flox::AttrPath> path;
 
-    /** Match a relative attribute path. */
-    std::optional<flox::AttrPath> path;
-
-    /** Force resolution is a given input, _flake reference_, or file. */
-    std::optional<std::variant<nix::FlakeRef, std::string>> input;
-
-
-    ManifestDescriptor() = default;
-
-    explicit ManifestDescriptor( const ManifestDescriptorRaw & raw );
+  /** Force resolution is a given input, _flake reference_, or file. */
+  std::optional<std::variant<nix::FlakeRef, std::string>> input;
 
 
-    /** @brief Reset to default state. */
-    void clear();
+  ManifestDescriptor() = default;
 
-    /**
-     * @brief Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to
-     *        lookup packages.
-     *
-     * NOTE: This DOES NOT clear @a pqa before filling it.
-     * This is intended to be used after filling @a pqa with global preferences.
-     * @param pqa A set of query args to _fill_ with preferences.
-     * @return A reference to the modified query args.
-     */
-    pkgdb::PkgQueryArgs & fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
+  explicit ManifestDescriptor( const ManifestDescriptorRaw & raw );
 
 
-};  /* End struct `ManifestDescriptor' */
+  /** @brief Reset to default state. */
+  void
+  clear();
+
+  /**
+   * @brief Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to
+   *        lookup packages.
+   *
+   * NOTE: This DOES NOT clear @a pqa before filling it.
+   * This is intended to be used after filling @a pqa with global preferences.
+   * @param pqa A set of query args to _fill_ with preferences.
+   * @return A reference to the modified query args.
+   */
+  pkgdb::PkgQueryArgs &
+  fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
+
+
+}; /* End struct `ManifestDescriptor' */
 
 
 /* -------------------------------------------------------------------------- */
 
-}  /* End namespaces `flox::resolver' */
+}  // namespace flox::resolver
 
 
 /* -------------------------------------------------------------------------- *

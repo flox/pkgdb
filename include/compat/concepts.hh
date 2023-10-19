@@ -31,7 +31,7 @@ namespace std {
  * instances can safely be destroyed at the end of their lifetime
  * ( including reference types ).
  */
-  template <class T>
+template<class T>
 concept destructible = std::is_nothrow_destructible_v<T>;
 
 
@@ -41,7 +41,7 @@ concept destructible = std::is_nothrow_destructible_v<T>;
  * The `constructible_from` concept specifies that a variable of type @a T can
  * be initialized with the given set of argument types @a Args....
  */
-  template <class T, class... Args>
+template<class T, class... Args>
 concept constructible_from =
   std::destructible<T> && std::is_constructible_v<T, Args...>;
 
@@ -54,10 +54,9 @@ concept constructible_from =
  * implicitly and explicitly converted to the type @a To, and the two forms of
  * conversion are equivalent.
  */
-  template <class From, class To>
-concept convertible_to =
-  std::is_convertible_v<From, To> &&
-  requires { static_cast<To>( std::declval<From>() ); };
+template<class From, class To>
+concept convertible_to = std::is_convertible_v<From, To> &&
+                         requires { static_cast<To>( std::declval<From>() ); };
 
 
 /* -------------------------------------------------------------------------- */
@@ -69,7 +68,7 @@ concept convertible_to =
  * Note that this behavior is different to `std::is_base_of` when @a Base is a
  * private or protected base of @a Derived.
  */
-  template<class Derived, class Base>
+template<class Derived, class Base>
 concept derived_from =
   std::is_base_of_v<Base, Derived> &&
   std::is_convertible_v<const volatile Derived *, const volatile Base *>;
@@ -77,7 +76,7 @@ concept derived_from =
 
 /* -------------------------------------------------------------------------- */
 
-}  /* End namespace `std' */
+}  // namespace std
 
 /* -------------------------------------------------------------------------- */
 
