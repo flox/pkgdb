@@ -34,12 +34,14 @@ class ResolverState : public pkgdb::PkgDbRegistryMixin
 {
 
 private:
+
   RegistryRaw registryRaw; /**< Flake inputs to resolve in. */
 
   pkgdb::QueryPreferences preferences; /**< _Global_ resolution settings. */
 
 
 protected:
+
   /* From `PkgDbRegistryMixin':
    *   std::shared_ptr<nix::Store>                         store
    *   bool                                                force    = false
@@ -54,6 +56,7 @@ protected:
 
 
 public:
+
   ResolverState( RegistryRaw registry, pkgdb::QueryPreferences preferences )
     : registryRaw( std::move( registry ) )
     , preferences( std::move( preferences ) )

@@ -134,14 +134,14 @@ void
 PkgDbInput::scrapeSystems( const std::vector<std::string> & systems )
 {
   /* Set fallbacks */
-  std::vector<std::string> stabilities =
-    this->stabilities.value_or( std::vector<std::string> { "stable" } );
+  std::vector<std::string> stabilities
+    = this->stabilities.value_or( std::vector<std::string> { "stable" } );
 
   /* Loop and scrape over `subtrees', `systems', and `stabilities'. */
   for ( const auto & subtree : this->getSubtrees() )
     {
-      flox::AttrPath prefix = { static_cast<std::string>(
-        to_string( subtree ) ) };
+      flox::AttrPath prefix
+        = { static_cast<std::string>( to_string( subtree ) ) };
       for ( const auto & system : systems )
         {
           prefix.emplace_back( system );
@@ -182,9 +182,9 @@ PkgDbRegistryMixin::initRegistry()
     {
       nix::ref<nix::Store>     store = this->getStore();
       pkgdb::PkgDbInputFactory factory( store );  // TODO: cacheDir
-      this->registry =
-        std::make_shared<Registry<PkgDbInputFactory>>( this->getRegistryRaw(),
-                                                       factory );
+      this->registry
+        = std::make_shared<Registry<PkgDbInputFactory>>( this->getRegistryRaw(),
+                                                         factory );
     }
 }
 

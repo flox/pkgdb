@@ -98,8 +98,8 @@ yamlToJSON( std::string_view yaml )
     }
   catch ( const std::exception &e )
     {
-      throw FloxException( "while parsing a YAML string: " +
-                           std::string( e.what() ) );
+      throw FloxException( "while parsing a YAML string: "
+                           + std::string( e.what() ) );
     }
   catch ( ... )
     {

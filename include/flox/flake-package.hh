@@ -46,9 +46,11 @@ class FlakePackage : public Package
 {
 
 public:
+
   friend class pkgdb::PkgDb;
 
 private:
+
   Cursor   _cursor;
   AttrPath _pathS;
 
@@ -73,6 +75,7 @@ private:
    */
 
 public:
+
   FlakePackage( Cursor cursor, const AttrPath & path, bool checkDrv = true )
     : _cursor( cursor )
     , _pathS( path )
@@ -184,8 +187,8 @@ public:
   getDescription() const override
   {
     if ( ! this->_hasMetaAttr ) { return std::nullopt; }
-    MaybeCursor l =
-      this->_cursor->getAttr( "meta" )->maybeGetAttr( "description" );
+    MaybeCursor l
+      = this->_cursor->getAttr( "meta" )->maybeGetAttr( "description" );
     if ( l == nullptr ) { return std::nullopt; }
     try
       {

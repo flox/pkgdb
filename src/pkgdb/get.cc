@@ -138,11 +138,11 @@ GetCommand::runPath()
 int
 GetCommand::runFlake()
 {
-  nlohmann::json flakeInfo = {
-    { "string", this->db->lockedRef.string },
-    { "attrs", this->db->lockedRef.attrs },
-    { "fingerprint", this->db->fingerprint.to_string( nix::Base16, false ) }
-  };
+  nlohmann::json flakeInfo
+    = { { "string", this->db->lockedRef.string },
+        { "attrs", this->db->lockedRef.attrs },
+        { "fingerprint",
+          this->db->fingerprint.to_string( nix::Base16, false ) } };
   std::cout << flakeInfo.dump() << std::endl;
   return EXIT_SUCCESS;
 }

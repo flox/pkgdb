@@ -61,6 +61,7 @@ class SearchCommand
 {
 
 private:
+
   SearchParams           params; /**< Query arguments and inputs */
   command::VerboseParser parser; /**< Query arguments and inputs parser */
 
@@ -85,6 +86,7 @@ private:
 
 
 public:
+
   SearchCommand();
 
   /** @brief Display a single row from the given @a input. */

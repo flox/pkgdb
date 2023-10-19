@@ -43,11 +43,11 @@ resolve_v0( ResolverState & state, const Descriptor & descriptor, bool one )
       if ( descriptor.stability.has_value() )
         {
           /* If the input lacks this stability, skip. */
-          if ( ( args.stabilities.has_value() ) &&
-               ( std::find( args.stabilities->begin(),
-                            args.stabilities->end(),
-                            *descriptor.stability ) ==
-                 args.stabilities->end() ) )
+          if ( ( args.stabilities.has_value() )
+               && ( std::find( args.stabilities->begin(),
+                               args.stabilities->end(),
+                               *descriptor.stability )
+                    == args.stabilities->end() ) )
             {
               continue;
             }
@@ -56,11 +56,11 @@ resolve_v0( ResolverState & state, const Descriptor & descriptor, bool one )
         }
 
       /* If the input lacks the subtree we need then skip. */
-      if ( args.subtrees.has_value() && ( descriptor.subtree.has_value() ) &&
-           ( std::find( args.subtrees->begin(),
-                        args.subtrees->end(),
-                        Subtree( *descriptor.subtree ) ) ==
-             args.subtrees->end() ) )
+      if ( args.subtrees.has_value() && ( descriptor.subtree.has_value() )
+           && ( std::find( args.subtrees->begin(),
+                           args.subtrees->end(),
+                           Subtree( *descriptor.subtree ) )
+                == args.subtrees->end() ) )
         {
           continue;
         }
@@ -92,8 +92,8 @@ resolve_v0( ResolverState & state, const Descriptor & descriptor, bool one )
           info.erase( "absPath" );
 
           rsl.emplace_back( Resolved {
-            .input =
-              Resolved::Input { .name = name, .locked = std::move( locked ) },
+            .input
+            = Resolved::Input { .name = name, .locked = std::move( locked ) },
             .path = std::move( absPath ),
             .info = std::move( info ) } );
           if ( one ) { return rsl; }

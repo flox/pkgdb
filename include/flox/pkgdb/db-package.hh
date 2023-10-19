@@ -29,6 +29,7 @@ class DbPackage : public RawPackage
 {
 
 protected:
+
   /* From `RawPackage':
    *   AttrPath                    path;
    *   std::string                 name;
@@ -47,12 +48,14 @@ protected:
   std::filesystem::path dbPath; /**< Path to the database. */
 
 private:
+
   /** @brief Fill @a flox::RawPackage fields by reading them from @a pkgdb. */
   void
   initRawPackage( PkgDbReadOnly & pkgdb );
 
 
 public:
+
   DbPackage( PkgDbReadOnly & pkgdb, row_id pkgId )
     : pkgId( pkgId ), dbPath( pkgdb.dbPath )
   {

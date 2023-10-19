@@ -22,16 +22,16 @@ FlakePackage::init( bool checkDrv )
     {
       throw FloxException(
         "Package::init(): Package attribute paths must have at least 3 "
-        "elements - the path '" +
-        this->_cursor->getAttrPathStr() + "' is too short." );
+        "elements - the path '"
+        + this->_cursor->getAttrPathStr() + "' is too short." );
     }
 
   if ( checkDrv && ( ! this->_cursor->isDerivation() ) )
     {
       throw FloxException(
-        "Package::init(): Packages must be derivations but the attrset at '" +
-        this->_cursor->getAttrPathStr() +
-        "' does not set `.type = \"derivation\"'." );
+        "Package::init(): Packages must be derivations but the attrset at '"
+        + this->_cursor->getAttrPathStr()
+        + "' does not set `.type = \"derivation\"'." );
     }
 
   /* Subtree type */
@@ -41,9 +41,9 @@ FlakePackage::init( bool checkDrv )
     }
   catch ( const std::invalid_argument & /* unused */ )
     {
-      throw FloxException( "FlakePackage::init(): Invalid subtree name '" +
-                           this->_pathS[0] + "' at path '" +
-                           this->_cursor->getAttrPathStr() + "'." );
+      throw FloxException( "FlakePackage::init(): Invalid subtree name '"
+                           + this->_pathS[0] + "' at path '"
+                           + this->_cursor->getAttrPathStr() + "'." );
     }
 
   this->_system = this->_pathS[1];
@@ -102,8 +102,8 @@ FlakePackage::getOutputsToInstall() const
 {
   if ( this->_hasMetaAttr )
     {
-      MaybeCursor cursor =
-        this->_cursor->getAttr( "meta" )->maybeGetAttr( "outputsToInstall" );
+      MaybeCursor cursor
+        = this->_cursor->getAttr( "meta" )->maybeGetAttr( "outputsToInstall" );
       if ( cursor != nullptr ) { return cursor->getListOfStrings(); }
     }
   std::vector<std::string> rsl;
@@ -124,8 +124,8 @@ FlakePackage::isBroken() const
   if ( ! this->_hasMetaAttr ) { return std::nullopt; }
   try
     {
-      MaybeCursor cursor =
-        this->_cursor->getAttr( "meta" )->maybeGetAttr( "broken" );
+      MaybeCursor cursor
+        = this->_cursor->getAttr( "meta" )->maybeGetAttr( "broken" );
       if ( cursor == nullptr ) { return std::nullopt; }
       return cursor->getBool();
     }
@@ -141,8 +141,8 @@ FlakePackage::isUnfree() const
   if ( ! this->_hasMetaAttr ) { return std::nullopt; }
   try
     {
-      MaybeCursor cursor =
-        this->_cursor->getAttr( "meta" )->maybeGetAttr( "unfree" );
+      MaybeCursor cursor
+        = this->_cursor->getAttr( "meta" )->maybeGetAttr( "unfree" );
       if ( cursor == nullptr ) { return std::nullopt; }
       return cursor->getBool();
     }

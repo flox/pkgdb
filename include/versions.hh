@@ -30,9 +30,11 @@ namespace versions {
 class VersionException : public std::exception
 {
 private:
+
   std::string msg;
 
 public:
+
   VersionException( std::string_view msg ) : msg( msg ) {}
   const char *
   what() const noexcept override

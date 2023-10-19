@@ -238,10 +238,8 @@ namespace flox {
 inline static const std::vector<std::string> &
 getDefaultSystems()
 {
-  static const std::vector<std::string> defaultSystems = { "x86_64-linux",
-                                                           "aarch64-linux",
-                                                           "x86_64-darwin",
-                                                           "aarch64-darwin" };
+  static const std::vector<std::string> defaultSystems
+    = { "x86_64-linux", "aarch64-linux", "x86_64-darwin", "aarch64-darwin" };
   return defaultSystems;
 }
 
@@ -250,9 +248,8 @@ getDefaultSystems()
 inline static const std::vector<std::string> &
 getDefaultSubtrees()
 {
-  static const std::vector<std::string> defaultSubtrees = { "catalog",
-                                                            "packages",
-                                                            "legacyPackages" };
+  static const std::vector<std::string> defaultSubtrees
+    = { "catalog", "packages", "legacyPackages" };
   return defaultSubtrees;
 }
 
@@ -261,11 +258,8 @@ getDefaultSubtrees()
 inline static const std::vector<std::string> &
 getDefaultCatalogStabilities()
 {
-  static const std::vector<std::string> defaultCatalogStabilities = {
-    "stable",
-    "staging",
-    "unstable"
-  };
+  static const std::vector<std::string> defaultCatalogStabilities
+    = { "stable", "staging", "unstable" };
   return defaultCatalogStabilities;
 }
 
@@ -293,8 +287,8 @@ parseFlakeRef( const std::string & flakeRef )
 {
   return ( flakeRef.find( '{' ) == std::string::npos )
            ? nix::parseFlakeRef( flakeRef )
-           : nix::FlakeRef::fromAttrs( nix::fetchers::jsonToAttrs(
-               nlohmann::json::parse( flakeRef ) ) );
+           : nix::FlakeRef::fromAttrs(
+             nix::fetchers::jsonToAttrs( nlohmann::json::parse( flakeRef ) ) );
 }
 
 

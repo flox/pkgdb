@@ -59,9 +59,11 @@ struct InputPreferences
   virtual ~InputPreferences() = default;
 
   InputPreferences &
-  operator=( const InputPreferences & ) = default;
+  operator=( const InputPreferences & )
+    = default;
   InputPreferences &
-  operator=( InputPreferences && ) = default;
+  operator=( InputPreferences && )
+    = default;
 
 
   /** @brief Reset to default state. */
@@ -105,12 +107,12 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT( InputPreferences,
  *        @a flox::InputPreferences.
  */
 template<typename T>
-concept input_preferences_typename =
-  std::is_base_of<InputPreferences, T>::value && requires( T obj ) {
-    {
-      obj.getFlakeRef()
-    } -> std::convertible_to<nix::ref<nix::FlakeRef>>;
-  };
+concept input_preferences_typename
+  = std::is_base_of<InputPreferences, T>::value && requires( T obj ) {
+      {
+        obj.getFlakeRef()
+      } -> std::convertible_to<nix::ref<nix::FlakeRef>>;
+    };
 
 
 /* -------------------------------------------------------------------------- */
@@ -198,6 +200,7 @@ class RegistryInputFactory
 {
 
 public:
+
   using input_type = RegistryInput;
 
   /** @brief Construct an input from a @a flox::RegistryInput. */
@@ -282,9 +285,11 @@ struct RegistryRaw
   virtual ~RegistryRaw() = default;
 
   RegistryRaw &
-  operator=( const RegistryRaw & ) = default;
+  operator=( const RegistryRaw & )
+    = default;
   RegistryRaw &
-  operator=( RegistryRaw && ) = default;
+  operator=( RegistryRaw && )
+    = default;
 
   /**
    * @abrief Return an ordered list of input names.
@@ -374,6 +379,7 @@ class Registry
 {
 
 private:
+
   /**
    * Orginal raw registry.
    * This is saved to allow the raw user input to be recorded in lockfiles.
@@ -387,6 +393,7 @@ private:
 
 
 public:
+
   using input_type = typename FactoryType::input_type;
 
 
@@ -439,10 +446,10 @@ public:
   [[nodiscard]] std::shared_ptr<typename FactoryType::input_type>
   get( const std::string & name ) const noexcept
   {
-    const auto maybeInput =
-      std::find_if( this->inputs.begin(),
-                    this->inputs.end(),
-                    [&]( const auto & pair ) { return pair.first == name; } );
+    const auto maybeInput
+      = std::find_if( this->inputs.begin(),
+                      this->inputs.end(),
+                      [&]( const auto & pair ) { return pair.first == name; } );
     if ( maybeInput == this->inputs.end() ) { return nullptr; }
     return maybeInput->second;
   }
@@ -456,8 +463,8 @@ public:
   [[nodiscard]] std::shared_ptr<typename FactoryType::input_type>
   at( const std::string & name ) const
   {
-    const std::shared_ptr<typename FactoryType::input_type> maybeInput =
-      this->get( name );
+    const std::shared_ptr<typename FactoryType::input_type> maybeInput
+      = this->get( name );
     if ( maybeInput == nullptr )
       {
         throw std::out_of_range( "No such input '" + name + "'" );
@@ -553,6 +560,7 @@ class FloxFlakeInput : public RegistryInput
 {
 
 private:
+
   nix::ref<nix::Store>       store; /**< A `nix` store connection. */
   std::shared_ptr<FloxFlake> flake; /**< A flake with an evaluator. */
   /**
@@ -563,6 +571,7 @@ private:
 
 
 public:
+
   /**
    * @brief Construct a @a flox::FloxFlakeInput from a `nix` store connection
    *        and @a flox::RegistryInput.
@@ -600,6 +609,7 @@ class FloxFlakeInputFactory : NixStoreMixin
 {
 
 public:
+
   using input_type = FloxFlakeInput;
 
   /** @brief Construct a factory using a new `nix` store connection. */

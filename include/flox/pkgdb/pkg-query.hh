@@ -57,9 +57,11 @@ struct PkgDescriptorBase
   virtual ~PkgDescriptorBase() = default;
 
   PkgDescriptorBase &
-  operator=( const PkgDescriptorBase & ) = default;
+  operator=( const PkgDescriptorBase & )
+    = default;
   PkgDescriptorBase &
-  operator=( PkgDescriptorBase && ) = default;
+  operator=( PkgDescriptorBase && )
+    = default;
 
   /** @brief Reset to default state. */
   virtual void
@@ -153,6 +155,7 @@ struct PkgQueryArgs : public PkgDescriptorBase
   {
 
   public:
+
     enum error_code {
       PQEC_ERROR = 1 /**< Generic Exception */
       /** Name/{pname,version,semver} are mutually exclusive */
@@ -177,10 +180,12 @@ struct PkgQueryArgs : public PkgDescriptorBase
     } errorCode;
 
   protected:
+
     static std::string
     errorMessage( const error_code & ecode );
 
   public:
+
     explicit InvalidArgException( const error_code & ecode = PQEC_ERROR )
       : flox::FloxException( InvalidArgException::errorMessage( ecode ) )
       , errorCode( ecode )
@@ -221,6 +226,7 @@ class PkgQuery : public PkgQueryArgs
 {
 
 private:
+
   /** Stream used to build up the `SELECT` block. */
   std::stringstream selects;
   /** Indicates if @a selects is empty so we know whether to add separator. */
@@ -333,6 +339,7 @@ private:
 
 
 public:
+
   PkgQuery() { this->init(); }
 
   explicit PkgQuery( const PkgQueryArgs & params ) : PkgQueryArgs( params )

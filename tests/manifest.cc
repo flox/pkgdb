@@ -352,8 +352,8 @@ test_parseManifestDescriptor_path4()
   EXPECT( descriptor.subtree.has_value() );
   EXPECT_EQ( *descriptor.subtree, flox::ST_LEGACY );
   EXPECT( descriptor.systems.has_value() );
-  EXPECT( ( *descriptor.systems ) ==
-          ( std::vector<std::string> { "x86_64-linux" } ) );
+  EXPECT( ( *descriptor.systems )
+          == ( std::vector<std::string> { "x86_64-linux" } ) );
   EXPECT( ! descriptor.stability.has_value() );
   EXPECT( descriptor.path.has_value() );
   EXPECT( ( *descriptor.path ) == ( flox::AttrPath { "hello" } ) );
@@ -378,8 +378,8 @@ test_parseManifestDescriptor_path5()
   EXPECT( descriptor.subtree.has_value() );
   EXPECT_EQ( *descriptor.subtree, flox::ST_CATALOG );
   EXPECT( descriptor.systems.has_value() );
-  EXPECT( ( *descriptor.systems ) ==
-          ( std::vector<std::string> { "x86_64-linux" } ) );
+  EXPECT( ( *descriptor.systems )
+          == ( std::vector<std::string> { "x86_64-linux" } ) );
   EXPECT( descriptor.stability.has_value() );
   EXPECT_EQ( *descriptor.stability, "stable" );
   EXPECT( descriptor.path.has_value() );

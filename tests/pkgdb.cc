@@ -276,10 +276,10 @@ test_PkgQuery0( flox::pkgdb::PkgDb &db )
   clearTables( db );
 
   /* Make a package */
-  row_id linux =
-    db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-linux" } );
-  row_id desc =
-    db.addOrGetDescriptionId( "A program with a friendly greeting" );
+  row_id linux = db.addOrGetAttrSetId(
+    flox::AttrPath { "legacyPackages", "x86_64-linux" } );
+  row_id desc
+    = db.addOrGetDescriptionId( "A program with a friendly greeting" );
   sqlite3pp::command cmd( db.db, R"SQL(
     INSERT INTO Packages (
       parentId, attrName, name, pname, version, semver, outputs, descriptionId
@@ -356,10 +356,10 @@ test_PkgQuery1( flox::pkgdb::PkgDb &db )
   clearTables( db );
 
   /* Make a package */
-  row_id linux =
-    db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-linux" } );
-  row_id desc =
-    db.addOrGetDescriptionId( "A program with a friendly greeting/farewell" );
+  row_id linux = db.addOrGetAttrSetId(
+    flox::AttrPath { "legacyPackages", "x86_64-linux" } );
+  row_id desc
+    = db.addOrGetDescriptionId( "A program with a friendly greeting/farewell" );
   sqlite3pp::command cmd( db.db, R"SQL(
     INSERT INTO Packages (
       parentId, attrName, name, pname, version, semver, outputs, license
@@ -421,8 +421,8 @@ test_PkgQuery1( flox::pkgdb::PkgDb &db )
 
   /* Run `licenses = ["GPL-3.0-or-later", "BUSL-1.1", "MIT"]' query */
   {
-    qargs.licenses =
-      std::vector<std::string> { "GPL-3.0-or-later", "BUSL-1.1", "MIT" };
+    qargs.licenses
+      = std::vector<std::string> { "GPL-3.0-or-later", "BUSL-1.1", "MIT" };
     flox::pkgdb::PkgQuery qry( qargs );
     qargs.licenses = std::nullopt;
     /* omits NULL licenses */
@@ -451,12 +451,12 @@ test_PkgQuery2( flox::pkgdb::PkgDb &db )
   clearTables( db );
 
   /* Make a package */
-  row_id linux =
-    db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-linux" } );
-  row_id descGreet =
-    db.addOrGetDescriptionId( "A program with a friendly hello" );
-  row_id descFarewell =
-    db.addOrGetDescriptionId( "A program with a friendly farewell" );
+  row_id linux = db.addOrGetAttrSetId(
+    flox::AttrPath { "legacyPackages", "x86_64-linux" } );
+  row_id descGreet
+    = db.addOrGetDescriptionId( "A program with a friendly hello" );
+  row_id descFarewell
+    = db.addOrGetDescriptionId( "A program with a friendly farewell" );
   sqlite3pp::command cmd( db.db, R"SQL(
     INSERT INTO Packages (
       parentId, attrName, name, pname, outputs, descriptionId
@@ -615,10 +615,10 @@ test_getPackages0( flox::pkgdb::PkgDb &db )
   clearTables( db );
 
   /* Make a package */
-  row_id linux =
-    db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-linux" } );
-  row_id desc =
-    db.addOrGetDescriptionId( "A program with a friendly greeting/farewell" );
+  row_id linux = db.addOrGetAttrSetId(
+    flox::AttrPath { "legacyPackages", "x86_64-linux" } );
+  row_id desc
+    = db.addOrGetDescriptionId( "A program with a friendly greeting/farewell" );
   sqlite3pp::command cmd( db.db, R"SQL(
     INSERT INTO Packages (
       parentId, attrName, name, pname, version, semver, outputs, descriptionId
@@ -688,15 +688,15 @@ test_getPackages1( flox::pkgdb::PkgDb &db )
     flox::AttrPath { "catalog", "x86_64-linux", "stable" } );
   row_id unstableLinux = db.addOrGetAttrSetId(
     flox::AttrPath { "catalog", "x86_64-linux", "unstable" } );
-  row_id packagesLinux =
-    db.addOrGetAttrSetId( flox::AttrPath { "packages", "x86_64-linux" } );
+  row_id packagesLinux
+    = db.addOrGetAttrSetId( flox::AttrPath { "packages", "x86_64-linux" } );
   row_id legacyDarwin = db.addOrGetAttrSetId(
     flox::AttrPath { "legacyPackages", "x86_64-darwin" } );
-  row_id packagesDarwin =
-    db.addOrGetAttrSetId( flox::AttrPath { "packages", "x86_64-darwin" } );
+  row_id packagesDarwin
+    = db.addOrGetAttrSetId( flox::AttrPath { "packages", "x86_64-darwin" } );
 
-  row_id desc =
-    db.addOrGetDescriptionId( "A program with a friendly greeting/farewell" );
+  row_id desc
+    = db.addOrGetDescriptionId( "A program with a friendly greeting/farewell" );
 
   sqlite3pp::command cmd( db.db, R"SQL(
     INSERT INTO Packages (
@@ -727,11 +727,11 @@ test_getPackages1( flox::pkgdb::PkgDb &db )
   /* Test `subtrees` ordering */
   {
     qargs.systems = std::vector<std::string> { "x86_64-darwin" };
-    qargs.subtrees =
-      std::vector<flox::Subtree> { flox::ST_PACKAGES, flox::ST_LEGACY };
+    qargs.subtrees
+      = std::vector<flox::Subtree> { flox::ST_PACKAGES, flox::ST_LEGACY };
     EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 5, 4 } ) );
-    qargs.subtrees =
-      std::vector<flox::Subtree> { flox::ST_LEGACY, flox::ST_PACKAGES };
+    qargs.subtrees
+      = std::vector<flox::Subtree> { flox::ST_LEGACY, flox::ST_PACKAGES };
     EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 4, 5 } ) );
     qargs.subtrees = std::nullopt;
     qargs.systems  = std::vector<std::string> {};
@@ -740,11 +740,11 @@ test_getPackages1( flox::pkgdb::PkgDb &db )
   /* Test `systems` ordering */
   {
     qargs.subtrees = std::vector<flox::Subtree> { flox::ST_PACKAGES };
-    qargs.systems =
-      std::vector<std::string> { "x86_64-linux", "x86_64-darwin" };
+    qargs.systems
+      = std::vector<std::string> { "x86_64-linux", "x86_64-darwin" };
     EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 3, 5 } ) );
-    qargs.systems =
-      std::vector<std::string> { "x86_64-darwin", "x86_64-linux" };
+    qargs.systems
+      = std::vector<std::string> { "x86_64-darwin", "x86_64-linux" };
     EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 5, 3 } ) );
     qargs.systems  = std::vector<std::string> {};
     qargs.subtrees = std::nullopt;
@@ -776,8 +776,8 @@ test_getPackages2( flox::pkgdb::PkgDb &db )
   clearTables( db );
 
   /* Make a package */
-  row_id linux =
-    db.addOrGetAttrSetId( flox::AttrPath { "packages", "x86_64-linux" } );
+  row_id linux
+    = db.addOrGetAttrSetId( flox::AttrPath { "packages", "x86_64-linux" } );
 
   sqlite3pp::command cmd( db.db, R"SQL(
     INSERT INTO Packages (
@@ -812,13 +812,13 @@ test_getPackages2( flox::pkgdb::PkgDb &db )
 
   /* Test `preferPreReleases = false' ordering */
   qargs.preferPreReleases = false;
-  EXPECT( db.getPackages( qargs ) ==
-          ( std::vector<row_id> { 3, 1, 2, 5, 6, 7, 8, 4 } ) );
+  EXPECT( db.getPackages( qargs )
+          == ( std::vector<row_id> { 3, 1, 2, 5, 6, 7, 8, 4 } ) );
 
   qargs.preferPreReleases = true;
   /* Test `preferPreReleases = true' ordering */
-  EXPECT( db.getPackages( qargs ) ==
-          ( std::vector<row_id> { 3, 2, 1, 5, 6, 7, 8, 4 } ) );
+  EXPECT( db.getPackages( qargs )
+          == ( std::vector<row_id> { 3, 2, 1, 5, 6, 7, 8, 4 } ) );
 
   return true;
 }
@@ -832,10 +832,10 @@ test_DbPackage0( flox::pkgdb::PkgDb &db )
   clearTables( db );
 
   /* Make a package */
-  row_id linux =
-    db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-linux" } );
-  row_id desc =
-    db.addOrGetDescriptionId( "A program with a friendly greeting/farewell" );
+  row_id linux = db.addOrGetAttrSetId(
+    flox::AttrPath { "legacyPackages", "x86_64-linux" } );
+  row_id desc
+    = db.addOrGetDescriptionId( "A program with a friendly greeting/farewell" );
   sqlite3pp::command cmd( db.db, R"SQL(
     INSERT INTO Packages (
       parentId, attrName, name, pname, version, semver, license, outputs
@@ -854,12 +854,12 @@ test_DbPackage0( flox::pkgdb::PkgDb &db )
         nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
     }
   row_id pkgId = db.db.last_insert_rowid();
-  auto   pkg =
-    flox::pkgdb::DbPackage( static_cast<flox::pkgdb::PkgDbReadOnly &>( db ),
-                            pkgId );
+  auto   pkg
+    = flox::pkgdb::DbPackage( static_cast<flox::pkgdb::PkgDbReadOnly &>( db ),
+                              pkgId );
 
-  EXPECT( pkg.getPathStrs() ==
-          ( flox::AttrPath { "legacyPackages", "x86_64-linux", "hello" } ) );
+  EXPECT( pkg.getPathStrs()
+          == ( flox::AttrPath { "legacyPackages", "x86_64-linux", "hello" } ) );
   EXPECT_EQ( pkg.getFullName(), "hello-2.12" );
   EXPECT_EQ( pkg.getPname(), "hello" );
   EXPECT_EQ( *pkg.getVersion(), "2.12" );
@@ -887,10 +887,10 @@ test_getPackages_semver0( flox::pkgdb::PkgDb &db )
   clearTables( db );
 
   /* Make packages */
-  row_id linux =
-    db.addOrGetAttrSetId( flox::AttrPath { "legacyPackages", "x86_64-linux" } );
-  row_id desc =
-    db.addOrGetDescriptionId( "A program with a friendly greeting/farewell" );
+  row_id linux = db.addOrGetAttrSetId(
+    flox::AttrPath { "legacyPackages", "x86_64-linux" } );
+  row_id desc
+    = db.addOrGetDescriptionId( "A program with a friendly greeting/farewell" );
   sqlite3pp::command cmd( db.db, R"SQL(
     INSERT INTO Packages (
       parentId, attrName, name, pname, version, semver, license, outputs

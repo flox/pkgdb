@@ -97,7 +97,7 @@ struct Subtree
                      : ( str == "catalog" )
                        ? ST_CATALOG
                        : throw std::invalid_argument(
-                           "Invalid subtree '" + std::string( str ) + "'" ) };
+                         "Invalid subtree '" + std::string( str ) + "'" ) };
   }
 
 
@@ -125,11 +125,13 @@ struct Subtree
 
   /** @brief Compare two @a flox::Subtree for equality. */
   [[nodiscard]] constexpr bool
-  operator==( const Subtree & other ) const = default;
+  operator==( const Subtree & other ) const
+    = default;
 
   /** @brief Compare two @a flox::Subtree for inequality. */
   [[nodiscard]] constexpr bool
-  operator!=( const Subtree & other ) const = default;
+  operator!=( const Subtree & other ) const
+    = default;
 
   /** @brief Compare with a @a flox::subtree_type for equality. */
   [[nodiscard]] constexpr bool

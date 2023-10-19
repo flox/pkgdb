@@ -105,8 +105,8 @@ PkgDbReadOnly::loadLockedFlake()
     "SELECT fingerprint, string, attrs FROM LockedFlake LIMIT 1" );
   auto      rsl            = *qry.begin();
   auto      fingerprintStr = rsl.get<std::string>( 0 );
-  nix::Hash fingerprint =
-    nix::Hash::parseNonSRIUnprefixed( fingerprintStr, nix::htSHA256 );
+  nix::Hash fingerprint
+    = nix::Hash::parseNonSRIUnprefixed( fingerprintStr, nix::htSHA256 );
   this->lockedRef.string = rsl.get<std::string>( 1 );
   this->lockedRef.attrs  = nlohmann::json::parse( rsl.get<std::string>( 2 ) );
   /* Check to see if our fingerprint is already known.
@@ -144,8 +144,8 @@ PkgDbReadOnly::getDbVersion()
   static const int base = 10;
 
   return SqlVersions {
-    .tables =
-      static_cast<unsigned>( std::strtoul( tables.c_str(), &end, base ) ),
+    .tables
+    = static_cast<unsigned>( std::strtoul( tables.c_str(), &end, base ) ),
     .views = static_cast<unsigned>( std::strtoul( views.c_str(), &end, base ) )
   };
 }

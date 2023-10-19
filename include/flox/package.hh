@@ -44,13 +44,16 @@ class Package
 {
 
 public:
+
   /** @return attribute path where package is defined */
   virtual AttrPath
-  getPathStrs() const = 0;
+  getPathStrs() const
+    = 0;
 
   /** @return the derivation `name` field. */
   virtual std::string
-  getFullName() const = 0;
+  getFullName() const
+    = 0;
 
   /**
    * @return iff the field `pname` is defined then `pname`, otherwise the
@@ -58,7 +61,8 @@ public:
    *         `nix::DrvName` parsing rules.
    */
   virtual std::string
-  getPname() const = 0;
+  getPname() const
+    = 0;
 
   /**
    * @return iff the field `version` is defined then `version`, otherwise the

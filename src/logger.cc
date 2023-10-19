@@ -28,10 +28,10 @@ namespace flox {
 static bool
 shouldANSI()
 {
-  return isatty( STDERR_FILENO ) &&
-         ( nix::getEnv( "TERM" ).value_or( "dumb" ) != "dumb" ) &&
-         ( ! ( nix::getEnv( "NO_COLOR" ).has_value() ||
-               nix::getEnv( "NOCOLOR" ).has_value() ) );
+  return isatty( STDERR_FILENO )
+         && ( nix::getEnv( "TERM" ).value_or( "dumb" ) != "dumb" )
+         && ( ! ( nix::getEnv( "NO_COLOR" ).has_value()
+                  || nix::getEnv( "NOCOLOR" ).has_value() ) );
 }
 
 
@@ -47,6 +47,7 @@ class FilteredLogger : public nix::Logger
 {
 
 protected:
+
   /**
    * @brief Detect ignored warnings.
    *
@@ -61,8 +62,8 @@ protected:
      * These can come up when an indirect input drops a dependendency
      * between different revisions and isn't particularly interesting
      * to users. */
-    if ( str.find( " has an override for a non-existent input " ) !=
-         std::string::npos )
+    if ( str.find( " has an override for a non-existent input " )
+         != std::string::npos )
       {
         /* Don't ignore with `-v' or if we are dumping logs to a file. */
         return ( ! this->tty ) || ( nix::verbosity < nix::lvlTalkative );
@@ -82,6 +83,7 @@ protected:
 
 
 public:
+
   bool systemd;        /**< Whether we should emit `systemd` style logs. */
   bool tty;            /**< Whether we are connected to a TTY. */
   bool color;          /**< Whether we should emit colors in logs. */
@@ -117,8 +119,8 @@ public:
                    /* ANSI_WARNING */ "\033[35;1m"
                                       "warning:"
                                       /* ANSI_NORMAL */ "\033[0m"
-                                      " " +
-                     msg );
+                                      " "
+                     + msg );
       }
   }
 
@@ -160,8 +162,8 @@ public:
         prefix = std::string( "<" ) + levelChar + ">";
       }
 
-    nix::writeToStderr( prefix + nix::filterANSIEscapes( str, ! this->color ) +
-                        "\n" );
+    nix::writeToStderr( prefix + nix::filterANSIEscapes( str, ! this->color )
+                        + "\n" );
   }
 
 

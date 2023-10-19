@@ -140,6 +140,7 @@ class PkgDbReadOnly
   /* Data */
 
 public:
+
   Fingerprint           fingerprint; /**< Unique hash of associated flake. */
   std::filesystem::path dbPath;      /**< Absolute path to database. */
   SQLiteDb              db;          /**< SQLite3 database handle. */
@@ -166,8 +167,8 @@ public:
   {
     explicit NoSuchDatabase( const PkgDbReadOnly & pdb )
       : PkgDbException(
-          pdb.dbPath,
-          std::string( "No such database '" + pdb.dbPath.string() + "'." ) )
+        pdb.dbPath,
+        std::string( "No such database '" + pdb.dbPath.string() + "'." ) )
     {}
   }; /* End struct `NoSuchDatabase' */
 
@@ -178,12 +179,14 @@ public:
   /* Internal Helpers */
 
 protected:
+
   /** Set @a this `PkgDb` `lockedRef` fields from database metadata. */
   void
   loadLockedFlake();
 
 
 private:
+
   /**
    * @brief Open SQLite3 db connection at @a dbPath.
    *
@@ -199,6 +202,7 @@ private:
   /* Constructors */
 
 protected:
+
   /**
    * @brief Dummy constructor required for child classes so that they can open
    *        databases in read-only mode.
@@ -209,6 +213,7 @@ protected:
 
 
 public:
+
   /**
    * @brief Opens an existing database.
    *

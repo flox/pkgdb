@@ -38,6 +38,7 @@ struct ManifestDescriptorRaw
 {
 
 public:
+
   /** Match `name`, `pname`, or `pkgAttrName` */
   std::optional<std::string> name;
 
@@ -115,6 +116,7 @@ struct ManifestDescriptor
 {
 
 public:
+
   /** Match `name`, `pname`, or `pkgAttrName` */
   std::optional<std::string> name;
 

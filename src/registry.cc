@@ -60,8 +60,8 @@ RegistryRaw::getOrder() const
     this->priority.cend() );
   for ( const auto &[key, _] : this->inputs )
     {
-      if ( std::find( this->priority.begin(), this->priority.end(), key ) ==
-           this->priority.end() )
+      if ( std::find( this->priority.begin(), this->priority.end(), key )
+           == this->priority.end() )
         {
           order.emplace_back( key );
         }
@@ -76,8 +76,8 @@ void
 from_json( const nlohmann::json &jfrom, RegistryInput &rip )
 {
   from_json( jfrom, dynamic_cast<InputPreferences &>( rip ) );
-  rip.from =
-    std::make_shared<nix::FlakeRef>( jfrom.at( "from" ).get<nix::FlakeRef>() );
+  rip.from = std::make_shared<nix::FlakeRef>(
+    jfrom.at( "from" ).get<nix::FlakeRef>() );
 }
 
 
@@ -104,8 +104,8 @@ RegistryRaw::fillPkgQueryArgs( const std::string   &input,
   try
     {
       const RegistryInput &minput = this->inputs.at( input );
-      pqa.subtrees =
-        minput.subtrees.has_value() ? minput.subtrees : this->defaults.subtrees;
+      pqa.subtrees    = minput.subtrees.has_value() ? minput.subtrees
+                                                    : this->defaults.subtrees;
       pqa.stabilities = minput.stabilities.has_value()
                           ? minput.stabilities
                           : this->defaults.stabilities;
@@ -126,9 +126,9 @@ FloxFlakeInput::getFlake()
 {
   if ( this->flake == nullptr )
     {
-      this->flake =
-        std::make_shared<FloxFlake>( NixState( this->store ).getState(),
-                                     *this->getFlakeRef() );
+      this->flake
+        = std::make_shared<FloxFlake>( NixState( this->store ).getState(),
+                                       *this->getFlakeRef() );
     }
   return static_cast<nix::ref<FloxFlake>>( this->flake );
 }

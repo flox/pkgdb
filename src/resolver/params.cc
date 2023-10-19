@@ -100,7 +100,8 @@ PkgDescriptorRaw::fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const
       /* If path is absolute set `subtree', `systems', and `stabilities'. */
       if ( std::find( getDefaultSubtrees().begin(),
                       getDefaultSubtrees().end(),
-                      this->path->front() ) != getDefaultSubtrees().end() )
+                      this->path->front() )
+           != getDefaultSubtrees().end() )
         {
           if ( this->path->size() < 3 )
             {
@@ -121,8 +122,8 @@ PkgDescriptorRaw::fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const
                     "Absolute attribute paths in catalogs must have at "
                     "least four elements" );
                 }
-              pqa.stabilities =
-                std::vector<std::string> { *this->path->at( 2 ) };
+              pqa.stabilities
+                = std::vector<std::string> { *this->path->at( 2 ) };
               fillRelPath( 3 );
             }
           else { fillRelPath( 2 ); }

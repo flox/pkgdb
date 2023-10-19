@@ -50,8 +50,8 @@ ScrapeCommand::initInput()
     }
   else
     {
-      this->input =
-        std::make_optional<PkgDbInput>( store, this->getRegistryInput() );
+      this->input
+        = std::make_optional<PkgDbInput>( store, this->getRegistryInput() );
     }
 }
 

@@ -24,23 +24,24 @@ namespace versions {
 /* -------------------------------------------------------------------------- */
 
 /** Matches Semantic Version strings, e.g. `4.2.0-pre'. */
-static const char * const semverREStr =
-  "(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[-[:alnum:]_+.]+)?";
+static const char * const semverREStr
+  = "(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[-[:alnum:]_+.]+)?";
 
 /** Matches _loose_ versions which may omit trailing 0s. */
-static const char * const semverLooseREStr =
-  "(0|[1-9][0-9]*)(\\.(0|[1-9][0-9]*)(\\.(0|[1-9][0-9]*))?)?"
-  "(-[-[:alnum:]_+.]+)?";
+static const char * const semverLooseREStr
+  = "(0|[1-9][0-9]*)(\\.(0|[1-9][0-9]*)(\\.(0|[1-9][0-9]*))?)?"
+    "(-[-[:alnum:]_+.]+)?";
 
 /** Coercively matches Semantic Version Strings, e.g. `v1.0-pre'. */
-static const char * const semverCoerceREStr =
-  "(.*@)?[vV]?(0*([0-9]+)(\\.0*([0-9]+)(\\.0*([0-9]+))?)?(-[-[:alnum:]_+.]+)?)";
+static const char * const semverCoerceREStr
+  = "(.*@)?[vV]?(0*([0-9]+)(\\.0*([0-9]+)(\\.0*([0-9]+))?)?(-[-[:alnum:]_+.]+)?"
+    ")";
 
 /** Match '-' separated date strings, e.g. `2023-05-31' or `5-1-23'. */
-static const char * const dateREStr =
-  "([12][0-9][0-9][0-9]-[0-1]?[0-9]-[0-3]?[0-9]|" /* Y-M-D */
-  "[0-1]?[0-9]-[0-3]?[0-9]-[12][0-9][0-9][0-9])"  /* M-D-Y */
-  "(-[-[:alnum:]_+.]+)?";
+static const char * const dateREStr
+  = "([12][0-9][0-9][0-9]-[0-1]?[0-9]-[0-3]?[0-9]|" /* Y-M-D */
+    "[0-1]?[0-9]-[0-3]?[0-9]-[12][0-9][0-9][0-9])"  /* M-D-Y */
+    "(-[-[:alnum:]_+.]+)?";
 
 
 /* -------------------------------------------------------------------------- */
@@ -71,8 +72,8 @@ isCoercibleToSemver( const std::string & version )
   static const std::regex dateRE( dateREStr, std::regex::ECMAScript );
   static const std::regex semverCoerceRE( semverCoerceREStr,
                                           std::regex::ECMAScript );
-  return ( ! std::regex_match( version, dateRE ) ) &&
-         std::regex_match( version, semverCoerceRE );
+  return ( ! std::regex_match( version, dateRE ) )
+         && std::regex_match( version, semverCoerceRE );
 }
 
 
@@ -143,17 +144,17 @@ bool
 isSemverRange( const std::string & range )
 {
   /* Check for _modifier_ */
-  static const std::string semverRangeREStr =
-    "\\s*([~^><=]|>=|<=)?\\s*" + std::string( semverLooseREStr ) + ".*";
+  static const std::string semverRangeREStr
+    = "\\s*([~^><=]|>=|<=)?\\s*" + std::string( semverLooseREStr ) + ".*";
   static const std::regex semverRangeRE( semverRangeREStr,
                                          std::regex::ECMAScript );
 
   /* A few special tokens including the empty string are also valid. */
   static const std::regex globMatch( "\\s*(\\*|any|latest)?\\s*" );
 
-  return std::regex_match( range, semverRangeRE ) ||
-         std::regex_match( range, globMatch ) ||
-         ( range.find( " - " ) != std::string::npos );
+  return std::regex_match( range, semverRangeRE )
+         || std::regex_match( range, globMatch )
+         || ( range.find( " - " ) != std::string::npos );
 }
 
 
@@ -166,8 +167,8 @@ isSemverRange( const std::string & range )
 std::pair<int, std::string>
 runSemver( const std::list<std::string> & args )
 {
-  static const std::string semverProg =
-    nix::getEnv( "SEMVER" ).value_or( SEMVER_PATH );
+  static const std::string semverProg
+    = nix::getEnv( "SEMVER" ).value_or( SEMVER_PATH );
   static const std::map<std::string, std::string> env = nix::getEnv();
   return nix::runProgram( nix::RunOptions { .program             = semverProg,
                                             .searchPath          = true,
@@ -188,10 +189,8 @@ runSemver( const std::list<std::string> & args )
 std::list<std::string>
 semverSat( const std::string & range, const std::list<std::string> & versions )
 {
-  std::list<std::string> args = { "--include-prerelease",
-                                  "--loose",
-                                  "--range",
-                                  range };
+  std::list<std::string> args
+    = { "--include-prerelease", "--loose", "--range", range };
   for ( const auto & version : versions ) { args.push_back( version ); }
   auto [ec, lines] = runSemver( args );
   /* TODO: determine parse error vs. empty list result. */

@@ -4,7 +4,7 @@ AlignConsecutiveMacros: true
 AlignConsecutiveAssignments: true
 AlignConsecutiveDeclarations: true
 AlignEscapedNewlines: Left
-AlignOperands: true
+AlignOperands: Align
 AlignTrailingComments: true
 AllowAllArgumentsOnNextLine: false
 AllowAllConstructorInitializersOnNextLine: true
@@ -80,5 +80,9 @@ Standard: Auto
 TabWidth: 2
 UseTab: Never
 InsertBraces: true
+EmptyLineBeforeAccessModifier: Always
+EmptyLineAfterAccessModifier: Always
+BreakBeforeConceptDeclarations: Always
+BreakBeforeBinaryOperators: All
 
 ...

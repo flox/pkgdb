@@ -421,10 +421,10 @@ PkgDb::scrape( nix::SymbolTable & syms, const Target & target, Todos & todo )
       if ( syms[aname] == "recurseForDerivations" ) { continue; }
 
       /* Used for logging, but can skip it at low verbosity levels. */
-      const std::string pathS =
-        ( nix::lvlTalkative <= nix::verbosity )
-          ? nix::concatStringsSep( ".", prefix ) + "." + syms[aname]
-          : "";
+      const std::string pathS
+        = ( nix::lvlTalkative <= nix::verbosity )
+            ? nix::concatStringsSep( ".", prefix ) + "." + syms[aname]
+            : "";
 
       nix::Activity act( *nix::logger,
                          nix::lvlTalkative,

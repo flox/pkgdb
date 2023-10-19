@@ -49,8 +49,8 @@ FloxFlake::openEvalCache()
           this->state->forceAttrs( *vFlake,
                                    nix::noPos,
                                    "while parsing cached flake data" );
-          nix::Attr * aOutputs =
-            vFlake->attrs->get( this->state->symbols.create( "outputs" ) );
+          nix::Attr * aOutputs
+            = vFlake->attrs->get( this->state->symbols.create( "outputs" ) );
           assert( aOutputs != nullptr );
           return aOutputs->value;
         } );

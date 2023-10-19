@@ -42,6 +42,7 @@ class PkgDb : public PkgDbReadOnly
   /* Internal Helpers */
 
 protected:
+
   /** @brief Create tables in database if they do not exist. */
   void
   initTables();
@@ -90,6 +91,7 @@ protected:
   /* Constructors */
 
 public:
+
   /**
    * @brief Opens an existing database.
    *
@@ -156,9 +158,9 @@ public:
     this->db.connect( this->dbPath.c_str(),
                       SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE );
     init();
-    this->lockedRef = { flake.flake.lockedRef.to_string(),
-                        nix::fetchers::attrsToJSON(
-                          flake.flake.lockedRef.toAttrs() ) };
+    this->lockedRef
+      = { flake.flake.lockedRef.to_string(),
+          nix::fetchers::attrsToJSON( flake.flake.lockedRef.toAttrs() ) };
     writeInput();
   }
 

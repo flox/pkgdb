@@ -48,10 +48,12 @@ class NixStoreMixin
 {
 
 private:
+
   std::shared_ptr<nix::Store> store; /**< `nix` store connection.   */
 
 
 public:
+
   /* Copy/Move base class boilerplate */
   NixStoreMixin( const NixStoreMixin & ) = default;
   NixStoreMixin( NixStoreMixin && )      = default;
@@ -59,9 +61,11 @@ public:
   virtual ~NixStoreMixin() = default;
 
   NixStoreMixin &
-  operator=( const NixStoreMixin & ) = default;
+  operator=( const NixStoreMixin & )
+    = default;
   NixStoreMixin &
-  operator=( NixStoreMixin && ) = default;
+  operator=( NixStoreMixin && )
+    = default;
 
 
   /**
@@ -108,6 +112,7 @@ class NixState : public NixStoreMixin
 {
 
 private:
+
   /* From `NixStoreMixin':
    *   std::shared_ptr<nix::Store> store
    */
@@ -116,6 +121,7 @@ private:
 
 
 public:
+
   /** @brief Construct `NixState` using the systems default `nix` store. */
   NixState() = default;
 
@@ -138,10 +144,10 @@ public:
   {
     if ( this->state == nullptr )
       {
-        this->state =
-          std::make_shared<nix::EvalState>( std::list<std::string> {},
-                                            this->getStore(),
-                                            this->getStore() );
+        this->state
+          = std::make_shared<nix::EvalState>( std::list<std::string> {},
+                                              this->getStore(),
+                                              this->getStore() );
         this->state->repair = nix::NoRepair;
       }
     return static_cast<nix::ref<nix::EvalState>>( this->state );

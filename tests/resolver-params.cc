@@ -106,15 +106,16 @@ main( int argc, char *argv[] )
   std::cout << std::endl;
 
   auto resolved = flox::resolver::Resolved {
-    .input = { .name = "nixpkgs",
-               .locked =
-                 nlohmann::json {
-                   { "type", "github" },
-                   { "owner", "NixOS" },
-                   { "repo", "nixpkgs" },
-                   { "rev", "e8039594435c68eb4f780f3e9bf3972a7399c4b1" } } },
-    .path  = flox::AttrPath { "legacyPackages", "x86_64-linux", "hello" },
-    .info  = nlohmann::json::object()
+    .input
+    = { .name = "nixpkgs",
+        .locked
+        = nlohmann::json { { "type", "github" },
+                           { "owner", "NixOS" },
+                           { "repo", "nixpkgs" },
+                           { "rev",
+                             "e8039594435c68eb4f780f3e9bf3972a7399c4b1" } } },
+    .path = flox::AttrPath { "legacyPackages", "x86_64-linux", "hello" },
+    .info = nlohmann::json::object()
   };
 
   auto resolvedJSON = nlohmann::json( resolved );

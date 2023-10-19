@@ -50,24 +50,24 @@ PkgDbMixin<PkgDb>::openPkgDb()
   if ( this->db != nullptr ) { return; } /* Already loaded. */
   if ( ( this->flake != nullptr ) && this->dbPath.has_value() )
     {
-      this->db =
-        std::make_shared<PkgDb>( this->flake->lockedFlake,
-                                 static_cast<std::string>( *this->dbPath ) );
+      this->db
+        = std::make_shared<PkgDb>( this->flake->lockedFlake,
+                                   static_cast<std::string>( *this->dbPath ) );
     }
   else if ( this->flake != nullptr )
     {
-      this->dbPath =
-        flox::pkgdb::genPkgDbName( this->flake->lockedFlake.getFingerprint() );
+      this->dbPath = flox::pkgdb::genPkgDbName(
+        this->flake->lockedFlake.getFingerprint() );
       std::filesystem::create_directories( this->dbPath->parent_path() );
-      this->db =
-        std::make_shared<PkgDb>( this->flake->lockedFlake,
-                                 static_cast<std::string>( *this->dbPath ) );
+      this->db
+        = std::make_shared<PkgDb>( this->flake->lockedFlake,
+                                   static_cast<std::string>( *this->dbPath ) );
     }
   else if ( this->dbPath.has_value() )
     {
       std::filesystem::create_directories( this->dbPath->parent_path() );
-      this->db =
-        std::make_shared<PkgDb>( static_cast<std::string>( *this->dbPath ) );
+      this->db
+        = std::make_shared<PkgDb>( static_cast<std::string>( *this->dbPath ) );
     }
   else
     {
@@ -93,8 +93,8 @@ PkgDbMixin<PkgDbReadOnly>::openPkgDb()
             "You must provide either a path to a database, or "
             "a flake-reference." );
         }
-      this->dbPath =
-        flox::pkgdb::genPkgDbName( this->flake->lockedFlake.getFingerprint() );
+      this->dbPath = flox::pkgdb::genPkgDbName(
+        this->flake->lockedFlake.getFingerprint() );
     }
 
   /* Initialize empty DB if none exists. */
@@ -146,16 +146,16 @@ PkgDbMixin<T>::addTargetArg( argparse::ArgumentParser & parser )
                 this->parseFlakeRef( target );
                 nix::ref<nix::Store> store = this->getStore();
                 FloxFlakeInput       input( store, this->getRegistryInput() );
-                this->flake =
-                  static_cast<std::shared_ptr<FloxFlake>>( input.getFlake() );
+                this->flake
+                  = static_cast<std::shared_ptr<FloxFlake>>( input.getFlake() );
               }
             catch ( ... )
               {
                 if ( std::filesystem::exists( target ) )
                   {
-                    throw FloxException( "Argument '" + target +
-                                         "' is neither a flake "
-                                         "reference or SQLite3 database" );
+                    throw FloxException( "Argument '" + target
+                                         + "' is neither a flake "
+                                           "reference or SQLite3 database" );
                   }
                 throw;
               }

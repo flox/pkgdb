@@ -199,8 +199,8 @@ from_json( const nlohmann::json &jfrom, QueryParams<QueryType> &params )
           if ( value.is_null() ) { continue; }
           value.get_to( params.query );
         }
-      else if ( ( key == "systems" ) || ( key == "allow" ) ||
-                ( key == "semver" ) )
+      else if ( ( key == "systems" ) || ( key == "allow" )
+                || ( key == "semver" ) )
         {
           /* Handled by `QueryPreferences::from_json' */
           continue;

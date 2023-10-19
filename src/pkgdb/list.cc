@@ -47,8 +47,8 @@ ListCommand::ListCommand() : parser( "list" )
 int
 ListCommand::run()
 {
-  std::filesystem::path cacheDir =
-    this->cacheDir.value_or( getPkgDbCachedir() );
+  std::filesystem::path cacheDir
+    = this->cacheDir.value_or( getPkgDbCachedir() );
 
   /* Make sure the cache directory exists. */
   if ( ! std::filesystem::exists( cacheDir ) )

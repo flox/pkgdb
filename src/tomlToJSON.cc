@@ -88,8 +88,8 @@ tomlToJSON( std::string_view toml )
     }
   catch ( const std::exception &e )  // TODO: toml::syntax_error
     {
-      throw FloxException( "while parsing a TOML string: " +
-                           std::string( e.what() ) );
+      throw FloxException( "while parsing a TOML string: "
+                           + std::string( e.what() ) );
     }
   catch ( ... )
     {

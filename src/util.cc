@@ -39,8 +39,8 @@ isSQLiteDb( const std::string & dbPath )
 
   std::clearerr( filep );
 
-  const size_t nread =
-    std::fread( &buffer[0], sizeof( buffer[0] ), sizeof( buffer ), filep );
+  const size_t nread
+    = std::fread( &buffer[0], sizeof( buffer[0] ), sizeof( buffer ), filep );
   if ( nread != sizeof( buffer ) )
     {
       if ( std::feof( filep ) != 0 )
@@ -57,8 +57,8 @@ isSQLiteDb( const std::string & dbPath )
       return false;
     }
   std::fclose( filep );  // NOLINT
-  return std::string_view( &buffer[0] ) ==
-         std::string_view( &expectedMagic[0] );
+  return std::string_view( &buffer[0] )
+         == std::string_view( &expectedMagic[0] );
 }
 
 
@@ -95,8 +95,8 @@ splitAttrPath( std::string_view path )
     auto end = part.end();
 
     /* Remove outer quotes. */
-    if ( ( ( part.front() == '\'' ) && ( part.back() == '\'' ) ) ||
-         ( ( part.front() == '"' ) && ( part.back() == '"' ) ) )
+    if ( ( ( part.front() == '\'' ) && ( part.back() == '\'' ) )
+         || ( ( part.front() == '"' ) && ( part.back() == '"' ) ) )
       {
         ++itr;
         --end;
@@ -153,11 +153,12 @@ splitAttrPath( std::string_view path )
 bool
 isUInt( std::string_view str )
 {
-  return ( ! str.empty() ) && ( std::find_if( str.begin(),
-                                              str.end(),
-                                              []( unsigned char chr ) {
-                                                return std::isdigit( chr ) == 0;
-                                              } ) == str.end() );
+  return ( ! str.empty() )
+         && ( std::find_if( str.begin(),
+                            str.end(),
+                            []( unsigned char chr )
+                            { return std::isdigit( chr ) == 0; } )
+              == str.end() );
 }
 
 

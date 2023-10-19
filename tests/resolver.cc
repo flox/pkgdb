@@ -104,11 +104,10 @@ test_resolve0()
 bool
 test_resolveStabilities()
 {
-  nlohmann::json registryJSON                           = commonRegistry;
-  registryJSON["inputs"]["nixpkgs-flox"]["stabilities"] = { "stable",
-                                                            "staging",
-                                                            "unstable" };
-  flox::RegistryRaw registry                            = registryJSON;
+  nlohmann::json registryJSON = commonRegistry;
+  registryJSON["inputs"]["nixpkgs-flox"]["stabilities"]
+    = { "stable", "staging", "unstable" };
+  flox::RegistryRaw registry = registryJSON;
 
   flox::pkgdb::QueryPreferences preferences = commonPreferences;
 

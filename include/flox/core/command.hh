@@ -58,9 +58,11 @@ class InlineInputMixin : virtual public NixState
 {
 
 private:
+
   RegistryInput registryInput;
 
 protected:
+
   /**
    * @brief Fill @a registryInput by parsing a flake ref.
    * @param flakeRef A flake reference as a URL string or JSON attribute set.
@@ -68,12 +70,13 @@ protected:
   void
   parseFlakeRef( const std::string & flakeRef )
   {
-    this->registryInput.from =
-      std::make_shared<nix::FlakeRef>( flox::parseFlakeRef( flakeRef ) );
+    this->registryInput.from
+      = std::make_shared<nix::FlakeRef>( flox::parseFlakeRef( flakeRef ) );
   }
 
 
 public:
+
   argparse::Argument &
   addSubtreeArg( argparse::ArgumentParser & parser );
   argparse::Argument &
@@ -135,6 +138,7 @@ struct RegistryFileMixin
   std::optional<RegistryRaw>           registryRaw;
 
 protected:
+
   /**
    * @brief Loads the registry.
    *
@@ -145,6 +149,7 @@ protected:
   loadRegistry();
 
 public:
+
   /**
    * @brief Sets the path to the registry file to load.
    *

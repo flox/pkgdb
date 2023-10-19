@@ -30,6 +30,7 @@ class RawPackage : public Package
 {
 
 protected:
+
   AttrPath                   path;
   std::string                name;
   std::string                pname;
@@ -47,6 +48,7 @@ protected:
    */
 
 public:
+
   RawPackage( const AttrPath &                 path             = {},
               std::string_view                 name             = {},
               std::string_view                 pname            = {},

@@ -42,8 +42,8 @@ concept destructible = std::is_nothrow_destructible_v<T>;
  * be initialized with the given set of argument types @a Args....
  */
 template<class T, class... Args>
-concept constructible_from =
-  std::destructible<T> && std::is_constructible_v<T, Args...>;
+concept constructible_from
+  = std::destructible<T> && std::is_constructible_v<T, Args...>;
 
 
 /* -------------------------------------------------------------------------- */
@@ -55,8 +55,9 @@ concept constructible_from =
  * conversion are equivalent.
  */
 template<class From, class To>
-concept convertible_to = std::is_convertible_v<From, To> &&
-                         requires { static_cast<To>( std::declval<From>() ); };
+concept convertible_to = std::is_convertible_v<From, To> && requires {
+  static_cast<To>( std::declval<From>() );
+};
 
 
 /* -------------------------------------------------------------------------- */
@@ -69,9 +70,9 @@ concept convertible_to = std::is_convertible_v<From, To> &&
  * private or protected base of @a Derived.
  */
 template<class Derived, class Base>
-concept derived_from =
-  std::is_base_of_v<Base, Derived> &&
-  std::is_convertible_v<const volatile Derived *, const volatile Base *>;
+concept derived_from
+  = std::is_base_of_v<Base, Derived>
+    && std::is_convertible_v<const volatile Derived *, const volatile Base *>;
 
 
 /* -------------------------------------------------------------------------- */

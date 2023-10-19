@@ -71,6 +71,7 @@ class FloxFlake : public std::enable_shared_from_this<FloxFlake>
 {
 
 private:
+
   /**
    * A handle for a cached `nix` evaluator associated with @a this flake.
    * This is opened lazily by @a openEvalCache and remains open until @a this
@@ -79,6 +80,7 @@ private:
   std::shared_ptr<nix::eval_cache::EvalCache> _cache;
 
 public:
+
   nix::ref<nix::EvalState>      state;
   const nix::flake::LockedFlake lockedFlake;
 

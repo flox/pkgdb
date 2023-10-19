@@ -28,6 +28,7 @@ class ResolveCommand : pkgdb::PkgDbRegistryMixin
 {
 
 private:
+
   ResolveOneParams       params; /**< Query arguments and inputs */
   command::VerboseParser parser; /**< Query arguments and inputs parser */
 
@@ -61,6 +62,7 @@ private:
 
 
 public:
+
   ResolveCommand();
 
   [[nodiscard]] command::VerboseParser &

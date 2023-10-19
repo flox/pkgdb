@@ -80,6 +80,7 @@ class ScrapeCommand
 {
 
 private:
+
   command::VerboseParser    parser;
   std::optional<PkgDbInput> input;
   /** Whether to force re-evaluation. */
@@ -91,6 +92,7 @@ private:
 
 
 public:
+
   ScrapeCommand();
 
   [[nodiscard]] command::VerboseParser &
@@ -134,6 +136,7 @@ class GetCommand
 {
 
 private:
+
   command::VerboseParser parser; /**< `get`       parser */
   command::VerboseParser pId;    /**< `get id`    parser */
   command::VerboseParser pPath;  /**< `get path`  parser */
@@ -188,6 +191,7 @@ private:
 
 
 public:
+
   GetCommand();
 
   [[nodiscard]] command::VerboseParser &
@@ -213,6 +217,7 @@ class ListCommand
 {
 
 private:
+
   command::VerboseParser               parser;
   std::optional<std::filesystem::path> cacheDir;
   bool                                 json      = false;
@@ -220,6 +225,7 @@ private:
 
 
 public:
+
   ListCommand();
 
   [[nodiscard]] command::VerboseParser &

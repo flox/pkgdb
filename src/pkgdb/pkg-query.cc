@@ -81,9 +81,9 @@ PkgQueryArgs::validate() const
 {
   using error_code = PkgQueryArgs::InvalidArgException::error_code;
 
-  if ( this->name.has_value() &&
-       ( this->pname.has_value() || this->version.has_value() ||
-         this->semver.has_value() ) )
+  if ( this->name.has_value()
+       && ( this->pname.has_value() || this->version.has_value()
+            || this->semver.has_value() ) )
     {
       return error_code::PQEC_MIX_NAME;
     }
@@ -110,7 +110,8 @@ PkgQueryArgs::validate() const
     {
       if ( std::find( flox::getDefaultSystems().begin(),
                       flox::getDefaultSystems().end(),
-                      system ) == flox::getDefaultSystems().end() )
+                      system )
+           == flox::getDefaultSystems().end() )
         {
           return error_code::PQEC_INVALID_SYSTEM;
         }
@@ -123,8 +124,8 @@ PkgQueryArgs::validate() const
         {
           if ( std::find( flox::getDefaultCatalogStabilities().begin(),
                           flox::getDefaultCatalogStabilities().end(),
-                          stability ) ==
-               flox::getDefaultCatalogStabilities().end() )
+                          stability )
+               == flox::getDefaultCatalogStabilities().end() )
             {
               return error_code::PQEC_INVALID_STABILITY;
             }
@@ -219,8 +220,8 @@ void
 PkgQuery::initMatch()
 {
   /* Filter by exact matches on `pname' or `pkgAttrName'. */
-  if ( this->pnameOrPkgAttrName.has_value() &&
-       ( ! this->pnameOrPkgAttrName->empty() ) )
+  if ( this->pnameOrPkgAttrName.has_value()
+       && ( ! this->pnameOrPkgAttrName->empty() ) )
     {
       this->addSelection( "( :pnameOrPkgAttrName = pname ) AS exactPname" );
       this->addSelection(
@@ -557,11 +558,11 @@ std::unordered_set<std::string>
 PkgQuery::filterSemvers(
   const std::unordered_set<std::string> & versions ) const
 {
-  static const std::vector<std::string> ignores = { "",   "*", "any", "^*",
-                                                    "~*", "x", "X" };
-  if ( ( ! this->semver.has_value() ) ||
-       ( std::find( ignores.begin(), ignores.end(), *this->semver ) !=
-         ignores.end() ) )
+  static const std::vector<std::string> ignores
+    = { "", "*", "any", "^*", "~*", "x", "X" };
+  if ( ( ! this->semver.has_value() )
+       || ( std::find( ignores.begin(), ignores.end(), *this->semver )
+            != ignores.end() ) )
     {
       return versions;
     }
@@ -581,8 +582,8 @@ std::shared_ptr<sqlite3pp::query>
 PkgQuery::bind( sqlite3pp::database & pdb ) const
 {
   std::string                       stmt = this->str();
-  std::shared_ptr<sqlite3pp::query> qry =
-    std::make_shared<sqlite3pp::query>( pdb, stmt.c_str() );
+  std::shared_ptr<sqlite3pp::query> qry
+    = std::make_shared<sqlite3pp::query>( pdb, stmt.c_str() );
   for ( const auto & [var, val] : this->binds )
     {
       qry->bind( var.c_str(), val, sqlite3pp::copy );

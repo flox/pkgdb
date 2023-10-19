@@ -24,6 +24,7 @@ class PkgDbInput : public FloxFlakeInput
 {
 
 private:
+
   /* Provided by `FloxFlakeInput':
    *   nix::ref<nix::FlakeRef>             flakeRef
    *   nix::ref<nix::Store>                store
@@ -68,6 +69,7 @@ private:
 
 
 public:
+
   /**
    * @brief Tag used to disambiguate construction with database path and
    *        cache directory path.
@@ -205,17 +207,19 @@ class PkgDbInputFactory
 {
 
 private:
+
   nix::ref<nix::Store>  store;    /**< `nix` store connection. */
   std::filesystem::path cacheDir; /**< Cache directory. */
 
 
 public:
+
   using input_type = PkgDbInput;
 
   /** @brief Construct a factory using a `nix` evaluator. */
-  explicit PkgDbInputFactory(
-    nix::ref<nix::Store> & store,
-    std::filesystem::path  cacheDir = getPkgDbCachedir() )
+  explicit PkgDbInputFactory( nix::ref<nix::Store> & store,
+                              std::filesystem::path  cacheDir
+                              = getPkgDbCachedir() )
     : store( store ), cacheDir( std::move( cacheDir ) )
   {}
 
@@ -248,6 +252,7 @@ class PkgDbRegistryMixin : virtual protected NixStoreMixin
 {
 
 private:
+
   /* From `NixStoreMixin':
    *   std::shared_ptr<nix::Store> store
    */
@@ -258,6 +263,7 @@ private:
 
 
 protected:
+
   /* From `NixStoreMixin':
    *   nix::ref<nix::Store> getStore()
    */
@@ -278,14 +284,17 @@ protected:
 
   /** @return A raw registry used to initialize. */
   [[nodiscard]] virtual RegistryRaw
-  getRegistryRaw() = 0;
+  getRegistryRaw()
+    = 0;
 
   /** @return A list of systems to be scraped. */
   [[nodiscard]] virtual std::vector<std::string> &
-  getSystems() = 0;
+  getSystems()
+    = 0;
 
 
 public:
+
   /**
    * @brief Get the set of package databases to resolve in.
    *

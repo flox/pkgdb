@@ -16,10 +16,10 @@ test_semverSat1()
   std::list<std::string> sats = versions::semverSat(
     "^4.2.0",
     { "4.0.0", "4.2.0", "4.2.1", "4.3.0", "5.0.0", "3.9.9" } );
-  return ( sats.size() == 3 ) &&
-         ( std::find( sats.begin(), sats.end(), "4.2.0" ) != sats.end() ) &&
-         ( std::find( sats.begin(), sats.end(), "4.2.1" ) != sats.end() ) &&
-         ( std::find( sats.begin(), sats.end(), "4.3.0" ) != sats.end() );
+  return ( sats.size() == 3 )
+         && ( std::find( sats.begin(), sats.end(), "4.2.0" ) != sats.end() )
+         && ( std::find( sats.begin(), sats.end(), "4.2.1" ) != sats.end() )
+         && ( std::find( sats.begin(), sats.end(), "4.3.0" ) != sats.end() );
 }
 
 

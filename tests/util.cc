@@ -20,8 +20,8 @@
 bool
 test_splitAttrPath0()
 {
-  EXPECT( flox::splitAttrPath( "a.b.c" ) ==
-          ( flox::AttrPath { "a", "b", "c" } ) );
+  EXPECT( flox::splitAttrPath( "a.b.c" )
+          == ( flox::AttrPath { "a", "b", "c" } ) );
   return true;
 }
 
@@ -31,8 +31,8 @@ test_splitAttrPath0()
 bool
 test_splitAttrPath1()
 {
-  EXPECT( flox::splitAttrPath( "a.'b.c'.d" ) ==
-          ( flox::AttrPath { "a", "b.c", "d" } ) );
+  EXPECT( flox::splitAttrPath( "a.'b.c'.d" )
+          == ( flox::AttrPath { "a", "b.c", "d" } ) );
   return true;
 }
 
@@ -42,8 +42,8 @@ test_splitAttrPath1()
 bool
 test_splitAttrPath2()
 {
-  EXPECT( flox::splitAttrPath( "a.\"b.c\".d" ) ==
-          ( flox::AttrPath { "a", "b.c", "d" } ) );
+  EXPECT( flox::splitAttrPath( "a.\"b.c\".d" )
+          == ( flox::AttrPath { "a", "b.c", "d" } ) );
   return true;
 }
 
@@ -53,8 +53,8 @@ test_splitAttrPath2()
 bool
 test_splitAttrPath3()
 {
-  EXPECT( flox::splitAttrPath( "a.\"b.'c.d'.e\".f" ) ==
-          ( flox::AttrPath { "a", "b.'c.d'.e", "f" } ) );
+  EXPECT( flox::splitAttrPath( "a.\"b.'c.d'.e\".f" )
+          == ( flox::AttrPath { "a", "b.'c.d'.e", "f" } ) );
   return true;
 }
 
@@ -64,8 +64,8 @@ test_splitAttrPath3()
 bool
 test_splitAttrPath4()
 {
-  EXPECT( flox::splitAttrPath( "a.\\\"b.c" ) ==
-          ( flox::AttrPath { "a", "\"b", "c" } ) );
+  EXPECT( flox::splitAttrPath( "a.\\\"b.c" )
+          == ( flox::AttrPath { "a", "\"b", "c" } ) );
   return true;
 }
 
@@ -75,8 +75,8 @@ test_splitAttrPath4()
 bool
 test_splitAttrPath5()
 {
-  EXPECT( flox::splitAttrPath( "a.'\"b'.c" ) ==
-          ( flox::AttrPath { "a", "\"b", "c" } ) );
+  EXPECT( flox::splitAttrPath( "a.'\"b'.c" )
+          == ( flox::AttrPath { "a", "\"b", "c" } ) );
   return true;
 }
 
@@ -86,8 +86,8 @@ test_splitAttrPath5()
 bool
 test_splitAttrPath6()
 {
-  EXPECT( flox::splitAttrPath( "a.\\\\\\..c" ) ==
-          ( flox::AttrPath { "a", "\\.", "c" } ) );
+  EXPECT( flox::splitAttrPath( "a.\\\\\\..c" )
+          == ( flox::AttrPath { "a", "\\.", "c" } ) );
   return true;
 }
 

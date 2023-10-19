@@ -30,8 +30,8 @@ SearchQuery::clear()
 void
 from_json( const nlohmann::json &jfrom, SearchQuery &qry )
 {
-  auto getOrFail =
-    [&]( const std::string &key, const nlohmann::json &from, auto &sink )
+  auto getOrFail
+    = [&]( const std::string &key, const nlohmann::json &from, auto &sink )
   {
     if ( from.is_null() ) { return; }
     try
@@ -40,13 +40,13 @@ from_json( const nlohmann::json &jfrom, SearchQuery &qry )
       }
     catch ( const nlohmann::json::exception &err )
       {
-        throw FloxException( "Failed to parse search query field: 'query." +
-                             key + "':\n  " + err.what() );
+        throw FloxException( "Failed to parse search query field: 'query." + key
+                             + "':\n  " + err.what() );
       }
     catch ( ... )
       {
-        throw FloxException( "Failed to parse search query field: 'query." +
-                             key + "'." );
+        throw FloxException( "Failed to parse search query field: 'query." + key
+                             + "'." );
       }
   };
 
@@ -59,8 +59,8 @@ from_json( const nlohmann::json &jfrom, SearchQuery &qry )
       else if ( key == "match" ) { getOrFail( key, value, qry.partialMatch ); }
       else
         {
-          throw FloxException( "Unrecognized search query key: 'query." + key +
-                               "'." );
+          throw FloxException( "Unrecognized search query key: 'query." + key
+                               + "'." );
         }
     }
 }

@@ -57,8 +57,8 @@ initManifestDescriptorVersion( ManifestDescriptor & desc,
 
       default:
         /* If it's a valid semver or a date then it's not a range. */
-        if ( versions::isSemver( trimmed ) || versions::isDate( trimmed ) ||
-             ( ! versions::isSemverRange( trimmed ) ) )
+        if ( versions::isSemver( trimmed ) || versions::isDate( trimmed )
+             || ( ! versions::isSemverRange( trimmed ) ) )
           {
             desc.version = std::move( trimmed );
           }
@@ -183,8 +183,8 @@ initManifestDescriptorAbsPath( ManifestDescriptor &          desc,
     }
 
   const auto & second = glob.at( 1 );
-  if ( second.has_value() && ( ( *second ) != "null" ) &&
-       ( ( *second ) != "*" ) )
+  if ( second.has_value() && ( ( *second ) != "null" )
+       && ( ( *second ) != "*" ) )
     {
       desc.systems = std::vector<std::string> { *second };
       if ( raw.systems.has_value() && ( *raw.systems != *desc.systems ) )
@@ -257,8 +257,8 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
 
       if ( std::holds_alternative<std::string>( *raw.packageRepository ) )
         {
-          this->input =
-            parseFlakeRef( std::get<std::string>( *raw.packageRepository ) );
+          this->input
+            = parseFlakeRef( std::get<std::string>( *raw.packageRepository ) );
         }
       else
         {

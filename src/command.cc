@@ -99,8 +99,8 @@ InlineInputMixin::addSubtreeArg( argparse::ArgumentParser & parser )
           }
         else
           {
-            this->registryInput.subtrees =
-              std::make_optional( std::vector<Subtree> { stype } );
+            this->registryInput.subtrees
+              = std::make_optional( std::vector<Subtree> { stype } );
           }
       } );
 }
@@ -131,8 +131,8 @@ InlineInputMixin::addStabilityArg( argparse::ArgumentParser & parser )
           }
         else
           {
-            this->registryInput.stabilities = { std::vector<std::string> {
-              stability } };
+            this->registryInput.stabilities
+              = { std::vector<std::string> { stability } };
           }
       } );
 }
