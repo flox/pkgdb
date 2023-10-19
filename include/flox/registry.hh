@@ -415,7 +415,8 @@ public:
         /* Throw an exception if a registry input is an indirect reference. */
         if ( pair->second.getFlakeRef()->input.getType() == "flake" )
           {
-            throw FloxException( "registry contained an indirect reference" );
+            throw InvalidRegistryException(
+              "registry contained an indirect reference" );
           }
 
         /* Fill default/fallback values if none are defined. */
@@ -436,6 +437,29 @@ public:
       }
   }
 
+  /** @brief An exception thrown when a registry has invalid contents */
+  class InvalidRegistryException : public FloxException
+  {
+  private:
+
+    static constexpr std::string_view categoryMsg = "invalid registry";
+
+  public:
+
+    explicit InvalidRegistryException( std::string_view contextMsg )
+      : FloxException( contextMsg )
+    {}
+    [[nodiscard]] error_category
+    get_error_code() const noexcept override
+    {
+      return EC_INVALID_REGISTRY;
+    }
+    [[nodiscard]] std::string_view
+    category_message() const noexcept override
+    {
+      return this->categoryMsg;
+    }
+  }; /* End class `InvalidArgException' */
 
   /**
    * @brief Get an input by name.

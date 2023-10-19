@@ -100,10 +100,10 @@ SearchCommand::run()
         }
       return EXIT_SUCCESS;
     }
-  catch ( const pkgdb::PkgQuery::InvalidArgException & err )
+  catch ( const pkgdb::PkgQuery::InvalidPkgQueryArgException & err )
     {
       // TODO: DRY ( see main.cc )
-      int exitCode = EC_PKG_QUERY_INVALID_ARG;
+      int exitCode = EC_INVALID_PKG_QUERY_ARG;
       exitCode += static_cast<int>( err.errorCode );
       std::cout << "{ \"error\": \"" << err.what()
                 << "\", \"code\": " << exitCode << " }" << std::endl;

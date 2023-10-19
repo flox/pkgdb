@@ -21,6 +21,37 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief An exception thrown when converting YAML to JSON */
+class YAMLToJSONException : public FloxException
+{
+private:
+
+  static constexpr std::string_view categoryMsg
+    = "error converting YAML to JSON";
+
+public:
+
+  explicit YAMLToJSONException( std::string_view contextMsg )
+    : FloxException( contextMsg )
+  {}
+  explicit YAMLToJSONException( std::string_view contextMsg,
+                                const char      *caughtMsg )
+    : FloxException( contextMsg, caughtMsg )
+  {}
+  [[nodiscard]] error_category
+  get_error_code() const noexcept override
+  {
+    return EC_YAML_TO_JSON;
+  }
+  [[nodiscard]] std::string_view
+  category_message() const noexcept override
+  {
+    return this->categoryMsg;
+  }
+
+}; /* End class `YAMLToJSONException' */
+
+
 nlohmann::json
 yamlToJSON( std::string_view yaml )
 {
@@ -79,11 +110,11 @@ yamlToJSON( std::string_view yaml )
           break;
 
         case YAML::NodeType::Undefined:
-          throw FloxException( "YAML node has an undefined type" );
+          throw YAMLToJSONException( "YAML node has an undefined type" );
           break;
 
         default:
-          throw FloxException( "YAML node has an unrecognized type" );
+          throw YAMLToJSONException( "YAML node has an unrecognized type" );
           break;
       }
   }; /* End fn `visit()' */
@@ -98,12 +129,11 @@ yamlToJSON( std::string_view yaml )
     }
   catch ( const std::exception &e )
     {
-      throw FloxException( "while parsing a YAML string: "
-                           + std::string( e.what() ) );
+      throw YAMLToJSONException( "while parsing a YAML string", e.what() );
     }
   catch ( ... )
     {
-      throw FloxException( "while parsing a YAML string: unknown error" );
+      throw YAMLToJSONException( "while parsing a YAML string" );
     }
 
   assert( false ); /* Unreachable */

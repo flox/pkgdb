@@ -151,15 +151,17 @@ struct PkgQueryArgs : public PkgDescriptorBase
 
 
   /** @brief Errors concerning validity of package query parameters. */
-  struct InvalidArgException : public flox::FloxException
+  struct InvalidPkgQueryArgException : public flox::FloxException
   {
+  private:
+
+    static constexpr std::string_view categoryMsg
+      = "encountered an error processing query arguments";
 
   public:
 
     enum error_code {
-      PQEC_ERROR = 1 /**< Generic Exception */
       /** Name/{pname,version,semver} are mutually exclusive */
-      ,
       PQEC_MIX_NAME = 2
       /** Version/semver are mutually exclusive */
       ,
@@ -186,12 +188,23 @@ struct PkgQueryArgs : public PkgDescriptorBase
 
   public:
 
-    explicit InvalidArgException( const error_code & ecode = PQEC_ERROR )
-      : flox::FloxException( InvalidArgException::errorMessage( ecode ) )
+    explicit InvalidPkgQueryArgException( const error_code & ecode )
+      : flox::FloxException(
+        InvalidPkgQueryArgException::errorMessage( ecode ) )
       , errorCode( ecode )
     {}
 
-  }; /* End struct `PkgDbQueryInvalidArgException' */
+    [[nodiscard]] flox::error_category
+    get_error_code() const noexcept override
+    {
+      return EC_INVALID_PKG_QUERY_ARG;
+    }
+    [[nodiscard]] std::string_view
+    category_message() const noexcept override
+    {
+      return this->categoryMsg;
+    }
+  }; /* End struct `InvalidPkgQueryArgException' */
 
 
   /** @brief Reset argset to its _default_ state. */
@@ -208,7 +221,7 @@ struct PkgQueryArgs : public PkgDescriptorBase
    * @return `std::nullopt` iff the above conditions are met, an error
    *         code otherwise.
    */
-  [[nodiscard]] std::optional<InvalidArgException::error_code>
+  [[nodiscard]] std::optional<InvalidPkgQueryArgException::error_code>
   validate() const;
 
 }; /* End struct `PkgQueryArgs' */

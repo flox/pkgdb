@@ -20,7 +20,7 @@ FlakePackage::init( bool checkDrv )
 {
   if ( this->_pathS.size() < 3 )
     {
-      throw FloxException(
+      throw PackageInitException(
         "Package::init(): Package attribute paths must have at least 3 "
         "elements - the path '"
         + this->_cursor->getAttrPathStr() + "' is too short." );
@@ -28,7 +28,7 @@ FlakePackage::init( bool checkDrv )
 
   if ( checkDrv && ( ! this->_cursor->isDerivation() ) )
     {
-      throw FloxException(
+      throw PackageInitException(
         "Package::init(): Packages must be derivations but the attrset at '"
         + this->_cursor->getAttrPathStr()
         + "' does not set `.type = \"derivation\"'." );
@@ -41,9 +41,9 @@ FlakePackage::init( bool checkDrv )
     }
   catch ( const std::invalid_argument & /* unused */ )
     {
-      throw FloxException( "FlakePackage::init(): Invalid subtree name '"
-                           + this->_pathS[0] + "' at path '"
-                           + this->_cursor->getAttrPathStr() + "'." );
+      throw PackageInitException( "FlakePackage::init(): Invalid subtree name '"
+                                  + this->_pathS[0] + "' at path '"
+                                  + this->_cursor->getAttrPathStr() + "'." );
     }
 
   this->_system = this->_pathS[1];

@@ -292,7 +292,6 @@ test_PkgQuery0( flox::pkgdb::PkgDb &db )
   if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
     {
       throw flox::pkgdb::PkgDbException(
-        db.dbPath,
         nix::fmt( "Failed to write Package 'hello':(%d) %s",
                   rc,
                   db.db.error_msg() ) );
@@ -383,7 +382,6 @@ test_PkgQuery1( flox::pkgdb::PkgDb &db )
   if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
     {
       throw flox::pkgdb::PkgDbException(
-        db.dbPath,
         nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
     }
   flox::pkgdb::PkgQueryArgs qargs;
@@ -477,7 +475,6 @@ test_PkgQuery2( flox::pkgdb::PkgDb &db )
   if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
     {
       throw flox::pkgdb::PkgDbException(
-        db.dbPath,
         nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
     }
   flox::pkgdb::PkgQueryArgs qargs;
@@ -638,7 +635,6 @@ test_getPackages0( flox::pkgdb::PkgDb &db )
   if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
     {
       throw flox::pkgdb::PkgDbException(
-        db.dbPath,
         nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
     }
 
@@ -717,7 +713,6 @@ test_getPackages1( flox::pkgdb::PkgDb &db )
   if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
     {
       throw flox::pkgdb::PkgDbException(
-        db.dbPath,
         nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
     }
 
@@ -802,7 +797,6 @@ test_getPackages2( flox::pkgdb::PkgDb &db )
   if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
     {
       throw flox::pkgdb::PkgDbException(
-        db.dbPath,
         nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
     }
 
@@ -850,7 +844,6 @@ test_DbPackage0( flox::pkgdb::PkgDb &db )
   if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
     {
       throw flox::pkgdb::PkgDbException(
-        db.dbPath,
         nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
     }
   row_id pkgId = db.db.last_insert_rowid();
@@ -920,7 +913,6 @@ test_getPackages_semver0( flox::pkgdb::PkgDb &db )
   if ( flox::pkgdb::sql_rc rc = cmd.execute(); flox::pkgdb::isSQLError( rc ) )
     {
       throw flox::pkgdb::PkgDbException(
-        db.dbPath,
         nix::fmt( "Failed to write Packages:(%d) %s", rc, db.db.error_msg() ) );
     }
 

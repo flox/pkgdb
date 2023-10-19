@@ -114,7 +114,7 @@ initManifestDescriptorAbsPath( ManifestDescriptor &          desc,
 {
   if ( ! raw.absPath.has_value() )
     {
-      throw FloxException(
+      throw InvalidManifestDescriptorException(
         "`absPath' must be set when calling "
         "`flox::resolver::ManifestDescriptor::initManifestDescriptorAbsPath'" );
     }
@@ -124,20 +124,21 @@ initManifestDescriptorAbsPath( ManifestDescriptor &          desc,
 
   if ( glob.size() < 3 )
     {
-      throw FloxException( "`absPath' must have at least three parts" );
+      throw InvalidManifestDescriptorException(
+        "`absPath' must have at least three parts" );
     }
 
   const auto & first = glob.front();
   if ( ! first.has_value() )
     {
-      throw FloxException(
+      throw InvalidManifestDescriptorException(
         "`absPath' may only have a glob as its second element" );
     }
   desc.subtree = Subtree( *first );
 
   if ( raw.stability.has_value() && ( first.value() != "catalog" ) )
     {
-      throw FloxException(
+      throw InvalidManifestDescriptorException(
         "`stability' cannot be used with non-catalog paths" );
     }
 
@@ -145,13 +146,13 @@ initManifestDescriptorAbsPath( ManifestDescriptor &          desc,
     {
       if ( glob.size() < 4 )
         {
-          throw FloxException(
+          throw InvalidManifestDescriptorException(
             "`absPath' must have at least four parts for catalog paths" );
         }
       const auto & third = glob.at( 2 );
       if ( ! third.has_value() )
         {
-          throw FloxException(
+          throw InvalidManifestDescriptorException(
             "`absPath' may only have a glob as its second element" );
         }
       desc.stability = *third;
@@ -161,7 +162,7 @@ initManifestDescriptorAbsPath( ManifestDescriptor &          desc,
           const auto & elem = *itr;
           if ( ! elem.has_value() )
             {
-              throw FloxException(
+              throw InvalidManifestDescriptorException(
                 "`absPath' may only have a glob as its second element" );
             }
           desc.path->emplace_back( *elem );
@@ -175,7 +176,7 @@ initManifestDescriptorAbsPath( ManifestDescriptor &          desc,
           const auto & elem = *itr;
           if ( ! elem.has_value() )
             {
-              throw FloxException(
+              throw InvalidManifestDescriptorException(
                 "`absPath' may only have a glob as its second element" );
             }
           desc.path->emplace_back( *elem );
@@ -189,7 +190,7 @@ initManifestDescriptorAbsPath( ManifestDescriptor &          desc,
       desc.systems = std::vector<std::string> { *second };
       if ( raw.systems.has_value() && ( *raw.systems != *desc.systems ) )
         {
-          throw FloxException(
+          throw InvalidManifestDescriptorException(
             "`systems' list conflicts with `absPath' system specification" );
         }
     }
@@ -241,7 +242,8 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
         {
           if ( this->path != path )
             {
-              throw FloxException( "`path' conflicts with with `absPath'" );
+              throw InvalidManifestDescriptorException(
+                "`path' conflicts with with `absPath'" );
             }
         }
       else { this->path = path; }
@@ -251,7 +253,7 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
     {
       if ( raw.input.has_value() )
         {
-          throw FloxException(
+          throw InvalidManifestDescriptorException(
             "`packageRepository' may not be used with `input'" );
         }
 

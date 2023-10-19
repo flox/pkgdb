@@ -34,8 +34,8 @@ PkgDescriptorBase::clear()
 /* -------------------------------------------------------------------------- */
 
 std::string
-PkgQueryArgs::InvalidArgException::errorMessage(
-  const PkgQueryArgs::InvalidArgException::error_code & ecode )
+PkgQueryArgs::InvalidPkgQueryArgException::errorMessage(
+  const PkgQueryArgs::InvalidPkgQueryArgException::error_code & ecode )
 {
   switch ( ecode )
     {
@@ -66,20 +66,16 @@ PkgQueryArgs::InvalidArgException::errorMessage(
       case PQEC_INVALID_MATCH_STYLE:
         return "Query `matchStyle' must be set when `match' is used";
         break;
-      default:
-      case PQEC_ERROR:
-        return "Encountered and error processing query arguments";
-        break;
     }
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-std::optional<PkgQueryArgs::InvalidArgException::error_code>
+std::optional<PkgQueryArgs::InvalidPkgQueryArgException::error_code>
 PkgQueryArgs::validate() const
 {
-  using error_code = PkgQueryArgs::InvalidArgException::error_code;
+  using error_code = PkgQueryArgs::InvalidPkgQueryArgException::error_code;
 
   if ( this->name.has_value()
        && ( this->pname.has_value() || this->version.has_value()
@@ -456,7 +452,7 @@ PkgQuery::init()
   /* Validate parameters */
   if ( auto maybe_ec = this->validate(); maybe_ec != std::nullopt )
     {
-      throw PkgQueryArgs::InvalidArgException( *maybe_ec );
+      throw PkgQueryArgs::InvalidPkgQueryArgException( *maybe_ec );
     }
 
   this->addSelection( "*" );

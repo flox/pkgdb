@@ -65,20 +65,47 @@ struct SearchQuery : public pkgdb::PkgDescriptorBase
    * @return A reference to the modified query args.
    */
   pkgdb::PkgQueryArgs &
-  fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
+  fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const;
 
 }; /* End struct "SearchQuery' */
 
+/** @brief An exception thrown when parsing `SearchQuery` from JSON */
+class ParseSearchQueryException : public FloxException
+{
+private:
+
+  static constexpr std::string_view categoryMsg = "error parsing search query";
+
+public:
+
+  explicit ParseSearchQueryException( std::string_view contextMsg )
+    : FloxException( contextMsg )
+  {}
+  explicit ParseSearchQueryException( std::string_view contextMsg,
+                                      const char      *caughtMsg )
+    : FloxException( contextMsg, caughtMsg )
+  {}
+  [[nodiscard]] error_category
+  get_error_code() const noexcept override
+  {
+    return EC_PARSE_SEARCH_QUERY;
+  }
+  [[nodiscard]] std::string_view
+  category_message() const noexcept override
+  {
+    return this->categoryMsg;
+  }
+}; /* End class `ParseSearchQueryException' */
 
 /* -------------------------------------------------------------------------- */
 
 /** @brief Convert a JSON object to a @a flox::search::SearchQuery. */
 void
-from_json( const nlohmann::json & jfrom, SearchQuery & qry );
+from_json( const nlohmann::json &jfrom, SearchQuery &qry );
 
 /** @brief Convert a @a flox::search::SearchQuery to a JSON object. */
 void
-to_json( nlohmann::json & jto, const SearchQuery & qry );
+to_json( nlohmann::json &jto, const SearchQuery &qry );
 
 
 /* -------------------------------------------------------------------------- */

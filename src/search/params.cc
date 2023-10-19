@@ -40,13 +40,13 @@ from_json( const nlohmann::json &jfrom, SearchQuery &qry )
       }
     catch ( const nlohmann::json::exception &err )
       {
-        throw FloxException( "Failed to parse search query field: 'query." + key
-                             + "':\n  " + err.what() );
+        throw ParseSearchQueryException( "parsing field: 'query." + key + "'",
+                                         err.what() );
       }
     catch ( ... )
       {
-        throw FloxException( "Failed to parse search query field: 'query." + key
-                             + "'." );
+        throw ParseSearchQueryException( "parsing field: 'query." + key
+                                         + "'." );
       }
   };
 
@@ -59,8 +59,8 @@ from_json( const nlohmann::json &jfrom, SearchQuery &qry )
       else if ( key == "match" ) { getOrFail( key, value, qry.partialMatch ); }
       else
         {
-          throw FloxException( "Unrecognized search query key: 'query." + key
-                               + "'." );
+          throw ParseSearchQueryException( "unrecognized key: 'query." + key
+                                           + "'." );
         }
     }
 }

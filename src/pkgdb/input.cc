@@ -57,7 +57,6 @@ PkgDbInput::init()
   if ( dbVersions != sqlVersions )
     {
       throw PkgDbException(
-        this->dbPath,
         nix::fmt( "Incompatible Flox PkgDb schema versions ( %u, %u )",
                   dbVersions.tables,
                   dbVersions.views ) );

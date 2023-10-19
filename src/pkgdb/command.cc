@@ -153,9 +153,10 @@ PkgDbMixin<T>::addTargetArg( argparse::ArgumentParser & parser )
               {
                 if ( std::filesystem::exists( target ) )
                   {
-                    throw FloxException( "Argument '" + target
-                                         + "' is neither a flake "
-                                           "reference or SQLite3 database" );
+                    throw command::InvalidArgException(
+                      "Argument '" + target
+                      + "' is neither a flake "
+                        "reference nor SQLite3 database" );
                   }
                 throw;
               }
