@@ -692,10 +692,10 @@ static_assert( registry_input_factory<FloxFlakeInputFactory> );
 class FlakeRegistry : public Registry<FloxFlakeInputFactory>
 {
 
-  public:
+public:
 
-    [[nodiscard]] std::unordered_map<std::string, RegistryInput>
-    getLockedInputs();
+  [[nodiscard]] std::unordered_map<std::string, RegistryInput>
+  getLockedInputs();
 
 
 }; /* End class `FlakeRegistry' */

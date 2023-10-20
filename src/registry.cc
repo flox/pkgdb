@@ -184,7 +184,7 @@ FloxFlakeInput::getLockedInput()
 FlakeRegistry::getLockedInputs()
 {
   std::unordered_map<std::string, RegistryInput> locked;
-  for ( auto & [name, input] : * this )
+  for ( auto &[name, input] : *this )
     {
       locked.emplace( name, input->getLockedInput() );
     }
