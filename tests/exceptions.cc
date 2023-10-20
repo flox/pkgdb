@@ -5,7 +5,6 @@
  * @brief Tests for `flox::exceptions`.
  *
  *
- *
  * -------------------------------------------------------------------------- */
 
 #include <cstdlib>
@@ -22,17 +21,17 @@ using namespace flox;
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief Test what_string correctly calls virtual methods. */
+/** @brief Test whatString correctly calls virtual methods. */
 bool
-test_what_string()
+test_whatString()
 {
   FloxException base( "context" );
-  EXPECT_EQ( base.what_string(), "general error: context" );
+  EXPECT_EQ( base.whatString(), "general error: context" );
 
   command::InvalidArgException derived( "context" );
   FloxException*               derived_ptr = &derived;
 
-  EXPECT_EQ( derived_ptr->what_string(), "invalid argument: context" );
+  EXPECT_EQ( derived_ptr->whatString(), "invalid argument: context" );
 
   return true;
 }
@@ -46,13 +45,7 @@ main()
   int exitCode = EXIT_SUCCESS;
 #define RUN_TEST( ... ) _RUN_TEST( exitCode, __VA_ARGS__ )
 
-  /* --------------------------------------------------------------------------
-   */
-
-  {
-
-    RUN_TEST( what_string );
-  }
+  RUN_TEST( whatString );
 
   return exitCode;
 }

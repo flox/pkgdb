@@ -114,7 +114,7 @@ public:
    *   methods.
    */
   [[nodiscard]] std::string
-  what_string() const noexcept;
+  whatString() const noexcept;
   
   friend void to_json( nlohmann::json & jto, const FloxException & err );
 
