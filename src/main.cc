@@ -80,17 +80,25 @@ main( int argc, char *argv[] )
     }
   catch ( const flox::FloxException &err )
     {
-      std::cout << err.to_json() << std::endl;
+      if ( ! isatty( STDERR_FILENO ) )
+        {
+          std::cout << err.to_json() << std::endl;
+        }
+      else { std::cerr << err.what() << std::endl; }
+
       return err.get_error_code();
     }
   catch ( const std::exception &err )
     {
-      nlohmann::json error = {
-        { "exit_code", EXIT_FAILURE },
-        { "message", err.what() },
-      };
-
-      std::cout << error << std::endl;
+      if ( ! isatty( STDERR_FILENO ) )
+        {
+          nlohmann::json error = {
+            { "exit_code", EXIT_FAILURE },
+            { "message", err.what() },
+          };
+          std::cout << error << std::endl;
+        }
+      else { std::cerr << err.what() << std::endl; }
 
       return flox::EC_FAILURE;
     }
