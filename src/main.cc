@@ -11,6 +11,7 @@
 #include <iostream>
 
 #include "flox/core/command.hh"
+#include "flox/core/exceptions.hh"
 #include "flox/pkgdb/command.hh"
 #include "flox/pkgdb/write.hh"
 #include "flox/resolver/command.hh"
@@ -20,9 +21,8 @@
 /* -------------------------------------------------------------------------- */
 
 int
-main( int argc, char * argv[] )
+run( int argc, char *argv[] )
 {
-
   /* Define arg parsers. */
 
   flox::command::VerboseParser prog( "pkgdb", FLOX_PKGDB_VERSION );
@@ -53,91 +53,59 @@ main( int argc, char * argv[] )
     {
       prog.parse_args( argc, argv );
     }
-  catch ( const flox::pkgdb::PkgQuery::InvalidPkgQueryArgException & err )
+  catch ( const std::runtime_error &err )
     {
-      // TODO: DRY ( see search/command.cc )
-      int exitCode = flox::EC_INVALID_PKG_QUERY_ARG;
-      exitCode += static_cast<int>( err.errorCode );
-      for ( int i = 1; i < argc; ++i )
-        {
-          if ( std::string_view( argv[i] ) == "search" )
-            {
-              std::cout << "{ \"error\": \"" << err.what()
-                        << "\", \"code\": " << exitCode << " }" << std::endl;
-              return exitCode;
-            }
-        }
-      std::cerr << "ERROR: " << err.what() << std::endl;
-      std::cerr << prog << std::endl;
-      return exitCode;
+      throw flox::command::InvalidArgException( err.what() );
     }
-  catch ( const std::exception & err )
-    {
-      // TODO: DRY ( see search/command.cc )
-      for ( int i = 1; i < argc; ++i )
-        {
-          if ( std::string_view( argv[i] ) == "search" )
-            {
-              std::cout << "{ \"error\": \"" << err.what()
-                        << "\", \"code\": " << flox::EC_FAILURE << " }"
-                        << std::endl;
-              return flox::EC_FAILURE;
-            }
-        }
-      std::cerr << "ERROR: " << err.what() << std::endl;
-      std::cerr << prog << std::endl;
-      return flox::EC_FAILURE;
-    }
-
 
   /* Run subcommand */
 
+  if ( prog.is_subcommand_used( "scrape" ) ) { return cmdScrape.run(); }
+  if ( prog.is_subcommand_used( "get" ) ) { return cmdGet.run(); }
+  if ( prog.is_subcommand_used( "list" ) ) { return cmdList.run(); }
+  if ( prog.is_subcommand_used( "search" ) ) { return cmdSearch.run(); }
+  if ( prog.is_subcommand_used( "resolve" ) ) { return cmdResolve.run(); }
+  if ( prog.is_subcommand_used( "lock" ) ) { return cmdLock.run(); }
+
+  // TODO: better error for this,
+  // likely only occurs if we add a new command without handling it (?)
+  throw flox::FloxException( "unrecognized command" );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+int
+main( int argc, char *argv[] )
+{
   try
     {
-      if ( prog.is_subcommand_used( "scrape" ) ) { return cmdScrape.run(); }
-      if ( prog.is_subcommand_used( "get" ) ) { return cmdGet.run(); }
-      if ( prog.is_subcommand_used( "list" ) ) { return cmdList.run(); }
-      if ( prog.is_subcommand_used( "search" ) ) { return cmdSearch.run(); }
-      if ( prog.is_subcommand_used( "resolve" ) ) { return cmdResolve.run(); }
-      if ( prog.is_subcommand_used( "lock" ) ) { return cmdLock.run(); }
+      return run( argc, argv );
     }
-  catch ( const flox::pkgdb::PkgQuery::InvalidPkgQueryArgException & err )
+  catch ( const flox::FloxException &err )
     {
-      // TODO: DRY ( see search/command.cc )
-      int exitCode = flox::EC_INVALID_PKG_QUERY_ARG;
-      exitCode += static_cast<int>( err.errorCode );
-      for ( int i = 1; i < argc; ++i )
+      if ( ! isatty( STDERR_FILENO ) )
         {
-          if ( std::string_view( argv[i] ) == "search" )
-            {
-              std::cout << "{ \"error\": \"" << err.what()
-                        << "\", \"code\": " << exitCode << " }" << std::endl;
-              return exitCode;
-            }
+          std::cout << nlohmann::json( err ).dump() << std::endl;
         }
-      std::cerr << "ERROR: " << err.what() << std::endl;
-      std::cerr << prog << std::endl;
-      return exitCode;
+      else { std::cerr << err.what() << std::endl; }
+
+      return err.getErrorCode();
     }
-  catch ( const std::exception & err )
+  catch ( const std::exception &err )
     {
-      // TODO: DRY ( see search/command.cc )
-      for ( int i = 1; i < argc; ++i )
+      if ( ! isatty( STDERR_FILENO ) )
         {
-          if ( std::string_view( argv[i] ) == "search" )
-            {
-              std::cout << "{ \"error\": \"" << err.what()
-                        << "\", \"code\": " << flox::EC_FAILURE << " }"
-                        << std::endl;
-              return flox::EC_FAILURE;
-            }
+          nlohmann::json error = {
+            { "exit_code", EXIT_FAILURE },
+            { "message", err.what() },
+          };
+          std::cout << error << std::endl;
         }
-      std::cerr << "ERROR: " << err.what() << std::endl;
-      std::cerr << prog << std::endl;
+      else { std::cerr << err.what() << std::endl; }
+
       return flox::EC_FAILURE;
     }
-
-  return EXIT_FAILURE;
 }
 
 

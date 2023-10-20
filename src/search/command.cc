@@ -86,36 +86,17 @@ SearchCommand::SearchCommand() : parser( "search" )
 int
 SearchCommand::run()
 {
-  try
+  pkgdb::PkgQueryArgs args;
+  for ( const auto & [name, input] : *this->getPkgDbRegistry() )
     {
-      pkgdb::PkgQueryArgs args;
-      for ( const auto & [name, input] : *this->getPkgDbRegistry() )
+      this->params.fillPkgQueryArgs( name, args );
+      this->query = pkgdb::PkgQuery( args );
+      for ( const auto & row : this->queryDb( *input->getDbReadOnly() ) )
         {
-          this->params.fillPkgQueryArgs( name, args );
-          this->query = pkgdb::PkgQuery( args );
-          for ( const auto & row : this->queryDb( *input->getDbReadOnly() ) )
-            {
-              this->showRow( *input, row );
-            }
+          this->showRow( *input, row );
         }
-      return EXIT_SUCCESS;
     }
-  catch ( const pkgdb::PkgQuery::InvalidPkgQueryArgException & err )
-    {
-      // TODO: DRY ( see main.cc )
-      int exitCode = EC_INVALID_PKG_QUERY_ARG;
-      exitCode += static_cast<int>( err.errorCode );
-      std::cout << "{ \"error\": \"" << err.what()
-                << "\", \"code\": " << exitCode << " }" << std::endl;
-      return exitCode;
-    }
-  catch ( const std::exception & err )
-    {
-      // TODO: DRY ( see main.cc )
-      std::cout << "{ \"error\": \"" << err.what()
-                << "\", \"code\": " << EC_FAILURE << " }" << std::endl;
-      return EC_FAILURE;
-    }
+  return EXIT_SUCCESS;
 }
 
 

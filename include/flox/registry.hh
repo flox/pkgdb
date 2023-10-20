@@ -511,7 +511,6 @@ public:
     return maybeInput;
   }
 
-
   /** @brief Get the raw registry read from the user. */
   [[nodiscard]] const RegistryRaw &
   getRaw() const
