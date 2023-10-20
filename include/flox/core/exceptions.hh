@@ -80,12 +80,12 @@ public:
     : contextMsg( contextMsg ), caughtMsg( caughtMsg )
   {}
   [[nodiscard]] virtual error_category
-  get_error_code() const noexcept
+  getErrorCode() const noexcept
   {
     return EC_FLOX_EXCEPTION;
   };
   [[nodiscard]] virtual std::string_view
-  category_message() const noexcept
+  getCategoryMessage() const noexcept
   {
     return this->categoryMsg;
   };

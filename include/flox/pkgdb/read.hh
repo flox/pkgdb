@@ -108,12 +108,12 @@ public:
 
   PkgDbException( std::string_view msg ) : FloxException( msg ) {}
   [[nodiscard]] error_category
-  get_error_code() const noexcept override
+  getErrorCode() const noexcept override
   {
     return EC_PKG_DB;
   }
   [[nodiscard]] std::string_view
-  category_message() const noexcept override
+  getCategoryMessage() const noexcept override
   {
     return this->categoryMsg;
   }
