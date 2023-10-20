@@ -21,9 +21,9 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 std::string
-FloxException::what_string() const noexcept
+FloxException::whatString() const noexcept
 {
-  std::string msg( this->category_message() );
+  std::string msg( this->getCategoryMessage() );
   if ( this->contextMsg.has_value() )
     {
       msg += ": ";
@@ -55,9 +55,9 @@ to_json( nlohmann::json & jto, const FloxException & err )
     }
 
   jto = {
-    { "exit_code", err.get_error_code() },
+    { "exit_code", err.getErrorCode() },
     { "message", msg },
-    { "category", err.category_message() },
+    { "category", err.getCategoryMessage() },
   };
 }
 

@@ -24,6 +24,7 @@ namespace flox {
 /** @brief An exception thrown when converting YAML to JSON */
 class YAMLToJSONException : public FloxException
 {
+
 private:
 
   static constexpr std::string_view categoryMsg
@@ -34,23 +35,28 @@ public:
   explicit YAMLToJSONException( std::string_view contextMsg )
     : FloxException( contextMsg )
   {}
+
   explicit YAMLToJSONException( std::string_view contextMsg,
                                 const char      *caughtMsg )
     : FloxException( contextMsg, caughtMsg )
   {}
+
   [[nodiscard]] error_category
-  get_error_code() const noexcept override
+  getErrorCode() const noexcept override
   {
     return EC_YAML_TO_JSON;
   }
+
   [[nodiscard]] std::string_view
-  category_message() const noexcept override
+  getCategoryMessage() const noexcept override
   {
     return this->categoryMsg;
   }
 
 }; /* End class `YAMLToJSONException' */
 
+
+/* -------------------------------------------------------------------------- */
 
 nlohmann::json
 yamlToJSON( std::string_view yaml )

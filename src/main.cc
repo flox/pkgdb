@@ -86,7 +86,7 @@ main( int argc, char *argv[] )
         }
       else { std::cerr << err.what() << std::endl; }
 
-      return err.get_error_code();
+      return err.getErrorCode();
     }
   catch ( const std::exception &err )
     {
