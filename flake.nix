@@ -8,7 +8,8 @@
 
 # ---------------------------------------------------------------------------- #
 
-  inputs.nixpkgs.url                      = "github:NixOS/nixpkgs";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/release-23.05";
+
   inputs.floco.url                        = "github:aakropotkin/floco";
   inputs.floco.inputs.nixpkgs.follows     = "/nixpkgs";
   inputs.argparse.url                     = "github:aakropotkin/argparse";
@@ -34,7 +35,11 @@
 
 # ---------------------------------------------------------------------------- #
 
+    /* Use nix@2.15 */
+    overlays.nix = final: prev: { nix = prev.nixVersions.nix_2_15; };
+    /* Aggregate dependency overlays. */
     overlays.deps = nixpkgs.lib.composeManyExtensions [
+      overlays.nix
       floco.overlays.default
       sqlite3pp.overlays.default
       argparse.overlays.default
