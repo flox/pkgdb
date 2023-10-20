@@ -29,9 +29,9 @@ test_whatString()
   EXPECT_EQ( base.whatString(), "general error: context" );
 
   command::InvalidArgException derived( "context" );
-  FloxException*               derived_ptr = &derived;
+  FloxException*               derivedPtr = &derived;
 
-  EXPECT_EQ( derived_ptr->whatString(), "invalid argument: context" );
+  EXPECT_EQ( derivedPtr->whatString(), "invalid argument: context" );
 
   return true;
 }
