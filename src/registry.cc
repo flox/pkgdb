@@ -10,8 +10,8 @@
 #include <nix/flake/flakeref.hh>
 
 #include "flox/core/util.hh"
-#include "flox/registry.hh"
 #include "flox/pkgdb/input.hh"
+#include "flox/registry.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -20,7 +20,7 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
-  void
+void
 InputPreferences::clear()
 {
   this->subtrees    = std::nullopt;
@@ -30,8 +30,8 @@ InputPreferences::clear()
 
 /* -------------------------------------------------------------------------- */
 
-  pkgdb::PkgQueryArgs &
-InputPreferences::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
+pkgdb::PkgQueryArgs &
+InputPreferences::fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const
 {
   pqa.subtrees    = this->subtrees;
   pqa.stabilities = this->stabilities;
@@ -41,7 +41,7 @@ InputPreferences::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 
 /* -------------------------------------------------------------------------- */
 
-  void
+void
 RegistryRaw::clear()
 {
   this->inputs.clear();
@@ -52,18 +52,16 @@ RegistryRaw::clear()
 
 /* -------------------------------------------------------------------------- */
 
-  std::vector<std::reference_wrapper<const std::string>>
+std::vector<std::reference_wrapper<const std::string>>
 RegistryRaw::getOrder() const
 {
   std::vector<std::reference_wrapper<const std::string>> order(
-    this->priority.cbegin()
-  , this->priority.cend()
-  );
-  for ( const auto & [key, _] : this->inputs )
+    this->priority.cbegin(),
+    this->priority.cend() );
+  for ( const auto &[key, _] : this->inputs )
     {
       if ( std::find( this->priority.begin(), this->priority.end(), key )
-           == this->priority.end()
-         )
+           == this->priority.end() )
         {
           order.emplace_back( key );
         }
@@ -74,24 +72,20 @@ RegistryRaw::getOrder() const
 
 /* -------------------------------------------------------------------------- */
 
-  void
-from_json( const nlohmann::json & jfrom, RegistryInput & rip )
+void
+from_json( const nlohmann::json &jfrom, RegistryInput &rip )
 {
   from_json( jfrom, dynamic_cast<InputPreferences &>( rip ) );
   rip.from = std::make_shared<nix::FlakeRef>(
-    jfrom.at( "from" ).get<nix::FlakeRef>()
-  );
+    jfrom.at( "from" ).get<nix::FlakeRef>() );
 }
 
 
-  void
-to_json( nlohmann::json & jto, const RegistryInput & rip )
+void
+to_json( nlohmann::json &jto, const RegistryInput &rip )
 {
   to_json( jto, dynamic_cast<const InputPreferences &>( rip ) );
-  if ( rip.from == nullptr )
-    {
-      jto.emplace( "from", nullptr );
-    }
+  if ( rip.from == nullptr ) { jto.emplace( "from", nullptr ); }
   else
     {
       jto.emplace( "from", nix::fetchers::attrsToJSON( rip.from->toAttrs() ) );
@@ -101,22 +95,20 @@ to_json( nlohmann::json & jto, const RegistryInput & rip )
 
 /* -------------------------------------------------------------------------- */
 
-  pkgdb::PkgQueryArgs &
-RegistryRaw::fillPkgQueryArgs( const std::string         & input
-                             ,       pkgdb::PkgQueryArgs & pqa
-                             ) const
+pkgdb::PkgQueryArgs &
+RegistryRaw::fillPkgQueryArgs( const std::string   &input,
+                               pkgdb::PkgQueryArgs &pqa ) const
 {
   /* Look for the named input and our fallbacks/default in the inputs list.
    * then fill input specific settings. */
   try
     {
-      const RegistryInput & minput = this->inputs.at( input );
-      pqa.subtrees = minput.subtrees.has_value()
-                     ? minput.subtrees
-                     : this->defaults.subtrees;
+      const RegistryInput &minput = this->inputs.at( input );
+      pqa.subtrees    = minput.subtrees.has_value() ? minput.subtrees
+                                                    : this->defaults.subtrees;
       pqa.stabilities = minput.stabilities.has_value()
-                        ? minput.stabilities
-                        : this->defaults.stabilities;
+                          ? minput.stabilities
+                          : this->defaults.stabilities;
     }
   catch ( ... )
     {
@@ -129,15 +121,14 @@ RegistryRaw::fillPkgQueryArgs( const std::string         & input
 
 /* -------------------------------------------------------------------------- */
 
-  nix::ref<FloxFlake>
+nix::ref<FloxFlake>
 FloxFlakeInput::getFlake()
 {
   if ( this->flake == nullptr )
     {
-      this->flake = std::make_shared<FloxFlake>(
-        NixState( this->store ).getState()
-      , * this->getFlakeRef()
-      );
+      this->flake
+        = std::make_shared<FloxFlake>( NixState( this->store ).getState(),
+                                       *this->getFlakeRef() );
     }
   return static_cast<nix::ref<FloxFlake>>( this->flake );
 }
@@ -145,14 +136,14 @@ FloxFlakeInput::getFlake()
 
 /* -------------------------------------------------------------------------- */
 
-  const std::vector<Subtree> &
+const std::vector<Subtree> &
 FloxFlakeInput::getSubtrees()
 {
   if ( ! this->enabledSubtrees.has_value() )
     {
       if ( this->subtrees.has_value() )
         {
-          this->enabledSubtrees = * this->subtrees;
+          this->enabledSubtrees = *this->subtrees;
         }
       else
         {
@@ -169,32 +160,27 @@ FloxFlakeInput::getSubtrees()
             {
               this->enabledSubtrees = std::vector<Subtree> { ST_LEGACY };
             }
-          else
-            {
-              this->enabledSubtrees = std::vector<Subtree> {};
-            }
+          else { this->enabledSubtrees = std::vector<Subtree> {}; }
         }
     }
-  return * this->enabledSubtrees;
+  return *this->enabledSubtrees;
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-  RegistryInput
+RegistryInput
 FloxFlakeInput::getLockedInput()
 {
-  return RegistryInput(
-    this->getSubtrees()
-  , this->stabilities
-  , this->getFlake()->lockedFlake.flake.lockedRef
-  );
+  return RegistryInput( this->getSubtrees(),
+                        this->stabilities,
+                        this->getFlake()->lockedFlake.flake.lockedRef );
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-}  /* End namespaces `flox' */
+}  // namespace flox
 
 
 /* -------------------------------------------------------------------------- *

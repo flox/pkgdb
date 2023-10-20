@@ -1,9 +1,10 @@
+exceptions
 is_sqlite3
 manifest
 pkgdb
 registry
-resolver
 resolver-params
+resolver
 search-params
 util
 versions

@@ -10,14 +10,14 @@
 
 #pragma once
 
-#include <string>
 #include <functional>
+#include <string>
 #include <vector>
 
 #include <nlohmann/json.hpp>
 
-#include "flox/pkgdb/pkg-query.hh"
 #include "flox/pkgdb/params.hh"
+#include "flox/pkgdb/pkg-query.hh"
 #include "flox/registry.hh"
 
 
@@ -45,7 +45,8 @@ using AttrPathGlob = std::vector<std::optional<std::string>>;
  * down into the descriptor, and do not attempt to distinguish from relative or
  * absolute attribute paths in the @a path field.
  */
-struct PkgDescriptorRaw : public pkgdb::PkgDescriptorBase {
+struct PkgDescriptorRaw : public pkgdb::PkgDescriptorBase
+{
 
   /* From `pkgdb::PkgDescriptorBase':
    *   std::optional<std::string> name;
@@ -54,7 +55,7 @@ struct PkgDescriptorRaw : public pkgdb::PkgDescriptorBase {
    *   std::optional<std::string> semver;
    */
 
-  /** 
+  /**
    * Filter results by an exact match on either `pname` or `pkgAttrName`.
    * To match just `pname` see @a flox::pkgdb::PkgDescriptorBase.
    */
@@ -91,7 +92,8 @@ struct PkgDescriptorRaw : public pkgdb::PkgDescriptorBase {
 
 
   /** @brief Reset to default state. */
-  void clear() override;
+  void
+  clear() override;
 
   /**
    * @brief Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to
@@ -102,19 +104,45 @@ struct PkgDescriptorRaw : public pkgdb::PkgDescriptorBase {
    * @param pqa A set of query args to _fill_ with preferences.
    * @return A reference to the modified query args.
    */
-  pkgdb::PkgQueryArgs & fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
+  pkgdb::PkgQueryArgs &
+  fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
 
 
-};  /* End struct `PkgDescriptorRaw' */
+}; /* End struct `PkgDescriptorRaw' */
 
+/** @brief An exception thrown a PkgDescriptorRaw is invalid */
+class InvalidPkgDescriptorException : public FloxException
+{
+private:
+
+  static constexpr std::string_view categoryMsg = "invalid package query";
+
+public:
+
+  explicit InvalidPkgDescriptorException( std::string_view contextMsg )
+    : FloxException( contextMsg )
+  {}
+  [[nodiscard]] error_category
+  get_error_code() const noexcept override
+  {
+    return EC_INVALID_PKG_DESCRIPTOR;
+  }
+  [[nodiscard]] std::string_view
+  category_message() const noexcept override
+  {
+    return this->categoryMsg;
+  }
+}; /* End class `InvalidPkgDescriptorException' */
 
 /* -------------------------------------------------------------------------- */
 
 /** @brief Convert a JSON object to a @a flox::resolver::PkgDescriptorRaw. */
-void from_json( const nlohmann::json & jfrom, PkgDescriptorRaw & desc );
+void
+from_json( const nlohmann::json & jfrom, PkgDescriptorRaw & desc );
 
 /** @brief Convert a @a flox::resolver::PkgDescriptorRaw to a a JSON object. */
-void to_json( nlohmann::json & jto, const PkgDescriptorRaw & desc );
+void
+to_json( nlohmann::json & jto, const PkgDescriptorRaw & desc );
 
 
 /* -------------------------------------------------------------------------- */
@@ -133,7 +161,7 @@ using ResolveOneParams = pkgdb::QueryParams<PkgDescriptorRaw>;
 
 /* -------------------------------------------------------------------------- */
 
-}  /* End namespaces `flox::resolver' */
+}  // namespace flox::resolver
 
 
 /* -------------------------------------------------------------------------- *

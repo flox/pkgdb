@@ -7,18 +7,18 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include <vector>
-#include <functional>
 #include <fstream>
+#include <functional>
+#include <vector>
 
 #include <nlohmann/json.hpp>
 
 #include "flox/core/exceptions.hh"
 #include "flox/core/util.hh"
 #include "flox/flox-flake.hh"
+#include "flox/pkgdb/command.hh"
 #include "flox/pkgdb/write.hh"
 #include "flox/search/command.hh"
-#include "flox/pkgdb/command.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -27,26 +27,26 @@ namespace flox::search {
 
 /* -------------------------------------------------------------------------- */
 
-  argparse::Argument &
+argparse::Argument &
 PkgQueryMixin::addQueryArgs( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "query" )
-               .help( "query parameters" )
-               .required()
-               .metavar( "QUERY" )
-               .action( [&]( const std::string & query )
-                        {
-                          pkgdb::PkgQueryArgs args;
-                          nlohmann::json::parse( query ).get_to( args );
-                          this->query = pkgdb::PkgQuery( args );
-                        }
-                      );
+    .help( "query parameters" )
+    .required()
+    .metavar( "QUERY" )
+    .action(
+      [&]( const std::string & query )
+      {
+        pkgdb::PkgQueryArgs args;
+        nlohmann::json::parse( query ).get_to( args );
+        this->query = pkgdb::PkgQuery( args );
+      } );
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-  std::vector<pkgdb::row_id>
+std::vector<pkgdb::row_id>
 PkgQueryMixin::queryDb( pkgdb::PkgDbReadOnly & pdb ) const
 {
   return this->query.execute( pdb.db );
@@ -55,20 +55,19 @@ PkgQueryMixin::queryDb( pkgdb::PkgDbReadOnly & pdb ) const
 
 /* -------------------------------------------------------------------------- */
 
-  argparse::Argument &
+argparse::Argument &
 SearchCommand::addSearchParamArgs( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "parameters" )
-               .help( "search paramaters as inline JSON or a path to a file" )
-               .required()
-               .metavar( "PARAMS" )
-               .action( [&]( const std::string & params )
-                        {
-                          nlohmann::json paramsJSON =
-                            parseOrReadJSONObject( params );
-                          paramsJSON.get_to( this->params );
-                        }
-                      );
+    .help( "search paramaters as inline JSON or a path to a file" )
+    .required()
+    .metavar( "PARAMS" )
+    .action(
+      [&]( const std::string & params )
+      {
+        nlohmann::json paramsJSON = parseOrReadJSONObject( params );
+        paramsJSON.get_to( this->params );
+      } );
 }
 
 
@@ -77,45 +76,44 @@ SearchCommand::addSearchParamArgs( argparse::ArgumentParser & parser )
 SearchCommand::SearchCommand() : parser( "search" )
 {
   this->parser.add_description(
-    "Search a set of flakes and emit a list satisfactory packages"
-  );
+    "Search a set of flakes and emit a list satisfactory packages" );
   this->addSearchParamArgs( this->parser );
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-  int
+int
 SearchCommand::run()
 {
   try
     {
       pkgdb::PkgQueryArgs args;
-      for ( const auto & [name, input] : * this->getPkgDbRegistry() )
+      for ( const auto & [name, input] : *this->getPkgDbRegistry() )
         {
           this->params.fillPkgQueryArgs( name, args );
           this->query = pkgdb::PkgQuery( args );
-          for ( const auto & row : this->queryDb( * input->getDbReadOnly() ) )
+          for ( const auto & row : this->queryDb( *input->getDbReadOnly() ) )
             {
-              this->showRow( * input, row );
+              this->showRow( *input, row );
             }
         }
       return EXIT_SUCCESS;
     }
-  catch( const pkgdb::PkgQuery::InvalidArgException & err )
+  catch ( const pkgdb::PkgQuery::InvalidPkgQueryArgException & err )
     {
       // TODO: DRY ( see main.cc )
-      int exitCode = EC_PKG_QUERY_INVALID_ARG;
+      int exitCode = EC_INVALID_PKG_QUERY_ARG;
       exitCode += static_cast<int>( err.errorCode );
-      std::cout << "{ \"error\": \"" << err.what() << "\", \"code\": "
-                << exitCode << " }" << std::endl;
+      std::cout << "{ \"error\": \"" << err.what()
+                << "\", \"code\": " << exitCode << " }" << std::endl;
       return exitCode;
     }
-  catch( const std::exception & err )
+  catch ( const std::exception & err )
     {
       // TODO: DRY ( see main.cc )
-      std::cout << "{ \"error\": \"" << err.what() << "\", \"code\": "
-                << EC_FAILURE << " }" << std::endl;
+      std::cout << "{ \"error\": \"" << err.what()
+                << "\", \"code\": " << EC_FAILURE << " }" << std::endl;
       return EC_FAILURE;
     }
 }
@@ -123,7 +121,7 @@ SearchCommand::run()
 
 /* -------------------------------------------------------------------------- */
 
-}  /* End namespaces `flox::search' */
+}  // namespace flox::search
 
 
 /* -------------------------------------------------------------------------- *

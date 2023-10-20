@@ -30,6 +30,7 @@ TEST       ?= test
 DOXYGEN    ?= doxygen
 BEAR       ?= bear
 TIDY       ?= clang-tidy
+FMT        ?= clang-format
 
 
 # ---------------------------------------------------------------------------- #
@@ -80,7 +81,7 @@ bin_SRCS       += $(addprefix src/pkgdb/,scrape.cc get.cc command.cc)
 bin_SRCS       += $(addprefix src/search/,command.cc)
 bin_SRCS       += $(addprefix src/resolver/,command.cc)
 lib_SRCS       =  $(filter-out $(bin_SRCS),$(SRCS))
-test_SRCS      =  $(wildcard tests/*.cc)
+test_SRCS      =  $(sort $(wildcard tests/*.cc))
 ALL_SRCS       = $(SRCS) $(test_SRCS)
 BINS           =  pkgdb
 TEST_UTILS     =  $(addprefix tests/,is_sqlite3 resolver-params search-params)
@@ -324,15 +325,26 @@ cdb: compile_commands.json
 
 
 # Get system include paths from `nix' C++ compiler.
-CXX_SYSTEM_INCDIRS := $(shell                                                \
-  $(CXX) -E -Wp,-v -xc++ /dev/null 2>&1 1>/dev/null|$(GREP) '^ /nix/store')
+# Filter out framework directory, e.g.
+# /nix/store/q2d0ya7rc5kmwbwvsqc2djvv88izn1q6-apple-framework-CoreFoundation-11.0.0/Library/Frameworks (framework directory)
+# We might be able to strip '(framework directory)' instead and append
+# CoreFoundation.framework/Headers but I don't think we need to.
+CXX_SYSTEM_INCDIRS := $(shell                                \
+  $(CXX) -E -Wp,-v -xc++ /dev/null 2>&1 1>/dev/null          \
+  |$(GREP) -v 'framework directory'|$(GREP) '^ /nix/store')
 
 compile_commands.json: flake.nix flake.lock pkg-fun.nix
 compile_commands.json: $(lastword $(MAKEFILE_LIST))
 compile_commands.json: $(COMMON_HEADERS) $(ALL_SRCS)
 	-$(MAKE) -C $(MAKEFILE_DIR) clean;
+	$(info $$CXX_SYSTEM_INCDIRS is [${CXX_SYSTEM_INCDIRS}])
+
+	$(MKDIR_P) $(MAKEFILE_DIR)/bear.d
+	ln -sf $(shell dirname $(shell command -v $(BEAR)))/../lib/bear/wrapper bear.d/c++
+
 	EXTRA_CXXFLAGS='$(patsubst %,-isystem %,$(CXX_SYSTEM_INCDIRS))'  \
-	  $(BEAR) --output "$@" -- $(MAKE) -C $(MAKEFILE_DIR) -j all;
+	  PATH="$(MAKEFILE_DIR)/bear.d/:$(PATH)"                         \
+	  $(BEAR) -- $(MAKE) -C $(MAKEFILE_DIR) -j bin;
 
 
 # ---------------------------------------------------------------------------- #
@@ -423,6 +435,12 @@ ignores: tests/.gitignore
 tests/.gitignore: FORCE
 	$(MKDIR_P) $(@D)
 	printf '%s\n' $(patsubst tests/%,%,$(test_SRCS:.cc=)) > $@
+
+# ---------------------------------------------------------------------------- #
+
+.PHONY: fmt
+fmt: $(COMMON_HEADERS) $(ALL_SRCS)
+	$(FMT) -i $^
 
 
 # ---------------------------------------------------------------------------- #

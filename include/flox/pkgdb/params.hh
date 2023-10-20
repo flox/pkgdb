@@ -24,7 +24,8 @@ namespace flox::pkgdb {
 /**
  * @brief Global preferences used for resolution/search with multiple queries.
  */
-struct QueryPreferences {
+struct QueryPreferences
+{
 
   /**
    * Ordered list of systems to be searched.
@@ -34,7 +35,8 @@ struct QueryPreferences {
 
 
   /** @brief Allow/disallow packages with certain metadata. */
-  struct Allows {
+  struct Allows
+  {
 
     /** Whether to include packages which are explicitly marked `unfree`. */
     bool unfree = true;
@@ -45,7 +47,7 @@ struct QueryPreferences {
     /** Filter results to those explicitly marked with the given licenses. */
     std::optional<std::vector<std::string>> licenses;
 
-  };  /* End struct `QueryPreferences::Allows' */
+  }; /* End struct `QueryPreferences::Allows' */
 
   Allows allow; /**< Allow/disallow packages with certain metadata. */
 
@@ -56,16 +58,18 @@ struct QueryPreferences {
    * These act as the _global_ default, but may be overridden by
    * individual descriptors.
    */
-  struct Semver {
+  struct Semver
+  {
     /** Whether pre-release versions should be ordered before releases. */
     bool preferPreReleases = false;
-  };  /* End struct `QueryPreferences::Semver' */
+  }; /* End struct `QueryPreferences::Semver' */
 
-  Semver semver;  /**< Settings associated with semantic version processing. */
+  Semver semver; /**< Settings associated with semantic version processing. */
 
 
   /** @brief Reset to default/empty state. */
-  virtual void clear();
+  virtual void
+  clear();
 
   /**
    * @brief Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to
@@ -73,10 +77,36 @@ struct QueryPreferences {
    *
    * NOTE: This DOES clear @a pqa before filling it.
    */
-  pkgdb::PkgQueryArgs & fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
+  pkgdb::PkgQueryArgs &
+  fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const;
 
 
-};  /* End struct `QueryPreferences' */
+}; /* End struct `QueryPreferences' */
+
+/** @brief An exception thrown when parsing `QueryPreferences` from JSON */
+class ParseQueryPreferencesException : public FloxException
+{
+private:
+
+  static constexpr std::string_view categoryMsg
+    = "error parsing query preferences";
+
+public:
+
+  explicit ParseQueryPreferencesException( std::string_view contextMsg )
+    : FloxException( contextMsg )
+  {}
+  [[nodiscard]] error_category
+  get_error_code() const noexcept override
+  {
+    return EC_PARSE_QUERY_PREFERENCES;
+  }
+  [[nodiscard]] std::string_view
+  category_message() const noexcept override
+  {
+    return this->categoryMsg;
+  }
+}; /* End class `ParseQueryPreferencesException' */
 
 
 /* -------------------------------------------------------------------------- */
@@ -87,14 +117,16 @@ struct QueryPreferences {
  * NOTE: This DOES clear @a prefs before filling it.
  * NOTE: Does not `throw` for unknown keys at the top level.
  */
-void from_json( const nlohmann::json & jfrom, QueryPreferences & prefs );
+void
+from_json( const nlohmann::json &jfrom, QueryPreferences &prefs );
 
 /**
  * @brief Convert a @a flox::pkgdb::QueryPreferences to a JSON object.
  *
  * NOTE: This DOES clear @a jto before filling it.
  */
-void to_json( nlohmann::json & jto, const QueryPreferences & prefs );
+void
+to_json( nlohmann::json &jto, const QueryPreferences &prefs );
 
 
 /* -------------------------------------------------------------------------- */
@@ -111,8 +143,9 @@ void to_json( nlohmann::json & jto, const QueryPreferences & prefs );
  * @see flox::resolver::ResolveOneParams
  * @see flox::search::SearchParams
  */
-  template <pkg_descriptor_typename QueryType>
-struct QueryParams : public QueryPreferences {
+template<pkg_descriptor_typename QueryType>
+struct QueryParams : public QueryPreferences
+{
 
   using query_type = QueryType;
 
@@ -140,7 +173,7 @@ struct QueryParams : public QueryPreferences {
   QueryType query;
 
   /** @brief Reset to default/empty state. */
-    virtual void
+  virtual void
   clear() override
   {
     this->pkgdb::QueryPreferences::clear();
@@ -156,10 +189,8 @@ struct QueryParams : public QueryPreferences {
    * @return `true` if @a pqa was modified, indicating that the input should be
    *         searched, `false` otherwise.
    */
-    virtual bool
-  fillPkgQueryArgs( const std::string         & input
-                  ,       pkgdb::PkgQueryArgs & pqa
-                  ) const
+  virtual bool
+  fillPkgQueryArgs( const std::string &input, pkgdb::PkgQueryArgs &pqa ) const
   {
     /* Fill from globals */
     this->pkgdb::QueryPreferences::fillPkgQueryArgs( pqa );
@@ -171,16 +202,43 @@ struct QueryParams : public QueryPreferences {
   }
 
 
-};  /* End struct `ResolveOneParams' */
+}; /* End struct `ResolveOneParams' */
 
 
 /* -------------------------------------------------------------------------- */
 
-  template <pkg_descriptor_typename QueryType> void
-from_json( const nlohmann::json & jfrom, QueryParams<QueryType> & params )
+/** @brief An exception thrown when parsing `QueryParams` from JSON */
+class ParseQueryParamsException : public FloxException
+{
+private:
+
+  static constexpr std::string_view categoryMsg
+    = "error parsing query parameters";
+
+public:
+
+  explicit ParseQueryParamsException( std::string_view contextMsg )
+    : FloxException( contextMsg )
+  {}
+  [[nodiscard]] error_category
+  get_error_code() const noexcept override
+  {
+    return EC_PARSE_QUERY_PARAMS;
+  }
+  [[nodiscard]] std::string_view
+  category_message() const noexcept override
+  {
+    return this->categoryMsg;
+  }
+
+}; /* End class `ParseQueryParamsException' */
+
+template<pkg_descriptor_typename QueryType>
+void
+from_json( const nlohmann::json &jfrom, QueryParams<QueryType> &params )
 {
   pkgdb::from_json( jfrom, dynamic_cast<pkgdb::QueryPreferences &>( params ) );
-  for ( const auto & [key, value] : jfrom.items() )
+  for ( const auto &[key, value] : jfrom.items() )
     {
       if ( key == "registry" )
         {
@@ -192,17 +250,16 @@ from_json( const nlohmann::json & jfrom, QueryParams<QueryType> & params )
           if ( value.is_null() ) { continue; }
           value.get_to( params.query );
         }
-      else if ( ( key == "systems" ) ||
-                ( key == "allow" )   ||
-                ( key == "semver" )
-              )
+      else if ( ( key == "systems" ) || ( key == "allow" )
+                || ( key == "semver" ) )
         {
           /* Handled by `QueryPreferences::from_json' */
           continue;
         }
       else
         {
-          throw FloxException( "Unexpected preferences field '" + key + '\'' );
+          throw ParseQueryParamsException( "Unexpected preferences field '"
+                                           + key + '\'' );
         }
     }
 }
@@ -210,12 +267,12 @@ from_json( const nlohmann::json & jfrom, QueryParams<QueryType> & params )
 
 /* -------------------------------------------------------------------------- */
 
-  template <pkg_descriptor_typename QueryType> void
-to_json( nlohmann::json & jto, const QueryParams<QueryType> & params )
+template<pkg_descriptor_typename QueryType>
+void
+to_json( nlohmann::json &jto, const QueryParams<QueryType> &params )
 {
-  pkgdb::to_json( jto
-                , dynamic_cast<const pkgdb::QueryPreferences &>( params )
-                );
+  pkgdb::to_json( jto,
+                  dynamic_cast<const pkgdb::QueryPreferences &>( params ) );
   jto["registry"] = params.registry;
   jto["query"]    = params.query;
 }
@@ -223,7 +280,7 @@ to_json( nlohmann::json & jto, const QueryParams<QueryType> & params )
 
 /* -------------------------------------------------------------------------- */
 
-}  /* End namespaces `flox::pkgdb' */
+}  // namespace flox::pkgdb
 
 
 /* -------------------------------------------------------------------------- *

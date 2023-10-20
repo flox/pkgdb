@@ -17,7 +17,7 @@ namespace flox::search {
 
 /* -------------------------------------------------------------------------- */
 
-  void
+void
 SearchQuery::clear()
 {
   this->pkgdb::PkgDescriptorBase::clear();
@@ -27,68 +27,47 @@ SearchQuery::clear()
 
 /* -------------------------------------------------------------------------- */
 
-  void
-from_json( const nlohmann::json & jfrom, SearchQuery & qry )
+void
+from_json( const nlohmann::json &jfrom, SearchQuery &qry )
 {
-  auto getOrFail = [&]( const std::string    & key
-                      , const nlohmann::json & from
-                      , auto                 & sink
-                      )
-    {
-      if ( from.is_null() ) { return; }
-      try
-        {
-          from.get_to( sink );
-        }
-      catch( const nlohmann::json::exception & err )
-        {
-          throw FloxException(
-            "Failed to parse search query field: 'query." + key + "':\n  " +
-            err.what()
-          );
-        }
-      catch( ... )
-        {
-          throw FloxException(
-            "Failed to parse search query field: 'query." + key + "'."
-          );
-        }
-    };
+  auto getOrFail
+    = [&]( const std::string &key, const nlohmann::json &from, auto &sink )
+  {
+    if ( from.is_null() ) { return; }
+    try
+      {
+        from.get_to( sink );
+      }
+    catch ( const nlohmann::json::exception &err )
+      {
+        throw ParseSearchQueryException( "parsing field: 'query." + key + "'",
+                                         err.what() );
+      }
+    catch ( ... )
+      {
+        throw ParseSearchQueryException( "parsing field: 'query." + key
+                                         + "'." );
+      }
+  };
 
-  for ( const auto & [key, value] : jfrom.items() )
+  for ( const auto &[key, value] : jfrom.items() )
     {
-      if ( key == "name" )
-        {
-          getOrFail( key, value, qry.name );
-        }
-      else if ( key == "pname" )
-        {
-          getOrFail( key, value, qry.pname );
-        }
-      else if ( key == "version" )
-        {
-          getOrFail( key, value, qry.version );
-        }
-      else if ( key == "semver" )
-        {
-          getOrFail( key, value, qry.semver );
-        }
-      else if ( key == "match" )
-        {
-          getOrFail( key, value, qry.partialMatch );
-        }
+      if ( key == "name" ) { getOrFail( key, value, qry.name ); }
+      else if ( key == "pname" ) { getOrFail( key, value, qry.pname ); }
+      else if ( key == "version" ) { getOrFail( key, value, qry.version ); }
+      else if ( key == "semver" ) { getOrFail( key, value, qry.semver ); }
+      else if ( key == "match" ) { getOrFail( key, value, qry.partialMatch ); }
       else
         {
-          throw FloxException(
-            "Unrecognized search query key: 'query." + key + "'."
-          );
+          throw ParseSearchQueryException( "unrecognized key: 'query." + key
+                                           + "'." );
         }
     }
 }
 
 
-  void
-to_json( nlohmann::json & jto, const SearchQuery & qry )
+void
+to_json( nlohmann::json &jto, const SearchQuery &qry )
 {
   pkgdb::to_json( jto, dynamic_cast<const pkgdb::PkgDescriptorBase &>( qry ) );
   jto["match"] = qry.partialMatch;
@@ -97,8 +76,8 @@ to_json( nlohmann::json & jto, const SearchQuery & qry )
 
 /* -------------------------------------------------------------------------- */
 
-  pkgdb::PkgQueryArgs &
-SearchQuery::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
+pkgdb::PkgQueryArgs &
+SearchQuery::fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const
 {
   /* XXX: DOES NOT CLEAR FIRST! We are called after global preferences. */
   pqa.name         = this->name;
@@ -112,21 +91,19 @@ SearchQuery::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 
 /* -------------------------------------------------------------------------- */
 
-}  /* End namespaces `flox::search' */
+}  // namespace flox::search
 
 
 /* -------------------------------------------------------------------------- */
 
 /* Instantiate templates. */
 namespace flox::pkgdb {
-  template struct QueryParams<search::SearchQuery>;
-  template void from_json( const nlohmann::json                   &
-                         ,       QueryParams<search::SearchQuery> &
-                         );
-  template void to_json(       nlohmann::json                   &
-                       , const QueryParams<search::SearchQuery> &
-                       );
-}  /* End namespaces `flox::pkgdb' */
+template struct QueryParams<search::SearchQuery>;
+template void
+from_json( const nlohmann::json &, QueryParams<search::SearchQuery> & );
+template void
+to_json( nlohmann::json &, const QueryParams<search::SearchQuery> & );
+}  // namespace flox::pkgdb
 
 
 /* -------------------------------------------------------------------------- *

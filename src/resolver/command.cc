@@ -19,22 +19,19 @@ namespace flox::resolver {
 
 /* -------------------------------------------------------------------------- */
 
-  argparse::Argument &
-ResolveCommand::addResolveParamArgs( argparse::ArgumentParser & parser )
+argparse::Argument &
+ResolveCommand::addResolveParamArgs( argparse::ArgumentParser &parser )
 {
   return parser.add_argument( "parameters" )
-               .help(
-                 "resolution paramaters as inline JSON or a path to a file"
-               )
-               .required()
-               .metavar( "PARAMS" )
-               .action( [&]( const std::string & params )
-                        {
-                          nlohmann::json paramsJSON =
-                            parseOrReadJSONObject( params );
-                          paramsJSON.get_to( this->params );
-                        }
-                      );
+    .help( "resolution paramaters as inline JSON or a path to a file" )
+    .required()
+    .metavar( "PARAMS" )
+    .action(
+      [&]( const std::string &params )
+      {
+        nlohmann::json paramsJSON = parseOrReadJSONObject( params );
+        paramsJSON.get_to( this->params );
+      } );
 }
 
 
@@ -44,26 +41,24 @@ ResolveCommand::ResolveCommand() : parser( "resolve" )
 {
   this->parser.add_description(
     "Resolve a descriptor in a set of flakes and emit a list "
-    "satisfactory packages"
-  );
+    "satisfactory packages" );
   this->addResolveParamArgs( this->parser );
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-   ResolverState
- ResolveCommand::getResolverState() const
- {
-   return { this->params.registry
-          , dynamic_cast<const pkgdb::QueryPreferences &>( this->params )
-          };
- }
+ResolverState
+ResolveCommand::getResolverState() const
+{
+  return { this->params.registry,
+           dynamic_cast<const pkgdb::QueryPreferences &>( this->params ) };
+}
 
 
 /* -------------------------------------------------------------------------- */
 
-  int
+int
 ResolveCommand::run()
 {
   auto state = this->getResolverState();
@@ -75,7 +70,7 @@ ResolveCommand::run()
 
 /* -------------------------------------------------------------------------- */
 
-}  /* End namespaces `flox::resolver' */
+}  // namespace flox::resolver
 
 
 /* -------------------------------------------------------------------------- *
