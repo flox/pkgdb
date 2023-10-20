@@ -86,12 +86,12 @@ public:
     : FloxException( contextMsg, caughtMsg )
   {}
   [[nodiscard]] error_category
-  get_error_code() const noexcept override
+  getErrorCode() const noexcept override
   {
     return EC_PARSE_SEARCH_QUERY;
   }
   [[nodiscard]] std::string_view
-  category_message() const noexcept override
+  getCategoryMessage() const noexcept override
   {
     return this->categoryMsg;
   }

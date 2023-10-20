@@ -452,6 +452,7 @@ public:
   /** @brief An exception thrown when a registry has invalid contents */
   class InvalidRegistryException : public FloxException
   {
+
   private:
 
     static constexpr std::string_view categoryMsg = "invalid registry";
@@ -461,17 +462,20 @@ public:
     explicit InvalidRegistryException( std::string_view contextMsg )
       : FloxException( contextMsg )
     {}
+
     [[nodiscard]] error_category
-    get_error_code() const noexcept override
+    getErrorCode() const noexcept override
     {
       return EC_INVALID_REGISTRY;
     }
+
     [[nodiscard]] std::string_view
-    category_message() const noexcept override
+    getCategoryMessage() const noexcept override
     {
       return this->categoryMsg;
     }
-  }; /* End class `InvalidArgException' */
+
+  }; /* End class `Registry::InvalidArgException' */
 
   /**
    * @brief Get an input by name.
@@ -489,7 +493,6 @@ public:
     if ( maybeInput == this->inputs.end() ) { return nullptr; }
     return maybeInput->second;
   }
-
 
   /**
    * @brief Get an input by name, or throw an error if no such input exists.
@@ -532,7 +535,6 @@ public:
     return this->inputs.empty();
   }
 
-
   /** @brief Iterate registry members in priority order. */
   [[nodiscard]] auto
   begin()
@@ -546,7 +548,6 @@ public:
   {
     return this->inputs.end();
   }
-
 
   /** @brief Iterate read-only registry members in priority order. */
   [[nodiscard]] auto
@@ -564,7 +565,6 @@ public:
   {
     return this->inputs.cend();
   }
-
 
   /** @brief Iterate read-only registry members in priority order. */
   [[nodiscard]] auto
@@ -693,6 +693,10 @@ class FlakeRegistry : public Registry<FloxFlakeInputFactory>
 {
 
 public:
+
+  FlakeRegistry( RegistryRaw registryRaw, FloxFlakeInputFactory & factory )
+    : Registry<FloxFlakeInputFactory>( registryRaw, factory )
+  {}
 
   [[nodiscard]] std::unordered_map<std::string, RegistryInput>
   getLockedInputs();

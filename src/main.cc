@@ -43,6 +43,9 @@ main( int argc, char * argv[] )
   flox::resolver::ResolveCommand cmdResolve;
   prog.add_subparser( cmdResolve.getParser() );
 
+  flox::resolver::LockCommand cmdLock;
+  prog.add_subparser( cmdLock.getParser() );
+
 
   /* Parse Args */
 
@@ -96,6 +99,7 @@ main( int argc, char * argv[] )
       if ( prog.is_subcommand_used( "list" ) ) { return cmdList.run(); }
       if ( prog.is_subcommand_used( "search" ) ) { return cmdSearch.run(); }
       if ( prog.is_subcommand_used( "resolve" ) ) { return cmdResolve.run(); }
+      if ( prog.is_subcommand_used( "lock" ) ) { return cmdLock.run(); }
     }
   catch ( const flox::pkgdb::PkgQuery::InvalidPkgQueryArgException & err )
     {

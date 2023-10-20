@@ -24,7 +24,7 @@ namespace flox {
 std::string
 FloxException::what_string() const noexcept
 {
-  std::string msg( this->category_message() );
+  std::string msg( this->getCategoryMessage() );
   if ( this->contextMsg.has_value() )
     {
       msg += ": ";

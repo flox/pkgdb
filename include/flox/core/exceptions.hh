@@ -76,19 +76,23 @@ public:
   explicit FloxException( std::string_view contextMsg )
     : contextMsg( contextMsg )
   {}
+
   explicit FloxException( std::string_view contextMsg, const char * caughtMsg )
     : contextMsg( contextMsg ), caughtMsg( caughtMsg )
   {}
+
   [[nodiscard]] virtual error_category
-  get_error_code() const noexcept
+  getErrorCode() const noexcept
   {
     return EC_FLOX_EXCEPTION;
-  };
+  }
+
   [[nodiscard]] virtual std::string_view
-  category_message() const noexcept
+  getCategoryMessage() const noexcept
   {
     return this->categoryMsg;
-  };
+  }
+
   // We can't override what() properly because we'd need to dynamically call
   // virtual methods.
   // - We don't want to force overriding what() in every child class, because
@@ -99,7 +103,8 @@ public:
   //   methods.
   [[nodiscard]] std::string
   what_string() const noexcept;
-};
+
+}; /* End class `FloxException' */
 
 
 /* -------------------------------------------------------------------------- */

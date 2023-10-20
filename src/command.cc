@@ -172,9 +172,8 @@ AttrPathMixin::fixupAttrPath()
 argparse::Argument &
 RegistryFileMixin::addRegistryFileArg( argparse::ArgumentParser & parser )
 {
-  return parser.add_argument( "--registry-file" )
+  return parser.add_argument( "--registry" )
     .help( "The path to the 'registry.json' file." )
-    .required()
     .metavar( "PATH" )
     .action( [&]( const std::string & strPath )
              { this->setRegistryPath( strPath ); } );
@@ -202,13 +201,41 @@ RegistryFileMixin::getRegistryRaw()
 void
 RegistryFileMixin::loadRegistry()
 {
+  /* Fallback to any of `[.flox/]{registry,manifest}.json' */
   if ( ! this->registryPath.has_value() )
     {
-      throw InvalidRegistryFileException( "registry path is null" );
+      if ( std::filesystem::exists( "registry.json" ) )
+        {
+          this->registryPath = nix::absPath( "registry.json" );
+        }
+      else if ( std::filesystem::exists( ".flox/registry.json" ) )
+        {
+          this->registryPath = nix::absPath( ".flox/registry.json" );
+        }
+      else if ( std::filesystem::exists( "manifest.json" ) )
+        {
+          this->registryPath = nix::absPath( "manifest.json" );
+        }
+      else if ( std::filesystem::exists( ".flox/manifest.json" ) )
+        {
+          this->registryPath = nix::absPath( ".flox/manifest.json" );
+        }
+      else
+        {
+          throw InvalidRegistryFileException( "registry path is null" );
+        }
     }
   std::ifstream  f( *( this->registryPath ) );
   nlohmann::json json = nlohmann::json::parse( f );
-  json.get_to( this->registryRaw );
+  /* If we read a manifest, registry is actually a field, so extract it. */
+  if ( json.find( "registry" ) != json.end() )
+    {
+      json.at( "registry" ).get_to( this->registryRaw );
+    }
+  else
+    {
+      json.get_to( this->registryRaw );
+    }
 }
 
 /* -------------------------------------------------------------------------- */
