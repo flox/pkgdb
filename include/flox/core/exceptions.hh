@@ -101,8 +101,7 @@ public:
   [[nodiscard]] std::string
   what_string() const noexcept;
 
-  [[nodiscard]] nlohmann::json
-  to_json() const noexcept;
+  friend void to_json( nlohmann::json & jto, const FloxException & err );
 };
 
 

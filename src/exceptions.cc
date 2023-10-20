@@ -12,7 +12,6 @@
 #include <filesystem>
 #include <fstream>
 
-
 #include "flox/core/exceptions.hh"
 
 
@@ -40,31 +39,27 @@ FloxException::what_string() const noexcept
 
 /* -------------------------------------------------------------------------- */
 
-nlohmann::json
-FloxException::to_json() const noexcept
+void
+to_json( nlohmann::json & jto, const FloxException & err )
 {
-
   std::string msg;
-  if ( this->contextMsg.has_value() )
+  if ( err.contextMsg.has_value() )
     {
       msg += ": ";
-      msg += *( this->contextMsg );
+      msg += *( err.contextMsg );
     }
-  if ( this->caughtMsg.has_value() )
+  if ( err.caughtMsg.has_value() )
     {
       msg += ": ";
-      msg += *( this->caughtMsg );
+      msg += *( err.caughtMsg );
     }
 
-  nlohmann::json json = {
-    { "exit_code", this->get_error_code() },
+  jto = {
+    { "exit_code", err.get_error_code() },
     { "message", msg },
-    { "category", this->category_message() },
+    { "category", err.category_message() },
   };
-
-  return json;
 }
-
 
 }  // namespace flox
 
