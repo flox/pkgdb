@@ -683,6 +683,26 @@ static_assert( registry_input_factory<FloxFlakeInputFactory> );
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * @brief A registry containing `FloxFlakeInput` members.
+ *
+ * This specialized form of registry carries additional helpers associated with
+ * _locking_ registry inputs.
+ */
+class FlakeRegistry : public Registry<FloxFlakeInputFactory>
+{
+
+  public:
+
+    [[nodiscard]] std::unordered_map<std::string, RegistryInput>
+    getLockedInputs();
+
+
+}; /* End class `FlakeRegistry' */
+
+
+/* -------------------------------------------------------------------------- */
+
 }  // namespace flox
 
 

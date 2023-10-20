@@ -180,6 +180,20 @@ FloxFlakeInput::getLockedInput()
 
 /* -------------------------------------------------------------------------- */
 
+[[nodiscard]] std::unordered_map<std::string, RegistryInput>
+FlakeRegistry::getLockedInputs()
+{
+  std::unordered_map<std::string, RegistryInput> locked;
+  for ( auto & [name, input] : * this )
+    {
+      locked.emplace( name, input->getLockedInput() );
+    }
+  return locked;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 }  // namespace flox
 
 
