@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include <nlohmann/json.hpp>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -99,6 +100,9 @@ public:
   //   methods.
   [[nodiscard]] std::string
   what_string() const noexcept;
+
+  [[nodiscard]] nlohmann::json
+  to_json() const noexcept;
 };
 
 

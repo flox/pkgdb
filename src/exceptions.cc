@@ -40,6 +40,32 @@ FloxException::what_string() const noexcept
 
 /* -------------------------------------------------------------------------- */
 
+nlohmann::json
+FloxException::to_json() const noexcept
+{
+
+  std::string msg;
+  if ( this->contextMsg.has_value() )
+    {
+      msg += ": ";
+      msg += *( this->contextMsg );
+    }
+  if ( this->caughtMsg.has_value() )
+    {
+      msg += ": ";
+      msg += *( this->caughtMsg );
+    }
+
+  nlohmann::json json = {
+    { "exit_code", this->get_error_code() },
+    { "message", msg },
+    { "category", this->category_message() },
+  };
+
+  return json;
+}
+
+
 }  // namespace flox
 
 
