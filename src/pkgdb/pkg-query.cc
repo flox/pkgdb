@@ -66,6 +66,9 @@ PkgQueryArgs::InvalidPkgQueryArgException::errorMessage(
       case PQEC_INVALID_MATCH_STYLE:
         return "Query `matchStyle' must be set when `match' is used";
         break;
+      default:
+        return "Unexpected PkgQuery error";
+        break;
     }
 }
 
