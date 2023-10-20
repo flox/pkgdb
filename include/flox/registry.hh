@@ -449,17 +449,20 @@ public:
     explicit InvalidRegistryException( std::string_view contextMsg )
       : FloxException( contextMsg )
     {}
+
     [[nodiscard]] error_category
     getErrorCode() const noexcept override
     {
       return EC_INVALID_REGISTRY;
     }
+
     [[nodiscard]] std::string_view
     getCategoryMessage() const noexcept override
     {
       return this->categoryMsg;
     }
-  }; /* End class `InvalidArgException' */
+
+  }; /* End class `Registry::InvalidArgException' */
 
   /**
    * @brief Get an input by name.
@@ -478,7 +481,6 @@ public:
     return maybeInput->second;
   }
 
-
   /**
    * @brief Get an input by name, or throw an error if no such input exists.
    * @param name Registry shortname for the target flake.
@@ -495,7 +497,6 @@ public:
       }
     return maybeInput;
   }
-
 
   /** @brief Get the raw registry read from the user. */
   [[nodiscard]] const RegistryRaw &
@@ -520,7 +521,6 @@ public:
     return this->inputs.empty();
   }
 
-
   /** @brief Iterate registry members in priority order. */
   [[nodiscard]] auto
   begin()
@@ -534,7 +534,6 @@ public:
   {
     return this->inputs.end();
   }
-
 
   /** @brief Iterate read-only registry members in priority order. */
   [[nodiscard]] auto
@@ -552,7 +551,6 @@ public:
   {
     return this->inputs.cend();
   }
-
 
   /** @brief Iterate read-only registry members in priority order. */
   [[nodiscard]] auto

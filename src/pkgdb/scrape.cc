@@ -18,7 +18,6 @@ namespace flox::pkgdb {
 
 /* -------------------------------------------------------------------------- */
 
-
 /* Scrape Subcommand */
 
 ScrapeCommand::ScrapeCommand() : parser( "scrape" )
