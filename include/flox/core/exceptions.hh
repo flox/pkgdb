@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include <nlohmann/json.hpp>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -114,6 +115,8 @@ public:
    */
   [[nodiscard]] std::string
   what_string() const noexcept;
+  
+  friend void to_json( nlohmann::json & jto, const FloxException & err );
 
 };  /* End class `FloxException' */
 
