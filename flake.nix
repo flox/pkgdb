@@ -71,66 +71,79 @@
     devShells = eachDefaultSystemMap ( system: let
       pkgsFor = ( builtins.getAttr system nixpkgs.legacyPackages ).extend
                   overlays.default;
-      flox-pkgdb-shell = let
+
+      ciPkgs = let
         batsWith = pkgsFor.bats.withLibraries ( libs: [
           libs.bats-assert
           libs.bats-file
           libs.bats-support
         ] );
-      in pkgsFor.mkShell {
-        name       = "flox-pkgdb-shell";
+      in [
+        # For tests
+        batsWith
+        pkgsFor.jq
+        # For doc
+        pkgsFor.doxygen
+      ];
+
+      # Used for interactive development
+      devPkgs = [
+        # For profiling
+        pkgsFor.lcov
+        ( if pkgsFor.stdenv.cc.isGNU or false then pkgsFor.gdb else
+          pkgsFor.lldb
+        )
+        # For IDEs
+        pkgsFor.ccls
+        pkgsFor.bear
+        # For lints/fmt
+        pkgsFor.clang-tools_16
+        # For debugging
+      ] ++ (
+        if pkgsFor.stdenv.isLinux or false then [pkgsFor.valgrind] else []
+      );
+
+      shellEnv = {
+        name       = "pkgdb-shell";
         inputsFrom = [pkgsFor.flox-pkgdb];
-        packages   = [
-          # For tests
-          batsWith
-          pkgsFor.jq
-          # For profiling
-          pkgsFor.lcov
-          ( if pkgsFor.stdenv.cc.isGNU or false then pkgsFor.gdb else
-            pkgsFor.lldb
-          )
-          # For doc
-          pkgsFor.doxygen
-          # For IDEs
-          pkgsFor.ccls
-          pkgsFor.bear
-          # For lints/fmt
-          pkgsFor.clang-tools_16
-          # For debugging
-        ] ++ (
-          if pkgsFor.stdenv.isLinux or false then [pkgsFor.valgrind] else []
-        );
+        inherit packages;
         inherit (pkgsFor.flox-pkgdb)
           nix_INCDIR boost_CFLAGS toml_CFLAGS yaml_PREFIX libExt SEMVER_PATH
         ;
-        shellHook = ''
-          shopt -s autocd;
-
-          alias gs='git status';
-          alias ga='git add';
-          alias gc='git commit -am';
-          alias gl='git pull';
-          alias gp='git push';
-
-          if [ -z "''${NO_WELCOME:-}" ]; then
-            {
-              echo "";
-              echo "Build with \`make' ( or \`make -j8' to go fast )";
-              echo "";
-              echo "Run with \`./bin/pkgdb --help'";
-              echo "";
-              echo "Test with \`make check'";
-              echo "";
-              echo "Read docs with: \`make docs && firefox ./docs/index.hml'";
-              echo "";
-              echo "See more tips in \`CONTRIBUTING.md'";
-            } >&2;
-          fi
-        '';
       };
+
+      pkgdb-shell = pkgsFor.mkShell ( shellEnv // {
+          packages = ciPkgs ++ devPkgs;
+          shellHook = ''
+            shopt -s autocd;
+
+            alias gs='git status';
+            alias ga='git add';
+            alias gc='git commit -am';
+            alias gl='git pull';
+            alias gp='git push';
+
+            if [ -z "''${NO_WELCOME:-}" ]; then
+              {
+                echo "";
+                echo "Build with \`make' ( or \`make -j8' to go fast )";
+                echo "";
+                echo "Run with \`./bin/pkgdb --help'";
+                echo "";
+                echo "Test with \`make check'";
+                echo "";
+                echo "Read docs with: \`make docs && firefox ./docs/index.hml'";
+                echo "";
+                echo "See more tips in \`CONTRIBUTING.md'";
+              } >&2;
+            fi
+          '';
+        } );
+
     in {
-      inherit flox-pkgdb-shell;
-      default = flox-pkgdb-shell;
+      inherit pkgdb-shell;
+      default = pkgdb-shell;
+      ci      = pkgsFor.mkShell ( shellEnv // { packages = ciPkgs; });
     } );
 
   };

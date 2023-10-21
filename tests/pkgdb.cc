@@ -31,6 +31,7 @@
 #include <nix/shared.hh>
 #include <nix/store-api.hh>
 #include <sqlite3pp.hh>
+#include <gtest/gtest.h>
 
 #include "flox/core/nix-state.hh"
 #include "flox/core/types.hh"

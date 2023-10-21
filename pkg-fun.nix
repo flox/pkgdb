@@ -15,6 +15,7 @@
 , sqlite3pp
 , toml11
 , yaml-cpp
+, gtest
 }: stdenv.mkDerivation {
   pname   = "flox-pkgdb";
   version = builtins.replaceStrings ["\n"] [""] ( builtins.readFile ./version );
@@ -41,7 +42,7 @@
   propagatedBuildInputs = [semver nix.dev boost];
   nativeBuildInputs     = [pkg-config];
   buildInputs           = [
-    sqlite.dev nlohmann_json argparse sqlite3pp toml11 yaml-cpp
+    sqlite.dev nlohmann_json argparse sqlite3pp toml11 yaml-cpp gtest.dev
   ];
   nix_INCDIR     = nix.dev.outPath + "/include";
   boost_CFLAGS   = "-I" + boost.dev.outPath + "/include";

@@ -180,6 +180,15 @@ endif
 flox_pkgdb_LDFLAGS += '-L$(MAKEFILE_DIR)/lib' -lflox-pkgdb
 endif
 
+gtest_CFLAGS       ?= $(shell $(PKG_CONFIG) --cflags gtest)
+gtest_CFLAGS       := $(gtest_CFLAGS)
+gtest_LDFLAGS      ?= $(shell $(PKG_CONFIG) --libs gtest)
+gtest_LDFLAGS      := $(gtest_LDFLAGS)
+gtest_main_CFLAGS  ?= $(shell $(PKG_CONFIG) --cflags gtest_main)
+gtest_main_CFLAGS  := $(gtest_main_CFLAGS)
+gtest_main_LDFLAGS ?= $(shell $(PKG_CONFIG) --libs gtest_main)
+gtest_main_LDFLAGS := $(gtest_main_LDFLAGS)
+
 
 # ---------------------------------------------------------------------------- #
 
@@ -258,8 +267,10 @@ bin/pkgdb: $(bin_SRCS:.cc=.o) lib/$(LIBFLOXPKGDB)
 
 # ---------------------------------------------------------------------------- #
 
-$(TESTS) $(TEST_UTILS): $(COMMON_HEADERS)
+$(TESTS) $(TEST_UTILS): $(COMMON_HEADERS) tests/tap.hh tests/test.hh
 $(TESTS) $(TEST_UTILS): bin_CXXFLAGS += '-DTEST_DATA_DIR="$(TEST_DATA_DIR)"'
+$(TESTS) $(TEST_UTILS): bin_CXXFLAGS += $(gtest_CFLAGS) $(gtest_main_CFLAGS)
+$(TESTS) $(TEST_UTILS): bin_LDFLAGS  += $(gtest_LDFLAGS) $(gtest_main_CFLAGS)
 $(TESTS) $(TEST_UTILS): tests/%: tests/%.cc lib/$(LIBFLOXPKGDB)
 	$(CXX) $(CXXFLAGS) $(bin_CXXFLAGS) $< $(LDFLAGS) $(bin_LDFLAGS) -o $@
 
@@ -319,6 +330,7 @@ cdb: compile_commands.json
 	  fi;                                                                 \
 	  echo $(CXXFLAGS) $(sqlite3_CFLAGS) $(nljson_CFLAGS) $(nix_CFLAGS);  \
 	  echo $(nljson_CFLAGS) $(argparse_CFLAGS) $(sqlite3pp_CFLAGS);       \
+	  echo $(gtest_CFLAGS) $(gtest_main_CFLAGS);                          \
 	  echo '-DTEST_DATA_DIR="$(TEST_DATA_DIR)"';                          \
 	}|$(TR) ' ' '\n'|$(SED) 's/-std=\(.*\)/%cpp -std=\1|%h -std=\1/'      \
 	 |$(TR) '|' '\n' >> "$@";
@@ -340,11 +352,12 @@ compile_commands.json: $(COMMON_HEADERS) $(ALL_SRCS)
 	$(info $$CXX_SYSTEM_INCDIRS is [${CXX_SYSTEM_INCDIRS}])
 
 	$(MKDIR_P) $(MAKEFILE_DIR)/bear.d
-	ln -sf $(shell dirname $(shell command -v $(BEAR)))/../lib/bear/wrapper bear.d/c++
+	ln -sf $(shell dirname $(shell command -v $(BEAR)))/../lib/bear/wrapper  \
+	       bear.d/c++;
 
 	EXTRA_CXXFLAGS='$(patsubst %,-isystem %,$(CXX_SYSTEM_INCDIRS))'  \
 	  PATH="$(MAKEFILE_DIR)/bear.d/:$(PATH)"                         \
-	  $(BEAR) -- $(MAKE) -C $(MAKEFILE_DIR) -j bin;
+	  $(BEAR) -- $(MAKE) -C $(MAKEFILE_DIR) -j bin tests;
 
 
 # ---------------------------------------------------------------------------- #
