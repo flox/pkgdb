@@ -15,7 +15,6 @@
 #include "flox/core/types.hh"
 #include "flox/core/util.hh"
 #include "test.hh"
-#include "tap.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -186,8 +185,8 @@ TEST( variantJSON, threeVector )
 TEST(hasPrefix0, simple)
 {
   EXPECT_TRUE( flox::hasPrefix( "foo", "foobar" ) );
-  EXPECT_FALSE(flox::hasPrefix( "bar", "foobar" ) );
-  EXPECT_FALSE(flox::hasPrefix( "foobar", "foo" ) );
+  EXPECT_FALSE( flox::hasPrefix( "bar", "foobar" ) );
+  EXPECT_FALSE( flox::hasPrefix( "foobar", "foo" ) );
 }
 
 
