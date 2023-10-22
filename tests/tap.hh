@@ -232,7 +232,7 @@ public:
      ci != this->testCaseTestResultMap.end(); ++ci) {
       const tap::TestSet& testSet = ci->second;
 #ifdef GTEST_TAP_PRINT_TO_STDOUT
-      std::cout << "TAP version 13" << std::endl;
+      //std::cout << "TAP version 13" << std::endl;
       std::cout << testSet.toString();
 #else
       std::ofstream tapFile;
