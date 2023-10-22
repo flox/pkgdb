@@ -35,6 +35,16 @@
 
 # ---------------------------------------------------------------------------- #
 
+    # This SHA256 hash allows us to create Fixed Output Derivations which expect
+    # to produce a file containing the string `"PASS\n"'.
+    # This allows us to use internet in derivations which run test suites.
+    # The only requirement is that those derivations run `echo "PASS" > "$out";'
+    # to indicate a successful run.
+    passHash = "sha256-wm3oOr3JSWzRMBRwkY7Dnsyhzzie8K4cZQTaGADRxDEA";
+
+
+# ---------------------------------------------------------------------------- #
+
     /* Use nix@2.15 */
     overlays.nix = final: prev: { nix = prev.nixVersions.nix_2_15; };
     /* Aggregate dependency overlays. */
