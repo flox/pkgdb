@@ -42,8 +42,8 @@ enum error_category {
   EC_INVALID_PKG_QUERY_ARG = 104,
   /** A registry has invalid contents. */
   EC_INVALID_REGISTRY = 105,
-  /** The value of registryPath is invalid. */
-  EC_INVALID_REGISTRY_FILE = 106,
+  /** The value of `manifestPath' is invalid. */
+  EC_INVALID_MANIFEST_FILE = 106,
   /** Exception initializing a `FlakePackage`. */
   EC_PACKAGE_INIT = 107,
   /** Exception parsing `QueryParams` from JSON. */

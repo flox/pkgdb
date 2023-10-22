@@ -87,7 +87,7 @@ public:
 
 class LockCommand
   : NixStoreMixin
-  , command::RegistryFileMixin
+  , command::ManifestFileMixin
 {
 
   std::optional<FloxFlakeInputFactory> factory;

@@ -170,72 +170,91 @@ AttrPathMixin::fixupAttrPath()
 /* -------------------------------------------------------------------------- */
 
 argparse::Argument &
-RegistryFileMixin::addRegistryFileArg( argparse::ArgumentParser & parser )
+ManifestFileMixin::addManifestFileOption( argparse::ArgumentParser & parser )
 {
-  return parser.add_argument( "--registry" )
-    .help( "The path to the 'registry.json' file." )
+  return parser.add_argument( "--manifest" )
+    .help( "The path to the 'manifest.{toml,yaml,json}' file." )
     .metavar( "PATH" )
     .action( [&]( const std::string & strPath )
-             { this->setRegistryPath( strPath ); } );
+             { this->manifestPath = nix::absPath( strPath ); }
+           );
 }
 
-void
-RegistryFileMixin::setRegistryPath( const std::filesystem::path & path )
+argparse::Argument &
+ManifestFileMixin::addManifestFileArg( argparse::ArgumentParser & parser )
 {
-  if ( path.empty() )
+  return parser.add_argument( "manifest" )
+    .help( "The path to the 'manifest.{toml,yaml,json}' file." )
+    .metavar( "MANIFEST-PATH" )
+    .action( [&]( const std::string & strPath )
+             { this->manifestPath = nix::absPath( strPath ); }
+           );
+}
+
+std::filesystem::path
+ManifestFileMixin::getManifestPath()
+{
+  auto tryFile = [&]( const std::string & path ) -> bool
+  {
+    std::filesystem::path absPath = nix::absPath( path );
+    if ( std::filesystem::exists( absPath ) )
+      {
+        this->manifestPath = absPath;
+        return true;
+      }
+    return false;
+  };
+
+  bool have = this->manifestPath.has_value() ||
+              tryFile( "manifest.toml" ) ||
+              tryFile( "manifest.yaml" ) ||
+              tryFile( "manifest.json" ) ||
+              tryFile( ".flox/manifest.toml" ) ||
+              tryFile( ".flox/manifest.yaml" ) ||
+              tryFile( ".flox/manifest.json" );
+  if ( ! have )
     {
-      throw InvalidRegistryFileException(
-        "provided registry path is empty string" );
+      throw InvalidManifestFileException(
+        "no manifest path given, and no registry available in PWD"
+      );
     }
-  this->registryPath = path;
+  return * this->manifestPath;
 }
 
 const RegistryRaw &
-RegistryFileMixin::getRegistryRaw()
+ManifestFileMixin::getRegistryRaw()
 {
-  if ( this->registryRaw.has_value() ) { return *this->registryRaw; }
-  this->loadRegistry();
+  if ( ! this->registryRaw.has_value() )
+    {
+      this->loadContents();
+    }
   return *this->registryRaw;
 }
 
 void
-RegistryFileMixin::loadRegistry()
+ManifestFileMixin::loadContents()
 {
-  /* Fallback to any of `[.flox/]{registry,manifest}.json' */
-  if ( ! this->registryPath.has_value() )
+  std::ifstream  f( this->getManifestPath() );
+  nlohmann::json json;
+  auto ext = std::filesystem::path( this->getManifestPath() ).extension();
+  if ( ext == ".json" )
     {
-      if ( std::filesystem::exists( "registry.json" ) )
-        {
-          this->registryPath = nix::absPath( "registry.json" );
-        }
-      else if ( std::filesystem::exists( ".flox/registry.json" ) )
-        {
-          this->registryPath = nix::absPath( ".flox/registry.json" );
-        }
-      else if ( std::filesystem::exists( "manifest.json" ) )
-        {
-          this->registryPath = nix::absPath( "manifest.json" );
-        }
-      else if ( std::filesystem::exists( ".flox/manifest.json" ) )
-        {
-          this->registryPath = nix::absPath( ".flox/manifest.json" );
-        }
-      else
-        {
-          throw InvalidRegistryFileException( "registry path is null" );
-        }
+      this->contents = nlohmann::json::parse( f );
     }
-  std::ifstream  f( *( this->registryPath ) );
-  nlohmann::json json = nlohmann::json::parse( f );
-  /* If we read a manifest, registry is actually a field, so extract it. */
-  if ( json.find( "registry" ) != json.end() )
+  else if ( ( ext == ".yaml" ) || ( ext == ".yml" ) )
     {
-      json.at( "registry" ).get_to( this->registryRaw );
+      std::ostringstream oss;
+      oss << f.rdbuf();
+      this->contents = yamlToJSON( oss.str() );
     }
-  else
+  else if ( ext == ".toml" )
     {
-      json.get_to( this->registryRaw );
+      std::ostringstream oss;
+      oss << f.rdbuf();
+      this->contents = tomlToJSON( oss.str() );
     }
+  /* Fill `registryRaw' */
+  this->contents.at( "registry" ).get_to( this->registryRaw );
 }
 
 /* -------------------------------------------------------------------------- */

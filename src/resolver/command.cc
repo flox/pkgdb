@@ -74,8 +74,8 @@ ResolveCommand::run()
 
 LockCommand::LockCommand() : parser( "lock" )
 {
-  this->parser.add_description( "Lock a registry" );
-  this->addRegistryFileArg( this->parser );
+  this->parser.add_description( "Lock a manifest" );
+  this->addManifestFileArg( this->parser );
 }
 
 
@@ -84,8 +84,11 @@ LockCommand::LockCommand() : parser( "lock" )
 int
 LockCommand::run()
 {
-  auto locked = this->getRegistry().getLockedInputs();
-  std::cout << nlohmann::json( locked ).dump() << std::endl;
+  auto lockedRegistry = this->getRegistry().getLockedInputs();
+  this->loadContents();
+  nlohmann::json lockfile = this->contents;
+  lockfile["registry"] = lockedRegistry;
+  std::cout << lockfile.dump() << std::endl;
   return EXIT_SUCCESS;
 }
 
