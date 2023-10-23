@@ -113,8 +113,10 @@ from_json( const nlohmann::json &jfrom, RegistryRaw &reg )
                 }
               catch ( nlohmann::json::exception &e )
                 {
-                  throw FloxException( "couldn't extract input '" + ikey + "': "
-                                       + flox::extract_json_errmsg( e ) );
+                  throw flox::Registry<flox::pkgdb::PkgDbInputFactory>::
+                    InvalidRegistryException(
+                      "couldn't extract input '" + ikey + "'",
+                      flox::extract_json_errmsg( e ).c_str() );
                 }
               inputs.insert( { ikey, input } );
             }
@@ -129,8 +131,10 @@ from_json( const nlohmann::json &jfrom, RegistryRaw &reg )
             }
           catch ( nlohmann::json::exception &e )
             {
-              throw FloxException( "couldn't extract input preferences: "
-                                   + flox::extract_json_errmsg( e ) );
+              throw flox::Registry<flox::pkgdb::PkgDbInputFactory>::
+                InvalidRegistryException(
+                  "couldn't extract input preferences",
+                  flox::extract_json_errmsg( e ).c_str() );
             }
           reg.defaults = prefs;
         }
@@ -143,14 +147,18 @@ from_json( const nlohmann::json &jfrom, RegistryRaw &reg )
             }
           catch ( nlohmann::json::exception &e )
             {
-              throw FloxException( "couldn't extract input priority: "
-                                   + flox::extract_json_errmsg( e ) );
+              throw flox::Registry<flox::pkgdb::PkgDbInputFactory>::
+                InvalidRegistryException(
+                  "couldn't extract input priority",
+                  flox::extract_json_errmsg( e ).c_str() );
             }
           reg.priority = p;
         }
       else
         {
-          throw FloxException( "unrecognized registry field '" + key + "'" );
+          throw flox::Registry<flox::pkgdb::PkgDbInputFactory>::
+            InvalidRegistryException( "unrecognized registry field '" + key
+                                      + "'" );
         }
     }
 }
