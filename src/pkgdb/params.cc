@@ -68,9 +68,9 @@ from_json( const nlohmann::json &jfrom, QueryPreferences &prefs )
             }
           catch ( nlohmann::json::exception &e )
             {
-              throw FloxException(
-                "couldn't interpret preferences field 'systems': "
-                + extract_json_errmsg( e ) );
+              throw ParseQueryPreferencesException(
+                "couldn't interpret preferences field 'systems'",
+                extract_json_errmsg( e ).c_str() );
             }
         }
       else if ( key == "allow" )
@@ -88,9 +88,10 @@ from_json( const nlohmann::json &jfrom, QueryPreferences &prefs )
                     }
                   catch ( nlohmann::json::exception &e )
                     {
-                      throw FloxException( "couldn't interpret preferences "
-                                           "field 'allow.unfree': "
-                                           + extract_json_errmsg( e ) );
+                      throw ParseQueryPreferencesException(
+                        "couldn't interpret preferences "
+                        "field 'allow.unfree'",
+                        extract_json_errmsg( e ).c_str() );
                     }
                 }
               else if ( akey == "broken" )
@@ -102,9 +103,10 @@ from_json( const nlohmann::json &jfrom, QueryPreferences &prefs )
                     }
                   catch ( nlohmann::json::exception &e )
                     {
-                      throw FloxException( "couldn't interpret preferences "
-                                           "field 'allow.broken': "
-                                           + extract_json_errmsg( e ) );
+                      throw ParseQueryPreferencesException(
+                        "couldn't interpret preferences "
+                        "field 'allow.broken'",
+                        extract_json_errmsg( e ).c_str() );
                     }
                 }
               else if ( akey == "licenses" )
@@ -116,9 +118,10 @@ from_json( const nlohmann::json &jfrom, QueryPreferences &prefs )
                     }
                   catch ( nlohmann::json::exception &e )
                     {
-                      throw FloxException( "couldn't interpret preferences "
-                                           "field 'allow.licenses': "
-                                           + extract_json_errmsg( e ) );
+                      throw ParseQueryPreferencesException(
+                        "couldn't interpret preferences "
+                        "field 'allow.licenses'",
+                        extract_json_errmsg( e ).c_str() );
                     }
                 }
               else
@@ -142,10 +145,10 @@ from_json( const nlohmann::json &jfrom, QueryPreferences &prefs )
                     }
                   catch ( nlohmann::json::exception &e )
                     {
-                      throw FloxException(
+                      throw ParseQueryPreferencesException(
                         "couldn't interpret preferences field "
-                        "'semver.preferPreReleases': "
-                        + extract_json_errmsg( e ) );
+                        "'semver.preferPreReleases'",
+                        extract_json_errmsg( e ).c_str() );
                     }
                 }
               else
