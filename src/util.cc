@@ -24,7 +24,7 @@ namespace flox {
 /* -------------------------------------------------------------------------- */
 
 bool
-isSQLiteDb( const std::string & dbPath )
+isSQLiteDb( const std::string &dbPath )
 {
   std::filesystem::path path( dbPath );
   if ( ! std::filesystem::exists( path ) ) { return false; }
@@ -35,7 +35,7 @@ isSQLiteDb( const std::string & dbPath )
 
   char buffer[16];  // NOLINT
   std::memset( &buffer[0], '\0', sizeof( buffer ) );
-  FILE * filep = fopen( dbPath.c_str(), "rb" );
+  FILE *filep = fopen( dbPath.c_str(), "rb" );
 
   std::clearerr( filep );
 
@@ -65,7 +65,7 @@ isSQLiteDb( const std::string & dbPath )
 /* -------------------------------------------------------------------------- */
 
 nlohmann::json
-parseOrReadJSONObject( const std::string & jsonOrPath )
+parseOrReadJSONObject( const std::string &jsonOrPath )
 {
   if ( jsonOrPath.find( '{' ) != std::string::npos )
     {
@@ -124,7 +124,7 @@ splitAttrPath( std::string_view path )
   auto start         = path.begin();
 
   /* Remove outer quotes and unescape. */
-  auto dequote = [&]( const std::string & part ) -> std::string
+  auto dequote = [&]( const std::string &part ) -> std::string
   {
     auto itr = part.begin();
     auto end = part.end();
@@ -210,7 +210,7 @@ hasPrefix( std::string_view prefix, std::string_view str )
 /* -------------------------------------------------------------------------- */
 
 std::string &
-ltrim( std::string & str )
+ltrim( std::string &str )
 {
   str.erase( str.begin(),
              std::find_if( str.begin(),
@@ -221,7 +221,7 @@ ltrim( std::string & str )
 }
 
 std::string &
-rtrim( std::string & str )
+rtrim( std::string &str )
 {
   str.erase( std::find_if( str.rbegin(),
                            str.rend(),
@@ -233,7 +233,7 @@ rtrim( std::string & str )
 }
 
 std::string &
-trim( std::string & str )
+trim( std::string &str )
 {
   rtrim( str );
   ltrim( str );
@@ -263,6 +263,21 @@ trim_copy( std::string_view str )
   std::string rsl( str );
   trim( rsl );
   return rsl;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+std::string
+extract_json_errmsg( nlohmann::json::exception &e )
+{
+  // All of the nlohmann::json::exception messages are formatted like so:
+  // [something] actually useful message
+  std::string            full( e.what() );
+  std::string::size_type idx = full.find( "]" );
+  idx += 1;  // Don't include the leading space
+  std::string userFriendly = full.substr( idx, full.size() );
+  return userFriendly;
 }
 
 

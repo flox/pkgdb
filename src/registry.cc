@@ -93,6 +93,80 @@ to_json( nlohmann::json &jto, const RegistryInput &rip )
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief Convert a JSON object to a @a flox::RegistryRaw. */
+void
+from_json( const nlohmann::json &jfrom, RegistryRaw &reg )
+{
+  reg.clear();
+  for ( const auto &[key, value] : jfrom.items() )
+    {
+      if ( value.is_null() ) { continue; }
+      if ( key == "inputs" )
+        {
+          std::map<std::string, RegistryInput> inputs;
+          for ( const auto &[ikey, ivalue] : value.items() )
+            {
+              RegistryInput input;
+              try
+                {
+                  ivalue.get_to( input );
+                }
+              catch ( nlohmann::json::exception &e )
+                {
+                  throw FloxException( "couldn't extract input '" + ikey + "': "
+                                       + flox::extract_json_errmsg( e ) );
+                }
+              inputs.insert( { ikey, input } );
+            }
+          reg.inputs = inputs;
+        }
+      else if ( key == "defaults" )
+        {
+          InputPreferences prefs;
+          try
+            {
+              value.get_to( prefs );
+            }
+          catch ( nlohmann::json::exception &e )
+            {
+              throw FloxException( "couldn't extract input preferences: "
+                                   + flox::extract_json_errmsg( e ) );
+            }
+          reg.defaults = prefs;
+        }
+      else if ( key == "priority" )
+        {
+          std::vector<std::string> p;
+          try
+            {
+              value.get_to( p );
+            }
+          catch ( nlohmann::json::exception &e )
+            {
+              throw FloxException( "couldn't extract input priority: "
+                                   + flox::extract_json_errmsg( e ) );
+            }
+          reg.priority = p;
+        }
+      else
+        {
+          throw FloxException( "unrecognized registry field '" + key + "'" );
+        }
+    }
+}
+
+/** @brief Convert a @a flox::RegistryRaw to a JSON object. */
+void
+to_json( nlohmann::json &jto, const RegistryRaw &reg )
+{
+  jto = { { "inputs", reg.inputs },
+          { "defaults", reg.defaults },
+          { "priority", reg.priority } };
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 pkgdb::PkgQueryArgs &
 RegistryRaw::fillPkgQueryArgs( const std::string   &input,
                                pkgdb::PkgQueryArgs &pqa ) const

@@ -346,18 +346,25 @@ struct RegistryRaw
 
 /* -------------------------------------------------------------------------- */
 
-/**
- * @fn void from_json( const nlohmann::json & jfrom, RegistryRaw & reg )
- * @brief Convert a JSON object to a @a flox::RegistryRaw.
- *
- * @fn void to_json( nlohmann::json & jto, const RegistryRaw & reg )
- * @brief Convert a @a flox::RegistryRaw to a JSON object.
- */
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT( RegistryRaw,
-                                                 inputs,
-                                                 defaults,
-                                                 priority );
+// /**
+//  * @fn void from_json( const nlohmann::json & jfrom, RegistryRaw & reg )
+//  * @brief Convert a JSON object to a @a flox::RegistryRaw.
+//  *
+//  * @fn void to_json( nlohmann::json & jto, const RegistryRaw & reg )
+//  * @brief Convert a @a flox::RegistryRaw to a JSON object.
+//  */
+// NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT( RegistryRaw,
+//                                                  inputs,
+//                                                  defaults,
+//                                                  priority );
 
+/** @brief Convert a JSON object to a @a flox::RegistryRaw. */
+void
+from_json( const nlohmann::json & jfrom, RegistryRaw & reg );
+
+/** @brief Convert a @a flox::RegistryRaw to a JSON object. */
+void
+to_json( nlohmann::json & jto, const RegistryRaw & reg );
 
 /* -------------------------------------------------------------------------- */
 
