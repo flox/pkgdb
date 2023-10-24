@@ -5,7 +5,6 @@
  * @brief Tests for `flox::Registry` interfaces.
  *
  *
- *
  * -------------------------------------------------------------------------- */
 
 #include <cstdlib>
@@ -157,9 +156,6 @@ main( int argc, char *argv[] )
   int exitCode = EXIT_SUCCESS;
 #define RUN_TEST( ... ) _RUN_TEST( exitCode, __VA_ARGS__ )
 
-  /* --------------------------------------------------------------------------
-   */
-
   nix::verbosity = nix::lvlWarn;
   if ( ( 1 < argc ) && ( std::string_view( argv[1] ) == "-v" ) )  // NOLINT
     {
@@ -169,22 +165,11 @@ main( int argc, char *argv[] )
   /* Initialize `nix' */
   flox::NixState nstate;
 
-
-  /* --------------------------------------------------------------------------
-   */
-
-
-  /* --------------------------------------------------------------------------
-   */
-
-  {
-
-    RUN_TEST( FloxFlakeInputRegistry0 );
-    RUN_TEST( ManifestFileMixinHappyPath );
-    RUN_TEST( ManifestFileMixinGetRegWithoutFile );
-    RUN_TEST( ManifestFileMixinGetRegCached );
-    RUN_TEST( ManifestFileMixinEmptyPath );
-  }
+  RUN_TEST( FloxFlakeInputRegistry0 );
+  RUN_TEST( ManifestFileMixinHappyPath );
+  RUN_TEST( ManifestFileMixinGetRegWithoutFile );
+  RUN_TEST( ManifestFileMixinGetRegCached );
+  RUN_TEST( ManifestFileMixinEmptyPath );
 
 
   return exitCode;
