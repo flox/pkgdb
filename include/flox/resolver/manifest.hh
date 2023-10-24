@@ -73,7 +73,7 @@ struct ManifestRaw
     std::optional<std::string> floxhub;
     std::optional<std::string> dir;
 
-    std::optional<InvalidManifestFileException>
+    void
     check() const;
   }; /* End struct `EnvBase' */
   std::optional<EnvBase> envBase;
@@ -116,12 +116,10 @@ struct ManifestRaw
     std::optional<std::string> file;
 
     /**
-     * @brief Validate `Hook` fields, returning an exception if its contents
+     * @brief Validate `Hook` fields, throwing an exception if its contents
      *        are invalid.
-     * @return `std::nullopt` if @a ManifestRaw::Hook is valid,
-     *         otherwise an exception.
      */
-    std::optional<InvalidManifestFileException>
+    void
     check() const;
 
     /**

@@ -18,16 +18,15 @@ namespace flox::resolver {
 
 /* -------------------------------------------------------------------------- */
 
-std::optional<InvalidManifestFileException>
+void
 ManifestRaw::EnvBase::check() const
 {
   if ( this->floxhub.has_value() && this->dir.has_value() )
     {
-      return InvalidManifestFileException(
+      throw InvalidManifestFileException(
         "Manifest may only define one of `env-base.floxhub' or `env-base.dir' "
         "fields." );
     }
-  return std::nullopt;
 }
 
 
@@ -82,14 +81,14 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::EnvBase & env )
             "Unrecognized manifest field `env-base." + key + "'." );
         }
     }
-  if ( auto err = env.check(); err.has_value() ) { throw *err; }
+  env.check();
 }
 
 // TODO: remove `maybe_unused' when you write `to_json' for `ManifestRaw'.
 [[maybe_unused]] static void
 to_json( nlohmann::json & jto, const ManifestRaw::EnvBase & env )
 {
-  if ( auto err = env.check(); err.has_value() ) { throw *err; }
+  env.check();
   if ( env.dir.has_value() ) { jto = { { "dir", *env.dir } }; }
   else if ( env.floxhub.has_value() ) { jto = { { "floxhub", *env.floxhub } }; }
   else { jto = nlohmann::json::object(); }
@@ -273,7 +272,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options & opts )
           /* Rely on the underlying exception handlers. */
           ManifestRaw::Options::Semver semver;
           value.get_to( semver );
-          opts.semver = std::move( semver );
+          opts.semver = semver;
         }
       else if ( key == "package-grouping-strategy" )
         {
@@ -386,14 +385,14 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Hook & hook )
         }
     }
 
-  if ( auto err = hook.check(); err.has_value() ) { throw *err; }
+  hook.check();
 }
 
 
 [[maybe_unused]] static void
 to_json( nlohmann::json & jto, const ManifestRaw::Hook & hook )
 {
-  if ( auto err = hook.check(); err.has_value() ) { throw *err; }
+  hook.check();
   if ( hook.file.has_value() ) { jto = { { "file", *hook.file } }; }
   else if ( hook.script.has_value() ) { jto = { { "script", *hook.script } }; }
   else { jto = nlohmann::json::object(); }
@@ -402,15 +401,14 @@ to_json( nlohmann::json & jto, const ManifestRaw::Hook & hook )
 
 /* -------------------------------------------------------------------------- */
 
-std::optional<InvalidManifestFileException>
+void
 ManifestRaw::Hook::check() const
 {
   if ( this->script.has_value() && this->file.has_value() )
     {
-      return InvalidManifestFileException(
+      throw InvalidManifestFileException(
         "Hook may only define one of `hook.script' or `hook.file' fields." );
     }
-  return std::nullopt;
 }
 
 
@@ -419,7 +417,7 @@ ManifestRaw::Hook::check() const
 std::optional<std::string>
 ManifestRaw::Hook::getHook() const
 {
-  if ( auto err = this->check(); err.has_value() ) { throw *err; }
+  this->check();
   if ( this->file.has_value() )
     {
       std::filesystem::path path( *this->file );
@@ -433,7 +431,7 @@ ManifestRaw::Hook::getHook() const
       buffer << file.rdbuf();
       return buffer.str();
     }
-  else { return this->script; }
+  return this->script;
 }
 
 
@@ -455,6 +453,38 @@ fixupDescriptor( const std::string & iid, ManifestDescriptor & desc )
   if ( ! ( desc.name.has_value() || desc.path.has_value() ) )
     {
       desc.name = iid;
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+static void
+varsFromJSON( const nlohmann::json &                         jfrom,
+              std::unordered_map<std::string, std::string> & vars )
+{
+  if ( ! jfrom.is_object() )
+    {
+      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
+      throw InvalidManifestFileException(
+        "Manifest `vars' field must be an object, but is" + aOrAn
+        + std::string( jfrom.type_name() ) + '.' );
+    }
+  vars.clear();
+  for ( const auto & [key, value] : jfrom.items() )
+    {
+      std::string val;
+      try
+        {
+          value.get_to( val );
+        }
+      catch ( const nlohmann::json::exception & err )
+        {
+          throw InvalidManifestFileException( "Invalid value for `vars." + key
+                                              + "' with value: "
+                                              + value.dump() );
+        }
+      vars.emplace( key, std::move( val ) );
     }
 }
 
@@ -497,29 +527,8 @@ from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
       else if ( key == "registry" ) { value.get_to( manifest.registry ); }
       else if ( key == "vars" )
         {
-          if ( ! value.is_object() )
-            {
-              std::string aOrAn = value.is_array() ? " an " : " a ";
-              throw InvalidManifestFileException(
-                "Manifest `vars' field must be an object, but is" + aOrAn
-                + std::string( value.type_name() ) + '.' );
-            }
           std::unordered_map<std::string, std::string> vars;
-          for ( const auto & [vkey, vvalue] : value.items() )
-            {
-              std::string val;
-              try
-                {
-                  vvalue.get_to( val );
-                }
-              catch ( const nlohmann::json::exception & err )
-                {
-                  throw InvalidManifestFileException( "Invalid value for `vars."
-                                                      + vkey + "' with value: "
-                                                      + vvalue.dump() );
-                }
-              vars.emplace( vkey, std::move( val ) );
-            }
+          varsFromJSON( value, vars );
           manifest.vars = std::move( vars );
         }
       else if ( key == "hook" ) { value.get_to( manifest.hook ); }
