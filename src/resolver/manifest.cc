@@ -514,9 +514,9 @@ from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
                 }
               catch ( const nlohmann::json::exception & err )
                 {
-                  throw InvalidManifestFileException(
-                    "Invalid value for `vars." + vkey + "' with value: "
-                    + vvalue.dump() );
+                  throw InvalidManifestFileException( "Invalid value for `vars."
+                                                      + vkey + "' with value: "
+                                                      + vvalue.dump() );
                 }
               vars.emplace( vkey, std::move( val ) );
             }
