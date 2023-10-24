@@ -17,6 +17,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "flox/core/exceptions.hh"
 #include "flox/core/nix-state.hh"
 #include "flox/core/types.hh"
 
@@ -115,6 +116,40 @@ public:
   openCursor( const AttrPath & path );
 
 }; /* End class `FloxFlake' */
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief An exception thrown when locking a flake */
+class LockFlakeException : public FloxException
+{
+
+private:
+
+  static constexpr std::string_view categoryMsg = "error locking flake";
+
+public:
+
+  explicit LockFlakeException( std::string_view contextMsg )
+    : FloxException( contextMsg )
+  {}
+  explicit LockFlakeException( std::string_view contextMsg,
+                               const char *     caughtMsg )
+    : FloxException( contextMsg, caughtMsg )
+  {}
+
+  [[nodiscard]] error_category
+  getErrorCode() const noexcept override
+  {
+    return EC_NIX_LOCK_FLAKE;
+  }
+
+  [[nodiscard]] std::string_view
+  getCategoryMessage() const noexcept override
+  {
+    return this->categoryMsg;
+  }
+
+}; /* End class `LockFlakeException' */
 
 
 /* -------------------------------------------------------------------------- */

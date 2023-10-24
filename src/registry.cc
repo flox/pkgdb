@@ -147,20 +147,28 @@ FloxFlakeInput::getSubtrees()
         }
       else
         {
-          auto root = this->getFlake()->openEvalCache()->getRoot();
-          if ( root->maybeGetAttr( "catalog" ) != nullptr )
+          try
             {
-              this->enabledSubtrees = std::vector<Subtree> { ST_CATALOG };
+              auto root = this->getFlake()->openEvalCache()->getRoot();
+              if ( root->maybeGetAttr( "catalog" ) != nullptr )
+                {
+                  this->enabledSubtrees = std::vector<Subtree> { ST_CATALOG };
+                }
+              else if ( root->maybeGetAttr( "packages" ) != nullptr )
+                {
+                  this->enabledSubtrees = std::vector<Subtree> { ST_PACKAGES };
+                }
+              else if ( root->maybeGetAttr( "legacyPackages" ) != nullptr )
+                {
+                  this->enabledSubtrees = std::vector<Subtree> { ST_LEGACY };
+                }
+              else { this->enabledSubtrees = std::vector<Subtree> {}; }
             }
-          else if ( root->maybeGetAttr( "packages" ) != nullptr )
+          catch ( const nix::EvalError &err )
             {
-              this->enabledSubtrees = std::vector<Subtree> { ST_PACKAGES };
+              throw NixEvalException( "could not determine flake subtrees",
+                                      err );
             }
-          else if ( root->maybeGetAttr( "legacyPackages" ) != nullptr )
-            {
-              this->enabledSubtrees = std::vector<Subtree> { ST_LEGACY };
-            }
-          else { this->enabledSubtrees = std::vector<Subtree> {}; }
         }
     }
   return *this->enabledSubtrees;
