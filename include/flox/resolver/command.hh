@@ -85,6 +85,49 @@ public:
 
 /* -------------------------------------------------------------------------- */
 
+class LockCommand
+  : NixStoreMixin
+  , command::ManifestFileMixin
+{
+
+  std::optional<FloxFlakeInputFactory> factory;
+  std::optional<FlakeRegistry>         registry;
+  command::VerboseParser               parser;
+
+public:
+
+  LockCommand();
+
+  [[nodiscard]] command::VerboseParser &
+  getParser()
+  {
+    return this->parser;
+  }
+
+  [[nodiscard]] FlakeRegistry &
+  getRegistry()
+  {
+    if ( ! this->registry.has_value() )
+      {
+        this->factory = FloxFlakeInputFactory( this->getStore() );
+        this->registry
+          = FlakeRegistry( this->getRegistryRaw(), *this->factory );
+      }
+    return *this->registry;
+  }
+
+  /**
+   * @brief Execute the `lock` routine.
+   * @return `EXIT_SUCCESS` or `EXIT_FAILURE`.
+   */
+  int
+  run();
+
+}; /* End class `LockCommand' */
+
+
+/* -------------------------------------------------------------------------- */
+
 }  // namespace flox::resolver
 
 

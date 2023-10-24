@@ -32,7 +32,7 @@ test_FloxFlakeInputRegistry0()
   using namespace flox;
 
   std::ifstream     regFile( TEST_DATA_DIR "/registry/registry0.json" );
-  nlohmann::json    json = nlohmann::json::parse( regFile );
+  nlohmann::json    json = nlohmann::json::parse( regFile ).at( "registry" );
   flox::RegistryRaw regRaw;
   json.get_to( regRaw );
 
@@ -54,12 +54,12 @@ test_FloxFlakeInputRegistry0()
 /* -------------------------------------------------------------------------- */
 
 bool
-test_RegistryFileMixinHappyPath()
+test_ManifestFileMixinHappyPath()
 {
   using namespace flox;
 
-  flox::command::RegistryFileMixin rfm;
-  rfm.setRegistryPath( TEST_DATA_DIR "/registry/registry0.json" );
+  flox::command::ManifestFileMixin rfm;
+  rfm.manifestPath   = TEST_DATA_DIR "/registry/registry0.json";
   RegistryRaw regRaw = rfm.getRegistryRaw();
 
   return true;
@@ -69,12 +69,12 @@ test_RegistryFileMixinHappyPath()
 /* -------------------------------------------------------------------------- */
 
 bool
-test_RegistryFileMixinGetRegWithoutFile()
+test_ManifestFileMixinGetRegWithoutFile()
 {
   using namespace flox;
 
-  flox::command::RegistryFileMixin rfm;
-  // Try loading the registry without setting the path
+  flox::command::ManifestFileMixin rfm;
+  /* Try loading the registry without setting the path. */
   try
     {
       RegistryRaw regRaw = rfm.getRegistryRaw();
@@ -90,15 +90,15 @@ test_RegistryFileMixinGetRegWithoutFile()
 /* -------------------------------------------------------------------------- */
 
 bool
-test_RegistryFileMixinEmptyPath()
+test_ManifestFileMixinEmptyPath()
 {
   using namespace flox;
 
-  flox::command::RegistryFileMixin rfm;
-  // Try loading the registry without setting the path
+  flox::command::ManifestFileMixin rfm;
+  /* Try loading the registry without setting the path. */
   try
     {
-      rfm.setRegistryPath( "" );
+      rfm.manifestPath   = std::nullopt;
       RegistryRaw regRaw = rfm.getRegistryRaw();
       return false;
     }
@@ -112,16 +112,16 @@ test_RegistryFileMixinEmptyPath()
 /* -------------------------------------------------------------------------- */
 
 bool
-test_RegistryFileMixinGetRegCached()
+test_ManifestFileMixinGetRegCached()
 {
   using namespace flox;
 
-  flox::command::RegistryFileMixin rfm;
-  rfm.setRegistryPath( TEST_DATA_DIR "/registry/registry0.json" );
+  flox::command::ManifestFileMixin rfm;
+  rfm.manifestPath   = TEST_DATA_DIR "/registry/registry0.json";
   RegistryRaw regRaw = rfm.getRegistryRaw();
-  // You don't need the registry path if the registry is cached. If it's not
+  // You don't need the manifest path if the registry is cached. If it's not
   // cached then you'll get an exception trying to open this file.
-  rfm.registryPath         = std::nullopt;
+  rfm.manifestPath         = std::nullopt;
   RegistryRaw regRawCached = rfm.getRegistryRaw();
 
   return true;
@@ -135,8 +135,8 @@ test_RegistryNoIndirectRefs()
 {
   using namespace flox;
 
-  flox::command::RegistryFileMixin rfm;
-  rfm.setRegistryPath( TEST_DATA_DIR "/registry/registry1.json" );
+  flox::command::ManifestFileMixin rfm;
+  rfm.manifestPath = TEST_DATA_DIR "/registry/registry1.json";
   try
     {
       RegistryRaw regRaw = rfm.getRegistryRaw();
@@ -180,10 +180,10 @@ main( int argc, char *argv[] )
   {
 
     RUN_TEST( FloxFlakeInputRegistry0 );
-    RUN_TEST( RegistryFileMixinHappyPath );
-    RUN_TEST( RegistryFileMixinGetRegWithoutFile );
-    RUN_TEST( RegistryFileMixinGetRegCached );
-    RUN_TEST( RegistryFileMixinEmptyPath );
+    RUN_TEST( ManifestFileMixinHappyPath );
+    RUN_TEST( ManifestFileMixinGetRegWithoutFile );
+    RUN_TEST( ManifestFileMixinGetRegCached );
+    RUN_TEST( ManifestFileMixinEmptyPath );
   }
 
 

@@ -55,6 +55,11 @@ struct InputPreferences
   InputPreferences()                           = default;
   InputPreferences( const InputPreferences & ) = default;
   InputPreferences( InputPreferences && )      = default;
+  InputPreferences(
+    const std::optional<std::vector<Subtree>> &     subtrees,
+    const std::optional<std::vector<std::string>> & stabilities )
+    : subtrees( subtrees ), stabilities( stabilities )
+  {}
 
   virtual ~InputPreferences() = default;
 
@@ -129,6 +134,13 @@ struct RegistryInput : public InputPreferences
   std::shared_ptr<nix::FlakeRef> from; /**< A parsed flake reference. */
 
   RegistryInput() = default;
+
+  RegistryInput( const std::optional<std::vector<Subtree>> &     subtrees,
+                 const std::optional<std::vector<std::string>> & stabilities,
+                 const nix::FlakeRef &                           from )
+    : InputPreferences( subtrees, stabilities )
+    , from( std::make_shared<nix::FlakeRef>( from ) )
+  {}
 
   explicit RegistryInput( const nix::FlakeRef & from )
     : from( std::make_shared<nix::FlakeRef>( from ) )
@@ -440,6 +452,7 @@ public:
   /** @brief An exception thrown when a registry has invalid contents */
   class InvalidRegistryException : public FloxException
   {
+
   private:
 
     static constexpr std::string_view categoryMsg = "invalid registry";
@@ -581,6 +594,13 @@ public:
 class FloxFlakeInput : public RegistryInput
 {
 
+  /* From `RegistryInput':
+   *   public:
+   *     std::optional<std::vector<Subtree>>     subtrees;
+   *     std::optional<std::vector<std::string>> stabilities;
+   *     std::shared_ptr<nix::FlakeRef>          from;
+   */
+
 private:
 
   nix::ref<nix::Store>       store; /**< A `nix` store connection. */
@@ -623,6 +643,10 @@ public:
   getSubtrees();
 
 
+  [[nodiscard]] RegistryInput
+  getLockedInput();
+
+
 }; /* End struct `FloxFlakeInput' */
 
 
@@ -654,6 +678,30 @@ public:
 
 
 static_assert( registry_input_factory<FloxFlakeInputFactory> );
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief A registry containing `FloxFlakeInput` members.
+ *
+ * This specialized form of registry carries additional helpers associated with
+ * _locking_ registry inputs.
+ */
+class FlakeRegistry : public Registry<FloxFlakeInputFactory>
+{
+
+public:
+
+  FlakeRegistry( RegistryRaw registryRaw, FloxFlakeInputFactory & factory )
+    : Registry<FloxFlakeInputFactory>( registryRaw, factory )
+  {}
+
+  [[nodiscard]] std::unordered_map<std::string, RegistryInput>
+  getLockedInputs();
+
+
+}; /* End class `FlakeRegistry' */
 
 
 /* -------------------------------------------------------------------------- */

@@ -78,6 +78,41 @@ parseOrReadJSONObject( const std::string & jsonOrPath )
 
 /* -------------------------------------------------------------------------- */
 
+nlohmann::json
+readAndCoerceJSON( const std::filesystem::path & path )
+{
+  if ( ! std::filesystem::exists( path ) )
+    {
+      throw flox::FloxException( "File `" + path.string()
+                                 + "' does not exist" );
+    }
+
+  std::ifstream ifs( path );
+  auto          ext = path.extension();
+  if ( ext == ".json" ) { return nlohmann::json::parse( ifs ); }
+
+  /* Read file to buffer */
+  std::ostringstream oss;
+  if ( ( ext == ".yaml" ) || ( ext == ".yml" ) )
+    {
+      oss << ifs.rdbuf();
+      return yamlToJSON( oss.str() );
+    }
+  else if ( ext == ".toml" )
+    {
+      oss << ifs.rdbuf();
+      return tomlToJSON( oss.str() );
+    }
+  else
+    {
+      throw flox::FloxException( "Cannot convert file extension `"
+                                 + ext.string() + "' to JSON" );
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 std::vector<std::string>
 splitAttrPath( std::string_view path )
 {

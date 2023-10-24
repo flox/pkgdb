@@ -170,46 +170,76 @@ AttrPathMixin::fixupAttrPath()
 /* -------------------------------------------------------------------------- */
 
 argparse::Argument &
-RegistryFileMixin::addRegistryFileArg( argparse::ArgumentParser & parser )
+ManifestFileMixin::addManifestFileOption( argparse::ArgumentParser & parser )
 {
-  return parser.add_argument( "--registry-file" )
-    .help( "The path to the 'registry.json' file." )
-    .required()
+  return parser.add_argument( "--manifest" )
+    .help( "The path to the 'manifest.{toml,yaml,json}' file." )
     .metavar( "PATH" )
     .action( [&]( const std::string & strPath )
-             { this->setRegistryPath( strPath ); } );
+             { this->manifestPath = nix::absPath( strPath ); } );
 }
 
-void
-RegistryFileMixin::setRegistryPath( const std::filesystem::path & path )
+argparse::Argument &
+ManifestFileMixin::addManifestFileArg( argparse::ArgumentParser & parser,
+                                       bool                       required )
 {
-  if ( path.empty() )
+  argparse::Argument & arg
+    = parser.add_argument( "manifest" )
+        .help( "The path to a 'manifest.{toml,yaml,json}' file." )
+        .metavar( "MANIFEST-PATH" )
+        .action( [&]( const std::string & strPath )
+                 { this->manifestPath = nix::absPath( strPath ); } );
+  return required ? arg.required() : arg;
+}
+
+std::filesystem::path
+ManifestFileMixin::getManifestPath()
+{
+  if ( ! this->manifestPath.has_value() )
     {
-      throw InvalidRegistryFileException(
-        "provided registry path is empty string" );
+      throw InvalidManifestFileException( "no manifest path given" );
     }
-  this->registryPath = path;
+  return *this->manifestPath;
 }
 
 const RegistryRaw &
-RegistryFileMixin::getRegistryRaw()
+ManifestFileMixin::getRegistryRaw()
 {
-  if ( this->registryRaw.has_value() ) { return *this->registryRaw; }
-  this->loadRegistry();
+  if ( ! this->registryRaw.has_value() ) { this->loadContents(); }
   return *this->registryRaw;
 }
 
 void
-RegistryFileMixin::loadRegistry()
+ManifestFileMixin::loadContents()
 {
-  if ( ! this->registryPath.has_value() )
+  this->contents = readAndCoerceJSON( this->getManifestPath() );
+  /* Fill `registryRaw' */
+  try
     {
-      throw InvalidRegistryFileException( "registry path is null" );
+      this->contents.at( "registry" ).get_to( this->registryRaw );
     }
-  std::ifstream  f( *( this->registryPath ) );
-  nlohmann::json json = nlohmann::json::parse( f );
-  json.get_to( this->registryRaw );
+  catch ( const nlohmann::json::out_of_range & )
+    {
+      throw InvalidManifestFileException(
+        "manifest does not contain a registry" );
+    }
+  catch ( const nlohmann::json::type_error & )
+    {
+      throw InvalidManifestFileException(
+        "manifest does not contain a valid registry" );
+    }
+  catch ( const FloxException & err )
+    {
+      /* Pass the inner error as it was. */
+      throw err;
+    }
+  catch ( const std::exception & err )
+    {
+      throw InvalidManifestFileException( "failed to load manifest registry: "
+                                          + std::string( err.what() ) );
+    }
 }
+
 
 /* -------------------------------------------------------------------------- */
 

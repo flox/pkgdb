@@ -129,61 +129,78 @@ struct AttrPathMixin
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief Extend a command state blob with registry inputs loaded from "path".
- */
-struct RegistryFileMixin
+/** @brief Extend a command state blob with a manifest loaded from path. */
+struct ManifestFileMixin
 {
 
-  std::optional<std::filesystem::path> registryPath;
+  nlohmann::json                       contents;
+  std::optional<std::filesystem::path> manifestPath;
   std::optional<RegistryRaw>           registryRaw;
 
 protected:
 
-  /**
-   * @brief Loads the registry.
-   *
-   * Requires that the registry file is already set.
-   */
+  /** @brief Loads the manifest contents from a file. */
   void
-  loadRegistry();
+  loadContents();
+
+  /**
+   * @brief Get the path to the manifest file.
+   *
+   * If @a manifestPath is already set, we use that; otherwise we attempt to
+   * locate a manifest at `[./flox/]manifest.{toml,yaml,json}`.
+   *
+   * @return The path to the manifest file.
+   */
+  std::filesystem::path
+  getManifestPath();
 
 public:
 
-  /** @brief Sets the path to the registry file to load. */
+  /**
+   * @brief Sets the path to the registry file to load with `--manifest`.
+   * @param parser The parser to add the argument to.
+   * @return The argument added to the parser.
+   */
   argparse::Argument &
-  addRegistryFileArg( argparse::ArgumentParser & parser );
+  addManifestFileOption( argparse::ArgumentParser & parser );
 
-  /** @brief Sets the path to the registry file. */
-  void
-  setRegistryPath( const std::filesystem::path & path );
+  /**
+   * @brief Sets the path to the registry file to load with a positional arg.
+   * @param parser The parser to add the argument to.
+   * @param required Whether the argument is required.
+   * @return The argument added to the parser.
+   */
+  argparse::Argument &
+  addManifestFileArg( argparse::ArgumentParser & parser, bool required = true );
 
-  /** @brief Returns the @a RegistryRaw from the provided file path. */
+  /** @brief Returns the @a RegistryRaw from the manifest. */
   const RegistryRaw &
   getRegistryRaw();
 
-}; /* End struct `RegistryFileMixin' */
+}; /* End struct `ManifestFileMixin' */
 
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief An exception thrown when the value of registryPath is invalid */
-class InvalidRegistryFileException : public FloxException
+/** @brief An exception thrown when the value of manifestPath is invalid */
+class InvalidManifestFileException : public FloxException
 {
+
 private:
 
   static constexpr std::string_view categoryMsg
-    = "invalid value for registry file";
+    = "invalid value for manifest file";
 
 public:
 
-  explicit InvalidRegistryFileException( std::string_view contextMsg )
+  explicit InvalidManifestFileException( std::string_view contextMsg )
     : FloxException( contextMsg )
   {}
 
   [[nodiscard]] error_category
   getErrorCode() const noexcept override
   {
-    return EC_INVALID_REGISTRY_FILE;
+    return EC_INVALID_MANIFEST_FILE;
   }
 
   [[nodiscard]] std::string_view
@@ -192,7 +209,7 @@ public:
     return this->categoryMsg;
   }
 
-}; /* End class `InvalidRegistryFileException' */
+}; /* End class `InvalidManifestFileException' */
 
 
 /* -------------------------------------------------------------------------- */
@@ -200,6 +217,7 @@ public:
 /** @brief An exception thrown when a command line argument is invalid */
 class InvalidArgException : public FloxException
 {
+
 private:
 
   static constexpr std::string_view categoryMsg = "invalid argument";

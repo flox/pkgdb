@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <filesystem>
 #include <functional>  // For `std::hash' and `std::pair'
 #include <list>
 #include <optional>
@@ -315,6 +316,19 @@ tomlToJSON( std::string_view toml );
 /** @brief Convert a YAML string to JSON. */
 nlohmann::json
 yamlToJSON( std::string_view yaml );
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief Read a file and coerce its contents to JSON based on its extension.
+ *
+ * Files with the extension `.json` are parsed directly.
+ * Files with the extension `.yaml` or `.yml` are converted to JSON from YAML.
+ * Files with the extension `.toml` are converted to JSON from TOML.
+ */
+nlohmann::json
+readAndCoerceJSON( const std::filesystem::path & path );
 
 
 /* -------------------------------------------------------------------------- */
