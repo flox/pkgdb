@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include <nix/nixexpr.hh>
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <stdexcept>
@@ -33,31 +34,37 @@ enum error_category {
   /** Generic exception emitted by `flox` routines. */
   EC_FLOX_EXCEPTION = 100,
   /** A command line argument is invalid. */
-  EC_INVALID_ARG = 101,
+  EC_INVALID_ARG,
   /** A package descriptor in a manifest is invalid. */
-  EC_INVALID_MANIFEST_DESCRIPTOR = 102,
+  EC_INVALID_MANIFEST_DESCRIPTOR,
   /** A PkgDescriptorRaw is invalid. */
-  EC_INVALID_PKG_DESCRIPTOR = 103,
+  EC_INVALID_PKG_DESCRIPTOR,
   /** Errors concerning validity of package query parameters. */
-  EC_INVALID_PKG_QUERY_ARG = 104,
+  EC_INVALID_PKG_QUERY_ARG,
   /** A registry has invalid contents. */
-  EC_INVALID_REGISTRY = 105,
+  EC_INVALID_REGISTRY,
   /** The value of `manifestPath' is invalid. */
-  EC_INVALID_MANIFEST_FILE = 106,
+  EC_INVALID_MANIFEST_FILE,
+  /** `nix::Error` that doesn't fall under a more specific EC_NIX_* category. */
+  EC_NIX,
+  /** `nix::EvalError` */
+  EC_NIX_EVAL,
+  /** Exception locking a flake. */
+  EC_NIX_LOCK_FLAKE,
   /** Exception initializing a `FlakePackage`. */
-  EC_PACKAGE_INIT = 107,
+  EC_PACKAGE_INIT,
   /** Exception parsing `QueryParams` from JSON. */
-  EC_PARSE_QUERY_PARAMS = 108,
+  EC_PARSE_QUERY_PARAMS,
   /** Exception parsing `QueryPreferences` from JSON. */
-  EC_PARSE_QUERY_PREFERENCES = 109,
+  EC_PARSE_QUERY_PREFERENCES,
   /** Exception parsing `SearchQuery` from JSON. */
-  EC_PARSE_SEARCH_QUERY = 110,
+  EC_PARSE_SEARCH_QUERY,
   /** For generic exceptions thrown by `flox::pkgdb::*` classes. */
-  EC_PKG_DB = 111,
+  EC_PKG_DB,
   /** Exception converting TOML to JSON. */
-  EC_TOML_TO_JSON = 112,
+  EC_TOML_TO_JSON,
   /** Exception converting YAML to JSON. */
-  EC_YAML_TO_JSON = 113,
+  EC_YAML_TO_JSON,
 
 }; /* End enum `error_category' */
 
@@ -87,7 +94,7 @@ public:
     : contextMsg( contextMsg )
   {}
 
-  explicit FloxException( std::string_view contextMsg, const char * caughtMsg )
+  explicit FloxException( std::string_view contextMsg, const char *caughtMsg )
     : contextMsg( contextMsg ), caughtMsg( caughtMsg )
   {}
 
@@ -117,10 +124,41 @@ public:
   whatString() const noexcept;
 
   friend void
-  to_json( nlohmann::json & jto, const FloxException & err );
+  to_json( nlohmann::json &jto, const FloxException &err );
 
 }; /* End class `FloxException' */
 
+/* -------------------------------------------------------------------------- */
+
+/** @brief A `nix::EvalError` was encountered.  */
+class NixEvalException : public FloxException
+{
+
+private:
+
+  static constexpr std::string_view categoryMsg = "invalid argument";
+
+public:
+
+  explicit NixEvalException( std::string_view      contextMsg,
+                             const nix::EvalError &err )
+    : FloxException( contextMsg,
+                     nix::filterANSIEscapes( err.what(), true ).c_str() )
+  {}
+
+  [[nodiscard]] error_category
+  getErrorCode() const noexcept override
+  {
+    return EC_NIX_EVAL;
+  }
+
+  [[nodiscard]] std::string_view
+  getCategoryMessage() const noexcept override
+  {
+    return this->categoryMsg;
+  }
+
+}; /* End class `NixEvalException' */
 
 /* -------------------------------------------------------------------------- */
 

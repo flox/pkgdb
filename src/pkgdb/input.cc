@@ -85,9 +85,9 @@ PkgDbInput::scrapePrefix( const flox::AttrPath & prefix )
 {
   if ( this->getDbReadOnly()->completedAttrSet( prefix ) ) { return; }
 
-  Todos       todo;
-  bool        wasRW = this->dbRW != nullptr;
-  MaybeCursor root  = this->getFlake()->maybeOpenCursor( prefix );
+  Todos todo;
+  bool  wasRW = this->dbRW != nullptr;
+  MaybeCursor root = this->getFlake()->maybeOpenCursor( prefix );
 
   if ( root == nullptr ) { return; }
 
@@ -111,12 +111,12 @@ PkgDbInput::scrapePrefix( const flox::AttrPath & prefix )
       /* Mark the prefix and its descendants as "done" */
       dbRW->setPrefixDone( row, true );
     }
-  catch ( const nix::EvalError & )
+  catch ( const nix::EvalError & err )
     {
       txn.rollback();
       /* Close the r/w connection if we opened it. */
       if ( ! wasRW ) { this->closeDbReadWrite(); }
-      throw;
+      throw NixEvalException( "error scraping flake", err );
     }
 
   /* Close the transaction. */
