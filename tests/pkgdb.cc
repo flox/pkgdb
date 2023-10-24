@@ -987,9 +987,6 @@ main( int argc, char *argv[] )
   int ec = EXIT_SUCCESS;
 #define RUN_TEST( ... ) _RUN_TEST( ec, __VA_ARGS__ )
 
-  /* --------------------------------------------------------------------------
-   */
-
   nix::verbosity = nix::lvlWarn;
   if ( ( 1 < argc ) && ( std::string_view( argv[1] ) == "-v" ) )
     {
@@ -1000,9 +997,6 @@ main( int argc, char *argv[] )
   flox::NixState nstate;
 
 
-  /* --------------------------------------------------------------------------
-   */
-
   auto [fd, path] = nix::createTempFile( "test-pkgdb.sql" );
   fd.close();
 
@@ -1010,12 +1004,7 @@ main( int argc, char *argv[] )
 
   flox::FloxFlake flake( nstate.getState(), ref );
 
-
-  /* --------------------------------------------------------------------------
-   */
-
   {
-
     flox::pkgdb::PkgDb db( flake.lockedFlake, path );
 
     RUN_TEST( addOrGetAttrSetId0, db );
@@ -1047,18 +1036,10 @@ main( int argc, char *argv[] )
     RUN_TEST( getPackages_semver0, db );
   }
 
-
-  /* --------------------------------------------------------------------------
-   */
-
   /* XXX: You may find it useful to preserve the file and print it for some
    *      debugging efforts. */
   std::filesystem::remove( path );
   // std::cerr << path << std::endl;
-
-
-  /* --------------------------------------------------------------------------
-   */
 
   return ec;
 }
