@@ -52,6 +52,7 @@ public:
     return this->categoryMsg;
   }
 
+
 }; /* End class `InvalidManifestFileException' */
 
 
@@ -71,6 +72,9 @@ struct ManifestRaw
   {
     std::optional<std::string> floxhub;
     std::optional<std::string> dir;
+
+    std::optional<InvalidManifestFileException>
+    check() const;
   }; /* End struct `EnvBase' */
   std::optional<EnvBase> envBase;
 

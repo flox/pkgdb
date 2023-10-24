@@ -18,6 +18,23 @@ namespace flox::resolver {
 
 /* -------------------------------------------------------------------------- */
 
+std::optional<InvalidManifestFileException>
+ManifestRaw::EnvBase::check() const
+{
+  if ( this->floxhub.has_value() && this->dir.has_value() )
+    {
+      return InvalidManifestFileException(
+        "Manifest may only define one of `env-base.floxhub' or `env-base.dir' "
+        "fields." );
+    }
+  return std::nullopt;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+// TODO: Write explicit definitions with exception handling.
+
 /* Generate `to_json' and `from_json' `ManifestRaw::EnvBase' */
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT( ManifestRaw::EnvBase,
                                                  floxhub,
@@ -170,7 +187,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
         }
       else if ( key == "options" )
         {
-          // TODO: iterate over options for improved exception messages.
+          // TODO: Write good exception messages in `Options' `from_json'.
           try
             {
               value.get_to( manifest.options );
@@ -193,6 +210,10 @@ from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
               throw InvalidManifestFileException(
                 "Invalid value for `envBase' field: "
                 + std::string( err.what() ) );
+            }
+          if ( auto err = manifest.envBase->check(); err.has_value() )
+            {
+              throw *err;
             }
         }
       else
