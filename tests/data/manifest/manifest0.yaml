@@ -35,7 +35,7 @@ registry:
 # This will happen later but is recorded here for completeness.
 # You will either have "floxhub" or "dir" but not both
 
-envBase:
+env-base:
   floxhub: "https://hub.flox.dev/owner/env"
 #  dir: "~/somewhere/else/"
 
@@ -47,13 +47,13 @@ options:
 # Define these once we have multiple strategies (likely not part
 # of initial requirements).
 # Examples: "etc-profiles" or sourcing a shell script
-  activationStrategy: etc-profiles
+  activation-strategy: etc-profiles
 
 # Concept: Which grouping strategy (edge case)
 # Define these to override default grouping behavior
 # Examples: "auto" or "single-nixpkgs-group"
 # Future options (post v1): "flexible-groups-with-overlays" or ...
-  packageGroupingStrategy: auto
+  package-grouping-strategy: auto
 
 
 # Project enviornments:
