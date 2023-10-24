@@ -19,6 +19,8 @@
 #include "flox/core/command.hh"
 #include "flox/core/util.hh"
 #include "flox/pkgdb/write.hh"
+#include "flox/resolver/manifest.hh"
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -163,80 +165,6 @@ AttrPathMixin::fixupAttrPath()
   if ( ( this->attrPath.size() < 3 ) && ( this->attrPath[0] == "catalog" ) )
     {
       this->attrPath.push_back( "stable" );
-    }
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-argparse::Argument &
-ManifestFileMixin::addManifestFileOption( argparse::ArgumentParser & parser )
-{
-  return parser.add_argument( "--manifest" )
-    .help( "The path to the 'manifest.{toml,yaml,json}' file." )
-    .metavar( "PATH" )
-    .action( [&]( const std::string & strPath )
-             { this->manifestPath = nix::absPath( strPath ); } );
-}
-
-argparse::Argument &
-ManifestFileMixin::addManifestFileArg( argparse::ArgumentParser & parser,
-                                       bool                       required )
-{
-  argparse::Argument & arg
-    = parser.add_argument( "manifest" )
-        .help( "The path to a 'manifest.{toml,yaml,json}' file." )
-        .metavar( "MANIFEST-PATH" )
-        .action( [&]( const std::string & strPath )
-                 { this->manifestPath = nix::absPath( strPath ); } );
-  return required ? arg.required() : arg;
-}
-
-std::filesystem::path
-ManifestFileMixin::getManifestPath()
-{
-  if ( ! this->manifestPath.has_value() )
-    {
-      throw InvalidManifestFileException( "no manifest path given" );
-    }
-  return *this->manifestPath;
-}
-
-const RegistryRaw &
-ManifestFileMixin::getRegistryRaw()
-{
-  if ( ! this->registryRaw.has_value() ) { this->loadContents(); }
-  return *this->registryRaw;
-}
-
-void
-ManifestFileMixin::loadContents()
-{
-  this->contents = readAndCoerceJSON( this->getManifestPath() );
-  /* Fill `registryRaw' */
-  try
-    {
-      this->contents.at( "registry" ).get_to( this->registryRaw );
-    }
-  catch ( const nlohmann::json::out_of_range & )
-    {
-      throw InvalidManifestFileException(
-        "manifest does not contain a registry" );
-    }
-  catch ( const nlohmann::json::type_error & )
-    {
-      throw InvalidManifestFileException(
-        "manifest does not contain a valid registry" );
-    }
-  catch ( const FloxException & err )
-    {
-      /* Pass the inner error as it was. */
-      throw err;
-    }
-  catch ( const std::exception & err )
-    {
-      throw InvalidManifestFileException( "failed to load manifest registry: "
-                                          + std::string( err.what() ) );
     }
 }
 

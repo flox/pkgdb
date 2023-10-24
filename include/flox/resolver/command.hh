@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "flox/resolver/manifest.hh"
 #include "flox/resolver/params.hh"
 #include "flox/resolver/state.hh"
 #include "flox/search/command.hh"
@@ -87,7 +88,7 @@ public:
 
 class LockCommand
   : NixStoreMixin
-  , command::ManifestFileMixin
+  , ManifestFileMixin
 {
 
   std::optional<FloxFlakeInputFactory> factory;

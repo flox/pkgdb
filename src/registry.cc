@@ -180,15 +180,15 @@ FloxFlakeInput::getSubtrees()
 RegistryInput
 FloxFlakeInput::getLockedInput()
 {
-  return RegistryInput( this->getSubtrees(),
-                        this->stabilities,
-                        this->getFlake()->lockedFlake.flake.lockedRef );
+  return { this->getSubtrees(),
+           this->stabilities,
+           this->getFlake()->lockedFlake.flake.lockedRef };
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-[[nodiscard]] std::unordered_map<std::string, RegistryInput>
+std::unordered_map<std::string, RegistryInput>
 FlakeRegistry::getLockedInputs()
 {
   std::unordered_map<std::string, RegistryInput> locked;

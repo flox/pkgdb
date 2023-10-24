@@ -172,6 +172,9 @@ public:
 
 }; /* End struct `ManifestDescriptor' */
 
+
+/* -------------------------------------------------------------------------- */
+
 /** @brief An exception thrown when a package descriptor in a manifest is
  * invalid */
 class InvalidManifestDescriptorException : public FloxException
@@ -185,16 +188,20 @@ public:
   explicit InvalidManifestDescriptorException( std::string_view contextMsg )
     : FloxException( contextMsg )
   {}
+
   [[nodiscard]] error_category
   getErrorCode() const noexcept override
   {
     return EC_INVALID_MANIFEST_DESCRIPTOR;
   }
+
   [[nodiscard]] std::string_view
   getCategoryMessage() const noexcept override
   {
     return this->categoryMsg;
   }
+
+
 }; /* End class `InvalidManifestDescriptorException' */
 
 /* -------------------------------------------------------------------------- */
