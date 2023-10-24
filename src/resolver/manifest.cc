@@ -162,12 +162,12 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Allows & allow )
             {
               value.get_to( allow.unfree );
             }
-          catch( const nlohmann::json::exception & )
+          catch ( const nlohmann::json::exception & )
             {
               throw InvalidManifestFileException(
                 "Failed to parse manifest field `options.allow.unfree' "
-                "with value: " + value.dump()
-              );
+                "with value: "
+                + value.dump() );
             }
         }
       else if ( key == "broken" )
@@ -176,12 +176,12 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Allows & allow )
             {
               value.get_to( allow.broken );
             }
-          catch( const nlohmann::json::exception & )
+          catch ( const nlohmann::json::exception & )
             {
               throw InvalidManifestFileException(
                 "Failed to parse manifest field `options.allow.broken' "
-                "with value: " + value.dump()
-              );
+                "with value: "
+                + value.dump() );
             }
         }
       else if ( key == "licenses" )
@@ -190,12 +190,12 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Allows & allow )
             {
               value.get_to( allow.licenses );
             }
-          catch( const nlohmann::json::exception & )
+          catch ( const nlohmann::json::exception & )
             {
               throw InvalidManifestFileException(
                 "Failed to parse manifest field `options.allow.licenses' "
-                "with value: " + value.dump()
-              );
+                "with value: "
+                + value.dump() );
             }
         }
       else
@@ -211,16 +211,10 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Allows & allow )
 static void
 to_json( nlohmann::json & jto, const ManifestRaw::Options::Allows & allow )
 {
-  if ( allow.unfree.has_value() )
-    {
-      jto = { { "unfree", *allow.unfree } };
-    }
+  if ( allow.unfree.has_value() ) { jto = { { "unfree", *allow.unfree } }; }
   else { jto = nlohmann::json::object(); }
 
-  if ( allow.broken.has_value() )
-    {
-      jto.emplace( "broken", *allow.broken );
-    }
+  if ( allow.broken.has_value() ) { jto.emplace( "broken", *allow.broken ); }
   if ( allow.licenses.has_value() )
     {
       jto.emplace( "licenses", *allow.licenses );
@@ -249,12 +243,11 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options & opts )
             {
               value.get_to( opts.systems );
             }
-          catch( const nlohmann::json::exception & )
+          catch ( const nlohmann::json::exception & )
             {
               throw InvalidManifestFileException(
                 "Failed to parse manifest field `options.systems' with value: "
-                + value.dump()
-              );
+                + value.dump() );
             }
         }
       else if ( key == "allow" )
@@ -275,13 +268,12 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options & opts )
             {
               value.get_to( opts.packageGroupingStrategy );
             }
-          catch( const nlohmann::json & exception )
+          catch ( const nlohmann::json & exception )
             {
               throw InvalidManifestFileException(
                 "Failed to parse manifest field "
                 "`options.package-grouping-strategy' with value: "
-                + value.dump()
-              );
+                + value.dump() );
             }
         }
       else if ( key == "activation-strategy" )
@@ -290,20 +282,18 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options & opts )
             {
               value.get_to( opts.activationStrategy );
             }
-          catch( const nlohmann::json & exception )
+          catch ( const nlohmann::json & exception )
             {
               throw InvalidManifestFileException(
                 "Failed to parse manifest field "
                 "`options.activation-strategy' with value: "
-                + value.dump()
-              );
+                + value.dump() );
             }
         }
       else
         {
           throw InvalidManifestFileException(
-            "Unrecognized manifest field `options." + key + "'."
-          );
+            "Unrecognized manifest field `options." + key + "'." );
         }
     }
 }
@@ -312,33 +302,21 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options & opts )
 [[maybe_unused]] void
 to_json( nlohmann::json & jto, const ManifestRaw::Options & opts )
 {
-  if ( opts.systems.has_value() )
-    {
-      jto = { { "systems", * opts.systems } };
-    }
-  else
-    {
-      jto = nlohmann::json::object();
-    }
+  if ( opts.systems.has_value() ) { jto = { { "systems", *opts.systems } }; }
+  else { jto = nlohmann::json::object(); }
 
-  if ( opts.allow.has_value() )
-    {
-      jto.emplace( "allow", * opts.allow );
-    }
+  if ( opts.allow.has_value() ) { jto.emplace( "allow", *opts.allow ); }
 
-  if ( opts.semver.has_value() )
-    {
-      jto.emplace( "semver", * opts.semver );
-    }
+  if ( opts.semver.has_value() ) { jto.emplace( "semver", *opts.semver ); }
 
   if ( opts.packageGroupingStrategy.has_value() )
     {
-      jto.emplace( "package-grouping-strategy", * opts.packageGroupingStrategy );
+      jto.emplace( "package-grouping-strategy", *opts.packageGroupingStrategy );
     }
 
   if ( opts.activationStrategy.has_value() )
     {
-      jto.emplace( "activation-strategy", * opts.activationStrategy );
+      jto.emplace( "activation-strategy", *opts.activationStrategy );
     }
 }
 

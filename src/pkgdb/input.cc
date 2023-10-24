@@ -85,9 +85,9 @@ PkgDbInput::scrapePrefix( const flox::AttrPath & prefix )
 {
   if ( this->getDbReadOnly()->completedAttrSet( prefix ) ) { return; }
 
-  Todos todo;
-  bool  wasRW = this->dbRW != nullptr;
-  MaybeCursor root = this->getFlake()->maybeOpenCursor( prefix );
+  Todos       todo;
+  bool        wasRW = this->dbRW != nullptr;
+  MaybeCursor root  = this->getFlake()->maybeOpenCursor( prefix );
 
   if ( root == nullptr ) { return; }
 
