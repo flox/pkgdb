@@ -231,6 +231,14 @@ fixupDescriptor( const std::string & iid, ManifestDescriptor & desc )
 void
 from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
 {
+  if ( ! jfrom.is_object() )
+    {
+      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
+      throw InvalidManifestFileException(
+        "Manifest must be an object, but is" + aOrAn
+        + std::string( jfrom.type_name() ) + '.' );
+    }
+
   for ( const auto & [key, value] : jfrom.items() )
     {
       if ( key == "install" )
