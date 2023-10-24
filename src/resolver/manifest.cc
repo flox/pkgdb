@@ -44,6 +44,10 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::EnvBase & env )
         + std::string( jfrom.type_name() ) + '.' );
     }
 
+  /* Clear fields. */
+  env.dir     = std::nullopt;
+  env.floxhub = std::nullopt;
+
   for ( const auto & [key, value] : jfrom.items() )
     {
       if ( key == "floxhub" )
@@ -78,6 +82,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::EnvBase & env )
             "Unrecognized manifest field `env-base." + key + "'." );
         }
     }
+  if ( auto err = env.check(); err.has_value() ) { throw *err; }
 }
 
 // TODO: remove `maybe_unused' when you write `to_json' for `ManifestRaw'.
@@ -103,6 +108,9 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Semver & semver )
         "Manifest field `options.semver' must be an object, but is" + aOrAn
         + std::string( jfrom.type_name() ) + '.' );
     }
+
+  /* Clear fields. */
+  semver.preferPreReleases = std::nullopt;
 
   for ( const auto & [key, value] : jfrom.items() )
     {
@@ -153,6 +161,11 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Allows & allow )
         "Manifest field `options.allow' must be an object, but is" + aOrAn
         + std::string( jfrom.type_name() ) + '.' );
     }
+
+  /* Clear fields. */
+  allow.licenses = std::nullopt;
+  allow.unfree   = std::nullopt;
+  allow.broken   = std::nullopt;
 
   for ( const auto & [key, value] : jfrom.items() )
     {
@@ -323,12 +336,68 @@ to_json( nlohmann::json & jto, const ManifestRaw::Options & opts )
 
 /* -------------------------------------------------------------------------- */
 
-// TODO: Write explicit definitions with exception handling.
+static void
+from_json( const nlohmann::json & jfrom, ManifestRaw::Hook & hook )
+{
+  if ( ! jfrom.is_object() )
+    {
+      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
+      throw InvalidManifestFileException(
+        "Manifest field `options' must be an object, but is" + aOrAn
+        + std::string( jfrom.type_name() ) + '.' );
+    }
 
-/* Generate `to_json' and `from_json' `ManifestRaw::Hook' */
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT( ManifestRaw::Hook,
-                                                 script,
-                                                 file )
+  /* Clear fields. */
+  hook.file   = std::nullopt;
+  hook.script = std::nullopt;
+
+  for ( const auto & [key, value] : jfrom.items() )
+    {
+      if ( key == "script" )
+        {
+          try
+            {
+              value.get_to( hook.script );
+            }
+          catch ( const nlohmann::json::exception & )
+            {
+              throw InvalidManifestFileException(
+                "Failed to parse manifest field `hook.script' with value: "
+                + value.dump() );
+            }
+        }
+      else if ( key == "file" )
+        {
+          try
+            {
+              value.get_to( hook.file );
+            }
+          catch ( const nlohmann::json::exception & )
+            {
+              throw InvalidManifestFileException(
+                "Failed to parse manifest field `hook.file' with value: "
+                + value.dump() );
+            }
+        }
+      else
+        {
+          throw InvalidManifestFileException(
+            "Unrecognized manifest field `hook." + key + "'." );
+        }
+    }
+
+  if ( auto err = hook.check(); err.has_value() ) { throw *err; }
+}
+
+
+[[maybe_unused]] static void
+to_json( nlohmann::json & jto, const ManifestRaw::Hook & hook )
+{
+  if ( auto err = hook.check(); err.has_value() ) { throw *err; }
+  if ( hook.file.has_value() ) { jto = { { "file", *hook.file } }; }
+  else if ( hook.script.has_value() ) { jto = { { "script", *hook.script } }; }
+  else { jto = nlohmann::json::object(); }
+}
 
 
 /* -------------------------------------------------------------------------- */
@@ -440,55 +509,9 @@ from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
                 + std::string( err.what() ) );
             }
         }
-      else if ( key == "hook" )
-        {
-          try
-            {
-              value.get_to( manifest.hook );
-            }
-          catch ( const nlohmann::json::exception & err )
-            {
-              // TODO: better exception message.
-              throw InvalidManifestFileException(
-                "Invalid value for `hook' field: "
-                + std::string( err.what() ) );
-            }
-          if ( auto err = manifest.hook->check(); err.has_value() )
-            {
-              throw *err;
-            }
-        }
-      else if ( key == "options" )
-        {
-          // TODO: Write good exception messages in `Options' `from_json'.
-          try
-            {
-              value.get_to( manifest.options );
-            }
-          catch ( const nlohmann::json::exception & err )
-            {
-              throw InvalidManifestFileException(
-                "Invalid value for `options' field: "
-                + std::string( err.what() ) );
-            }
-        }
-      else if ( key == "env-base" )
-        {
-          try
-            {
-              value.get_to( manifest.envBase );
-            }
-          catch ( const nlohmann::json::exception & err )
-            {
-              throw InvalidManifestFileException(
-                "Invalid value for `env-base' field: "
-                + std::string( err.what() ) );
-            }
-          if ( auto err = manifest.envBase->check(); err.has_value() )
-            {
-              throw *err;
-            }
-        }
+      else if ( key == "hook" ) { value.get_to( manifest.hook ); }
+      else if ( key == "options" ) { value.get_to( manifest.options ); }
+      else if ( key == "env-base" ) { value.get_to( manifest.envBase ); }
       else
         {
           throw InvalidManifestFileException( "Unrecognized manifest field: `"
