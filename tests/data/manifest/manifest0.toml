@@ -1,54 +1,54 @@
 [registry]
 priority = [ "nixpkgs", "floco", "nixpkgs-flox" ]
 
-#[registry.inputs.nixpkgs]
-#subtrees = [ "legacyPackages" ]
-#
-#  [registry.inputs.nixpkgs.from]
-#  type = "github"
-#  owner = "NixOS"
-#  repo = "nixpkgs"
-#  rev = "e8039594435c68eb4f780f3e9bf3972a7399c4b1"
-#
-#[registry.inputs.nixpkgs-flox]
-#subtrees = [ "catalog" ]
-#stabilities = [ "stable" ]
-#
-#  [registry.inputs.nixpkgs-flox.from]
-#  type = "github"
-#  owner = "flox"
-#  repo = "nixpkgs-flox"
-#  rev = "feb593b6844a96dd4e17497edaabac009be05709"
-#
-#[registry.inputs.floco]
-#subtrees = [ "packages" ]
-#
-#  [registry.inputs.floco.from]
-#  type = "github"
-#  owner = "aakropotkin"
-#  repo = "floco"
-#  rev = "1e84b4b16bba5746e1195fa3a4d8addaaf2d9ef4"
-#
-#[envBase]
-#floxhub = "https://hub.flox.dev/owner/env"
-#
-#[options]
-#systems = [ "x86_64-linux" ]
-#activationStrategy = "etc-profiles"
-#packageGroupingStrategy = "auto"
-#
-#[install]
-#[install.python3.packageRepository]
-#type = "github"
-#owner = "NixOS"
-#repo = "nixpkgs"
-#rev = "e8039594435c68eb4f780f3e9bf3972a7399c4b1"
-#
-#  [install.charasay]
-#  version = "^2"
-#
-#  [install.pip]
-#  path = "python310Packages.pip"
+[registry.inputs.nixpkgs]
+subtrees = [ "legacyPackages" ]
+
+  [registry.inputs.nixpkgs.from]
+  type = "github"
+  owner = "NixOS"
+  repo = "nixpkgs"
+  rev = "e8039594435c68eb4f780f3e9bf3972a7399c4b1"
+
+[registry.inputs.nixpkgs-flox]
+subtrees = [ "catalog" ]
+stabilities = [ "stable" ]
+
+  [registry.inputs.nixpkgs-flox.from]
+  type = "github"
+  owner = "flox"
+  repo = "nixpkgs-flox"
+  rev = "feb593b6844a96dd4e17497edaabac009be05709"
+
+[registry.inputs.floco]
+subtrees = [ "packages" ]
+
+  [registry.inputs.floco.from]
+  type = "github"
+  owner = "aakropotkin"
+  repo = "floco"
+  rev = "1e84b4b16bba5746e1195fa3a4d8addaaf2d9ef4"
+
+[env-base]
+floxhub = "https://hub.flox.dev/owner/env"
+
+[options]
+systems = [ "x86_64-linux" ]
+activation-strategy = "etc-profiles"
+package-grouping-strategy = "auto"
+
+[install]
+[install.python3.packageRepository]
+type = "github"
+owner = "NixOS"
+repo = "nixpkgs"
+rev = "e8039594435c68eb4f780f3e9bf3972a7399c4b1"
+
+  [install.charasay]
+  version = "^2"
+
+  [install.pip]
+  path = "python310Packages.pip"
 
 [vars]
 message = "Howdy"
