@@ -33,13 +33,69 @@ ManifestRaw::EnvBase::check() const
 
 /* -------------------------------------------------------------------------- */
 
+static void
+from_json( const nlohmann::json & jfrom, ManifestRaw::EnvBase & env )
+{
+  for ( const auto & [key, value] : jfrom.items() )
+    {
+      if ( key == "floxhub" )
+        {
+          try
+            {
+              value.get_to( env.floxhub );
+            }
+          catch ( const nlohmann::json::exception & )
+            {
+              throw InvalidManifestFileException(
+                "Failed to parse manifest field `env-base.floxhub' with value: "
+                + value.dump() );
+            }
+        }
+      else if ( key == "dir" )
+        {
+          try
+            {
+              value.get_to( env.dir );
+            }
+          catch ( const nlohmann::json::exception & )
+            {
+              throw InvalidManifestFileException(
+                "Failed to parse manifest field `env-base.dir' with value: "
+                + value.dump() );
+            }
+        }
+      else
+        {
+          throw InvalidManifestFileException(
+            "Unrecognized manifest field `env-base." + key + "'."
+          );
+        }
+    }
+}
+
+// TODO: remove `maybe_unused' when you write `to_json' for `ManifestRaw'.
+[[maybe_unused]] static void
+to_json( nlohmann::json & jto, const ManifestRaw::EnvBase & env )
+{
+  if ( auto err = env.check(); err.has_value() ) { throw *err; }
+  if ( env.dir.has_value() )
+    {
+      jto = { { "dir", * env.dir } };
+    }
+  else if ( env.floxhub.has_value() )
+    {
+      jto = { { "floxhub", * env.floxhub } };
+    }
+  else
+    {
+      jto = nlohmann::json::object();
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 // TODO: Write explicit definitions with exception handling.
-
-/* Generate `to_json' and `from_json' `ManifestRaw::EnvBase' */
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT( ManifestRaw::EnvBase,
-                                                 floxhub,
-                                                 dir )
-
 
 /* Generate `to_json' and `from_json' `ManifestRaw::Options' */
 
