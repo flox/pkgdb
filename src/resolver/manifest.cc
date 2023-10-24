@@ -106,7 +106,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Semver & semver )
 
   for ( const auto & [key, value] : jfrom.items() )
     {
-      if ( ( key == "preferPreReleases" ) || ( key == "prefer-pre-releases" ) )
+      if ( key == "prefer-pre-releases" )
         {
           try
             {
@@ -115,8 +115,8 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Semver & semver )
           catch ( const nlohmann::json::exception & )
             {
               throw InvalidManifestFileException(
-                "Failed to parse manifest field `env-base.options.semver." + key
-                + "' with value: " + value.dump() );
+                "Failed to parse manifest field `env-base.options.semver."
+                "prefer-pre-releases' with value: " + value.dump() );
             }
         }
       else
@@ -134,7 +134,7 @@ to_json( nlohmann::json & jto, const ManifestRaw::Options::Semver semver )
 {
   if ( semver.preferPreReleases.has_value() )
     {
-      jto = { { "preferPreReleases", *semver.preferPreReleases } };
+      jto = { { "prefer-pre-releases", *semver.preferPreReleases } };
     }
   else { jto = nlohmann::json::object(); }
 }
@@ -299,7 +299,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
                 + std::string( err.what() ) );
             }
         }
-      else if ( ( key == "envBase" ) || ( key == "env-base" ) )
+      else if ( key == "env-base" )
         {
           try
             {
@@ -308,7 +308,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
           catch ( const nlohmann::json::exception & err )
             {
               throw InvalidManifestFileException(
-                "Invalid value for `envBase' field: "
+                "Invalid value for `env-base' field: "
                 + std::string( err.what() ) );
             }
           if ( auto err = manifest.envBase->check(); err.has_value() )
