@@ -131,7 +131,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Semver & semver )
 
 
 [[maybe_unused]] static void
-to_json( nlohmann::json & jto, const ManifestRaw::Options::Semver semver )
+to_json( nlohmann::json & jto, const ManifestRaw::Options::Semver & semver )
 {
   if ( semver.preferPreReleases.has_value() )
     {
@@ -143,14 +143,96 @@ to_json( nlohmann::json & jto, const ManifestRaw::Options::Semver semver )
 
 /* -------------------------------------------------------------------------- */
 
+static void
+from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Allows & allows )
+{
+  if ( ! jfrom.is_object() )
+    {
+      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
+      throw InvalidManifestFileException(
+        "Manifest field `options.allows' must be an object, but is" + aOrAn
+        + std::string( jfrom.type_name() ) + '.' );
+    }
+
+  for ( const auto & [key, value] : jfrom.items() )
+    {
+      if ( key == "unfree" )
+        {
+          try
+            {
+              value.get_to( allows.unfree );
+            }
+          catch( const nlohmann::json::exception & )
+            {
+              throw InvalidManifestFileException(
+                "Failed to parse manifest field `options.allows.unfree' "
+                "with value: " + value.dump()
+              );
+            }
+        }
+      else if ( key == "broken" )
+        {
+          try
+            {
+              value.get_to( allows.broken );
+            }
+          catch( const nlohmann::json::exception & )
+            {
+              throw InvalidManifestFileException(
+                "Failed to parse manifest field `options.allows.broken' "
+                "with value: " + value.dump()
+              );
+            }
+        }
+      else if ( key == "licenses" )
+        {
+          try
+            {
+              value.get_to( allows.licenses );
+            }
+          catch( const nlohmann::json::exception & )
+            {
+              throw InvalidManifestFileException(
+                "Failed to parse manifest field `options.allows.licenses' "
+                "with value: " + value.dump()
+              );
+            }
+        }
+      else
+        {
+          throw InvalidManifestFileException(
+            "Unrecognized manifest field `env-base.options.allows." + key
+            + "'." );
+        }
+    }
+}
+
+
+[[maybe_unused]] static void
+to_json( nlohmann::json & jto, const ManifestRaw::Options::Allows & allows )
+{
+  if ( allows.unfree.has_value() )
+    {
+      jto = { { "unfree", *allows.unfree } };
+    }
+  else { jto = nlohmann::json::object(); }
+
+  if ( allows.broken.has_value() )
+    {
+      jto.emplace( "broken", *allows.broken );
+    }
+  if ( allows.licenses.has_value() )
+    {
+      jto.emplace( "licenses", *allows.licenses );
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 // TODO: Write explicit definitions with exception handling.
 
 /* Generate `to_json' and `from_json' `ManifestRaw::Options' */
-
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT( ManifestRaw::Options::Allows,
-                                                 unfree,
-                                                 broken,
-                                                 licenses )
 
 // TODO: Remap `fooBar' to `foo-bar' in the JSON.
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT( ManifestRaw::Options,
