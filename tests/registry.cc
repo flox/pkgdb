@@ -14,8 +14,8 @@
 
 #include <nlohmann/json.hpp>
 
-#include "flox/core/command.hh"
 #include "flox/registry.hh"
+#include "flox/resolver/params.hh"
 #include "test.hh"
 
 
@@ -58,7 +58,7 @@ test_ManifestFileMixinHappyPath()
 {
   using namespace flox;
 
-  flox::command::ManifestFileMixin rfm;
+  flox::resolver::ManifestFileMixin rfm;
   rfm.manifestPath   = TEST_DATA_DIR "/registry/registry0.json";
   RegistryRaw regRaw = rfm.getRegistryRaw();
 
@@ -73,7 +73,7 @@ test_ManifestFileMixinGetRegWithoutFile()
 {
   using namespace flox;
 
-  flox::command::ManifestFileMixin rfm;
+  flox::resolver::ManifestFileMixin rfm;
   /* Try loading the registry without setting the path. */
   try
     {
@@ -94,7 +94,7 @@ test_ManifestFileMixinEmptyPath()
 {
   using namespace flox;
 
-  flox::command::ManifestFileMixin rfm;
+  flox::resolver::ManifestFileMixin rfm;
   /* Try loading the registry without setting the path. */
   try
     {
@@ -116,7 +116,7 @@ test_ManifestFileMixinGetRegCached()
 {
   using namespace flox;
 
-  flox::command::ManifestFileMixin rfm;
+  flox::resolver::ManifestFileMixin rfm;
   rfm.manifestPath   = TEST_DATA_DIR "/registry/registry0.json";
   RegistryRaw regRaw = rfm.getRegistryRaw();
   // You don't need the manifest path if the registry is cached. If it's not
@@ -135,7 +135,7 @@ test_RegistryNoIndirectRefs()
 {
   using namespace flox;
 
-  flox::command::ManifestFileMixin rfm;
+  flox::resolver::ManifestFileMixin rfm;
   rfm.manifestPath = TEST_DATA_DIR "/registry/registry1.json";
   try
     {
