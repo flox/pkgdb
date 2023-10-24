@@ -67,8 +67,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::EnvBase & env )
       else
         {
           throw InvalidManifestFileException(
-            "Unrecognized manifest field `env-base." + key + "'."
-          );
+            "Unrecognized manifest field `env-base." + key + "'." );
         }
     }
 }
@@ -78,18 +77,9 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::EnvBase & env )
 to_json( nlohmann::json & jto, const ManifestRaw::EnvBase & env )
 {
   if ( auto err = env.check(); err.has_value() ) { throw *err; }
-  if ( env.dir.has_value() )
-    {
-      jto = { { "dir", * env.dir } };
-    }
-  else if ( env.floxhub.has_value() )
-    {
-      jto = { { "floxhub", * env.floxhub } };
-    }
-  else
-    {
-      jto = nlohmann::json::object();
-    }
+  if ( env.dir.has_value() ) { jto = { { "dir", *env.dir } }; }
+  else if ( env.floxhub.has_value() ) { jto = { { "floxhub", *env.floxhub } }; }
+  else { jto = nlohmann::json::object(); }
 }
 
 
