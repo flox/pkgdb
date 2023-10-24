@@ -497,17 +497,30 @@ from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
       else if ( key == "registry" ) { value.get_to( manifest.registry ); }
       else if ( key == "vars" )
         {
-          // TODO: iterate for improved exception messages.
-          try
+          if ( ! value.is_object() )
             {
-              value.get_to( manifest.vars );
-            }
-          catch ( const nlohmann::json::exception & err )
-            {
+              std::string aOrAn = value.is_array() ? " an " : " a ";
               throw InvalidManifestFileException(
-                "Invalid value for `vars' field: "
-                + std::string( err.what() ) );
+                "Manifest `vars' field must be an object, but is" + aOrAn
+                + std::string( value.type_name() ) + '.' );
             }
+          std::unordered_map<std::string, std::string> vars;
+          for ( const auto & [vkey, vvalue] : value.items() )
+            {
+              std::string val;
+              try
+                {
+                  vvalue.get_to( val );
+                }
+              catch ( const nlohmann::json::exception & err )
+                {
+                  throw InvalidManifestFileException(
+                    "Invalid value for `vars." + vkey + "' with value: "
+                    + vvalue.dump() );
+                }
+              vars.emplace( vkey, std::move( val ) );
+            }
+          manifest.vars = std::move( vars );
         }
       else if ( key == "hook" ) { value.get_to( manifest.hook ); }
       else if ( key == "options" ) { value.get_to( manifest.options ); }
