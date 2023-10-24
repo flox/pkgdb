@@ -98,11 +98,11 @@ test_ManifestFileMixinEmptyPath()
   /* Try loading the registry without setting the path. */
   try
     {
-      rfm.manifestPath = "";
+      rfm.manifestPath = std::nullopt;
       RegistryRaw regRaw = rfm.getRegistryRaw();
       return false;
     }
-  catch ( ... )
+  catch ( FloxException & )
     {
       return true;
     }

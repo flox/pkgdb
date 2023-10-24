@@ -181,42 +181,27 @@ ManifestFileMixin::addManifestFileOption( argparse::ArgumentParser & parser )
 }
 
 argparse::Argument &
-ManifestFileMixin::addManifestFileArg( argparse::ArgumentParser & parser )
+ManifestFileMixin::addManifestFileArg(
+  argparse::ArgumentParser & parser
+, bool                       required
+)
 {
-  return parser.add_argument( "manifest" )
-    .help( "The path to the 'manifest.{toml,yaml,json}' file." )
+  argparse::Argument & arg =
+    parser.add_argument( "manifest" )
+    .help( "The path to a 'manifest.{toml,yaml,json}' file." )
     .metavar( "MANIFEST-PATH" )
     .action( [&]( const std::string & strPath )
              { this->manifestPath = nix::absPath( strPath ); }
            );
+  return required ? arg.required() : arg;
 }
 
 std::filesystem::path
 ManifestFileMixin::getManifestPath()
 {
-  auto tryFile = [&]( const std::string & path ) -> bool
-  {
-    std::filesystem::path absPath = nix::absPath( path );
-    if ( std::filesystem::exists( absPath ) )
-      {
-        this->manifestPath = absPath;
-        return true;
-      }
-    return false;
-  };
-
-  bool have = this->manifestPath.has_value() ||
-              tryFile( "manifest.toml" ) ||
-              tryFile( "manifest.yaml" ) ||
-              tryFile( "manifest.json" ) ||
-              tryFile( ".flox/manifest.toml" ) ||
-              tryFile( ".flox/manifest.yaml" ) ||
-              tryFile( ".flox/manifest.json" );
-  if ( ! have )
+  if ( ! this->manifestPath.has_value() )
     {
-      throw InvalidManifestFileException(
-        "no manifest path given, and no registry available in PWD"
-      );
+      throw InvalidManifestFileException( "no manifest path given" );
     }
   return * this->manifestPath;
 }
@@ -234,28 +219,37 @@ ManifestFileMixin::getRegistryRaw()
 void
 ManifestFileMixin::loadContents()
 {
-  std::ifstream  f( this->getManifestPath() );
-  nlohmann::json json;
-  auto ext = std::filesystem::path( this->getManifestPath() ).extension();
-  if ( ext == ".json" )
-    {
-      this->contents = nlohmann::json::parse( f );
-    }
-  else if ( ( ext == ".yaml" ) || ( ext == ".yml" ) )
-    {
-      std::ostringstream oss;
-      oss << f.rdbuf();
-      this->contents = yamlToJSON( oss.str() );
-    }
-  else if ( ext == ".toml" )
-    {
-      std::ostringstream oss;
-      oss << f.rdbuf();
-      this->contents = tomlToJSON( oss.str() );
-    }
+  this->contents = readAndCoerceJSON( this->getManifestPath() );
   /* Fill `registryRaw' */
-  this->contents.at( "registry" ).get_to( this->registryRaw );
+  try
+    {
+      this->contents.at( "registry" ).get_to( this->registryRaw );
+    }
+  catch ( const nlohmann::json::out_of_range & )
+    {
+      throw InvalidManifestFileException(
+        "manifest does not contain a registry"
+      );
+    }
+  catch ( const nlohmann::json::type_error & )
+    {
+      throw InvalidManifestFileException(
+        "manifest does not contain a valid registry"
+      );
+    }
+  catch ( const FloxException & err )
+    {
+      /* Pass the inner error as it was. */
+      throw err;
+    }
+  catch ( const std::exception & err )
+    {
+      throw InvalidManifestFileException(
+        "failed to load manifest registry: " + std::string( err.what() )
+      );
+    }
 }
+
 
 /* -------------------------------------------------------------------------- */
 

@@ -148,21 +148,32 @@ protected:
    *
    * If @a manifestPath is already set, we use that; otherwise we attempt to
    * locate a manifest at `[./flox/]manifest.{toml,yaml,json}`.
+   *
+   * @return The path to the manifest file.
    */
   std::filesystem::path
   getManifestPath();
 
 public:
 
-  /** @brief Sets the path to the registry file to load with `--manifest`. */
+  /**
+   * @brief Sets the path to the registry file to load with `--manifest`.
+   * @param parser The parser to add the argument to.
+   * @return The argument added to the parser.
+   */
   argparse::Argument &
   addManifestFileOption( argparse::ArgumentParser & parser );
 
   /**
    * @brief Sets the path to the registry file to load with a positional arg.
+   * @param parser The parser to add the argument to.
+   * @param required Whether the argument is required.
+   * @return The argument added to the parser.
    */
   argparse::Argument &
-  addManifestFileArg( argparse::ArgumentParser & parser );
+  addManifestFileArg( argparse::ArgumentParser & parser
+                    , bool                       required = true
+                    );
 
   /** @brief Returns the @a RegistryRaw from the manifest. */
   const RegistryRaw &

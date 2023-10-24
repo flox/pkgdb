@@ -88,6 +88,27 @@ LockCommand::run()
   this->loadContents();
   nlohmann::json lockfile = this->contents;
   lockfile["registry"] = lockedRegistry;
+  for ( const auto &[name, input] : lockfile.at( "registry" ).items() )
+    {
+      /* Delete a few metadata fields that we don't really care about. */
+      auto type = input.at( "from" ).at( "type" );
+      input.at( "from" ).erase( "lastModified" );
+      /* Only keep `narHash' for tarballs and files. */
+      if ( ! ( ( type == "tarball" ) || ( type == "file" ) ) )
+        {
+          input.at( "from" ).erase( "narHash" );
+        }
+
+      /* Drop `stabilities' for non-catalogs. */
+      bool isCatalog = false;
+      for ( const auto &subtree : input.at( "subtrees" ) )
+        {
+          if ( subtree == "catalog" ) { isCatalog = true; }
+        }
+      if ( ! isCatalog ) { input.erase( "stabilities" ); }
+    }
+
+  /* Print that bad boii */
   std::cout << lockfile.dump() << std::endl;
   return EXIT_SUCCESS;
 }
