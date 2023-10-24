@@ -36,6 +36,15 @@ ManifestRaw::EnvBase::check() const
 static void
 from_json( const nlohmann::json & jfrom, ManifestRaw::EnvBase & env )
 {
+  if ( ! jfrom.is_object() )
+    {
+      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
+      throw InvalidManifestFileException(
+        "Manifest field `options.env-base' must be an object, but is" + aOrAn
+        + std::string( jfrom.type_name() ) + '.'
+       );
+    }
+
   for ( const auto & [key, value] : jfrom.items() )
     {
       if ( key == "floxhub" )
@@ -85,6 +94,59 @@ to_json( nlohmann::json & jto, const ManifestRaw::EnvBase & env )
 
 /* -------------------------------------------------------------------------- */
 
+static void
+from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Semver & semver )
+{
+  if ( ! jfrom.is_object() )
+    {
+      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
+      throw InvalidManifestFileException(
+        "Manifest field `options.semver' must be an object, but is" + aOrAn
+        + std::string( jfrom.type_name() ) + '.'
+       );
+    }
+
+  for ( const auto & [key, value] : jfrom.items() )
+    {
+      if ( ( key == "preferPreReleases" ) || ( key == "prefer-pre-releases" ) )
+        {
+          try
+            {
+              value.get_to( semver.preferPreReleases );
+            }
+          catch( const nlohmann::json::exception & )
+            {
+              throw InvalidManifestFileException(
+                "Failed to parse manifest field `env-base.options.semver." + key
+                + "' with value: " + value.dump()
+              );
+            }
+        }
+      else
+        {
+          throw InvalidManifestFileException(
+            "Unrecognized manifest field `env-base.options.semver." + key + "'." );
+        }
+    }
+}
+
+
+[[maybe_unused]] static void
+to_json( nlohmann::json & jto, const ManifestRaw::Options::Semver semver )
+{
+  if ( semver.preferPreReleases.has_value() )
+    {
+      jto = { { "preferPreReleases", * semver.preferPreReleases } };
+    }
+  else
+    {
+      jto = nlohmann::json::object();
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 // TODO: Write explicit definitions with exception handling.
 
 /* Generate `to_json' and `from_json' `ManifestRaw::Options' */
@@ -93,9 +155,6 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT( ManifestRaw::Options::Allows,
                                                  unfree,
                                                  broken,
                                                  licenses )
-
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT( ManifestRaw::Options::Semver,
-                                                 preferPreReleases )
 
 // TODO: Remap `fooBar' to `foo-bar' in the JSON.
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT( ManifestRaw::Options,
