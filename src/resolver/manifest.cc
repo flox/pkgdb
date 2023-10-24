@@ -116,7 +116,8 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Semver & semver )
             {
               throw InvalidManifestFileException(
                 "Failed to parse manifest field `env-base.options.semver."
-                "prefer-pre-releases' with value: " + value.dump() );
+                "prefer-pre-releases' with value: "
+                + value.dump() );
             }
         }
       else
