@@ -155,6 +155,13 @@ to_json( nlohmann::json &jto, const RegistryInput &rip )
 void
 from_json( const nlohmann::json &jfrom, RegistryRaw &reg )
 {
+  if ( ! jfrom.is_object() )
+    {
+      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
+      throw flox::Registry<flox::pkgdb::PkgDbInputFactory>::
+        InvalidRegistryException( "registry must be an object, but is" + aOrAn
+                                  + std::string( jfrom.type_name() ) + '.' );
+    }
   reg.clear();
   for ( const auto &[key, value] : jfrom.items() )
     {
@@ -334,6 +341,14 @@ FlakeRegistry::getLockedInputs()
 void
 from_json( const nlohmann::json &jfrom, InputPreferences &prefs )
 {
+  if ( ! jfrom.is_object() )
+    {
+      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
+      throw flox::Registry<flox::pkgdb::PkgDbInputFactory>::
+        InvalidRegistryException( "preferences must be an object, but is"
+                                  + aOrAn + std::string( jfrom.type_name() )
+                                  + '.' );
+    }
   for ( const auto &[key, value] : jfrom.items() )
     {
       if ( key == "subtrees" )

@@ -144,6 +144,13 @@ public:
 void
 from_json( const nlohmann::json &jfrom, RawPackage &pkg )
 {
+  if ( ! jfrom.is_object() )
+    {
+      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
+      throw flox::pkgdb::PkgDbException(
+        "package must be an object, but is" + aOrAn
+        + std::string( jfrom.type_name() ) + '.' );
+    }
   for ( const auto &[key, value] : jfrom.items() )
     {
       if ( key == "path" )
