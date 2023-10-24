@@ -88,9 +88,24 @@ main( int argc, char *argv[] )
         {
           std::cout << nlohmann::json( err ).dump() << std::endl;
         }
-      else { std::cerr << err.what() << std::endl; }
+      else { std::cerr << err.whatString() << std::endl; }
 
       return err.getErrorCode();
+    }
+  // TODO: we may want to catch these closer to where they are originally thrown
+  catch ( const nix::Error &err )
+    {
+      if ( ! isatty( STDERR_FILENO ) )
+        {
+          nlohmann::json error = {
+            { "exit_code", flox::EC_NIX },
+            { "message", nix::filterANSIEscapes( err.what(), true ) },
+          };
+          std::cout << error << std::endl;
+        }
+      else { std::cerr << err.what() << std::endl; }
+
+      return flox::EC_NIX;
     }
   catch ( const std::exception &err )
     {
