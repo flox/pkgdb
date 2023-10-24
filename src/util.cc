@@ -83,17 +83,13 @@ readAndCoerceJSON( const std::filesystem::path & path )
 {
   if ( ! std::filesystem::exists( path ) )
     {
-      throw flox::FloxException(
-        "File `" + path.string() + "' does not exist"
-      );
+      throw flox::FloxException( "File `" + path.string()
+                                 + "' does not exist" );
     }
 
   std::ifstream ifs( path );
-  auto ext = path.extension();
-  if ( ext == ".json" )
-    {
-      return nlohmann::json::parse( ifs );
-    }
+  auto          ext = path.extension();
+  if ( ext == ".json" ) { return nlohmann::json::parse( ifs ); }
 
   /* Read file to buffer */
   std::ostringstream oss;
@@ -109,9 +105,8 @@ readAndCoerceJSON( const std::filesystem::path & path )
     }
   else
     {
-      throw flox::FloxException(
-        "Cannot convert file extension `" + ext.string() + "' to JSON"
-      );
+      throw flox::FloxException( "Cannot convert file extension `"
+                                 + ext.string() + "' to JSON" );
     }
 }
 

@@ -171,9 +171,7 @@ public:
    * @return The argument added to the parser.
    */
   argparse::Argument &
-  addManifestFileArg( argparse::ArgumentParser & parser
-                    , bool                       required = true
-                    );
+  addManifestFileArg( argparse::ArgumentParser & parser, bool required = true );
 
   /** @brief Returns the @a RegistryRaw from the manifest. */
   const RegistryRaw &

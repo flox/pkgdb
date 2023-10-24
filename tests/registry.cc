@@ -59,7 +59,7 @@ test_ManifestFileMixinHappyPath()
   using namespace flox;
 
   flox::command::ManifestFileMixin rfm;
-  rfm.manifestPath = TEST_DATA_DIR "/registry/registry0.json";
+  rfm.manifestPath   = TEST_DATA_DIR "/registry/registry0.json";
   RegistryRaw regRaw = rfm.getRegistryRaw();
 
   return true;
@@ -98,7 +98,7 @@ test_ManifestFileMixinEmptyPath()
   /* Try loading the registry without setting the path. */
   try
     {
-      rfm.manifestPath = std::nullopt;
+      rfm.manifestPath   = std::nullopt;
       RegistryRaw regRaw = rfm.getRegistryRaw();
       return false;
     }
@@ -117,7 +117,7 @@ test_ManifestFileMixinGetRegCached()
   using namespace flox;
 
   flox::command::ManifestFileMixin rfm;
-  rfm.manifestPath = TEST_DATA_DIR "/registry/registry0.json";
+  rfm.manifestPath   = TEST_DATA_DIR "/registry/registry0.json";
   RegistryRaw regRaw = rfm.getRegistryRaw();
   // You don't need the manifest path if the registry is cached. If it's not
   // cached then you'll get an exception trying to open this file.

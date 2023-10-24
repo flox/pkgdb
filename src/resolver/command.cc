@@ -87,7 +87,7 @@ LockCommand::run()
   auto lockedRegistry = this->getRegistry().getLockedInputs();
   this->loadContents();
   nlohmann::json lockfile = this->contents;
-  lockfile["registry"] = lockedRegistry;
+  lockfile["registry"]    = lockedRegistry;
   for ( const auto &[name, input] : lockfile.at( "registry" ).items() )
     {
       /* Delete a few metadata fields that we don't really care about. */

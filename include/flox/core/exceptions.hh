@@ -115,10 +115,11 @@ public:
    */
   [[nodiscard]] std::string
   whatString() const noexcept;
-  
-  friend void to_json( nlohmann::json & jto, const FloxException & err );
 
-};  /* End class `FloxException' */
+  friend void
+  to_json( nlohmann::json & jto, const FloxException & err );
+
+}; /* End class `FloxException' */
 
 
 /* -------------------------------------------------------------------------- */

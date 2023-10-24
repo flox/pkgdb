@@ -9,13 +9,13 @@
 
 #pragma once
 
+#include <filesystem>
 #include <functional>  // For `std::hash' and `std::pair'
 #include <list>
 #include <optional>
 #include <string>  // For `std::string' and `std::string_view'
 #include <variant>
 #include <vector>
-#include <filesystem>
 
 #include <nix/eval-cache.hh>
 #include <nix/flake/flakeref.hh>

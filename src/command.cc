@@ -176,23 +176,19 @@ ManifestFileMixin::addManifestFileOption( argparse::ArgumentParser & parser )
     .help( "The path to the 'manifest.{toml,yaml,json}' file." )
     .metavar( "PATH" )
     .action( [&]( const std::string & strPath )
-             { this->manifestPath = nix::absPath( strPath ); }
-           );
+             { this->manifestPath = nix::absPath( strPath ); } );
 }
 
 argparse::Argument &
-ManifestFileMixin::addManifestFileArg(
-  argparse::ArgumentParser & parser
-, bool                       required
-)
+ManifestFileMixin::addManifestFileArg( argparse::ArgumentParser & parser,
+                                       bool                       required )
 {
-  argparse::Argument & arg =
-    parser.add_argument( "manifest" )
-    .help( "The path to a 'manifest.{toml,yaml,json}' file." )
-    .metavar( "MANIFEST-PATH" )
-    .action( [&]( const std::string & strPath )
-             { this->manifestPath = nix::absPath( strPath ); }
-           );
+  argparse::Argument & arg
+    = parser.add_argument( "manifest" )
+        .help( "The path to a 'manifest.{toml,yaml,json}' file." )
+        .metavar( "MANIFEST-PATH" )
+        .action( [&]( const std::string & strPath )
+                 { this->manifestPath = nix::absPath( strPath ); } );
   return required ? arg.required() : arg;
 }
 
@@ -203,16 +199,13 @@ ManifestFileMixin::getManifestPath()
     {
       throw InvalidManifestFileException( "no manifest path given" );
     }
-  return * this->manifestPath;
+  return *this->manifestPath;
 }
 
 const RegistryRaw &
 ManifestFileMixin::getRegistryRaw()
 {
-  if ( ! this->registryRaw.has_value() )
-    {
-      this->loadContents();
-    }
+  if ( ! this->registryRaw.has_value() ) { this->loadContents(); }
   return *this->registryRaw;
 }
 
@@ -228,14 +221,12 @@ ManifestFileMixin::loadContents()
   catch ( const nlohmann::json::out_of_range & )
     {
       throw InvalidManifestFileException(
-        "manifest does not contain a registry"
-      );
+        "manifest does not contain a registry" );
     }
   catch ( const nlohmann::json::type_error & )
     {
       throw InvalidManifestFileException(
-        "manifest does not contain a valid registry"
-      );
+        "manifest does not contain a valid registry" );
     }
   catch ( const FloxException & err )
     {
@@ -244,9 +235,8 @@ ManifestFileMixin::loadContents()
     }
   catch ( const std::exception & err )
     {
-      throw InvalidManifestFileException(
-        "failed to load manifest registry: " + std::string( err.what() )
-      );
+      throw InvalidManifestFileException( "failed to load manifest registry: "
+                                          + std::string( err.what() ) );
     }
 }
 
