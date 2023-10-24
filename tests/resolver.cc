@@ -156,34 +156,20 @@ main( int argc, char * argv[] )
   int exitCode = EXIT_SUCCESS;
 #define RUN_TEST( ... ) _RUN_TEST( exitCode, __VA_ARGS__ )
 
-  /* --------------------------------------------------------------------------
-   */
-
   nix::verbosity = nix::lvlWarn;
   if ( ( 1 < argc ) && ( std::string_view( argv[1] ) == "-v" ) )  // NOLINT
     {
       nix::verbosity = nix::lvlDebug;
     }
 
-
-  /* --------------------------------------------------------------------------
-   */
-
   /* Make a temporary directory for cache DBs to ensure tests
    * are reproducible. */
   std::string cacheDir = nix::createTempDir();
   setenv( "PKGDB_CACHEDIR", cacheDir.c_str(), 1 );
 
-
-  /* --------------------------------------------------------------------------
-   */
-
-  {
-
-    RUN_TEST( resolve0 );
-    RUN_TEST( resolveStabilities );
-    RUN_TEST( resolveInput );
-  }
+  RUN_TEST( resolve0 );
+  RUN_TEST( resolveStabilities );
+  RUN_TEST( resolveInput );
 
   /* Cleanup the temporary directory. */
   nix::deletePath( cacheDir );
