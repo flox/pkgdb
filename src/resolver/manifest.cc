@@ -213,8 +213,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Allows & allow )
       else
         {
           throw InvalidManifestFileException(
-            "Unrecognized manifest field `options.allow." + key
-            + "'." );
+            "Unrecognized manifest field `options.allow." + key + "'." );
         }
     }
 }
