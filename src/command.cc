@@ -19,6 +19,8 @@
 #include "flox/core/command.hh"
 #include "flox/core/util.hh"
 #include "flox/pkgdb/write.hh"
+#include "flox/resolver/manifest.hh"
+
 
 /* -------------------------------------------------------------------------- */
 
