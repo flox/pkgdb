@@ -211,7 +211,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
                 flox::extract_json_errmsg( e ).c_str() );
             }
         }
-      else if ( key == "path" )
+      else if ( key == "license" )
         {
           try
             {
