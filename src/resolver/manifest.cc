@@ -41,8 +41,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::EnvBase & env )
       std::string aOrAn = jfrom.is_array() ? " an " : " a ";
       throw InvalidManifestFileException(
         "Manifest field `options.env-base' must be an object, but is" + aOrAn
-        + std::string( jfrom.type_name() ) + '.'
-       );
+        + std::string( jfrom.type_name() ) + '.' );
     }
 
   for ( const auto & [key, value] : jfrom.items() )
@@ -102,8 +101,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Semver & semver )
       std::string aOrAn = jfrom.is_array() ? " an " : " a ";
       throw InvalidManifestFileException(
         "Manifest field `options.semver' must be an object, but is" + aOrAn
-        + std::string( jfrom.type_name() ) + '.'
-       );
+        + std::string( jfrom.type_name() ) + '.' );
     }
 
   for ( const auto & [key, value] : jfrom.items() )
@@ -114,18 +112,18 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Semver & semver )
             {
               value.get_to( semver.preferPreReleases );
             }
-          catch( const nlohmann::json::exception & )
+          catch ( const nlohmann::json::exception & )
             {
               throw InvalidManifestFileException(
                 "Failed to parse manifest field `env-base.options.semver." + key
-                + "' with value: " + value.dump()
-              );
+                + "' with value: " + value.dump() );
             }
         }
       else
         {
           throw InvalidManifestFileException(
-            "Unrecognized manifest field `env-base.options.semver." + key + "'." );
+            "Unrecognized manifest field `env-base.options.semver." + key
+            + "'." );
         }
     }
 }
@@ -136,12 +134,9 @@ to_json( nlohmann::json & jto, const ManifestRaw::Options::Semver semver )
 {
   if ( semver.preferPreReleases.has_value() )
     {
-      jto = { { "preferPreReleases", * semver.preferPreReleases } };
+      jto = { { "preferPreReleases", *semver.preferPreReleases } };
     }
-  else
-    {
-      jto = nlohmann::json::object();
-    }
+  else { jto = nlohmann::json::object(); }
 }
 
 
