@@ -413,32 +413,6 @@ ManifestRaw::Hook::check() const
 
 /* -------------------------------------------------------------------------- */
 
-std::optional<std::string>
-ManifestRaw::Hook::getHook() const
-{
-  this->check();
-  if ( this->file.has_value() )
-    {
-      // TODO: This assumes that PWD is the same directory as the manifest.
-      // You need to track the `manifestPath' more explicitly to resolve any
-      // relative paths that may appear here.
-      std::filesystem::path path( *this->file );
-      if ( ! std::filesystem::exists( path ) )
-        {
-          throw InvalidManifestFileException( "Hook file `" + path.string()
-                                              + "' does not exist." );
-        }
-      std::ifstream      file( path );
-      std::ostringstream buffer;
-      buffer << file.rdbuf();
-      return buffer.str();
-    }
-  return this->script;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
 /**
  * @brief Add a `name' field to the descriptor if it is missing, and no
  *        other acceptable field is present.

@@ -121,15 +121,6 @@ struct ManifestRaw
      */
     void
     check() const;
-
-    /**
-     * @brief Get a stringized form of the hook, possibly reading a file.
-     * @return An activation hook string if one is defined,
-     *         otherwise `std::nullopt`.
-     */
-    std::optional<std::string>
-    getHook() const;
-
   }; /* End struct `ManifestRaw::Hook' */
   std::optional<Hook> hook;
 
