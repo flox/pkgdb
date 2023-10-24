@@ -122,7 +122,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Semver & semver )
           catch ( const nlohmann::json::exception & )
             {
               throw InvalidManifestFileException(
-                "Failed to parse manifest field `env-base.options.semver."
+                "Failed to parse manifest field `options.semver."
                 "prefer-pre-releases' with value: "
                 + value.dump() );
             }
@@ -213,7 +213,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Allows & allow )
       else
         {
           throw InvalidManifestFileException(
-            "Unrecognized manifest field `env-base.options.allow." + key
+            "Unrecognized manifest field `options.allow." + key
             + "'." );
         }
     }
@@ -420,6 +420,9 @@ ManifestRaw::Hook::getHook() const
   this->check();
   if ( this->file.has_value() )
     {
+      // TODO: This assumes that PWD is the same directory as the manifest.
+      // You need to track the `manifestPath' more explicitly to resolve any
+      // relative paths that may appear here.
       std::filesystem::path path( *this->file );
       if ( ! std::filesystem::exists( path ) )
         {
@@ -439,7 +442,7 @@ ManifestRaw::Hook::getHook() const
 
 /**
  * @brief Add a `name' field to the descriptor if it is missing, and no
- *        other accebtable field is present.
+ *        other acceptable field is present.
  *
  * The fields `absPath` or `path` may be used instead of the `name` field, but
  * if none are present use the `install.<ID>` identifier as `name`.
