@@ -95,30 +95,43 @@ struct Resolved
 
 }; /* End struct `Resolved' */
 
+// /**
+//  * @fn void from_json( const nlohmann::json & j, Resolved::Input & pdb )
+//  * @brief Convert a JSON object to a @a flox::resolver::Resolved::Input.
+//  *
+//  * @fn void to_json( nlohmann::json & j, const Resolved::Input & pdb )
+//  * @brief Convert a @a flox::resolver::Resolved::Input to a JSON object.
+//  *
+//  * @fn void from_json( const nlohmann::json & j, Resolved & pdb )
+//  * @brief Convert a JSON object to a @a flox::resolver::Resolved.
+//  *
+//  * @fn void to_json( nlohmann::json & j, const Resolved & pdb )
+//  * @brief Convert a @a flox::resolver::Resolved to a JSON object.
+//  */
+// /* Generate `to_json' and `from_json' functions. */
+// NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( Resolved::Input, name, locked )
+// NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( Resolved, input, path, info )
 
-/**
- * @fn void flox::resolver::from_json( const nlohmann::json & j,
- * flox::resolver::Resolved::Input & pdb )
- * @brief Convert a JSON object to a @a flox::resolver::Resolved::Input.
- *
- * @fn void flox::resolver::to_json( nlohmann::json & j, const
- * flox::resolver::Resolved::Input & pdb )
- * @brief Convert a @a flox::resolver::Resolved::Input to a JSON object.
- *
- * @fn void flox::resolver::from_json( const nlohmann::json & j,
- * flox::resolver::Resolved & pdb )
- * @brief Convert a JSON object to a @a flox::resolver::Resolved.
- *
- * @fn void flox::resolver::to_json( nlohmann::json & j, const
- * flox::resolver::Resolved & pdb )
- * @brief Convert a @a flox::resolver::Resolved to a JSON object.
+
+/** @brief Convert a JSON object to a @a flox::resolver::Resolved::Input. */
+void
+from_json( const nlohmann::json & jfrom, Resolved::Input & pdb );
+
+/** @brief Convert a @a flox::resolver::Resolved::Input to a JSON object. */
+void
+to_json( nlohmann::json & jto, const Resolved::Input & pdb );
+
+/** @brief Convert a JSON object to a @a flox::resolver::Resolved. */
+void
+from_json( const nlohmann::json & jfrom, Resolved & pdb );
+
+/** @brief Convert a @a flox::resolver::Resolved to a JSON object. */
+void
+to_json( nlohmann::json & jto, const Resolved & pdb );
+
+
+/* --------------------------------------------------------------------------
  */
-/* Generate `to_json' and `from_json' functions. */
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( Resolved::Input, name, locked )
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( Resolved, input, path, info )
-
-
-/* -------------------------------------------------------------------------- */
 
 using Descriptor = PkgDescriptorRaw;
 
