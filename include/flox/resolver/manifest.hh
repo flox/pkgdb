@@ -28,10 +28,12 @@ namespace flox::resolver {
 /**
  * @class flox::resolver::InvalidManifestFileException
  * @brief An exception thrown when the value of manifestPath is invalid.
+ * @{
  */
 FLOX_DEFINE_EXCEPTION( InvalidManifestFileException,
                        EC_INVALID_MANIFEST_FILE,
                        "invalid manifest file" )
+/** @} */
 
 
 /* -------------------------------------------------------------------------- */

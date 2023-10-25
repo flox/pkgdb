@@ -452,10 +452,12 @@ public:
   /**
    * @class flox::Registry::InvalidRegistryException
    * @brief An exception thrown when a registry has invalid contents.
+   * @{
    */
   FLOX_DEFINE_EXCEPTION( InvalidRegistryException,
                          EC_INVALID_REGISTRY,
                          "invalid registry" )
+  /** @} */
 
   /**
    * @brief Get an input by name.
