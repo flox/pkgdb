@@ -181,6 +181,7 @@ to_json( nlohmann::json &jto, const FloxException &err );
 
 /* -------------------------------------------------------------------------- */
 
+//NOLINTBEGIN(bugprone-macro-parentheses)
 /**
  * @brief Generate a class definition with an error code and
  *        _category message_.
@@ -189,20 +190,20 @@ to_json( nlohmann::json &jto, const FloxException &err );
  * and `NAME( contextMsg, caughtMsg )` constructors available.
  */
 #define FLOX_DEFINE_EXCEPTION( NAME, ERROR_CODE, CATEGORY_MSG )                \
-  class ( NAME ) : public FloxException                                        \
+  class NAME : public FloxException                                            \
   {                                                                            \
   public:                                                                      \
                                                                                \
-    ( NAME )() : FloxException( CATEGORY_MSG, std::nullopt, std::nullopt ) {}  \
+    NAME() : FloxException( CATEGORY_MSG, std::nullopt, std::nullopt ) {}      \
                                                                                \
-    explicit ( NAME )( std::string_view contextMsg )                           \
+    explicit NAME( std::string_view contextMsg )                               \
       : FloxException( ( CATEGORY_MSG ),                                       \
                        std::string( contextMsg ),                              \
                        std::nullopt )                                          \
     {}                                                                         \
                                                                                \
-    explicit ( NAME )( std::string_view contextMsg,                            \
-                       std::string_view caughtMsg )                            \
+    explicit NAME( std::string_view contextMsg,                                \
+                   std::string_view caughtMsg )                                \
       : FloxException( ( CATEGORY_MSG ),                                       \
                        std::string( contextMsg ),                              \
                        std::string( caughtMsg ) )                              \
@@ -220,6 +221,7 @@ to_json( nlohmann::json &jto, const FloxException &err );
       return ( CATEGORY_MSG );                                                 \
     }                                                                          \
   };
+//NOLINTEND(bugprone-macro-parentheses)
 
 
 /* -------------------------------------------------------------------------- */
