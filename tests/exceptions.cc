@@ -21,17 +21,19 @@ using namespace flox;
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief Test whatString correctly calls virtual methods. */
+/** @brief Test what() correctly calls virtual methods. */
 bool
-test_whatString()
+test_what0()
 {
   FloxException base( "context" );
-  EXPECT_EQ( base.whatString(), "general error: context" );
+  EXPECT_EQ( std::string( base.what() ),
+             std::string( "general error: context" ) );
 
   command::InvalidArgException derived( "context" );
   FloxException*               derivedPtr = &derived;
 
-  EXPECT_EQ( derivedPtr->whatString(), "invalid argument: context" );
+  EXPECT_EQ( std::string( derivedPtr->what() ),
+             std::string( "invalid argument: context" ) );
 
   return true;
 }
@@ -45,7 +47,7 @@ main()
   int exitCode = EXIT_SUCCESS;
 #define RUN_TEST( ... ) _RUN_TEST( exitCode, __VA_ARGS__ )
 
-  RUN_TEST( whatString );
+  RUN_TEST( what0 );
 
   return exitCode;
 }

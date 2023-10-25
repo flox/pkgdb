@@ -67,35 +67,21 @@ struct SearchQuery : public pkgdb::PkgDescriptorBase
   pkgdb::PkgQueryArgs &
   fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const;
 
+
 }; /* End struct "SearchQuery' */
 
-/** @brief An exception thrown when parsing `SearchQuery` from JSON */
-class ParseSearchQueryException : public FloxException
-{
-private:
 
-  static constexpr std::string_view categoryMsg = "error parsing search query";
+/* -------------------------------------------------------------------------- */
 
-public:
+/**
+ * @class flox::search::ParseSearchQueryException
+ * @brief An exception thrown when parsing @a flox::search::SearchQuery
+ *        from JSON.
+ */
+FLOX_DEFINE_EXCEPTION( ParseSearchQueryException,
+                       EC_PARSE_SEARCH_QUERY,
+                       "error parsing search query" )
 
-  explicit ParseSearchQueryException( std::string_view contextMsg )
-    : FloxException( contextMsg )
-  {}
-  explicit ParseSearchQueryException( std::string_view contextMsg,
-                                      const char      *caughtMsg )
-    : FloxException( contextMsg, caughtMsg )
-  {}
-  [[nodiscard]] error_category
-  getErrorCode() const noexcept override
-  {
-    return EC_PARSE_SEARCH_QUERY;
-  }
-  [[nodiscard]] std::string_view
-  getCategoryMessage() const noexcept override
-  {
-    return this->categoryMsg;
-  }
-}; /* End class `ParseSearchQueryException' */
 
 /* -------------------------------------------------------------------------- */
 

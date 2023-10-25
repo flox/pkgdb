@@ -83,30 +83,17 @@ struct QueryPreferences
 
 }; /* End struct `QueryPreferences' */
 
-/** @brief An exception thrown when parsing `QueryPreferences` from JSON */
-class ParseQueryPreferencesException : public FloxException
-{
-private:
 
-  static constexpr std::string_view categoryMsg
-    = "error parsing query preferences";
+/* -------------------------------------------------------------------------- */
 
-public:
-
-  explicit ParseQueryPreferencesException( std::string_view contextMsg )
-    : FloxException( contextMsg )
-  {}
-  [[nodiscard]] error_category
-  getErrorCode() const noexcept override
-  {
-    return EC_PARSE_QUERY_PREFERENCES;
-  }
-  [[nodiscard]] std::string_view
-  getCategoryMessage() const noexcept override
-  {
-    return this->categoryMsg;
-  }
-}; /* End class `ParseQueryPreferencesException' */
+/**
+ * @class flox::pkgdb::ParseQueryPreferencesException
+ * @brief An exception thrown when parsing @a flox::pkgdb::QueryPreferences
+ *        from JSON.
+ */
+FLOX_DEFINE_EXCEPTION( ParseQueryPreferencesException,
+                       EC_PARSE_QUERY_PREFERENCES,
+                       "error parsing query preferences" )
 
 
 /* -------------------------------------------------------------------------- */
@@ -207,31 +194,17 @@ struct QueryParams : public QueryPreferences
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief An exception thrown when parsing `QueryParams` from JSON */
-class ParseQueryParamsException : public FloxException
-{
-private:
+/**
+ * @class flox::pkgdb::ParseQueryParamsException
+ * @brief An exception thrown when parsing @a flox::pkgdb::QueryParams
+ *        from JSON.
+ */
+FLOX_DEFINE_EXCEPTION( ParseQueryParamsException,
+                       EC_PARSE_QUERY_PARAMS,
+                       "error parsing query parameters" )
 
-  static constexpr std::string_view categoryMsg
-    = "error parsing query parameters";
 
-public:
-
-  explicit ParseQueryParamsException( std::string_view contextMsg )
-    : FloxException( contextMsg )
-  {}
-  [[nodiscard]] error_category
-  getErrorCode() const noexcept override
-  {
-    return EC_PARSE_QUERY_PARAMS;
-  }
-  [[nodiscard]] std::string_view
-  getCategoryMessage() const noexcept override
-  {
-    return this->categoryMsg;
-  }
-
-}; /* End class `ParseQueryParamsException' */
+/* -------------------------------------------------------------------------- */
 
 template<pkg_descriptor_typename QueryType>
 void

@@ -74,29 +74,53 @@ enum error_category {
 /** Typed exception wrapper used for misc errors. */
 class FloxException : public std::exception
 {
-private:
 
-  /** Corresponds to an error_category, in this case `EC_FLOX_EXCEPTION`. */
-  static constexpr std::string_view categoryMsg = "general error";
+private:
 
   /** Additional context added when the error is thrown. */
   std::optional<std::string> contextMsg;
 
   /**
-   * If some other exception was caught before throwing this one, caughtMsg
+   * If some other exception was caught before throwing this one, @a caughtMsg
    * contains what() of that exception.
    */
   std::optional<std::string> caughtMsg;
+
+  /** The final what() message. */
+  std::string whatMsg;
+
 
 public:
 
   explicit FloxException( std::string_view contextMsg )
     : contextMsg( contextMsg )
-  {}
+  {
+    this->whatMsg = std::string( this->getCategoryMessage() ) + ": "
+                    + std::string( contextMsg );
+  }
 
-  explicit FloxException( std::string_view contextMsg, const char *caughtMsg )
+  explicit FloxException( std::string_view contextMsg,
+                          std::string_view caughtMsg )
     : contextMsg( contextMsg ), caughtMsg( caughtMsg )
-  {}
+  {
+    this->whatMsg = std::string( this->getCategoryMessage() ) + ": "
+                    + std::string( contextMsg );
+  }
+
+  /* For child classes. */
+  explicit FloxException( std::string_view           categoryMsg,
+                          std::optional<std::string> contextMsg,
+                          std::optional<std::string> caughtMsg )
+    : contextMsg( contextMsg ), caughtMsg( caughtMsg ), whatMsg( categoryMsg )
+  {
+    if ( contextMsg.has_value() ) { this->whatMsg += ": " + ( *contextMsg ); }
+    if ( caughtMsg.has_value() )
+      {
+        assert( contextMsg.has_value() );
+        this->whatMsg += ": " + ( *caughtMsg );
+      }
+  }
+
 
   [[nodiscard]] virtual error_category
   getErrorCode() const noexcept
@@ -104,29 +128,82 @@ public:
     return EC_FLOX_EXCEPTION;
   }
 
+  [[nodiscard]] std::optional<std::string>
+  getContextMessage() const noexcept
+  {
+    return this->contextMsg;
+  }
+
+  [[nodiscard]] std::optional<std::string>
+  getCaughtMessage() const noexcept
+  {
+    return this->caughtMsg;
+  }
+
   [[nodiscard]] virtual std::string_view
   getCategoryMessage() const noexcept
   {
-    return this->categoryMsg;
+    return "general error";
   }
 
-  /**
-   * We can't override what() properly because we'd need to dynamically call
-   * virtual methods.
-   * - We don't want to force overriding what() in every child class, because
-   *   that would be a pain.
-   * - We can't do that when calling what(), because what() returns a char *
-   *   and is const, we don't have anywhere to store that dynamic information.
-   * - We can't do it at construction time, because we can't call virtual
-   *   methods.
-   */
-  [[nodiscard]] std::string
-  whatString() const noexcept;
+  /** @brief Produces an explanatory string about an exception. */
+  [[nodiscard]] const char *
+  what() const noexcept override
+  {
+    return this->whatMsg.c_str();
+  }
 
-  friend void
-  to_json( nlohmann::json &jto, const FloxException &err );
 
 }; /* End class `FloxException' */
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+to_json( nlohmann::json &jto, const FloxException &err );
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief Generate a class definition with an error code and
+ *        _category message_.
+ *
+ * The resulting class will have `NAME()`, `NAME( contextMsg )`,
+ * and `NAME( contextMsg, caughtMsg )` constructors available.
+ */
+#define FLOX_DEFINE_EXCEPTION( NAME, ERROR_CODE, CATEGORY_MSG )                \
+  class NAME : public FloxException                                            \
+  {                                                                            \
+  public:                                                                      \
+                                                                               \
+    NAME() : FloxException( CATEGORY_MSG, std::nullopt, std::nullopt )         \
+    {}                                                                         \
+                                                                               \
+    explicit NAME( std::string_view contextMsg )                               \
+      : FloxException( CATEGORY_MSG, std::string( contextMsg ), std::nullopt ) \
+    {}                                                                         \
+                                                                               \
+    explicit NAME( std::string_view contextMsg, std::string_view caughtMsg )   \
+      : FloxException( CATEGORY_MSG,                                           \
+                       std::string( contextMsg ),                              \
+                       std::string( caughtMsg ) )                              \
+    {}                                                                         \
+                                                                               \
+    [[nodiscard]] error_category                                               \
+    getErrorCode() const noexcept override                                     \
+    {                                                                          \
+      return ERROR_CODE;                                                       \
+    }                                                                          \
+                                                                               \
+    [[nodiscard]] std::string_view                                             \
+    getCategoryMessage() const noexcept override                               \
+    {                                                                          \
+      return CATEGORY_MSG;                                                     \
+    }                                                                          \
+                                                                               \
+  };
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -134,16 +211,13 @@ public:
 class NixEvalException : public FloxException
 {
 
-private:
-
-  static constexpr std::string_view categoryMsg = "invalid argument";
-
 public:
 
   explicit NixEvalException( std::string_view      contextMsg,
                              const nix::EvalError &err )
-    : FloxException( contextMsg,
-                     nix::filterANSIEscapes( err.what(), true ).c_str() )
+    : FloxException( "invalid argument",
+                     std::string( contextMsg ),
+                     nix::filterANSIEscapes( err.what(), true ) )
   {}
 
   [[nodiscard]] error_category
@@ -155,10 +229,12 @@ public:
   [[nodiscard]] std::string_view
   getCategoryMessage() const noexcept override
   {
-    return this->categoryMsg;
+    return "invalid argument";
   }
 
+
 }; /* End class `NixEvalException' */
+
 
 /* -------------------------------------------------------------------------- */
 

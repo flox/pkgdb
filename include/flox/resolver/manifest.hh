@@ -25,35 +25,13 @@ namespace flox::resolver {
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief An exception thrown when the value of manifestPath is invalid */
-class InvalidManifestFileException : public FloxException
-{
-
-private:
-
-  static constexpr std::string_view categoryMsg
-    = "invalid value for manifest file";
-
-public:
-
-  explicit InvalidManifestFileException( std::string_view contextMsg )
-    : FloxException( contextMsg )
-  {}
-
-  [[nodiscard]] error_category
-  getErrorCode() const noexcept override
-  {
-    return EC_INVALID_MANIFEST_FILE;
-  }
-
-  [[nodiscard]] std::string_view
-  getCategoryMessage() const noexcept override
-  {
-    return this->categoryMsg;
-  }
-
-
-}; /* End class `InvalidManifestFileException' */
+/**
+ * @class flox::resolver::InvalidManifestFileException
+ * @brief An exception thrown when the value of manifestPath is invalid.
+ */
+FLOX_DEFINE_EXCEPTION( InvalidManifestFileException,
+                       EC_INVALID_MANIFEST_FILE,
+                       "invalid manifest file" )
 
 
 /* -------------------------------------------------------------------------- */

@@ -201,36 +201,18 @@ public:
   }
 
 
-  /* --------------------------------------------------------------------------
-   */
-
 }; /* End class `FlakePackage' */
 
-/** @brief An exception thrown when initializing a `FlakePackage` */
-class PackageInitException : public FloxException
-{
-private:
 
-  static constexpr std::string_view categoryMsg
-    = "error initializing FlakePackage";
+/* -------------------------------------------------------------------------- */
 
-public:
-
-  explicit PackageInitException( std::string_view contextMsg )
-    : FloxException( contextMsg )
-  {}
-  [[nodiscard]] error_category
-  getErrorCode() const noexcept override
-  {
-    return EC_PACKAGE_INIT;
-  }
-  [[nodiscard]] std::string_view
-  getCategoryMessage() const noexcept override
-  {
-    return this->categoryMsg;
-  }
-
-}; /* End class `PackageInitException' */
+/**
+ * @class
+ * @brief An exception thrown when initializing a @a flox::FlakePackage.
+ */
+FLOX_DEFINE_EXCEPTION( PackageInitException,
+                       EC_PACKAGE_INIT,
+                       "error initializing FlakePackage" )
 
 
 /* -------------------------------------------------------------------------- */

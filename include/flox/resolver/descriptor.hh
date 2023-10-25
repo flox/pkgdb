@@ -175,34 +175,15 @@ public:
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief An exception thrown when a package descriptor in a manifest is
- * invalid */
-class InvalidManifestDescriptorException : public FloxException
-{
-private:
+/**
+ * @class flox::resolver::InvalidManifestDescriptorException
+ * @brief An exception thrown when a package descriptor in a manifest
+ *        is invalid.
+ */
+FLOX_DEFINE_EXCEPTION( InvalidManifestDescriptorException,
+                       EC_INVALID_MANIFEST_DESCRIPTOR,
+                       "invalid manifest descriptor" )
 
-  static constexpr std::string_view categoryMsg = "error in package descriptor";
-
-public:
-
-  explicit InvalidManifestDescriptorException( std::string_view contextMsg )
-    : FloxException( contextMsg )
-  {}
-
-  [[nodiscard]] error_category
-  getErrorCode() const noexcept override
-  {
-    return EC_INVALID_MANIFEST_DESCRIPTOR;
-  }
-
-  [[nodiscard]] std::string_view
-  getCategoryMessage() const noexcept override
-  {
-    return this->categoryMsg;
-  }
-
-
-}; /* End class `InvalidManifestDescriptorException' */
 
 /* -------------------------------------------------------------------------- */
 

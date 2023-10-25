@@ -21,39 +21,13 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief An exception thrown when converting YAML to JSON */
-class YAMLToJSONException : public FloxException
-{
-
-private:
-
-  static constexpr std::string_view categoryMsg
-    = "error converting YAML to JSON";
-
-public:
-
-  explicit YAMLToJSONException( std::string_view contextMsg )
-    : FloxException( contextMsg )
-  {}
-
-  explicit YAMLToJSONException( std::string_view contextMsg,
-                                const char      *caughtMsg )
-    : FloxException( contextMsg, caughtMsg )
-  {}
-
-  [[nodiscard]] error_category
-  getErrorCode() const noexcept override
-  {
-    return EC_YAML_TO_JSON;
-  }
-
-  [[nodiscard]] std::string_view
-  getCategoryMessage() const noexcept override
-  {
-    return this->categoryMsg;
-  }
-
-}; /* End class `YAMLToJSONException' */
+/**
+ * @class YAMLToJSONException
+ * @brief An exception thrown when converting YAML to JSON.
+ */
+FLOX_DEFINE_EXCEPTION( YAMLToJSONException,
+                       EC_YAML_TO_JSON,
+                       "error converting YAML to JSON" )
 
 
 /* -------------------------------------------------------------------------- */
