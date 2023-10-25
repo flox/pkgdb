@@ -42,8 +42,14 @@ private:
   std::filesystem::path manifestPath;
   ManifestRaw           manifestRaw;
 
-  /** Lazily converted @a flox::pkgdb::QueryPreferences record. */
-  std::optional<pkgdb::QueryPreferences> preferences;
+  /** Lazily locked registry. */
+  std::optional<RegistryRaw> lockedRegistry;
+
+  /**
+   * Lazily converted @a flox::pkgdb::PkgQueryArgs record.
+   * This is used as a _base_ for individual descriptor queries.
+   */
+  std::optional<pkgdb::PkgQueryArgs> baseQueryArgs;
 
 
 public:
@@ -90,47 +96,50 @@ public:
     return this->manifestRaw.registry;
   }
 
-  [[nodiscard]] const pkgdb::QueryPreferences &
-  getQueryPreferences()
+  [[nodiscard]] const RegistryRaw &
+  getLockedRegistry()
   {
-    if ( ! this->preferences.has_value() )
+    if ( ! this->lockedRegistry.has_value() )
       {
-        pkgdb::QueryPreferences prefs;
+        this->lockedRegistry = lockRegistry( this->getRegistryRaw() );
+      }
+    return *this->lockedRegistry;
+  }
+
+  [[nodiscard]] const pkgdb::PkgQueryArgs &
+  getBaseQueryArgs()
+  {
+    if ( ! this->baseQueryArgs.has_value() )
+      {
+        pkgdb::PkgQueryArgs args;
         if ( this->manifestRaw.options.systems.has_value() )
           {
-            prefs.systems = *this->manifestRaw.options.systems;
+            args.systems = *this->manifestRaw.options.systems;
           }
 
         if ( this->manifestRaw.options.allow.has_value() )
           {
             if ( this->manifestRaw.options.allow->unfree.has_value() )
               {
-                prefs.allow.unfree = *this->manifestRaw.options.allow->unfree;
+                args.allowUnfree = *this->manifestRaw.options.allow->unfree;
               }
             if ( this->manifestRaw.options.allow->broken.has_value() )
               {
-                prefs.allow.broken = *this->manifestRaw.options.allow->broken;
+                args.allowBroken = *this->manifestRaw.options.allow->broken;
               }
-            if ( this->manifestRaw.options.allow->licenses.has_value() )
-              {
-                prefs.allow.licenses
-                  = *this->manifestRaw.options.allow->licenses;
-              }
+            args.licenses = this->manifestRaw.options.allow->licenses;
           }
 
-        if ( this->manifestRaw.options.semver.has_value() )
+        if ( this->manifestRaw.options.semver.has_value()
+             && this->manifestRaw.options.semver->preferPreReleases
+                  .has_value() )
           {
-            if ( this->manifestRaw.options.semver->preferPreReleases
-                   .has_value() )
-              {
-                prefs.semver.preferPreReleases
-                  = *this->manifestRaw.options.semver->preferPreReleases;
-              }
+            args.preferPreReleases
+              = *this->manifestRaw.options.semver->preferPreReleases;
           }
-        this->preferences = std::make_optional( std::move( prefs ) );
+        this->baseQueryArgs = std::make_optional( std::move( args ) );
       }
-
-    return *this->preferences;
+    return *this->baseQueryArgs;
   }
 
 

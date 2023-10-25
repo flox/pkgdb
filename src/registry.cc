@@ -188,14 +188,27 @@ FloxFlakeInput::getLockedInput()
 
 /* -------------------------------------------------------------------------- */
 
-std::unordered_map<std::string, RegistryInput>
+std::map<std::string, RegistryInput>
 FlakeRegistry::getLockedInputs()
 {
-  std::unordered_map<std::string, RegistryInput> locked;
+  std::map<std::string, RegistryInput> locked;
   for ( auto &[name, input] : *this )
     {
       locked.emplace( name, input->getLockedInput() );
     }
+  return locked;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+RegistryRaw
+lockRegistry( const RegistryRaw &unlocked )
+{
+  auto store    = NixStoreMixin().getStore();
+  auto factory  = FloxFlakeInputFactory( NixStoreMixin().getStore() );
+  auto locked   = unlocked;
+  locked.inputs = FlakeRegistry( unlocked, factory ).getLockedInputs();
   return locked;
 }
 
