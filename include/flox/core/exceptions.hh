@@ -223,7 +223,7 @@ public:
   [[nodiscard]] std::string_view
   getCategoryMessage() const noexcept override
   {
-    return "invalid argument";
+    return "Nix evaluation error";
   }
 
 
