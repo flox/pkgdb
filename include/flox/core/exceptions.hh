@@ -94,18 +94,16 @@ public:
 
   explicit FloxException( std::string_view contextMsg )
     : contextMsg( contextMsg )
-  {
-    this->whatMsg = std::string( this->getCategoryMessage() ) + ": "
-                    + std::string( contextMsg );
-  }
+    , whatMsg( "general error: " + std::string( contextMsg ) )
+  {}
 
   explicit FloxException( std::string_view contextMsg,
                           std::string_view caughtMsg )
-    : contextMsg( contextMsg ), caughtMsg( caughtMsg )
-  {
-    this->whatMsg = std::string( this->getCategoryMessage() ) + ": "
-                    + std::string( contextMsg );
-  }
+    : contextMsg( contextMsg )
+    , caughtMsg( caughtMsg )
+    , whatMsg( "general error: " + std::string( contextMsg ) + ": "
+               + std::string( caughtMsg ) )
+  {}
 
   /* For child classes. */
   explicit FloxException( std::string_view           categoryMsg,
@@ -113,12 +111,10 @@ public:
                           std::optional<std::string> caughtMsg )
     : contextMsg( contextMsg ), caughtMsg( caughtMsg ), whatMsg( categoryMsg )
   {
+    /* Finish initializing `categoryMsg` if we received `contextMsg` or
+     * `caughtMsg` values. */
     if ( contextMsg.has_value() ) { this->whatMsg += ": " + ( *contextMsg ); }
-    if ( caughtMsg.has_value() )
-      {
-        assert( contextMsg.has_value() );
-        this->whatMsg += ": " + ( *caughtMsg );
-      }
+    if ( caughtMsg.has_value() ) { this->whatMsg += ": " + ( *caughtMsg ); }
   }
 
 
@@ -177,8 +173,7 @@ to_json( nlohmann::json &jto, const FloxException &err );
   {                                                                            \
   public:                                                                      \
                                                                                \
-    NAME() : FloxException( CATEGORY_MSG, std::nullopt, std::nullopt )         \
-    {}                                                                         \
+    NAME() : FloxException( CATEGORY_MSG, std::nullopt, std::nullopt ) {}      \
                                                                                \
     explicit NAME( std::string_view contextMsg )                               \
       : FloxException( CATEGORY_MSG, std::string( contextMsg ), std::nullopt ) \
@@ -201,7 +196,6 @@ to_json( nlohmann::json &jto, const FloxException &err );
     {                                                                          \
       return CATEGORY_MSG;                                                     \
     }                                                                          \
-                                                                               \
   };
 
 
