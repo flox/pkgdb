@@ -182,6 +182,8 @@ to_json( nlohmann::json &jto, const FloxException &err );
 /* -------------------------------------------------------------------------- */
 
 //NOLINTBEGIN(bugprone-macro-parentheses)
+// Disable macro parentheses lint so we can use `NAME' symbol directly.
+
 /**
  * @brief Generate a class definition with an error code and
  *        _category message_.
