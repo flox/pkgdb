@@ -189,18 +189,21 @@ to_json( nlohmann::json &jto, const FloxException &err );
  * and `NAME( contextMsg, caughtMsg )` constructors available.
  */
 #define FLOX_DEFINE_EXCEPTION( NAME, ERROR_CODE, CATEGORY_MSG )                \
-  class NAME : public FloxException                                            \
+  class ( NAME ) : public FloxException                                        \
   {                                                                            \
   public:                                                                      \
                                                                                \
-    NAME() : FloxException( CATEGORY_MSG, std::nullopt, std::nullopt ) {}      \
+    ( NAME )() : FloxException( CATEGORY_MSG, std::nullopt, std::nullopt ) {}  \
                                                                                \
-    explicit NAME( std::string_view contextMsg )                               \
-      : FloxException( CATEGORY_MSG, std::string( contextMsg ), std::nullopt ) \
+    explicit ( NAME )( std::string_view contextMsg )                           \
+      : FloxException( ( CATEGORY_MSG ),                                       \
+                       std::string( contextMsg ),                              \
+                       std::nullopt )                                          \
     {}                                                                         \
                                                                                \
-    explicit NAME( std::string_view contextMsg, std::string_view caughtMsg )   \
-      : FloxException( CATEGORY_MSG,                                           \
+    explicit ( NAME )( std::string_view contextMsg,                            \
+                       std::string_view caughtMsg )                            \
+      : FloxException( ( CATEGORY_MSG ),                                       \
                        std::string( contextMsg ),                              \
                        std::string( caughtMsg ) )                              \
     {}                                                                         \
@@ -208,13 +211,13 @@ to_json( nlohmann::json &jto, const FloxException &err );
     [[nodiscard]] error_category                                               \
     getErrorCode() const noexcept override                                     \
     {                                                                          \
-      return ERROR_CODE;                                                       \
+      return ( ERROR_CODE );                                                   \
     }                                                                          \
                                                                                \
     [[nodiscard]] std::string_view                                             \
     getCategoryMessage() const noexcept override                               \
     {                                                                          \
-      return CATEGORY_MSG;                                                     \
+      return ( CATEGORY_MSG );                                                 \
     }                                                                          \
   };
 

@@ -253,7 +253,6 @@ PkgDb::addPackage( row_id               parentId,
                    bool                 replace,
                    bool                 checkDrv )
 {
-// NOLINTNEXTLINE
 #define ADD_PKG_BODY                                                   \
   " INTO Packages ("                                                   \
   "  parentId, attrName, name, pname, version, semver, license"        \
