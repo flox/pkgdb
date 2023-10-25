@@ -1,8 +1,10 @@
 /* ========================================================================== *
  *
- * @file resolver/manifest.cc
+ * @file resolver/manifest-raw.cc
  *
  * @brief An abstract description of an environment in its unresolved state.
+ *        This file contains the implementation of the
+ *        @a flox::resolver::ManifestRaw struct, and associated JSON parsers.
  *
  *
  * -------------------------------------------------------------------------- */
