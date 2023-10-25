@@ -22,7 +22,7 @@ namespace flox {
 /* -------------------------------------------------------------------------- */
 
 /**
- * @class TOMLToJSONException
+ * @class flox::TOMLToJSONException
  * @brief An exception thrown when converting TOML to JSON.
  */
 FLOX_DEFINE_EXCEPTION( TOMLToJSONException,
