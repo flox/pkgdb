@@ -24,7 +24,7 @@ ManifestRaw::EnvBase::check() const
   if ( this->floxhub.has_value() && this->dir.has_value() )
     {
       throw InvalidManifestFileException(
-        "Manifest may only define one of `env-base.floxhub' or `env-base.dir' "
+        "manifest may only define one of `env-base.floxhub' or `env-base.dir' "
         "fields." );
     }
 }
@@ -39,7 +39,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::EnvBase & env )
     {
       std::string aOrAn = jfrom.is_array() ? " an " : " a ";
       throw InvalidManifestFileException(
-        "Manifest field `options.env-base' must be an object, but is" + aOrAn
+        "manifest field `options.env-base' must be an object, but is" + aOrAn
         + std::string( jfrom.type_name() ) + '.' );
     }
 
@@ -58,7 +58,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::EnvBase & env )
           catch ( const nlohmann::json::exception & )
             {
               throw InvalidManifestFileException(
-                "Failed to parse manifest field `env-base.floxhub' with value: "
+                "failed to parse manifest field `env-base.floxhub' with value: "
                 + value.dump() );
             }
         }
@@ -71,14 +71,14 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::EnvBase & env )
           catch ( const nlohmann::json::exception & )
             {
               throw InvalidManifestFileException(
-                "Failed to parse manifest field `env-base.dir' with value: "
+                "failed to parse manifest field `env-base.dir' with value: "
                 + value.dump() );
             }
         }
       else
         {
           throw InvalidManifestFileException(
-            "Unrecognized manifest field `env-base." + key + "'." );
+            "unrecognized manifest field `env-base." + key + "'." );
         }
     }
   env.check();
@@ -104,7 +104,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Semver & semver )
     {
       std::string aOrAn = jfrom.is_array() ? " an " : " a ";
       throw InvalidManifestFileException(
-        "Manifest field `options.semver' must be an object, but is" + aOrAn
+        "manifest field `options.semver' must be an object, but is" + aOrAn
         + std::string( jfrom.type_name() ) + '.' );
     }
 
@@ -122,7 +122,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Semver & semver )
           catch ( const nlohmann::json::exception & )
             {
               throw InvalidManifestFileException(
-                "Failed to parse manifest field `options.semver."
+                "failed to parse manifest field `options.semver."
                 "prefer-pre-releases' with value: "
                 + value.dump() );
             }
@@ -130,7 +130,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Semver & semver )
       else
         {
           throw InvalidManifestFileException(
-            "Unrecognized manifest field `env-base.options.semver." + key
+            "unrecognized manifest field `env-base.options.semver." + key
             + "'." );
         }
     }
@@ -157,7 +157,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Allows & allow )
     {
       std::string aOrAn = jfrom.is_array() ? " an " : " a ";
       throw InvalidManifestFileException(
-        "Manifest field `options.allow' must be an object, but is" + aOrAn
+        "manifest field `options.allow' must be an object, but is" + aOrAn
         + std::string( jfrom.type_name() ) + '.' );
     }
 
@@ -177,7 +177,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Allows & allow )
           catch ( const nlohmann::json::exception & )
             {
               throw InvalidManifestFileException(
-                "Failed to parse manifest field `options.allow.unfree' "
+                "failed to parse manifest field `options.allow.unfree' "
                 "with value: "
                 + value.dump() );
             }
@@ -191,7 +191,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Allows & allow )
           catch ( const nlohmann::json::exception & )
             {
               throw InvalidManifestFileException(
-                "Failed to parse manifest field `options.allow.broken' "
+                "failed to parse manifest field `options.allow.broken' "
                 "with value: "
                 + value.dump() );
             }
@@ -205,7 +205,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Allows & allow )
           catch ( const nlohmann::json::exception & )
             {
               throw InvalidManifestFileException(
-                "Failed to parse manifest field `options.allow.licenses' "
+                "failed to parse manifest field `options.allow.licenses' "
                 "with value: "
                 + value.dump() );
             }
@@ -213,7 +213,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Allows & allow )
       else
         {
           throw InvalidManifestFileException(
-            "Unrecognized manifest field `options.allow." + key + "'." );
+            "unrecognized manifest field `options.allow." + key + "'." );
         }
     }
 }
@@ -242,7 +242,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options & opts )
     {
       std::string aOrAn = jfrom.is_array() ? " an " : " a ";
       throw InvalidManifestFileException(
-        "Manifest field `options' must be an object, but is" + aOrAn
+        "manifest field `options' must be an object, but is" + aOrAn
         + std::string( jfrom.type_name() ) + '.' );
     }
 
@@ -257,7 +257,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options & opts )
           catch ( const nlohmann::json::exception & )
             {
               throw InvalidManifestFileException(
-                "Failed to parse manifest field `options.systems' with value: "
+                "failed to parse manifest field `options.systems' with value: "
                 + value.dump() );
             }
         }
@@ -282,7 +282,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options & opts )
           catch ( const nlohmann::json & exception )
             {
               throw InvalidManifestFileException(
-                "Failed to parse manifest field "
+                "failed to parse manifest field "
                 "`options.package-grouping-strategy' with value: "
                 + value.dump() );
             }
@@ -296,7 +296,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options & opts )
           catch ( const nlohmann::json & exception )
             {
               throw InvalidManifestFileException(
-                "Failed to parse manifest field "
+                "failed to parse manifest field "
                 "`options.activation-strategy' with value: "
                 + value.dump() );
             }
@@ -304,7 +304,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options & opts )
       else
         {
           throw InvalidManifestFileException(
-            "Unrecognized manifest field `options." + key + "'." );
+            "unrecognized manifest field `options." + key + "'." );
         }
     }
 }
@@ -341,7 +341,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Hook & hook )
     {
       std::string aOrAn = jfrom.is_array() ? " an " : " a ";
       throw InvalidManifestFileException(
-        "Manifest field `options' must be an object, but is" + aOrAn
+        "manifest field `options' must be an object, but is" + aOrAn
         + std::string( jfrom.type_name() ) + '.' );
     }
 
@@ -360,7 +360,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Hook & hook )
           catch ( const nlohmann::json::exception & )
             {
               throw InvalidManifestFileException(
-                "Failed to parse manifest field `hook.script' with value: "
+                "failed to parse manifest field `hook.script' with value: "
                 + value.dump() );
             }
         }
@@ -373,14 +373,14 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Hook & hook )
           catch ( const nlohmann::json::exception & )
             {
               throw InvalidManifestFileException(
-                "Failed to parse manifest field `hook.file' with value: "
+                "failed to parse manifest field `hook.file' with value: "
                 + value.dump() );
             }
         }
       else
         {
           throw InvalidManifestFileException(
-            "Unrecognized manifest field `hook." + key + "'." );
+            "unrecognized manifest field `hook." + key + "'." );
         }
     }
 
@@ -406,7 +406,7 @@ ManifestRaw::Hook::check() const
   if ( this->script.has_value() && this->file.has_value() )
     {
       throw InvalidManifestFileException(
-        "Hook may only define one of `hook.script' or `hook.file' fields." );
+        "hook may only define one of `hook.script' or `hook.file' fields." );
     }
 }
 
@@ -443,7 +443,7 @@ varsFromJSON( const nlohmann::json &                         jfrom,
     {
       std::string aOrAn = jfrom.is_array() ? " an " : " a ";
       throw InvalidManifestFileException(
-        "Manifest `vars' field must be an object, but is" + aOrAn
+        "manifest `vars' field must be an object, but is" + aOrAn
         + std::string( jfrom.type_name() ) + '.' );
     }
   vars.clear();
@@ -456,7 +456,7 @@ varsFromJSON( const nlohmann::json &                         jfrom,
         }
       catch ( const nlohmann::json::exception & err )
         {
-          throw InvalidManifestFileException( "Invalid value for `vars." + key
+          throw InvalidManifestFileException( "invalid value for `vars." + key
                                               + "' with value: "
                                               + value.dump() );
         }
@@ -474,7 +474,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
     {
       std::string aOrAn = jfrom.is_array() ? " an " : " a ";
       throw InvalidManifestFileException(
-        "Manifest must be an object, but is" + aOrAn
+        "manifest must be an object, but is" + aOrAn
         + std::string( jfrom.type_name() ) + '.' );
     }
 
@@ -512,7 +512,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
       else if ( key == "env-base" ) { value.get_to( manifest.envBase ); }
       else
         {
-          throw InvalidManifestFileException( "Unrecognized manifest field: `"
+          throw InvalidManifestFileException( "unrecognized manifest field: `"
                                               + key + "'." );
         }
     }
