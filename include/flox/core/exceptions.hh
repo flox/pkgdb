@@ -92,11 +92,22 @@ private:
 
 public:
 
+  /**
+   * @brief Create a generic exception with a custom message.
+   *
+   * This constructor is NOT suitable for use by _child classes_.
+   */
   explicit FloxException( std::string_view contextMsg )
     : contextMsg( contextMsg )
     , whatMsg( "general error: " + std::string( contextMsg ) )
   {}
 
+  /**
+   * @brief Create a generic exception with a custom message and information
+   *        from a child error.
+   *
+   * This constructor is NOT suitable for use by _child classes_.
+   */
   explicit FloxException( std::string_view contextMsg,
                           std::string_view caughtMsg )
     : contextMsg( contextMsg )
@@ -105,7 +116,15 @@ public:
                + std::string( caughtMsg ) )
   {}
 
-  /* For child classes. */
+  /**
+   * @brief Directly initialize a FloxException with a custom category message,
+   *        (optional) _context_, and (optional) information from a child error.
+   *
+   * This form is recommended for use by _child classes_ which
+   * extend @a flox::FloxException.
+   *
+   * @see FLOX_DEFINE_EXCEPTION
+   */
   explicit FloxException( std::string_view           categoryMsg,
                           std::optional<std::string> contextMsg,
                           std::optional<std::string> caughtMsg )
@@ -155,6 +174,7 @@ public:
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief Convert a @a flox::FloxException to a JSON object. */
 void
 to_json( nlohmann::json &jto, const FloxException &err );
 
