@@ -153,10 +153,6 @@ struct PkgQueryArgs : public PkgDescriptorBase
   /** @brief Errors concerning validity of package query parameters. */
   struct InvalidPkgQueryArgException : public flox::FloxException
   {
-  private:
-
-    static constexpr std::string_view categoryMsg
-      = "encountered an error processing query arguments";
 
   public:
 
@@ -181,15 +177,18 @@ struct PkgQueryArgs : public PkgDescriptorBase
       PQEC_INVALID_MATCH_STYLE = 10 /**< `match` without `matchStyle` */
     } errorCode;
 
-  protected:
+
+  private:
 
     static std::string
     errorMessage( const error_code & ecode );
+
 
   public:
 
     explicit InvalidPkgQueryArgException( const error_code & ecode )
       : flox::FloxException(
+        "encountered an error processing query arguments:",
         InvalidPkgQueryArgException::errorMessage( ecode ) )
       , errorCode( ecode )
     {}
@@ -199,11 +198,14 @@ struct PkgQueryArgs : public PkgDescriptorBase
     {
       return EC_INVALID_PKG_QUERY_ARG;
     }
+
     [[nodiscard]] std::string_view
     getCategoryMessage() const noexcept override
     {
-      return this->categoryMsg;
+      return "encountered an error processing query arguments";
     }
+
+
   }; /* End struct `InvalidPkgQueryArgException' */
 
 

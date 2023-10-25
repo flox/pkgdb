@@ -449,33 +449,13 @@ public:
       }
   }
 
-  /** @brief An exception thrown when a registry has invalid contents */
-  class InvalidRegistryException : public FloxException
-  {
-
-  private:
-
-    static constexpr std::string_view categoryMsg = "invalid registry";
-
-  public:
-
-    explicit InvalidRegistryException( std::string_view contextMsg )
-      : FloxException( contextMsg )
-    {}
-
-    [[nodiscard]] error_category
-    getErrorCode() const noexcept override
-    {
-      return EC_INVALID_REGISTRY;
-    }
-
-    [[nodiscard]] std::string_view
-    getCategoryMessage() const noexcept override
-    {
-      return this->categoryMsg;
-    }
-
-  }; /* End class `Registry::InvalidArgException' */
+  /**
+   * @class flox::Registry::InvalidRegistryException
+   * @brief An exception thrown when a registry has invalid contents.
+   */
+  FLOX_DEFINE_EXCEPTION( InvalidRegistryException,
+                         EC_INVALID_REGISTRY,
+                         "invalid registry" )
 
   /**
    * @brief Get an input by name.

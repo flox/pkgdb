@@ -396,13 +396,13 @@ bool
 test_parseManifestRaw_toml0()
 {
   std::ifstream ifs( TEST_DATA_DIR "/manifest/manifest0.toml" );
-  std::string   toml( ( std::istreambuf_iterator<char>( ifs ) ),
-                      ( std::istreambuf_iterator<char>() ) );
-  nlohmann::json manifestJSON = flox::tomlToJSON( toml );
-  flox::resolver::ManifestRaw manifest = manifestJSON;
+
+  std::string toml( ( std::istreambuf_iterator<char>( ifs ) ),
+                    ( std::istreambuf_iterator<char>() ) );
+
+  flox::resolver::ManifestRaw manifest = flox::tomlToJSON( toml );
   return true;
 }
-
 
 
 /* -------------------------------------------------------------------------- */

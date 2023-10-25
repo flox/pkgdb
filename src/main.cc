@@ -88,7 +88,7 @@ main( int argc, char *argv[] )
         {
           std::cout << nlohmann::json( err ).dump() << std::endl;
         }
-      else { std::cerr << err.whatString() << std::endl; }
+      else { std::cerr << err.what() << std::endl; }
 
       return err.getErrorCode();
     }

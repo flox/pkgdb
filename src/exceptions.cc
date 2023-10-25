@@ -20,43 +20,27 @@
 namespace flox {
 
 /* -------------------------------------------------------------------------- */
-std::string
-FloxException::whatString() const noexcept
-{
-  std::string msg( this->getCategoryMessage() );
-  if ( this->contextMsg.has_value() )
-    {
-      msg += ": ";
-      msg += *( this->contextMsg );
-    }
-  if ( this->caughtMsg.has_value() )
-    {
-      msg += ": ";
-      msg += *( this->caughtMsg );
-    }
-  return msg;
-}
-
-/* -------------------------------------------------------------------------- */
 
 void
 to_json( nlohmann::json & jto, const FloxException & err )
 {
+  auto        contextMsg = err.getContextMessage();
+  auto        caughtMsg  = err.getCaughtMessage();
   std::string msg;
-  if ( err.contextMsg.has_value() )
+  if ( contextMsg.has_value() )
     {
-      msg += ": ";
-      msg += *( err.contextMsg );
+      msg = *contextMsg;
+      if ( caughtMsg.has_value() )
+        {
+          msg += ": ";
+          msg += *caughtMsg;
+        }
     }
-  if ( err.caughtMsg.has_value() )
-    {
-      msg += ": ";
-      msg += *( err.caughtMsg );
-    }
+  else if ( caughtMsg.has_value() ) { msg = *caughtMsg; }
 
   jto = {
     { "exit_code", err.getErrorCode() },
-    { "message", msg },
+    { "message", std::move( msg ) },
     { "category", err.getCategoryMessage() },
   };
 }

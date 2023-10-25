@@ -21,35 +21,16 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief An exception thrown when converting TOML to JSON */
-class TOMLToJSONException : public FloxException
-{
-private:
+/**
+ * @class flox::TOMLToJSONException
+ * @brief An exception thrown when converting TOML to JSON.
+ */
+FLOX_DEFINE_EXCEPTION( TOMLToJSONException,
+                       EC_TOML_TO_JSON,
+                       "error converting TOML to JSON" )
 
-  static constexpr std::string_view categoryMsg
-    = "error converting TOML to JSON";
 
-public:
-
-  explicit TOMLToJSONException( std::string_view contextMsg )
-    : FloxException( contextMsg )
-  {}
-  explicit TOMLToJSONException( std::string_view contextMsg,
-                                const char      *caughtMsg )
-    : FloxException( contextMsg, caughtMsg )
-  {}
-  [[nodiscard]] error_category
-  getErrorCode() const noexcept override
-  {
-    return EC_TOML_TO_JSON;
-  }
-  [[nodiscard]] std::string_view
-  getCategoryMessage() const noexcept override
-  {
-    return this->categoryMsg;
-  }
-}; /* End class `TOMLToJSONException' */
-
+/* -------------------------------------------------------------------------- */
 
 nlohmann::json
 tomlToJSON( std::string_view toml )

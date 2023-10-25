@@ -129,33 +129,11 @@ struct AttrPathMixin
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief An exception thrown when a command line argument is invalid */
-class InvalidArgException : public FloxException
-{
-
-private:
-
-  static constexpr std::string_view categoryMsg = "invalid argument";
-
-public:
-
-  explicit InvalidArgException( std::string_view contextMsg )
-    : FloxException( contextMsg )
-  {}
-
-  [[nodiscard]] error_category
-  getErrorCode() const noexcept override
-  {
-    return EC_INVALID_ARG;
-  }
-
-  [[nodiscard]] std::string_view
-  getCategoryMessage() const noexcept override
-  {
-    return this->categoryMsg;
-  }
-
-}; /* End class `InvalidArgException' */
+/**
+ * @class flox::command::InvalidArgException
+ * @brief An exception thrown when a command line argument is invalid.
+ */
+FLOX_DEFINE_EXCEPTION( InvalidArgException, EC_INVALID_ARG, "invalid argument" )
 
 
 /* -------------------------------------------------------------------------- */

@@ -97,28 +97,11 @@ using sql_rc      = int;                 /**< `SQLITE_*` result code. */
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief A generic exception thrown by `flox::pkgdb::*` classes. */
-class PkgDbException : public FloxException
-{
-private:
-
-  static constexpr std::string_view categoryMsg = "error running pkgdb";
-
-public:
-
-  PkgDbException( std::string_view msg ) : FloxException( msg ) {}
-  [[nodiscard]] error_category
-  getErrorCode() const noexcept override
-  {
-    return EC_PKG_DB;
-  }
-  [[nodiscard]] std::string_view
-  getCategoryMessage() const noexcept override
-  {
-    return this->categoryMsg;
-  }
-
-}; /* End class `PkgDbException' */
+/**
+ * @class flox::pkgdb::PkgDbException
+ * @brief A generic exception thrown by `flox::pkgdb::*` classes.
+ */
+FLOX_DEFINE_EXCEPTION( PkgDbException, EC_PKG_DB, "error running pkgdb" )
 
 
 /* -------------------------------------------------------------------------- */
@@ -148,9 +131,6 @@ genPkgDbName( const Fingerprint &           fingerprint,
 class PkgDbReadOnly
 {
 
-  /* --------------------------------------------------------------------------
-   */
-
   /* Data */
 
 public:
@@ -169,9 +149,6 @@ public:
   struct LockedFlakeRef lockedRef; /**< Locked _flake reference_. */
 
 
-  /* --------------------------------------------------------------------------
-   */
-
   /* Errors */
 
   // public:
@@ -185,9 +162,6 @@ public:
     {}
   }; /* End struct `NoSuchDatabase' */
 
-
-  /* --------------------------------------------------------------------------
-   */
 
   /* Internal Helpers */
 
@@ -208,9 +182,6 @@ private:
   void
   init();
 
-
-  /* --------------------------------------------------------------------------
-   */
 
   /* Constructors */
 
@@ -263,9 +234,6 @@ public:
     : PkgDbReadOnly( fingerprint, genPkgDbName( fingerprint ).string() )
   {}
 
-
-  /* --------------------------------------------------------------------------
-   */
 
   /* Queries */
 
@@ -405,8 +373,6 @@ public:
       nix::fetchers::jsonToAttrs( this->lockedRef.attrs ) );
   }
 
-  /* --------------------------------------------------------------------------
-   */
 
 }; /* End class `PkgDbReadOnly' */
 
