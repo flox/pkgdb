@@ -38,10 +38,10 @@
                     ( ! ( builtins.elem ext ignoredExts ) );
     in notIgnored && notResult;
   };
-  propagatedBuildInputs = [semver nix.dev boost];
+  propagatedBuildInputs = [semver nix];
   nativeBuildInputs     = [pkg-config];
   buildInputs           = [
-    sqlite.dev nlohmann_json argparse sqlite3pp toml11 yaml-cpp
+    sqlite.dev nlohmann_json argparse sqlite3pp toml11 yaml-cpp boost nix
   ];
   nix_INCDIR     = nix.dev.outPath + "/include";
   boost_CFLAGS   = "-I" + boost.dev.outPath + "/include";
@@ -60,6 +60,7 @@
   # Checks require internet
   doCheck          = false;
   doInstallCheck   = false;
+  outputs = ["out" "dev"];
   meta.mainProgram = "pkgdb";
 }
 
