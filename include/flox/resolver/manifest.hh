@@ -7,16 +7,18 @@
  *
  * -------------------------------------------------------------------------- */
 
+#pragma once
+
 #include <optional>
 #include <unordered_map>
 #include <unordered_set>
 
+#include <argparse/argparse.hpp>
 #include <nlohmann/json.hpp>
 
 #include "flox/pkgdb/input.hh"
 #include "flox/registry.hh"
 #include "flox/resolver/descriptor.hh"
-#include "flox/resolver/state.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -117,6 +119,178 @@ from_json( const nlohmann::json & jfrom, ManifestRaw & manifest );
 // TODO:
 /** @brief Convert a @a flox::resolver::ManifestRaw to a JSON object. */
 // void to_json( nlohmann::json & jto, const ManifestRaw & manifest );
+
+
+/* -------------------------------------------------------------------------- */
+
+class UnlockedManifest
+{
+
+private:
+
+  std::filesystem::path manifestPath;
+  ManifestRaw           manifestRaw;
+
+
+public:
+
+  ~UnlockedManifest()                          = default;
+  UnlockedManifest()                           = default;
+  UnlockedManifest( const UnlockedManifest & ) = default;
+  UnlockedManifest( UnlockedManifest && )      = default;
+
+  UnlockedManifest( std::filesystem::path manifestPath, ManifestRaw raw )
+    : manifestPath( std::move( manifestPath ) ), manifestRaw( std::move( raw ) )
+  {}
+
+  explicit UnlockedManifest( std::filesystem::path manifestPath );
+
+
+  UnlockedManifest &
+  operator=( const UnlockedManifest & )
+    = default;
+
+  UnlockedManifest &
+  operator=( UnlockedManifest && )
+    = default;
+
+
+  [[nodiscard]] std::filesystem::path
+  getManifestPath() const
+  {
+    return this->manifestPath;
+  }
+
+  [[nodiscard]] const ManifestRaw &
+  getManifestRaw() const
+  {
+    return this->manifestRaw;
+  }
+
+  [[nodiscard]] const RegistryRaw &
+  getRegistryRaw() const
+  {
+    return this->manifestRaw.registry;
+  }
+
+  [[nodiscard]] RegistryRaw
+  getLockedRegistry( nix::ref<nix::Store> store
+                     = NixStoreMixin().getStore() ) const
+  {
+    return lockRegistry( this->getRegistryRaw(), store );
+  }
+
+  [[nodiscard]] pkgdb::PkgQueryArgs
+  getBaseQueryArgs() const;
+
+
+}; /* End class `UnlockedManifest' */
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief A state blob with a manifest loaded from path.
+ *
+ * This structure stashes several fields to avoid repeatedly calculating them.
+ */
+struct ManifestFileMixin : private pkgdb::PkgDbRegistryMixin
+{
+
+public:
+
+  /* From `PkgDbRegistryMixin':
+   *   std::shared_ptr<nix::Store>                         store;
+   *   std::shared_ptr<nix::EvalState>                     state;
+   *   bool                                                force    = false;
+   *   std::shared_ptr<Registry<pkgdb::PkgDbInputFactory>> registry;
+   */
+
+  std::optional<std::filesystem::path> manifestPath;
+  std::optional<UnlockedManifest>      manifest;
+  std::optional<RegistryRaw>           lockedRegistry;
+  std::optional<pkgdb::PkgQueryArgs>   baseQueryArgs;
+
+  /**
+   * @brief Returns the locked @a RegistryRaw from the manifest.
+   *
+   * This is used to initialize the @a registry field from
+   * @a flox::pkgdb::PkgDbRegistryMixin and should not be confused with the
+   * _unlocked registry_ ( which can be accessed directly from @a manifest ).
+   */
+  [[nodiscard]] RegistryRaw
+  getRegistryRaw() override
+  {
+    return this->getUnlockedManifest().getRegistryRaw();
+  }
+
+  [[nodiscard]] const std::vector<std::string> &
+  getSystems() override
+  {
+    return this->getBaseQueryArgs().systems;
+  }
+
+  /**
+   * @brief Get the path to the manifest file.
+   *
+   * If @a manifestPath is already set, we use that; otherwise we attempt to
+   * locate a manifest at `[./flox/]manifest.{toml,yaml,json}`.
+   *
+   * @return The path to the manifest file.
+   */
+  std::filesystem::path
+  getManifestPath();
+
+  /**
+   * @brief Sets the path to the registry file to load with `--manifest`.
+   * @param parser The parser to add the argument to.
+   * @return The argument added to the parser.
+   */
+  argparse::Argument &
+  addManifestFileOption( argparse::ArgumentParser & parser );
+
+  /**
+   * @brief Sets the path to the registry file to load with a positional arg.
+   * @param parser The parser to add the argument to.
+   * @param required Whether the argument is required.
+   * @return The argument added to the parser.
+   */
+  argparse::Argument &
+  addManifestFileArg( argparse::ArgumentParser & parser, bool required = true );
+
+  const UnlockedManifest &
+  getUnlockedManifest()
+  {
+    if ( ! this->manifest.has_value() )
+      {
+        this->manifest = UnlockedManifest( this->getManifestPath() );
+      }
+    return *this->manifest;
+  }
+
+  const RegistryRaw &
+  getLockedRegistry()
+  {
+    if ( ! this->lockedRegistry.has_value() )
+      {
+        this->lockedRegistry
+          = this->getUnlockedManifest().getLockedRegistry( this->getStore() );
+      }
+    return *this->lockedRegistry;
+  }
+
+  const pkgdb::PkgQueryArgs &
+  getBaseQueryArgs()
+  {
+    if ( ! this->baseQueryArgs.has_value() )
+      {
+        this->baseQueryArgs = this->getUnlockedManifest().getBaseQueryArgs();
+      }
+    return *this->baseQueryArgs;
+  }
+
+
+}; /* End struct `ManifestFileMixin' */
 
 
 /* -------------------------------------------------------------------------- */

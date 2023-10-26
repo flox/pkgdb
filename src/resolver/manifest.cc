@@ -10,7 +10,6 @@
 #include <filesystem>
 #include <optional>
 
-#include "flox/pkgdb/params.hh"
 #include "flox/resolver/manifest.hh"
 
 
@@ -21,7 +20,7 @@ namespace flox::resolver {
 /* -------------------------------------------------------------------------- */
 
 static ManifestRaw
-readManifestFromPath( const std::filesystem::path & manifestPath )
+readManifestFromPath( const std::filesystem::path &manifestPath )
 {
   if ( ! std::filesystem::exists( manifestPath ) )
     {
@@ -34,116 +33,86 @@ readManifestFromPath( const std::filesystem::path & manifestPath )
 
 /* -------------------------------------------------------------------------- */
 
-class UnlockedManifest
+UnlockedManifest::UnlockedManifest( std::filesystem::path manifestPath )
+  : manifestPath( std::move( manifestPath ) )
+  , manifestRaw( readManifestFromPath( this->manifestPath ) )
+{}
+
+
+/* -------------------------------------------------------------------------- */
+
+pkgdb::PkgQueryArgs
+UnlockedManifest::getBaseQueryArgs() const
 {
+  pkgdb::PkgQueryArgs args;
+  if ( this->manifestRaw.options.systems.has_value() )
+    {
+      args.systems = *this->manifestRaw.options.systems;
+    }
 
-private:
+  if ( this->manifestRaw.options.allow.has_value() )
+    {
+      if ( this->manifestRaw.options.allow->unfree.has_value() )
+        {
+          args.allowUnfree = *this->manifestRaw.options.allow->unfree;
+        }
+      if ( this->manifestRaw.options.allow->broken.has_value() )
+        {
+          args.allowBroken = *this->manifestRaw.options.allow->broken;
+        }
+      args.licenses = this->manifestRaw.options.allow->licenses;
+    }
 
-  std::filesystem::path manifestPath;
-  ManifestRaw           manifestRaw;
-
-  /** Lazily locked registry. */
-  std::optional<RegistryRaw> lockedRegistry;
-
-  /**
-   * Lazily converted @a flox::pkgdb::PkgQueryArgs record.
-   * This is used as a _base_ for individual descriptor queries.
-   */
-  std::optional<pkgdb::PkgQueryArgs> baseQueryArgs;
-
-
-public:
-
-  ~UnlockedManifest()                          = default;
-  UnlockedManifest()                           = default;
-  UnlockedManifest( const UnlockedManifest & ) = default;
-  UnlockedManifest( UnlockedManifest && )      = default;
-
-  UnlockedManifest( std::filesystem::path manifestPath, ManifestRaw raw )
-    : manifestPath( std::move( manifestPath ) ), manifestRaw( std::move( raw ) )
-  {}
-
-  explicit UnlockedManifest( std::filesystem::path manifestPath )
-    : manifestPath( std::move( manifestPath ) )
-    , manifestRaw( readManifestFromPath( this->manifestPath ) )
-  {}
+  if ( this->manifestRaw.options.semver.has_value()
+       && this->manifestRaw.options.semver->preferPreReleases.has_value() )
+    {
+      args.preferPreReleases
+        = *this->manifestRaw.options.semver->preferPreReleases;
+    }
+  return args;
+}
 
 
-  UnlockedManifest &
-  operator=( const UnlockedManifest & )
-    = default;
+/* -------------------------------------------------------------------------- */
 
-  UnlockedManifest &
-  operator=( UnlockedManifest && )
-    = default;
-
-
-  [[nodiscard]] std::filesystem::path
-  getManifestPath() const
-  {
-    return this->manifestPath;
-  }
-
-  [[nodiscard]] const ManifestRaw &
-  getManifestRaw() const
-  {
-    return this->manifestRaw;
-  }
-
-  [[nodiscard]] const RegistryRaw &
-  getRegistryRaw() const
-  {
-    return this->manifestRaw.registry;
-  }
-
-  [[nodiscard]] const RegistryRaw &
-  getLockedRegistry()
-  {
-    if ( ! this->lockedRegistry.has_value() )
-      {
-        this->lockedRegistry = lockRegistry( this->getRegistryRaw() );
-      }
-    return *this->lockedRegistry;
-  }
-
-  [[nodiscard]] const pkgdb::PkgQueryArgs &
-  getBaseQueryArgs()
-  {
-    if ( ! this->baseQueryArgs.has_value() )
-      {
-        pkgdb::PkgQueryArgs args;
-        if ( this->manifestRaw.options.systems.has_value() )
-          {
-            args.systems = *this->manifestRaw.options.systems;
-          }
-
-        if ( this->manifestRaw.options.allow.has_value() )
-          {
-            if ( this->manifestRaw.options.allow->unfree.has_value() )
-              {
-                args.allowUnfree = *this->manifestRaw.options.allow->unfree;
-              }
-            if ( this->manifestRaw.options.allow->broken.has_value() )
-              {
-                args.allowBroken = *this->manifestRaw.options.allow->broken;
-              }
-            args.licenses = this->manifestRaw.options.allow->licenses;
-          }
-
-        if ( this->manifestRaw.options.semver.has_value()
-             && this->manifestRaw.options.semver->preferPreReleases
-                  .has_value() )
-          {
-            args.preferPreReleases
-              = *this->manifestRaw.options.semver->preferPreReleases;
-          }
-        this->baseQueryArgs = std::make_optional( std::move( args ) );
-      }
-    return *this->baseQueryArgs;
-  }
+argparse::Argument &
+ManifestFileMixin::addManifestFileOption( argparse::ArgumentParser &parser )
+{
+  return parser.add_argument( "--manifest" )
+    .help( "The path to the 'manifest.{toml,yaml,json}' file." )
+    .metavar( "PATH" )
+    .action( [&]( const std::string &strPath )
+             { this->manifestPath = nix::absPath( strPath ); } );
+}
 
 
-}; /* End class `UnlockedManifest' */
+/* -------------------------------------------------------------------------- */
+
+argparse::Argument &
+ManifestFileMixin::addManifestFileArg( argparse::ArgumentParser &parser,
+                                       bool                      required )
+{
+  argparse::Argument &arg
+    = parser.add_argument( "manifest" )
+        .help( "The path to a 'manifest.{toml,yaml,json}' file." )
+        .metavar( "MANIFEST-PATH" )
+        .action( [&]( const std::string &strPath )
+                 { this->manifestPath = nix::absPath( strPath ); } );
+  return required ? arg.required() : arg;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+std::filesystem::path
+ManifestFileMixin::getManifestPath()
+{
+  if ( ! this->manifestPath.has_value() )
+    {
+      throw InvalidManifestFileException( "no manifest path given" );
+    }
+  return *this->manifestPath;
+}
 
 
 /* -------------------------------------------------------------------------- */

@@ -203,10 +203,9 @@ FlakeRegistry::getLockedInputs()
 /* -------------------------------------------------------------------------- */
 
 RegistryRaw
-lockRegistry( const RegistryRaw &unlocked )
+lockRegistry( const RegistryRaw &unlocked, nix::ref<nix::Store> store )
 {
-  auto store    = NixStoreMixin().getStore();
-  auto factory  = FloxFlakeInputFactory( NixStoreMixin().getStore() );
+  auto factory  = FloxFlakeInputFactory( store );
   auto locked   = unlocked;
   locked.inputs = FlakeRegistry( unlocked, factory ).getLockedInputs();
   return locked;

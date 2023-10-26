@@ -690,7 +690,8 @@ public:
 
 /** @brief Lock an unlocked registry. */
 RegistryRaw
-lockRegistry( const RegistryRaw & unlocked );
+lockRegistry( const RegistryRaw &  unlocked,
+              nix::ref<nix::Store> store = NixStoreMixin().getStore() );
 
 
 /* -------------------------------------------------------------------------- */

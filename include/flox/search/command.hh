@@ -78,7 +78,7 @@ private:
     return this->params.registry;
   }
 
-  [[nodiscard]] std::vector<std::string> &
+  [[nodiscard]] const std::vector<std::string> &
   getSystems() override
   {
     return this->params.systems;

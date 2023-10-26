@@ -84,11 +84,13 @@ LockCommand::LockCommand() : parser( "lock" )
 int
 LockCommand::run()
 {
-  auto lockedRegistry = this->getRegistry().getLockedInputs();
-  this->loadContents();
-  nlohmann::json lockfile = this->contents;
-  lockfile["registry"]    = lockedRegistry;
-  for ( const auto &[name, input] : lockfile.at( "registry" ).items() )
+  auto lockedRegistry = this->getLockedRegistry();
+  // TODO: to_json( ManifestRaw )
+  nlohmann::json lockfile
+    = { { "manifest", readAndCoerceJSON( this->getManifestPath() ) },
+        { "registry", lockedRegistry } };
+  for ( const auto &[name, input] :
+        lockfile.at( "registry" ).at( "inputs" ).items() )
     {
       /* Delete a few metadata fields that we don't really care about. */
       auto type = input.at( "from" ).at( "type" );

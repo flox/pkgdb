@@ -31,7 +31,7 @@ env-base:
 
 options:
   systems: ["x86_64-linux"]
-  activation-trategy: etc-profiles
+  activation-strategy: etc-profiles
   package-grouping-strategy: auto
 
 install:

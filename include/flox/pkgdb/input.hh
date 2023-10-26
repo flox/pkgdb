@@ -289,7 +289,7 @@ protected:
     = 0;
 
   /** @return A list of systems to be scraped. */
-  [[nodiscard]] virtual std::vector<std::string> &
+  [[nodiscard]] virtual const std::vector<std::string> &
   getSystems()
     = 0;
 
