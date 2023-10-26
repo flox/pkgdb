@@ -87,6 +87,7 @@ LockCommand::run()
   auto lockedRegistry = this->getLockedRegistry();
 
   // TODO: Handle multiple inputs
+  // TODO: Handle multiple systems
   auto [name, input] = * this->getPkgDbRegistry()->begin();
   auto dbRO  = this->getPkgDbRegistry()->begin()->second->getDbReadOnly();
   nlohmann::json install = nlohmann::json::object();

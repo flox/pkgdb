@@ -17,6 +17,9 @@ install:
     version: ^2
   pip:
     path: python310Packages.pip
+  # Expect failure
+  bad:
+    optional: true
 
 vars:
   message: Howdy
