@@ -81,7 +81,7 @@ from_json( const nlohmann::json & jfrom, QueryPreferences & prefs )
               else
                 {
                   throw ParseQueryPreferencesException(
-                    "Unexpected preferences field 'allow." + akey + '\'' );
+                    "unexpected preferences field 'allow." + akey + '\'' );
                 }
             }
         }
@@ -98,7 +98,7 @@ from_json( const nlohmann::json & jfrom, QueryPreferences & prefs )
               else
                 {
                   throw ParseQueryPreferencesException(
-                    "Unexpected preferences field 'semver." + skey + '\'' );
+                    "unexpected preferences field 'semver." + skey + '\'' );
                 }
             }
         }
