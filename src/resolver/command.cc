@@ -88,7 +88,8 @@ LockCommand::run()
   // TODO: to_json( ManifestRaw )
   nlohmann::json lockfile
     = { { "manifest", readAndCoerceJSON( this->getManifestPath() ) },
-        { "registry", lockedRegistry } };
+        { "registry", lockedRegistry },
+        { "lockfileVersion", 0 } };
   for ( const auto &[name, input] :
         lockfile.at( "registry" ).at( "inputs" ).items() )
     {
