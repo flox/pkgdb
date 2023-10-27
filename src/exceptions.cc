@@ -24,25 +24,14 @@ namespace flox {
 void
 to_json( nlohmann::json & jto, const FloxException & err )
 {
-  auto        contextMsg = err.getContextMessage();
-  auto        caughtMsg  = err.getCaughtMessage();
-  std::string msg;
-  if ( contextMsg.has_value() )
-    {
-      msg = *contextMsg;
-      if ( caughtMsg.has_value() )
-        {
-          msg += ": ";
-          msg += *caughtMsg;
-        }
-    }
-  else if ( caughtMsg.has_value() ) { msg = *caughtMsg; }
-
   jto = {
     { "exit_code", err.getErrorCode() },
-    { "message", std::move( msg ) },
-    { "category", err.getCategoryMessage() },
+    { "category_message", err.getCategoryMessage() },
   };
+  auto contextMsg = err.getContextMessage();
+  auto caughtMsg  = err.getCaughtMessage();
+  if ( contextMsg.has_value() ) { jto["context_message"] = *contextMsg; };
+  if ( caughtMsg.has_value() ) { jto["caught_message"] = *caughtMsg; };
 }
 
 }  // namespace flox

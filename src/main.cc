@@ -84,7 +84,7 @@ main( int argc, char *argv[] )
     }
   catch ( const flox::FloxException &err )
     {
-      if ( ! isatty( STDERR_FILENO ) )
+      if ( ! isatty( STDOUT_FILENO ) )
         {
           std::cout << nlohmann::json( err ).dump() << std::endl;
         }
@@ -97,7 +97,7 @@ main( int argc, char *argv[] )
   // TODO: handle IFD build errors.
   catch ( const nix::Error &err )
     {
-      if ( ! isatty( STDERR_FILENO ) )
+      if ( ! isatty( STDOUT_FILENO ) )
         {
           nlohmann::json error = {
             { "exit_code", flox::EC_NIX },
@@ -111,7 +111,7 @@ main( int argc, char *argv[] )
     }
   catch ( const std::exception &err )
     {
-      if ( ! isatty( STDERR_FILENO ) )
+      if ( ! isatty( STDOUT_FILENO ) )
         {
           nlohmann::json error = {
             { "exit_code", EXIT_FAILURE },
