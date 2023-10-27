@@ -10,6 +10,7 @@ on:
       - '!**/CONTRIBUTING*'
   pull_request:
     types: [opened, synchronize, reopened]
+  merge_group:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
