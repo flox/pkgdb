@@ -88,10 +88,11 @@ LockCommand::run()
 
   // TODO: Handle multiple inputs
   // TODO: Handle multiple systems
-  auto [name, input] = * this->getPkgDbRegistry()->begin();
-  auto dbRO  = this->getPkgDbRegistry()->begin()->second->getDbReadOnly();
+  auto [name, input] = *this->getPkgDbRegistry()->begin();
+  auto dbRO = this->getPkgDbRegistry()->begin()->second->getDbReadOnly();
   nlohmann::json install = nlohmann::json::object();
-  for ( const auto & [id, desc] : this->getUnlockedManifest().getManifestRaw().install )
+  for ( const auto &[id, desc] :
+        this->getUnlockedManifest().getManifestRaw().install )
     {
       auto args = this->getBaseQueryArgs();
       desc.fillPkgQueryArgs( args );
@@ -109,10 +110,10 @@ LockCommand::run()
       else
         {
           auto info = dbRO->getPackage( rows.front() );
-          install.emplace( id, nlohmann::json {
-            { "input", name }
-          , { "abs-path", info.at( "absPath" ) }
-          } );
+          install.emplace(
+            id,
+            nlohmann::json { { "input", name },
+                             { "abs-path", info.at( "absPath" ) } } );
         }
     }
 

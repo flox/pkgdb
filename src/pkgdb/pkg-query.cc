@@ -43,15 +43,13 @@ PkgQueryArgs::validate() const
     {
       throw InvalidPkgQueryArg(
         "queries may not mix `name' parameter with any of `pname', "
-        "`version', or `semver' parameters."
-      );
+        "`version', or `semver' parameters." );
     }
 
   if ( this->version.has_value() && this->semver.has_value() )
     {
       throw InvalidPkgQueryArg(
-        "queries may not mix `version' and `semver' parameters."
-      );
+        "queries may not mix `version' and `semver' parameters." );
     }
 
   /* Check licenses don't contain the ' character */
@@ -62,8 +60,7 @@ PkgQueryArgs::validate() const
           if ( license.find( '\'' ) != std::string::npos )
             {
               throw InvalidPkgQueryArg(
-                "license contains illegal character \"'\": " + license
-              );
+                "license contains illegal character \"'\": " + license );
             }
         }
     }
@@ -77,8 +74,8 @@ PkgQueryArgs::validate() const
            == flox::getDefaultSystems().end() )
         {
 
-          throw InvalidPkgQueryArg(
-            "unrecognized or unsupported system: " + std::string( system ) );
+          throw InvalidPkgQueryArg( "unrecognized or unsupported system: "
+                                    + std::string( system ) );
         }
     }
 }
