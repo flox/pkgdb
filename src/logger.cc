@@ -7,10 +7,10 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include <optional>
-#include <string>
 #include <nix/logging.hh>
 #include <nix/util.hh>
+#include <optional>
+#include <string>
 
 #include "flox/core/nix-state.hh"
 
