@@ -7,10 +7,16 @@
  *
  * -------------------------------------------------------------------------- */
 
+#include <map>
+#include <nix/config.hh>
 #include <nix/globals.hh>
+#include <nlohmann/json.hpp>
+#include <optional>
+#include <string>
+#include <vector>
 
-#include "flox/core/util.hh"
-#include "flox/resolver/params.hh"
+#include "flox/pkgdb/params.hh"
+#include "flox/pkgdb/pkg-query.hh"
 
 
 /* -------------------------------------------------------------------------- */
