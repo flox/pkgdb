@@ -55,7 +55,7 @@ private:
     return this->params.registry;
   }
 
-  [[nodiscard]] std::vector<std::string> &
+  [[nodiscard]] const std::vector<std::string> &
   getSystems() override
   {
     return this->params.systems;
@@ -86,14 +86,10 @@ public:
 
 /* -------------------------------------------------------------------------- */
 
-class LockCommand
-  : NixStoreMixin
-  , ManifestFileMixin
+class LockCommand : ManifestFileMixin
 {
 
-  std::optional<FloxFlakeInputFactory> factory;
-  std::optional<FlakeRegistry>         registry;
-  command::VerboseParser               parser;
+  command::VerboseParser parser;
 
 public:
 
@@ -103,18 +99,6 @@ public:
   getParser()
   {
     return this->parser;
-  }
-
-  [[nodiscard]] FlakeRegistry &
-  getRegistry()
-  {
-    if ( ! this->registry.has_value() )
-      {
-        this->factory = FloxFlakeInputFactory( this->getStore() );
-        this->registry
-          = FlakeRegistry( this->getRegistryRaw(), *this->factory );
-      }
-    return *this->registry;
   }
 
   /**

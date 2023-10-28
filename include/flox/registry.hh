@@ -679,11 +679,19 @@ public:
     : Registry<FloxFlakeInputFactory>( registryRaw, factory )
   {}
 
-  [[nodiscard]] std::unordered_map<std::string, RegistryInput>
+  [[nodiscard]] std::map<std::string, RegistryInput>
   getLockedInputs();
 
 
 }; /* End class `FlakeRegistry' */
+
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Lock an unlocked registry. */
+RegistryRaw
+lockRegistry( const RegistryRaw &  unlocked,
+              nix::ref<nix::Store> store = NixStoreMixin().getStore() );
 
 
 /* -------------------------------------------------------------------------- */

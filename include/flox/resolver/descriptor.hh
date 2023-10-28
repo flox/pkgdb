@@ -18,12 +18,22 @@
 
 #include "flox/pkgdb/pkg-query.hh"
 #include "flox/registry.hh"
-#include "flox/resolver/params.hh"
 
 
 /* -------------------------------------------------------------------------- */
 
 namespace flox::resolver {
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief An attribute path which may contain `null` members to
+ *        represent _globs_.
+ *
+ * Globs may only appear as the second element representing `system`.
+ */
+using AttrPathGlob = std::vector<std::optional<std::string>>;
+
 
 /* -------------------------------------------------------------------------- */
 

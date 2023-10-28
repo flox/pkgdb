@@ -48,7 +48,7 @@ protected:
    *   std::shared_ptr<Registry<pkgdb::PkgDbInputFactory>> registry
    */
 
-  [[nodiscard]] std::vector<std::string> &
+  [[nodiscard]] const std::vector<std::string> &
   getSystems() override
   {
     return this->preferences.systems;

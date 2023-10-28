@@ -181,8 +181,8 @@ to_json( nlohmann::json &jto, const FloxException &err );
 
 /* -------------------------------------------------------------------------- */
 
-//NOLINTBEGIN(bugprone-macro-parentheses)
-// Disable macro parentheses lint so we can use `NAME' symbol directly.
+// NOLINTBEGIN(bugprone-macro-parentheses)
+//  Disable macro parentheses lint so we can use `NAME' symbol directly.
 
 /**
  * @brief Generate a class definition with an error code and
@@ -191,39 +191,38 @@ to_json( nlohmann::json &jto, const FloxException &err );
  * The resulting class will have `NAME()`, `NAME( contextMsg )`,
  * and `NAME( contextMsg, caughtMsg )` constructors available.
  */
-#define FLOX_DEFINE_EXCEPTION( NAME, ERROR_CODE, CATEGORY_MSG )                \
-  class NAME : public FloxException                                            \
-  {                                                                            \
-  public:                                                                      \
-                                                                               \
-    NAME() : FloxException( CATEGORY_MSG, std::nullopt, std::nullopt ) {}      \
-                                                                               \
-    explicit NAME( std::string_view contextMsg )                               \
-      : FloxException( ( CATEGORY_MSG ),                                       \
-                       std::string( contextMsg ),                              \
-                       std::nullopt )                                          \
-    {}                                                                         \
-                                                                               \
-    explicit NAME( std::string_view contextMsg,                                \
-                   std::string_view caughtMsg )                                \
-      : FloxException( ( CATEGORY_MSG ),                                       \
-                       std::string( contextMsg ),                              \
-                       std::string( caughtMsg ) )                              \
-    {}                                                                         \
-                                                                               \
-    [[nodiscard]] error_category                                               \
-    getErrorCode() const noexcept override                                     \
-    {                                                                          \
-      return ( ERROR_CODE );                                                   \
-    }                                                                          \
-                                                                               \
-    [[nodiscard]] std::string_view                                             \
-    getCategoryMessage() const noexcept override                               \
-    {                                                                          \
-      return ( CATEGORY_MSG );                                                 \
-    }                                                                          \
+#define FLOX_DEFINE_EXCEPTION( NAME, ERROR_CODE, CATEGORY_MSG )              \
+  class NAME : public FloxException                                          \
+  {                                                                          \
+  public:                                                                    \
+                                                                             \
+    NAME() : FloxException( CATEGORY_MSG, std::nullopt, std::nullopt ) {}    \
+                                                                             \
+    explicit NAME( std::string_view contextMsg )                             \
+      : FloxException( ( CATEGORY_MSG ),                                     \
+                       std::string( contextMsg ),                            \
+                       std::nullopt )                                        \
+    {}                                                                       \
+                                                                             \
+    explicit NAME( std::string_view contextMsg, std::string_view caughtMsg ) \
+      : FloxException( ( CATEGORY_MSG ),                                     \
+                       std::string( contextMsg ),                            \
+                       std::string( caughtMsg ) )                            \
+    {}                                                                       \
+                                                                             \
+    [[nodiscard]] error_category                                             \
+    getErrorCode() const noexcept override                                   \
+    {                                                                        \
+      return ( ERROR_CODE );                                                 \
+    }                                                                        \
+                                                                             \
+    [[nodiscard]] std::string_view                                           \
+    getCategoryMessage() const noexcept override                             \
+    {                                                                        \
+      return ( CATEGORY_MSG );                                               \
+    }                                                                        \
   };
-//NOLINTEND(bugprone-macro-parentheses)
+// NOLINTEND(bugprone-macro-parentheses)
 
 
 /* -------------------------------------------------------------------------- */
