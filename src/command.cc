@@ -7,19 +7,16 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include <fstream>
-#include <iostream>
+#include <algorithm>
+#include <argparse/argparse.hpp>
+#include <optional>
+#include <string>
+#include <variant>
+#include <vector>
 
-#include <nix/eval-cache.hh>
-#include <nix/eval.hh>
-#include <nix/flake/flake.hh>
-#include <nix/shared.hh>
-#include <nix/store-api.hh>
-
+#include "flox/core/types.hh"
+#include "flox/registry.hh"
 #include "flox/core/command.hh"
-#include "flox/core/util.hh"
-#include "flox/pkgdb/write.hh"
-#include "flox/resolver/manifest.hh"
 
 
 /* -------------------------------------------------------------------------- */

@@ -7,6 +7,8 @@
  *
  * -------------------------------------------------------------------------- */
 
+#include <optional>
+#include <string>
 #include <nix/logging.hh>
 #include <nix/util.hh>
 

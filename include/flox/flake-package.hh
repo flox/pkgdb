@@ -10,17 +10,14 @@
 
 #pragma once
 
-#include <functional>
 #include <memory>
 #include <nix/eval-cache.hh>
-#include <nix/fetchers.hh>
-#include <nix/flake/flake.hh>
 #include <nix/names.hh>
-#include <nlohmann/json.hpp>
 #include <optional>
 #include <string>
 #include <vector>
 
+#include "flox/core/exceptions.hh"
 #include "flox/core/types.hh"
 #include "flox/package.hh"
 

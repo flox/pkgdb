@@ -5,7 +5,6 @@
  * -------------------------------------------------------------------------- */
 
 #include "flox/flake-package.hh"
-#include "flox/core/exceptions.hh"
 #include "versions.hh"
 
 
