@@ -151,7 +151,7 @@ struct PkgQueryArgs : public PkgDescriptorBase
 
 
   /** @brief Errors concerning validity of package query parameters. */
-  struct InvalidPkgQueryArgException : public flox::FloxException
+  class InvalidPkgQueryArgException : public FloxException
   {
 
   public:
@@ -206,7 +206,7 @@ struct PkgQueryArgs : public PkgDescriptorBase
     }
 
 
-  }; /* End struct `InvalidPkgQueryArgException' */
+  }; /* End class `InvalidPkgQueryArgException' */
 
 
   /** @brief Reset argset to its _default_ state. */
