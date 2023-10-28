@@ -9,13 +9,44 @@
 
 #pragma once
 
-#include "flox/pkgdb/write.hh"
+#include <filesystem>
+#include <memory>
+#include <nlohmann/json_fwd.hpp>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+#include <nix/flake/flake.hh>
+#include <nix/flake/flakeref.hh>
+#include <nix/ref.hh>
+
+#include "flox/core/nix-state.hh"
+#include "flox/core/types.hh"
+#include "flox/flox-flake.hh"
+#include "flox/pkgdb/pkg-query.hh"
+#include "flox/pkgdb/read.hh"
 #include "flox/registry.hh"
 
 
 /* -------------------------------------------------------------------------- */
 
+/* Forward declare */
+namespace nix {
+class Store;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 namespace flox::pkgdb {
+
+/* -------------------------------------------------------------------------- */
+
+/* Forward declare */
+class PkgDb;
 
 /* -------------------------------------------------------------------------- */
 
