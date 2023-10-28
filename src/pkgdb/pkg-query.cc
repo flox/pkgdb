@@ -33,61 +33,25 @@ PkgDescriptorBase::clear()
 
 /* -------------------------------------------------------------------------- */
 
-std::string
-PkgQueryArgs::InvalidPkgQueryArgException::errorMessage(
-  const PkgQueryArgs::InvalidPkgQueryArgException::error_code & ecode )
-{
-  switch ( ecode )
-    {
-      case PQEC_MIX_NAME:
-        return "Queries may not mix `name' parameter with any of `pname', "
-               "`version', or `semver' parameters";
-        break;
-      case PQEC_MIX_VERSION_SEMVER:
-        return "Queries may not mix `version' and `semver' parameters";
-        break;
-      case PQEC_INVALID_SEMVER: return "Semver Parse Error"; break;
-      case PQEC_INVALID_LICENSE:
-        return "Query `license' parameter contains invalid character \"'\"";
-        break;
-      case PQEC_INVALID_SUBTREE:
-        return "Unrecognized subtree in query arguments";
-        break;
-      case PQEC_CONFLICTING_SUBTREE:
-        return "Query `stability' parameter may only be used in "
-               "\"catalog\" `subtree'";
-        break;
-      case PQEC_INVALID_SYSTEM:
-        return "Unrecognized or unsupported `system' in query arguments";
-        break;
-      case PQEC_INVALID_STABILITY:
-        return "Unrecognized `stability' in query arguments";
-        break;
-      case PQEC_INVALID_MATCH_STYLE:
-        return "Query `matchStyle' must be set when `match' is used";
-        break;
-      default: return "Unexpected PkgQuery error"; break;
-    }
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-std::optional<PkgQueryArgs::InvalidPkgQueryArgException::error_code>
+void
 PkgQueryArgs::validate() const
 {
-  using error_code = PkgQueryArgs::InvalidPkgQueryArgException::error_code;
 
   if ( this->name.has_value()
        && ( this->pname.has_value() || this->version.has_value()
             || this->semver.has_value() ) )
     {
-      return error_code::PQEC_MIX_NAME;
+      throw InvalidPkgQueryArg(
+        "queries may not mix `name' parameter with any of `pname', "
+        "`version', or `semver' parameters."
+      );
     }
 
   if ( this->version.has_value() && this->semver.has_value() )
     {
-      return error_code::PQEC_MIX_VERSION_SEMVER;
+      throw InvalidPkgQueryArg(
+        "queries may not mix `version' and `semver' parameters."
+      );
     }
 
   /* Check licenses don't contain the ' character */
@@ -97,7 +61,9 @@ PkgQueryArgs::validate() const
         {
           if ( license.find( '\'' ) != std::string::npos )
             {
-              return error_code::PQEC_INVALID_LICENSE;
+              throw InvalidPkgQueryArg(
+                "license contains illegal character \"'\": " + license
+              );
             }
         }
     }
@@ -110,26 +76,11 @@ PkgQueryArgs::validate() const
                       system )
            == flox::getDefaultSystems().end() )
         {
-          return error_code::PQEC_INVALID_SYSTEM;
+
+          throw InvalidPkgQueryArg(
+            "unrecognized or unsupported system: " + std::string( system ) );
         }
     }
-
-  /* Stabilities */
-  if ( this->stabilities.has_value() )
-    {
-      for ( const auto & stability : *this->stabilities )
-        {
-          if ( std::find( flox::getDefaultCatalogStabilities().begin(),
-                          flox::getDefaultCatalogStabilities().end(),
-                          stability )
-               == flox::getDefaultCatalogStabilities().end() )
-            {
-              return error_code::PQEC_INVALID_STABILITY;
-            }
-        }
-    }
-
-  return std::nullopt;
 }
 
 
@@ -451,10 +402,7 @@ PkgQuery::init()
   this->clearBuilt();
 
   /* Validate parameters */
-  if ( auto maybe_ec = this->validate(); maybe_ec != std::nullopt )
-    {
-      throw PkgQueryArgs::InvalidPkgQueryArgException( *maybe_ec );
-    }
+  this->validate();
 
   this->addSelection( "*" );
 
