@@ -40,10 +40,11 @@ struct PkgDescriptorRaw : public pkgdb::PkgDescriptorBase
 {
 
   /* From `pkgdb::PkgDescriptorBase':
-   *   std::optional<std::string> name;
-   *   std::optional<std::string> pname;
-   *   std::optional<std::string> version;
-   *   std::optional<std::string> semver;
+   *   std::optional<std::string> name;    //< Filter results by exact `name`.
+   *   std::optional<std::string> pname;   //< Filter results by exact `pname`.
+   *   std::optional<std::string> version; //< Filter results by exact version.
+   *   std::optional<std::string> semver;  //< Filter results by version range.
+
    */
 
   /**
