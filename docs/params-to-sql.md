@@ -199,7 +199,13 @@ struct PkgQueryArgs : public PkgDescriptorBase
 ```
 
 
-### flox::pkgdb::QueryPreferences
+### flox::pkgdb::QueryPreferences ( to be deprecated )
+
+NOTE: This structure is expected to be deprecated and replaced by a subset of
+      the `flox::resolver::ManifestRaw::Options` fields.
+      The current fields and fallback behavior there are identical, but
+      fallback handling was moved to an intermediate struct
+      `flox::resolver::UnlockedManifest`.
 
 Declared in
 [<pkgdb>/include/flox/pkgdb/params.hh](../include/flox/pkgdb/params.hh).
@@ -472,6 +478,13 @@ which describes an environment.
 Parts of this file are used to essentially construct something similar to
 the `flox::pkgdb::QueryParams<QueryType>` structure.
 
+The `flox::resolver::ManifestRaw` struct intends to exactly match the format
+of the file so that it can be used to validate its syntax, and be converted
+without any loss of detail into JSON ( to become a part of a lockfile ).
+With that in mind, no default fields are handled in this struct; instead
+handling of fallbacks is done in a related class
+`flox::resolver::UnlockedManifest`.
+
 While some fields in this file are not relevant to resolution/search all of them
 will be shown here.
 Here is its declaration:
@@ -518,6 +531,7 @@ struct ManifestRaw
   Options options;
 
   // Contains descriptors to be resolved.
+  // FIXME: This should be `ManifestDescriptorRaw`! ( to be fixed soon )
   std::unordered_map<std::string, ManifestDescriptor> install;
 
   RegistryRaw registry;
@@ -542,7 +556,7 @@ struct ManifestRaw
 NOTE: This struct is not in use by the `flox` CLI and was created strictly for
 testing resolution with `pkgdb resolve` in our own test suite.
 It is expected to be removed in the near future in favor
-of `flox::resolver::ManifestDescriptor`.
+of `flox::resolver::ManifestDescriptorRaw`.
 
 Declared in
 [<pkgdb>/include/flox/resolver/params.hh](../include/flox/resolver/params.hh).
