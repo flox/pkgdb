@@ -22,7 +22,36 @@ This document will help you navigate these various structures and help you
 identify common patterns among them.
 
 
-## Query Argument Data
+## Terminology
+
+- Registry : A collection of _flake ref inputs_ assigned _short names_
+             or _aliases_ which comprise the pool of package sets to be queried.
+- Descriptor : An abstract description of a dependency by indicating
+               _requirements_ to be satisfied.
+               These are simply put a collection of user defined filters.
+               The most common descriptor is
+               _"give me a package with the name X"_, or maybe 
+               _"give me a package with the name X with version between 3-4"_.
+- Preferences : Settings or filters which apply to _all_ descriptors or 
+                registry inputs.
+                These may overlap with some _descriptor_ filters, but may be
+                defined _globally_ for convenience.
+                These are things like
+                _"limit search results to those with the following licenses: 
+                X, Y, Z_, or
+                _"treat prefer pre-release versions of sofware over the previous 
+                major release"_.
+
+
+## Query Argument and Registry Data
+
+The pipeline from user input into `PkgQueryArgs` and `RegistryRaw` structures
+is split across a few base classes in an attempt to avoid repeating common
+processes in multiple places - this comes at the expense of making it slightly
+harder for readers to trace; the aim of this section is to aggregate all of
+classes related to this transformation in one place, and describe their
+relationships to one another.
+
 
 ### PkgQueryArgs
 
