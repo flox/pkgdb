@@ -53,7 +53,54 @@ classes related to this transformation in one place, and describe their
 relationships to one another.
 
 
-### PkgQueryArgs
+### flox::pkgdb::PkgDescriptorBase
+
+Declared in
+[<pkgdb>/include/flox/pkgdb/pkg-query.hh](../include/flox/pkgdb/pkg-query.hh).
+
+This is the most common set of query filters related to a single package,
+and is used as a base for several more complex descriptors.
+
+It has the following members:
+```c++
+// NOTE: This document may be out of sync with `pkg-query.hh'.
+//       The header itself is the _source of truth_.
+
+struct PkgDescriptorBase
+{
+
+  std::optional<std::string> name;    /**< Filter results by exact `name`. */
+  std::optional<std::string> pname;   /**< Filter results by exact `pname`. */
+  std::optional<std::string> version; /**< Filter results by exact version. */
+  std::optional<std::string> semver;  /**< Filter results by version range. */
+
+  // ...<SNIP>...
+
+};
+
+/**
+ * @brief A concept that checks if a typename is derived
+ *        from @a flox::pkgdb::PkgDescriptorBase.
+ */
+template<typename T>
+concept pkg_descriptor_typename = std::derived_from<T, PkgDescriptorBase>;
+```
+
+Child Classes:
+- `flox::pkgdb::PkgQueryArgs`
+- `flox::resolver::PkgDescriptorRaw`
+- `flox::search::SearchQuery`
+
+Contained by:
+- `flox::pkgdb::QueryParams<pkg_descriptor_typename QueryType>`
+  + Uses `pkg_descriptor_typename` concept to accept any child of
+    `PkgDescriptorBase` as a template parameter.
+
+
+### flox::pkgdb::PkgQueryArgs
+
+Declared in
+[<pkgdb>/include/flox/pkgdb/pkg-query.hh](../include/flox/pkgdb/pkg-query.hh).
 
 This is the _finalized_ set of arguments used to actually query a database.
 It has the following fields which are translated into SQL query filters,
@@ -61,7 +108,6 @@ and in the case of the `semver` field additional filtering using `node-semver`
 will be performed.
 
 ```c++
-// Taken from <pkgdb>/include/flox/pkgdb/pkg-query.hh
 // NOTE: This document may be out of sync with `pkg-query.hh'.
 //       The header itself is the _source of truth_.
 
@@ -127,6 +173,73 @@ struct PkgQueryArgs : public PkgDescriptorBase
    */
   std::optional<flox::AttrPath> relPath;
   
+  // ...<SNIP>...
+  
+};
+```
+
+
+### flox::pkgdb::QueryPreferences
+
+Declared in
+[<pkgdb>/include/flox/pkgdb/params.hh](../include/flox/pkgdb/params.hh).
+
+These are _global_ settings that are often used for performing queries with
+multiple descriptors.
+
+Here is its declaration:
+
+```c++
+// NOTE: This document may be out of sync with `params.hh'.
+//       The header itself is the _source of truth_.
+
+/**
+ * @brief Global preferences used for resolution/search with multiple queries.
+ */
+struct QueryPreferences
+{
+
+  /**
+   * Ordered list of systems to be searched.
+   * Results will be grouped by system in the order they appear here.
+   *
+   * Defaults to the current system.
+   */
+  std::vector<std::string> systems = { nix::settings.thisSystem.get() };
+
+
+  /** @brief Allow/disallow packages with certain metadata. */
+  struct Allows
+  {
+
+    /** Whether to include packages which are explicitly marked `unfree`. */
+    bool unfree = true;
+
+    /** Whether to include packages which are explicitly marked `broken`. */
+    bool broken = false;
+
+    /** Filter results to those explicitly marked with the given licenses. */
+    std::optional<std::vector<std::string>> licenses;
+
+  }; /* End struct `QueryPreferences::Allows' */
+
+  Allows allow; /**< Allow/disallow packages with certain metadata. */
+
+
+  /**
+   * @brief Settings associated with semantic version processing.
+   *
+   * These act as the _global_ default, but may be overridden by
+   * individual descriptors.
+   */
+  struct Semver
+  {
+    /** Whether pre-release versions should be ordered before releases. */
+    bool preferPreReleases = false;
+  }; /* End struct `QueryPreferences::Semver' */
+
+  Semver semver; /**< Settings associated with semantic version processing. */
+
   // ...<SNIP>...
   
 };

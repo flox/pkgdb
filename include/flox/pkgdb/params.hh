@@ -30,6 +30,8 @@ struct QueryPreferences
   /**
    * Ordered list of systems to be searched.
    * Results will be grouped by system in the order they appear here.
+   *
+   * Defaults to the current system.
    */
   std::vector<std::string> systems = { nix::settings.thisSystem.get() };
 
