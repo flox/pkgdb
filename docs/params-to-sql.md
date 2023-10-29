@@ -617,3 +617,12 @@ struct PkgDescriptorRaw : public pkgdb::PkgDescriptorBase
 
 Contained by:
 - `ResolveOneParams = flox::pkgdb::QueryParams<flox::resolver::PkgDescriptorRaw>`
+
+
+## TODO: Common Routines
+
+### `fillPkgQueryArgs`
+### `to_json` and `from_json`
+### `clear`
+### `getRegistryRaw`
+### `getSystems`
