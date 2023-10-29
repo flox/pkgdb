@@ -118,13 +118,13 @@ struct PkgQueryArgs : public PkgDescriptorBase
 {
 
   /* From `PkgDescriptorBase':
-   *   std::optional<std::string> name;
-   *   std::optional<std::string> pname;
-   *   std::optional<std::string> version;
-   *   std::optional<std::string> semver;
+   *   std::optional<std::string> name;    //< Filter results by exact `name`.
+   *   std::optional<std::string> pname;   //< Filter results by exact `pname`.
+   *   std::optional<std::string> version; //< Filter results by exact version.
+   *   std::optional<std::string> semver;  //< Filter results by version range.
    */
 
-  /** Filter results by partial match on pname, pkgAttrName, or description */
+  /** Filter results by partial match on pname, pkgAttrName, or description. */
   std::optional<std::string> partialMatch;
 
   /**
@@ -133,7 +133,11 @@ struct PkgQueryArgs : public PkgDescriptorBase
    */
   std::optional<std::string> pnameOrPkgAttrName;
 
-  /** Filter results to those explicitly marked with the given licenses. */
+  /**
+   * Filter results to those explicitly marked with the given licenses.
+   *
+   * NOTE: License strings should be SPDX Ids ( short names ).
+   */
   std::optional<std::vector<std::string>> licenses;
 
   /** Whether to include packages which are explicitly marked `broken`. */
@@ -145,19 +149,30 @@ struct PkgQueryArgs : public PkgDescriptorBase
   /** Whether pre-release versions should be ordered before releases. */
   bool preferPreReleases = false;
 
-  /** Subtrees to search. */
+  /**
+   * Subtrees to search.
+   *
+   * NOTE: `Subtree` is an enum of top level flake outputs, being one of
+   * `"catalog"`, `"packages"`, or `"legacyPackages"`.
+   */
   std::optional<std::vector<Subtree>> subtrees;
 
-  /** Systems to search */
+  /** Systems to search. Defaults to the current system. */
   std::vector<std::string> systems = { nix::settings.thisSystem.get() };
 
-  /** Stabilities to search ( if any ) */
+  /**
+   * Stabilities to search ( if any ).
+   *
+   * NOTE: Stabilities must be one of `"stable"`, `"staging"`, or `"unstable"`.
+   */
   std::optional<std::vector<std::string>> stabilities;
 
   /**
    * Relative attribute path to package from its prefix.
    * For catalogs this is the part following `stability`, and for regular flakes
    * it is the part following `system`.
+   *
+   * NOTE: @a flox::AttrPath is an alias of `std::vector<std::string>`.
    */
   std::optional<flox::AttrPath> relPath;
 
