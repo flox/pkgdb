@@ -404,7 +404,7 @@ PkgDbReadOnly::getPackage( row_id row )
   rsl.emplace( "system", std::move( path.at( 1 ) ) );
 
   path.erase( path.begin(), path.begin() + 2 );
-  rsl.emplace( "pkgSubPath", std::move( path ) );
+  rsl.emplace( "relPath", std::move( path ) );
 
   return rsl;
 }
