@@ -405,14 +405,12 @@ PkgDbReadOnly::getPackage( row_id row )
 
   if ( path.at( 0 ) == "catalog" )
     {
-      rsl.emplace( "stability", std::move( path.at( 2 ) ) );
       path.erase( path.begin(), path.begin() + 3 );
       path.pop_back();
       rsl.emplace( "pkgSubPath", std::move( path ) );
     }
   else
     {
-      rsl.emplace( "stability", nullptr );
       path.erase( path.begin(), path.begin() + 2 );
       rsl.emplace( "pkgSubPath", std::move( path ) );
     }

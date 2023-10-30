@@ -24,7 +24,6 @@ void
 InputPreferences::clear()
 {
   this->subtrees    = std::nullopt;
-  this->stabilities = std::nullopt;
 }
 
 
@@ -34,7 +33,6 @@ pkgdb::PkgQueryArgs &
 InputPreferences::fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const
 {
   pqa.subtrees    = this->subtrees;
-  pqa.stabilities = this->stabilities;
   return pqa;
 }
 
@@ -106,14 +104,10 @@ RegistryRaw::fillPkgQueryArgs( const std::string   &input,
       const RegistryInput &minput = this->inputs.at( input );
       pqa.subtrees    = minput.subtrees.has_value() ? minput.subtrees
                                                     : this->defaults.subtrees;
-      pqa.stabilities = minput.stabilities.has_value()
-                          ? minput.stabilities
-                          : this->defaults.stabilities;
     }
   catch ( ... )
     {
       pqa.subtrees    = this->defaults.subtrees;
-      pqa.stabilities = this->defaults.stabilities;
     }
   return pqa;
 }
@@ -181,7 +175,6 @@ RegistryInput
 FloxFlakeInput::getLockedInput()
 {
   return { this->getSubtrees(),
-           this->stabilities,
            this->getFlake()->lockedFlake.flake.lockedRef };
 }
 

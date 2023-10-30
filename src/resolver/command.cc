@@ -133,14 +133,6 @@ LockCommand::run()
         {
           input.at( "from" ).erase( "narHash" );
         }
-
-      /* Drop `stabilities' for non-catalogs. */
-      bool isCatalog = false;
-      for ( const auto &subtree : input.at( "subtrees" ) )
-        {
-          if ( subtree == "catalog" ) { isCatalog = true; }
-        }
-      if ( ! isCatalog ) { input.erase( "stabilities" ); }
     }
 
   /* Print that bad boii */

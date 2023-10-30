@@ -55,9 +55,6 @@ public:
   /** Match `version` or `semver` if a modifier is present. */
   std::optional<std::string> version;
 
-  /** Match a catalog stability. */
-  std::optional<std::string> stability;
-
   /** @brief A dot separated attribut path, or list representation. */
   using Path = std::variant<std::string, flox::AttrPath>;
   /** Match a relative path. */
@@ -106,7 +103,6 @@ public:
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT( ManifestDescriptorRaw,
                                                  name,
                                                  version,
-                                                 stability,
                                                  path,
                                                  absPath,
                                                  systems,
@@ -147,9 +143,6 @@ public:
 
   /** Only resolve for a given set of systems. */
   std::optional<std::vector<std::string>> systems;
-
-  /** Match a catalog stability. */
-  std::optional<std::string> stability;
 
   /** Match a relative attribute path. */
   std::optional<flox::AttrPath> path;

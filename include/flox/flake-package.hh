@@ -162,13 +162,6 @@ public:
   }
 
   std::optional<std::string>
-  getStability() const override
-  {
-    if ( this->_subtree != ST_CATALOG ) { return std::nullopt; }
-    return this->_pathS[2];
-  }
-
-  std::optional<std::string>
   getLicense() const override
   {
     if ( this->_license.has_value() ) { return this->_license; }

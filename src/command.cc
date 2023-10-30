@@ -108,38 +108,6 @@ InlineInputMixin::addSubtreeArg( argparse::ArgumentParser & parser )
 }
 
 
-argparse::Argument &
-InlineInputMixin::addStabilityArg( argparse::ArgumentParser & parser )
-{
-  return parser.add_argument( "--stability" )
-    .help( "A stability name, being one of `stable`, `staging`, "
-           "or `unstable', that should be processed. "
-           "May be used multiple times." )
-    .required()
-    .metavar( "STABILITY" )
-    .action(
-      [&]( const std::string & stability )
-      {
-        /* Create or append the `stabilities' list. */
-        if ( this->registryInput.stabilities.has_value() )
-          {
-            if ( auto has = std::find( this->registryInput.stabilities->begin(),
-                                       this->registryInput.stabilities->end(),
-                                       stability );
-                 has == this->registryInput.stabilities->end() )
-              {
-                this->registryInput.stabilities->emplace_back( stability );
-              }
-          }
-        else
-          {
-            this->registryInput.stabilities
-              = { std::vector<std::string> { stability } };
-          }
-      } );
-}
-
-
 /* -------------------------------------------------------------------------- */
 
 argparse::Argument &
@@ -161,10 +129,6 @@ AttrPathMixin::fixupAttrPath()
   if ( this->attrPath.size() < 2 )
     {
       this->attrPath.push_back( nix::settings.thisSystem.get() );
-    }
-  if ( ( this->attrPath.size() < 3 ) && ( this->attrPath[0] == "catalog" ) )
-    {
-      this->attrPath.push_back( "stable" );
     }
 }
 

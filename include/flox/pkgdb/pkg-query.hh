@@ -139,12 +139,8 @@ struct PkgQueryArgs : public PkgDescriptorBase
   /** Systems to search */
   std::vector<std::string> systems = { nix::settings.thisSystem.get() };
 
-  /** Stabilities to search ( if any ) */
-  std::optional<std::vector<std::string>> stabilities;
-
   /**
    * Relative attribute path to package from its prefix.
-   * For catalogs this is the part following `stability`, and for regular flakes
    * it is the part following `system`.
    */
   std::optional<flox::AttrPath> relPath;
@@ -168,13 +164,9 @@ struct PkgQueryArgs : public PkgDescriptorBase
       ,
       PQEC_INVALID_SUBTREE = 6 /**< Unrecognized subtree */
       ,
-      PQEC_CONFLICTING_SUBTREE = 7 /**< Conflicting subtree/stability */
+      PQEC_INVALID_SYSTEM = 7 /**< Unrecognized/unsupported system */
       ,
-      PQEC_INVALID_SYSTEM = 8 /**< Unrecognized/unsupported system */
-      ,
-      PQEC_INVALID_STABILITY = 9 /**< Unrecognized stability */
-      ,
-      PQEC_INVALID_MATCH_STYLE = 10 /**< `match` without `matchStyle` */
+      PQEC_INVALID_MATCH_STYLE = 8 /**< `match` without `matchStyle` */
     } errorCode;
 
 
@@ -217,7 +209,6 @@ struct PkgQueryArgs : public PkgDescriptorBase
    * @brief Sanity check parameters.
    *
    * Make sure `systems` are valid systems.
-   * Make sure `stabilities` are valid stabilities.
    * Make sure `name` is not set when `pname`, `version`, or `semver` are set.
    * Make sure `version` is not set when `semver` is set.
    * @return `std::nullopt` iff the above conditions are met, an error
@@ -330,13 +321,6 @@ private:
    */
   void
   initSystems();
-
-  /**
-   * @brief A helper of @a init() which handles
-   *        `stabilities` filtering/ranking.
-   */
-  void
-  initStabilities();
 
   /** @brief A helper of @a init() which constructs the `ORDER BY` block. */
   void

@@ -127,12 +127,10 @@ to_json( nlohmann::json &jto, const SearchQuery &qry );
  *         , "repo": "floxpkgs"
  *         }
  *       , "subtrees": ["catalog"]
- *       , "stabilities": ["stable"]
  *       }
  *     }
  *   , "defaults": {
  *       "subtrees": null
- *     , "stabilities": ["stable"]
  *     }
  *   , "priority": ["nixpkgs", "floco", "floxpkgs"]
  *   }
