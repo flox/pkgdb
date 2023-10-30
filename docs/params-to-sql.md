@@ -112,7 +112,7 @@ Declared in [<pkgdb>/include/flox/registry.hh](../include/flox/registry.hh).
 
 This structure holds information about _flake inputs_ whose package databases
 should be scraped, some settings associated with each to indicate which
-_subtrees_/_stabilities_ should be searched, and the _priority_ order results
+_subtrees_ should be searched, and the _priority_ order results
 should be _ranked_ by.
 
 A more detailed look at _registries_ and their fields can be
@@ -172,24 +172,16 @@ struct PkgQueryArgs : public PkgDescriptorBase
    * Subtrees to search.
    * 
    * NOTE: `Subtree` is an enum of top level flake outputs, being one of
-   * `"catalog"`, `"packages"`, or `"legacyPackages"`.
+   * `"packages"` or `"legacyPackages"`.
    */
   std::optional<std::vector<Subtree>> subtrees;
 
   /** Systems to search. Defaults to the current system. */
   std::vector<std::string> systems = { nix::settings.thisSystem.get() };
 
-  /** 
-   * Stabilities to search ( if any ).
-   *
-   * NOTE: Stabilities must be one of `"stable"`, `"staging"`, or `"unstable"`.
-   */
-  std::optional<std::vector<std::string>> stabilities;
-
   /**
    * Relative attribute path to package from its prefix.
-   * For catalogs this is the part following `stability`, and for regular flakes
-   * it is the part following `system`.
+   * For regular flakes it is the part following `system`.
    *
    * NOTE: @a flox::AttrPath is an alias of `std::vector<std::string>`.
    */
@@ -421,9 +413,6 @@ public:
    */
   std::optional<std::string> version;
 
-  /** Match a catalog stability. */
-  std::optional<std::string> stability;
-
   /** @brief A dot separated attribut path, or list representation. */
   using Path = std::variant<std::string, flox::AttrPath>;
   /** Match a relative path. */
@@ -615,9 +604,6 @@ struct PkgDescriptorRaw : public pkgdb::PkgDescriptorBase
    * This field must not conflict with the @a path field.
    */
   std::optional<std::string> subtree;
-
-  /** Restricts resolution to a given stability. */
-  std::optional<std::string> stability;
 
   /**
    * Whether pre-releases should be preferred over releases.
