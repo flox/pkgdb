@@ -635,6 +635,15 @@ Contained by:
 
 ## TODO: Common Routines
 
+### `getBaseQueryArgs`
+
+This routine provides a _base_ set of `PkgQueryArgs` based on global settings
+so that they may be used to create individual descriptors' queries.
+
+This is currently only in use by `flox::resolver::UnlockedManifest`, but is
+preferred for any parameter set containing _global_ settings.
+
+
 ### `fillPkgQueryArgs`
 
 This routine appears on most parameter sets and is used to move parameter fields
