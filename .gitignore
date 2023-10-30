@@ -43,3 +43,5 @@ compile_commands.json
 *.gcov
 *.log
 gmon.out
+
+/.direnv/
