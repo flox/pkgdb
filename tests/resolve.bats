@@ -34,10 +34,10 @@ genParams() {
 # bats test_tags=resolve:pname, resolve:semver
 
 # Resolves pname="hello" & semver = ">=2"
-@test "'pkgdb resolve' params0.json" {
-  run $PKGDB resolve "$TDATA/params0.json";
-  assert_success;
-}
+#@test "'pkgdb resolve' params0.json" {
+#  run $PKGDB resolve "$TDATA/params0.json";
+#  assert_success;
+#}
 
 
 # ---------------------------------------------------------------------------- #

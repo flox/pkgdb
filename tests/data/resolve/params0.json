@@ -27,7 +27,6 @@
         , "rev": "feb593b6844a96dd4e17497edaabac009be05709"
         }
       , "subtrees": ["catalog"]
-      , "stabilities": ["stable", "staging", "unstable"]
       }
     }
   , "priority": ["nixpkgs", "floco", "nixpkgs-flox"]

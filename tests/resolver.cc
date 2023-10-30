@@ -53,12 +53,10 @@ static const nlohmann::json commonRegistry = R"( {
       , "rev": "feb593b6844a96dd4e17497edaabac009be05709"
       }
     , "subtrees": ["catalog"]
-    , "stabilities": ["stable"]
     }
   }
   , "defaults": {
     "subtrees": null
-  , "stabilities": ["stable"]
   }
 , "priority": ["nixpkgs", "floco", "nixpkgs-flox"]
 } )"_json;
@@ -92,33 +90,7 @@ test_resolve0()
 
   auto rsl = flox::resolver::resolve_v0( state, descriptor );
 
-  EXPECT_EQ( rsl.size(), std::size_t( 5 ) );
-
-  return true;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-/** @brief Expand number of stabilites and ensure `nixpkgs` is still scanned. */
-bool
-test_resolveStabilities()
-{
-  nlohmann::json registryJSON = commonRegistry;
-  registryJSON["inputs"]["nixpkgs-flox"]["stabilities"]
-    = { "stable", "staging", "unstable" };
-  flox::RegistryRaw registry = registryJSON;
-
-  flox::pkgdb::QueryPreferences preferences = commonPreferences;
-
-  auto state = flox::resolver::ResolverState( registry, preferences );
-
-  flox::resolver::Descriptor descriptor;
-  descriptor.pname = "hello";
-
-  auto rsl = flox::resolver::resolve_v0( state, descriptor );
-
-  EXPECT_EQ( rsl.size(), std::size_t( 13 ) );
+  EXPECT_EQ( rsl.size(), std::size_t( 1 ) );
 
   return true;
 }
@@ -168,7 +140,6 @@ main( int argc, char * argv[] )
   setenv( "PKGDB_CACHEDIR", cacheDir.c_str(), 1 );
 
   RUN_TEST( resolve0 );
-  RUN_TEST( resolveStabilities );
   RUN_TEST( resolveInput );
 
   /* Cleanup the temporary directory. */

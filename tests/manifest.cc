@@ -257,7 +257,6 @@ test_parseManifestDescriptor_path0()
   EXPECT( descriptor.subtree.has_value() );
   EXPECT_EQ( *descriptor.subtree, flox::ST_LEGACY );
   EXPECT( ! descriptor.systems.has_value() );
-  EXPECT( ! descriptor.stability.has_value() );
   EXPECT( descriptor.path.has_value() );
   EXPECT( ( *descriptor.path ) == ( flox::AttrPath { "hello" } ) );
 
@@ -281,7 +280,6 @@ test_parseManifestDescriptor_path1()
   EXPECT( descriptor.subtree.has_value() );
   EXPECT_EQ( *descriptor.subtree, flox::ST_LEGACY );
   EXPECT( ! descriptor.systems.has_value() );
-  EXPECT( ! descriptor.stability.has_value() );
   EXPECT( descriptor.path.has_value() );
   EXPECT( ( *descriptor.path ) == ( flox::AttrPath { "hello" } ) );
 
@@ -305,7 +303,6 @@ test_parseManifestDescriptor_path2()
   EXPECT( descriptor.subtree.has_value() );
   EXPECT_EQ( *descriptor.subtree, flox::ST_LEGACY );
   EXPECT( ! descriptor.systems.has_value() );
-  EXPECT( ! descriptor.stability.has_value() );
   EXPECT( descriptor.path.has_value() );
   EXPECT( ( *descriptor.path ) == ( flox::AttrPath { "hello" } ) );
 
@@ -329,7 +326,6 @@ test_parseManifestDescriptor_path3()
   EXPECT( descriptor.subtree.has_value() );
   EXPECT_EQ( *descriptor.subtree, flox::ST_LEGACY );
   EXPECT( ! descriptor.systems.has_value() );
-  EXPECT( ! descriptor.stability.has_value() );
   EXPECT( descriptor.path.has_value() );
   EXPECT( ( *descriptor.path ) == ( flox::AttrPath { "hello" } ) );
 
@@ -355,7 +351,6 @@ test_parseManifestDescriptor_path4()
   EXPECT( descriptor.systems.has_value() );
   EXPECT( ( *descriptor.systems )
           == ( std::vector<std::string> { "x86_64-linux" } ) );
-  EXPECT( ! descriptor.stability.has_value() );
   EXPECT( descriptor.path.has_value() );
   EXPECT( ( *descriptor.path ) == ( flox::AttrPath { "hello" } ) );
 
@@ -381,8 +376,6 @@ test_parseManifestDescriptor_path5()
   EXPECT( descriptor.systems.has_value() );
   EXPECT( ( *descriptor.systems )
           == ( std::vector<std::string> { "x86_64-linux" } ) );
-  EXPECT( descriptor.stability.has_value() );
-  EXPECT_EQ( *descriptor.stability, "stable" );
   EXPECT( descriptor.path.has_value() );
   EXPECT( ( *descriptor.path ) == ( flox::AttrPath { "hello", "4.2.0" } ) );
 

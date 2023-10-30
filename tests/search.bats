@@ -149,7 +149,6 @@ genParamsNixpkgsFlox() {
 # bats test_tags=search
 
 # Check output fields.
-# NOTE: `stability' is not `null' in catalogs.
 @test "'pkgdb search' emits expected fields" {
   run sh -c "$PKGDB search '$(
     genParams '.systems=["x86_64-linux","x86_64-darwin"]|.query.pname="hello"';
@@ -163,7 +162,6 @@ genParamsNixpkgsFlox() {
   assert_output --partial 'license string';
   assert_output --partial 'pkgSubPath array';
   assert_output --partial 'pname string';
-  assert_output --partial 'stability null';
   assert_output --partial 'subtree string';
   assert_output --partial 'system string';
   assert_output --partial 'unfree boolean';
@@ -245,32 +243,6 @@ genParamsNixpkgsFlox() {
 
 # ---------------------------------------------------------------------------- #
 
-# bats test_tags=search:stabilities, search:pname
-
-# `stabilities' ordering
-@test "'pkgdb search' stabilities order" {
-  run sh -c "$PKGDB search -qq '$( genParamsNixpkgsFlox          \
-    '.registry.inputs["nixpkgs-flox"].stabilities+=["unstable"]
-    |.query.pname|="hello"
-    |.query.version|="2.12.1"';
-  )'|jq -rs 'to_entries|map(
-               ( .key|tostring ) + \" \" + .value.absPath[2]
-             )[]'";
-  assert_success;
-  # catalog.x86_64-linux.stable.hello.2_12_1
-  assert_output --partial '0 stable';
-  # catalog.x86_64-linux.stable.hello.latest
-  assert_output --partial '1 stable';
-  # catalog.x86_64-linux.unstable.hello.2_12_1
-  assert_output --partial '2 unstable';
-  # catalog.x86_64-linux.unstable.hello.latest
-  assert_output --partial '3 unstable';
-  refute_output --partial '4 ';
-}
-
-
-# ---------------------------------------------------------------------------- #
-
 # bats test_tags=search:params, search:params:fallbacks
 
 @test "search-params with empty object" {
@@ -312,10 +284,6 @@ genParamsNixpkgsFlox() {
   run sh -c "$SEARCH_PARAMS '{}'|jq -r '.registry.inputs';";
   assert_success;
   assert_output '{}';
-
-  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.registry.defaults.stabilities';";
-  assert_success;
-  assert_output 'null';
 
   run sh -c "$SEARCH_PARAMS '{}'|jq -r '.registry.defaults.subtrees';";
   assert_success;
