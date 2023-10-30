@@ -51,12 +51,16 @@ jobs:
         echo 'Runner Version' >&2;
         { printf '    bash   version: '; bash   --version|head -n1; } >&2;
         { printf '    nix    version: '; nix    --version; } >&2;
-        NO_WELCOME=: nix develop --extra-experimental-features "nix-command flakes" --no-update-lock-file --command sh -c '
-          echo "";
-          echo "Development Environment Versions";
-          printf "    nix    version: "; nix    --version;
-          printf "    CXX    version: "; $CXX --version|head -n1;
-        ' >&2;
+        export NO_WELCOME=:
+        nix develop \
+          --extra-experimental-features "nix-command flakes" \
+          --no-update-lock-file \
+          --command sh -c '
+            echo "";
+            echo "Development Environment Versions";
+            printf "    nix    version: "; nix    --version;
+            printf "    CXX    version: "; $CXX --version|head -n1;
+          ' >&2;
 
     # This is performed to reduce cpu/memory overhead in tests later.
     # NOTE: Ensure this `rev' is aligned with `<pkgdb>/tests/setup_suite.bats'
@@ -66,7 +70,13 @@ jobs:
         set -o pipefail;
         rev="e8039594435c68eb4f780f3e9bf3972a7399c4b1"
         echo "Priming Eval Cache: nixpkgs/$rev" >&2;
-        NIX_SYSTEM="$(nix eval --raw --impure --expr builtins.currentSystem;)";
+        NIX_SYSTEM="$(
+          nix eval
+            --extra-experimental-features "nix-command flakes"
+            --raw
+            --impure
+            --expr "builtins.currentSystem";
+          )";
         nix flake show \
           --extra-experimental-features "nix-command flakes" \
           --legacy "github:NixOS/nixpkgs/$rev"  \
@@ -119,7 +129,7 @@ jobs:
       uses: "actions/deploy-pages@v2"
 
   nix-build:
-    name: "Build"
+    name: "Nix Build"
     runs-on: "${{ matrix.os }}"
 
     strategy:
