@@ -45,20 +45,11 @@ static const nlohmann::json commonRegistry = R"( {
       }
     , "subtrees": ["packages"]
     }
-  , "nixpkgs-flox": {
-      "from": {
-        "type": "github"
-      , "owner": "flox"
-      , "repo": "nixpkgs-flox"
-      , "rev": "feb593b6844a96dd4e17497edaabac009be05709"
-      }
-    , "subtrees": ["catalog"]
-    }
   }
   , "defaults": {
     "subtrees": null
   }
-, "priority": ["nixpkgs", "floco", "nixpkgs-flox"]
+, "priority": ["nixpkgs", "floco"]
 } )"_json;
 
 static const nlohmann::json commonPreferences = R"( {

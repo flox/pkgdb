@@ -23,17 +23,6 @@
                     "packages"
                 ]
             },
-            "nixpkgs-flox": {
-                "from": {
-                    "type": "github",
-                    "owner": "flox",
-                    "repo": "nixpkgs-flox",
-                    "rev": "feb593b6844a96dd4e17497edaabac009be05709"
-                },
-                "subtrees": [
-                    "catalog"
-                ]
-            },
             "nixpkgs2": {
                 "from": {
                     "id": "nixpkgs2",
@@ -52,8 +41,7 @@
         },
         "priority": [
             "nixpkgs",
-            "floco",
-            "nixpkgs-flox"
+            "floco"
         ]
     }
 }

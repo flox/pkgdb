@@ -680,10 +680,6 @@ test_getPackages1( flox::pkgdb::PkgDb &db )
   clearTables( db );
 
   /* Make a package */
-  row_id stableLinux = db.addOrGetAttrSetId(
-    flox::AttrPath { "catalog", "x86_64-linux", "stable" } );
-  row_id unstableLinux = db.addOrGetAttrSetId(
-    flox::AttrPath { "catalog", "x86_64-linux", "unstable" } );
   row_id packagesLinux
     = db.addOrGetAttrSetId( flox::AttrPath { "packages", "x86_64-linux" } );
   row_id legacyDarwin = db.addOrGetAttrSetId(
@@ -698,15 +694,11 @@ test_getPackages1( flox::pkgdb::PkgDb &db )
     INSERT INTO Packages (
       id, parentId, attrName, name, outputs, descriptionId
     ) VALUES
-      ( 1, :stableLinuxId,    'hello', 'hello', '["out"]', :descriptionId )
-    , ( 2, :unstableLinuxId,  'hello', 'hello', '["out"]', :descriptionId )
-    , ( 3, :packagesLinuxId,  'hello', 'hello', '["out"]', :descriptionId )
-    , ( 4, :legacyDarwinId,   'hello', 'hello', '["out"]', :descriptionId )
-    , ( 5, :packagesDarwinId, 'hello', 'hello', '["out"]', :descriptionId )
+    , ( 1, :packagesLinuxId,  'hello', 'hello', '["out"]', :descriptionId )
+    , ( 2, :legacyDarwinId,   'hello', 'hello', '["out"]', :descriptionId )
+    , ( 3, :packagesDarwinId, 'hello', 'hello', '["out"]', :descriptionId )
   )SQL" );
   cmd.bind( ":descriptionId", static_cast<long long>( desc ) );
-  cmd.bind( ":stableLinuxId", static_cast<long long>( stableLinux ) );
-  cmd.bind( ":unstableLinuxId", static_cast<long long>( unstableLinux ) );
   cmd.bind( ":packagesLinuxId", static_cast<long long>( packagesLinux ) );
   cmd.bind( ":legacyDarwinId", static_cast<long long>( legacyDarwin ) );
   cmd.bind( ":packagesDarwinId", static_cast<long long>( packagesDarwin ) );

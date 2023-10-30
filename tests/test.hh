@@ -65,6 +65,7 @@ runTest( std::string_view name, F f, Args && ... args )
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
+#pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 
 /**
  * @brief Wrap a test routine which returns an exit code, and set a provided
