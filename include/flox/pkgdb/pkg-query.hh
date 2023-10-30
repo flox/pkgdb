@@ -192,7 +192,7 @@ struct PkgQueryArgs : public PkgDescriptorBase
    *         code otherwise.
    */
   void
-  validate() const;
+  check() const;
 
 
 }; /* End struct `PkgQueryArgs' */

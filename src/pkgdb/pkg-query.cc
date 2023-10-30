@@ -34,7 +34,7 @@ PkgDescriptorBase::clear()
 /* -------------------------------------------------------------------------- */
 
 void
-PkgQueryArgs::validate() const
+PkgQueryArgs::check() const
 {
 
   if ( this->name.has_value()
@@ -399,7 +399,7 @@ PkgQuery::init()
   this->clearBuilt();
 
   /* Validate parameters */
-  this->validate();
+  this->check();
 
   this->addSelection( "*" );
 
