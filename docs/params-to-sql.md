@@ -26,6 +26,8 @@ identify common patterns among them.
 
 - Registry : A collection of _flake ref inputs_ assigned _short names_
              or _aliases_ which comprise the pool of package sets to be queried.
+             Not the same as Nix registry, but fucking close. We added
+             additional fields (See [registry](./registry.md)).
 - Descriptor : An abstract description of a dependency by indicating
                _requirements_ to be satisfied.
                These are simply put a collection of user defined filters.

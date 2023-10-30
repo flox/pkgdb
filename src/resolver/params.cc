@@ -114,17 +114,7 @@ PkgDescriptorRaw::fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const
               pqa.systems = std::vector<std::string> { *this->path->at( 1 ) };
             }
 
-          if ( subtree == ST_CATALOG )
-            {
-              if ( this->path->size() < 4 )
-                {
-                  throw InvalidPkgDescriptorException(
-                    "Absolute attribute paths in catalogs must have at "
-                    "least four elements" );
-                }
-              fillRelPath( 3 );
-            }
-          else { fillRelPath( 2 ); }
+          fillRelPath( 2 );
           pqa.subtrees = std::vector<Subtree> { subtree };
         }
       else { fillRelPath( 0 ); }

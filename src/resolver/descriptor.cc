@@ -136,44 +136,16 @@ initManifestDescriptorAbsPath( ManifestDescriptor &          desc,
     }
   desc.subtree = Subtree( *first );
 
-  if ( first.value() == "catalog" )
+  desc.path = AttrPath {};
+  for ( auto itr = glob.begin() + 2; itr != glob.end(); ++itr )
     {
-      if ( glob.size() < 4 )
-        {
-          throw InvalidManifestDescriptorException(
-            "`absPath' must have at least four parts for catalog paths" );
-        }
-      const auto & third = glob.at( 2 );
-      if ( ! third.has_value() )
+      const auto & elem = *itr;
+      if ( ! elem.has_value() )
         {
           throw InvalidManifestDescriptorException(
             "`absPath' may only have a glob as its second element" );
         }
-      desc.path      = AttrPath {};
-      for ( auto itr = glob.begin() + 3; itr != glob.end(); ++itr )
-        {
-          const auto & elem = *itr;
-          if ( ! elem.has_value() )
-            {
-              throw InvalidManifestDescriptorException(
-                "`absPath' may only have a glob as its second element" );
-            }
-          desc.path->emplace_back( *elem );
-        }
-    }
-  else
-    {
-      desc.path = AttrPath {};
-      for ( auto itr = glob.begin() + 2; itr != glob.end(); ++itr )
-        {
-          const auto & elem = *itr;
-          if ( ! elem.has_value() )
-            {
-              throw InvalidManifestDescriptorException(
-                "`absPath' may only have a glob as its second element" );
-            }
-          desc.path->emplace_back( *elem );
-        }
+      desc.path->emplace_back( *elem );
     }
 
   const auto & second = glob.at( 1 );
@@ -266,15 +238,15 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
 void
 ManifestDescriptor::clear()
 {
-  this->name      = std::nullopt;
-  this->optional  = false;
-  this->group     = std::nullopt;
-  this->version   = std::nullopt;
-  this->semver    = std::nullopt;
-  this->subtree   = std::nullopt;
-  this->systems   = std::nullopt;
-  this->path      = std::nullopt;
-  this->input     = std::nullopt;
+  this->name     = std::nullopt;
+  this->optional = false;
+  this->group    = std::nullopt;
+  this->version  = std::nullopt;
+  this->semver   = std::nullopt;
+  this->subtree  = std::nullopt;
+  this->systems  = std::nullopt;
+  this->path     = std::nullopt;
+  this->input    = std::nullopt;
 }
 
 

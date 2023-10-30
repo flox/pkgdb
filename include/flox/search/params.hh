@@ -120,14 +120,6 @@ to_json( nlohmann::json &jto, const SearchQuery &qry );
  *         }
  *       , "subtrees": ["packages"]
  *       }
- *     , "floxpkgs": {
- *         "from": {
- *           "type": "github"
- *         , "owner": "flox"
- *         , "repo": "floxpkgs"
- *         }
- *       , "subtrees": ["catalog"]
- *       }
  *     }
  *   , "defaults": {
  *       "subtrees": null

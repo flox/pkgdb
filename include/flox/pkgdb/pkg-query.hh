@@ -153,7 +153,7 @@ struct PkgQueryArgs : public PkgDescriptorBase
    * Subtrees to search.
    *
    * NOTE: `Subtree` is an enum of top level flake outputs, being one of
-   * `"catalog"`, `"packages"`, or `"legacyPackages"`.
+   * `"packages"` or `"legacyPackages"`.
    */
   std::optional<std::vector<Subtree>> subtrees;
 

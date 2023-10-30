@@ -185,18 +185,12 @@ LEFT OUTER JOIN v_Semvers ON ( Packages.semver = v_Semvers.semver );
 CREATE VIEW IF NOT EXISTS v_PackagesPaths AS SELECT
   Packages.id
 , json_insert( v_AttrPaths.path, '$[#]', Packages.attrName ) AS path
-, json_insert( iif( ( v_AttrPaths.subtree = 'catalog' )
-                  , json_remove( v_AttrPaths.path, '$[2]', '$[1]', '$[0]' )
-                  , json_remove( v_AttrPaths.path, '$[1]', '$[0]' )
-                  )
+, json_insert( json_remove( v_AttrPaths.path, '$[1]', '$[0]' )
              , '$[#]'
              , Packages.attrName
              ) AS relPath
 , ( json_array_length( v_AttrPaths.path ) + 1 ) AS depth
-, iif( v_AttrPaths.subtree = 'catalog'
-     , json_extract( v_AttrPaths.path, '$[#-1]' )
-     , Packages.attrName
-     ) AS pkgAttrName
+, Packages.attrName AS pkgAttrName
 FROM Packages INNER JOIN v_AttrPaths ON ( Packages.parentId = v_AttrPaths.id );
 
 
@@ -205,6 +199,7 @@ CREATE VIEW IF NOT EXISTS v_PackagesSearch AS SELECT
   Packages.id
 , v_AttrPaths.subtree
 , v_AttrPaths.system
+, v_AttrPaths.stability
 , v_PackagesPaths.path
 , v_PackagesPaths.relPath
 , v_PackagesPaths.depth

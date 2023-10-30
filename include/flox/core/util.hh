@@ -250,7 +250,7 @@ inline static const std::vector<std::string> &
 getDefaultSubtrees()
 {
   static const std::vector<std::string> defaultSubtrees
-    = { "catalog", "packages", "legacyPackages" };
+    = { "packages", "legacyPackages" };
   return defaultSubtrees;
 }
 

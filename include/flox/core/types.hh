@@ -45,12 +45,7 @@ using Cursor = nix::ref<nix::eval_cache::AttrCursor>;
 /* -------------------------------------------------------------------------- */
 
 /** @brief A _top level_ key in a `nix` flake */
-enum subtree_type {
-  ST_NONE     = 0,
-  ST_LEGACY   = 1,
-  ST_PACKAGES = 2,
-  ST_CATALOG  = 3
-};
+enum subtree_type { ST_NONE = 0, ST_LEGACY = 1, ST_PACKAGES = 2 };
 
 /**
  * @fn void from_json( const nlohmann::json & j, subtree_type & pdb )
@@ -63,8 +58,7 @@ enum subtree_type {
 NLOHMANN_JSON_SERIALIZE_ENUM( subtree_type,
                               { { ST_NONE, nullptr },
                                 { ST_LEGACY, "legacyPackages" },
-                                { ST_PACKAGES, "packages" },
-                                { ST_CATALOG, "catalog" } } )
+                                { ST_PACKAGES, "packages" } } )
 
 
 /** @brief A strongly typed wrapper over an attribute path _subtree_ name, which
@@ -83,7 +77,6 @@ struct Subtree
   constexpr explicit Subtree( std::string_view str ) noexcept
     : subtree( ( str == "legacyPackages" ) ? ST_LEGACY
                : ( str == "packages" )     ? ST_PACKAGES
-               : ( str == "catalog" )      ? ST_CATALOG
                                            : ST_NONE )
   {}
 
@@ -93,9 +86,8 @@ struct Subtree
   parseSubtree( std::string_view str )
   {
     return Subtree { ( str == "legacyPackages" ) ? ST_LEGACY
-                     : ( str == "packages" )     ? ST_PACKAGES
-                     : ( str == "catalog" )
-                       ? ST_CATALOG
+                     : ( str == "packages" )
+                       ? ST_PACKAGES
                        : throw std::invalid_argument(
                          "Invalid subtree '" + std::string( str ) + "'" ) };
   }
@@ -109,7 +101,6 @@ struct Subtree
       {
         case ST_LEGACY: return "legacyPackages";
         case ST_PACKAGES: return "packages";
-        case ST_CATALOG: return "catalog";
         default: return "ST_NONE";
       }
   }
