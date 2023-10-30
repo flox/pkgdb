@@ -65,7 +65,9 @@ pkgdb_bin_setup() {
     else  # Build
       (
         cd "$REPO_ROOT" >/dev/null 2>&1||return 1;
-        nix develop -c make -j8;
+        nix develop \
+          --extra-experimental-features "nix-command flakes" \
+          --command make -j8;
       );
       PKGDB="$REPO_ROOT/bin/pkgdb";
     fi
@@ -100,7 +102,12 @@ reals_setup() {
 # Lookup system pair recognized by `nix' for this system.
 nix_system_setup() {
   if [[ -z "${NIX_SYSTEM:-}" ]]; then
-    NIX_SYSTEM="$( nix eval --impure --expr builtins.currentSystem --raw; )";
+    NIX_SYSTEM="$(
+      nix eval \
+        --extra-experimental-features "nix-command flakes" \
+        --impure \
+        --expr builtins.currentSystem --raw;
+      )";
   fi
   export NIX_SYSTEM;
 }

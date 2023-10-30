@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - "improve-ci"
+      - "main"
     paths:
       - '**'
       - '!**/README*'
@@ -46,7 +46,7 @@ jobs:
         aws-access-key-id:      "${{ secrets.AWS_ACCESS_KEY_ID }}"
         aws-secret-access-key:  "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
 
-    - name: "Setup"
+    - name: "Show Setup"
       run: |
         echo 'Runner Version' >&2;
         { printf '    bash   version: '; bash   --version|head -n1; } >&2;
@@ -104,7 +104,7 @@ jobs:
           --command make check -j4
 
     - name: "Build Docs"
-      if: github.ref == 'refs/heads/improve-ci'
+      if: github.ref == 'refs/heads/main'
       run: |
         nix develop \
           --extra-experimental-features "nix-command flakes" \
@@ -112,20 +112,20 @@ jobs:
           --command make docs
 
     - name: "Fix permissions"
-      if: github.ref == 'refs/heads/improve-ci'
+      if: github.ref == 'refs/heads/main'
       run: |
         chmod -c -R +rX "docs/" | while read line; do
           echo "::warning title=Invalid file permissions fixed::$line"
         done
 
     - name: "Upload artifact"
-      if: github.ref == 'refs/heads/improve-ci'
+      if: github.ref == 'refs/heads/main'
       uses: "actions/upload-pages-artifact@v2"
       with:
         path: 'docs'
 
     - name: "Deploy to GitHub Pages"
-      if: github.ref == 'refs/heads/improve-ci'
+      if: github.ref == 'refs/heads/main'
       uses: "actions/deploy-pages@v2"
 
   nix-build:
