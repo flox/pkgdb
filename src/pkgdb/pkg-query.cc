@@ -87,15 +87,15 @@ void
 PkgQueryArgs::clear()
 {
   this->PkgDescriptorBase::clear();
-  this->partialMatch       = std::nullopt;
-  this->pnameOrAttrName    = std::nullopt;
-  this->licenses           = std::nullopt;
-  this->allowBroken        = false;
-  this->allowUnfree        = true;
-  this->preferPreReleases  = false;
-  this->subtrees           = std::nullopt;
-  this->systems            = { nix::settings.thisSystem.get() };
-  this->relPath            = std::nullopt;
+  this->partialMatch      = std::nullopt;
+  this->pnameOrAttrName   = std::nullopt;
+  this->licenses          = std::nullopt;
+  this->allowBroken       = false;
+  this->allowUnfree       = true;
+  this->preferPreReleases = false;
+  this->subtrees          = std::nullopt;
+  this->systems           = { nix::settings.thisSystem.get() };
+  this->relPath           = std::nullopt;
 }
 
 
@@ -168,8 +168,7 @@ PkgQuery::initMatch()
        && ( ! this->pnameOrAttrName->empty() ) )
     {
       this->addSelection( "( :pnameOrAttrName = pname ) AS exactPname" );
-      this->addSelection(
-        "( :pnameOrAttrName = attrName ) AS exactAttrName" );
+      this->addSelection( "( :pnameOrAttrName = attrName ) AS exactAttrName" );
       binds.emplace( ":pnameOrAttrName", *this->pnameOrAttrName );
       this->addWhere( "( exactPname OR exactAttrName )" );
     }

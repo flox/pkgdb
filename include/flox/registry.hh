@@ -244,7 +244,7 @@ static_assert( registry_input_factory<RegistryInputFactory> );
  * , "defaults": {
  *     "subtrees": null
  *   }
- * , "priority": ["nixpkgs", "floco", "floxpkgs"]
+ * , "priority": ["nixpkgs", "floco"]
  * }
  * ```
  */

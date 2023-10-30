@@ -63,9 +63,9 @@ void
 to_json( nlohmann::json &jto, const PkgDescriptorRaw &desc )
 {
   pkgdb::to_json( jto, dynamic_cast<const pkgdb::PkgDescriptorBase &>( desc ) );
-  jto["pnameOrAttrName"]    = desc.pnameOrAttrName;
-  jto["preferPreReleases"]  = desc.preferPreReleases;
-  jto["path"]               = desc.path;
+  jto["pnameOrAttrName"]   = desc.pnameOrAttrName;
+  jto["preferPreReleases"] = desc.preferPreReleases;
+  jto["path"]              = desc.path;
 }
 
 

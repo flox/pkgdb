@@ -124,7 +124,7 @@ to_json( nlohmann::json &jto, const SearchQuery &qry );
  *   , "defaults": {
  *       "subtrees": null
  *     }
- *   , "priority": ["nixpkgs", "floco", "floxpkgs"]
+ *   , "priority": ["nixpkgs", "floco"]
  *   }
  * , "systems": ["x86_64-linux"]
  * , "allow":   { "unfree": true, "broken": false, "licenses": ["MIT"] }

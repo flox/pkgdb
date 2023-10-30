@@ -558,8 +558,8 @@ test_PkgQuery2( flox::pkgdb::PkgDb &db )
       qargs,
       std::vector<std::string> { "exactPname", "exactAttrName" } );
     qargs.pnameOrAttrName = std::nullopt;
-    size_t count             = 0;
-    auto   bound             = qry.bind( db.db );
+    size_t count          = 0;
+    auto   bound          = qry.bind( db.db );
     for ( const auto &row : *bound )
       {
         ++count;
@@ -586,8 +586,8 @@ test_PkgQuery2( flox::pkgdb::PkgDb &db )
       qargs,
       std::vector<std::string> { "exactPname", "exactAttrName" } );
     qargs.pnameOrAttrName = std::nullopt;
-    size_t count             = 0;
-    auto   bound             = qry.bind( db.db );
+    size_t count          = 0;
+    auto   bound          = qry.bind( db.db );
     for ( const auto &row : *bound )
       {
         ++count;
