@@ -212,6 +212,31 @@ public:
   std::optional<RegistryRaw>           lockedRegistry;
   std::optional<pkgdb::PkgQueryArgs>   baseQueryArgs;
 
+  // TODO: Handle groups
+  // bool                                                   didGroups = false;
+  // std::unordered_set<std::string>                        ungroupedIds;
+  // std::unordered_map<std::string, std::string>           groupIds;
+
+  /**
+   * @brief A map of _locked_ descriptors organized by their _install ID_,
+   *        and then by `system`.
+   *        For optional packages, or those which are explicitly declared for
+   *        a subset of systems, the value may be `std::nullopt`.
+   */
+  std::unordered_map<std::string,                    /* _install ID_ */
+                     std::unordered_map<std::string, /* system */
+                                        std::optional<ManifestDescriptorRaw>>>
+    lockedDescriptors;
+
+
+private:
+
+  const std::unordered_map<std::string, std::optional<ManifestDescriptorRaw>> &
+  lockDescriptor( const std::string & iid, const ManifestDescriptor & desc );
+
+
+public:
+
   /**
    * @brief Returns the locked @a RegistryRaw from the manifest.
    *
@@ -260,34 +285,18 @@ public:
   addManifestFileArg( argparse::ArgumentParser & parser, bool required = true );
 
   const UnlockedManifest &
-  getUnlockedManifest()
-  {
-    if ( ! this->manifest.has_value() )
-      {
-        this->manifest = UnlockedManifest( this->getManifestPath() );
-      }
-    return *this->manifest;
-  }
+  getUnlockedManifest();
 
   const RegistryRaw &
-  getLockedRegistry()
-  {
-    if ( ! this->lockedRegistry.has_value() )
-      {
-        this->lockedRegistry
-          = this->getUnlockedManifest().getLockedRegistry( this->getStore() );
-      }
-    return *this->lockedRegistry;
-  }
+  getLockedRegistry();
 
   const pkgdb::PkgQueryArgs &
-  getBaseQueryArgs()
+  getBaseQueryArgs();
+
+  const std::unordered_map<std::string, ManifestDescriptor> &
+  getDescriptors()
   {
-    if ( ! this->baseQueryArgs.has_value() )
-      {
-        this->baseQueryArgs = this->getUnlockedManifest().getBaseQueryArgs();
-      }
-    return *this->baseQueryArgs;
+    return this->getUnlockedManifest().getManifestRaw().install;
   }
 
 
