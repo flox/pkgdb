@@ -36,6 +36,7 @@ PkgDescriptorBase::clear()
 void
 PkgQueryArgs::check() const
 {
+
   if ( this->name.has_value()
        && ( this->pname.has_value() || this->version.has_value()
             || this->semver.has_value() ) )
