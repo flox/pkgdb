@@ -101,57 +101,63 @@ resolve_v0( ResolverState &state, const Descriptor &descriptor, bool one )
 
 /* -------------------------------------------------------------------------- */
 
-// void
-// from_json( const nlohmann::json &jfrom, Resolved::Input &pdb )
-// {
-//   if ( ! jfrom.is_object() )
-//     {
-//       std::string aOrAn = jfrom.is_array() ? " an " : " a ";
-//       throw flox::pkgdb::PkgDbException(
-//         "registry input must be an object, but is" + aOrAn
-//         + std::string( jfrom.type_name() ) + '.' );
-//     }
-//   for ( const auto &[key, value] : jfrom.items() )
-//     {
-//       if ( key == "name" )
-//         {
-//           try
-//             {
-//               value.get_to( pdb.name );
-//             }
-//           catch ( nlohmann::json::exception &e )
-//             {
-//               throw flox::pkgdb::PkgDbException(
-//                 "couldn't parse resolved input field '" + key + "'",
-//                 extract_json_errmsg( e ).c_str() );
-//             }
-//         }
-//       else if ( key == "locked" ) { pdb.locked = value; }
-//       else
-//         {
-//           throw flox::pkgdb::PkgDbException( "encountered unrecognized field
-//           '"
-//                                              + key
-//                                              + "' while parsing locked input"
-//                                              );
-//         }
-//     }
-// }
-
-// void
-// to_json( nlohmann::json &jto, const Resolved &pdb )
-// {
-//   jto = { { "name", pdb.name }, { "locked", pdb.locked } };
-// }
-
-
 void
-from_json( const nlohmann::json &jfrom, Resolved::Input &pdb )
+from_json( const nlohmann::json &jfrom, Resolved &resolved )
 {
   if ( ! jfrom.is_object() )
     {
       std::string aOrAn = jfrom.is_array() ? " an " : " a ";
-      throw flox::pkgdb::PkgDbException(
+      throw ParseResolvedException(
+        "resolved installable must be an object, but is" + aOrAn
+        + std::string( jfrom.type_name() ) + '.' );
+    }
+  for ( const auto &[key, value] : jfrom.items() )
+    {
+      if ( key == "input" )
+        {
+          /* Rely on the underlying exception handlers. */
+          value.get_to( resolved.input );
+        }
+      else if ( key == "path" )
+        {
+          try
+            {
+              value.get_to( resolved.path );
+            }
+          catch ( nlohmann::json::exception &e )
+            {
+              throw ParseResolvedException(
+                "couldn't interpret field 'path'",
+                flox::extract_json_errmsg( e ).c_str() );
+            }
+        }
+      else if ( key == "info" ) { resolved.info = value; }
+      else
+        {
+          throw ParseResolvedException(
+            "encountered unrecognized field '" + key
+            + "' while parsing resolved installable" );
+        }
+    }
+}
+
+void
+to_json( nlohmann::json &jto, const Resolved &resolved )
+{
+  jto = { { "input", resolved.input },
+          { "path", resolved.path },
+          {"info",
+          resolved.info }};
+}
+
+
+void
+from_json( const nlohmann::json &jfrom, Resolved::Input &input )
+{
+  if ( ! jfrom.is_object() )
+    {
+      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
+      throw ParseResolvedException(
         "registry input must be an object, but is" + aOrAn
         + std::string( jfrom.type_name() ) + '.' );
     }
@@ -161,19 +167,19 @@ from_json( const nlohmann::json &jfrom, Resolved::Input &pdb )
         {
           try
             {
-              value.get_to( pdb.name );
+              value.get_to( input.name );
             }
           catch ( nlohmann::json::exception &e )
             {
-              throw flox::pkgdb::PkgDbException(
+              throw ParseResolvedException(
                 "couldn't parse resolved input field '" + key + "'",
                 extract_json_errmsg( e ).c_str() );
             }
         }
-      else if ( key == "locked" ) { pdb.locked = value; }
+      else if ( key == "locked" ) { input.locked = value; }
       else
         {
-          throw flox::pkgdb::PkgDbException( "encountered unrecognized field '"
+          throw ParseResolvedException( "encountered unrecognized field '"
                                              + key
                                              + "' while parsing locked input" );
         }
@@ -181,9 +187,9 @@ from_json( const nlohmann::json &jfrom, Resolved::Input &pdb )
 }
 
 void
-to_json( nlohmann::json &jto, const Resolved::Input &pdb )
+to_json( nlohmann::json &jto, const Resolved::Input &input )
 {
-  jto = { { "name", pdb.name }, { "locked", pdb.locked } };
+  jto = { { "name", input.name }, { "locked", input.locked } };
 }
 
 

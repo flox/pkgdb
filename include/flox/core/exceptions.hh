@@ -59,18 +59,20 @@ enum error_category {
   EC_PARSE_QUERY_PARAMS = 111,
   /** Exception parsing @a flox::pkgdb::QueryPreferences from JSON. */
   EC_PARSE_QUERY_PREFERENCES = 112,
+  /** Exception parsing `flox::resolver::Resolved` from JSON. */
+  EC_PARSE_RESOLVED = 113,
   /** Exception parsing @a flox::search::SearchQuery from JSON. */
-  EC_PARSE_SEARCH_QUERY = 113,
+  EC_PARSE_SEARCH_QUERY = 114,
   /** For generic exceptions thrown by `flox::pkgdb::*` classes. */
-  EC_PKG_DB = 114,
+  EC_PKG_DB = 115,
   /** Exceptions thrown by SQLite3. */
-  EC_SQLITE3 = 115,
+  EC_SQLITE3 = 116,
   /** Exception parsing/processing JSON. */
-  EC_JSON = 116,
+  EC_JSON = 117,
   /** Exception converting TOML to JSON. */
-  EC_TOML_TO_JSON = 117,
+  EC_TOML_TO_JSON = 118,
   /** Exception converting YAML to JSON. */
-  EC_YAML_TO_JSON = 118
+  EC_YAML_TO_JSON = 119
 
 }; /* End enum `error_category' */
 
