@@ -190,7 +190,7 @@ CREATE VIEW IF NOT EXISTS v_PackagesPaths AS SELECT
              , Packages.attrName
              ) AS relPath
 , ( json_array_length( v_AttrPaths.path ) + 1 ) AS depth
-, Packages.attrName AS pkgAttrName
+, Packages.attrName AS attrName
 FROM Packages INNER JOIN v_AttrPaths ON ( Packages.parentId = v_AttrPaths.id );
 
 
@@ -205,7 +205,7 @@ CREATE VIEW IF NOT EXISTS v_PackagesSearch AS SELECT
 , Packages.name
 , Packages.attrName
 , Packages.pname
-, v_PackagesPaths.pkgAttrName
+, v_PackagesPaths.attrName
 , Packages.version
 , v_PackagesVersions.versionDate
 , Packages.semver

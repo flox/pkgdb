@@ -46,8 +46,8 @@ SearchParams ::= {
 
 - `query.match` strings are used to test partial matches found in a package's
   `name`, `pname`, or `description` fields as well as partial matches on a
-  calculated column `pkgAttrName`.
-  + `pkgAttrName` is _the last attribute path element_ for `packages` and
+  calculated column `attrName`.
+  + `attrName` is _the last attribute path element_ for `packages` and
      `legacyPackages` subtrees, and _the second to last attribute path element_
      for `catalog` subtrees.
   + Exact matches cause search results to appear before ( higher ) than

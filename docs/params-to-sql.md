@@ -143,14 +143,14 @@ struct PkgQueryArgs : public PkgDescriptorBase
    *   std::optional<std::string> semver;  //< Filter results by version range.
    */
 
-  /** Filter results by partial match on pname, pkgAttrName, or description */
+  /** Filter results by partial match on pname, attrName, or description */
   std::optional<std::string> partialMatch;
 
   /**
-   * Filter results by an exact match on either `pname` or `pkgAttrName`.
+   * Filter results by an exact match on either `pname` or `attrName`.
    * To match just `pname` see @a flox::pkgdb::PkgDescriptorBase.
    */
-  std::optional<std::string> pnameOrPkgAttrName;
+  std::optional<std::string> pnameOrAttrName;
 
   /** 
    * Filter results to those explicitly marked with the given licenses.
@@ -348,7 +348,7 @@ This set of parameters is used by `pkgdb search` in order to support
 
 This is an incredibly lightweight extension of `flox::pkgdb::PkgDescriptorBase`
 which simply adds the ability to filter by a partial match on
-`pname`, `pkgAttrName`, or `description` fields ( using `partialMatch` field
+`pname`, `attrName`, or `description` fields ( using `partialMatch` field
 in `flox::pkgdb::PkgQueryArgs` ).
 It has the following declaration:
 
@@ -371,7 +371,7 @@ struct SearchQuery : public pkgdb::PkgDescriptorBase
    *   std::optional<std::string> semver;
    */
 
-  /** Filter results by partial match on pname, pkgAttrName, or description */
+  /** Filter results by partial match on pname, attrName, or description */
   std::optional<std::string> partialMatch;
   
   // ...<SNIP>...
@@ -406,8 +406,8 @@ struct ManifestDescriptorRaw
 public:
 
   /** 
-   * Match `name`, `pname`, or `pkgAttrName`.
-   * Maps to `flox::pkgdb::PkgQueryArgs::pnameOrPkgAttrName`.
+   * Match `name`, `pname`, or `attrName`.
+   * Maps to `flox::pkgdb::PkgQueryArgs::pnameOrAttrName`.
    */
   std::optional<std::string> name;
 
@@ -592,10 +592,10 @@ struct PkgDescriptorRaw : public pkgdb::PkgDescriptorBase
    */
 
   /**
-   * Filter results by an exact match on either `pname` or `pkgAttrName`.
+   * Filter results by an exact match on either `pname` or `attrName`.
    * To match just `pname` see @a flox::pkgdb::PkgDescriptorBase.
    */
-  std::optional<std::string> pnameOrPkgAttrName;
+  std::optional<std::string> pnameOrAttrName;
 
   /** Restricts resolution to the named registry input. */
   std::optional<std::string> input;

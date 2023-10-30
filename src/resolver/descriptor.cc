@@ -255,8 +255,8 @@ ManifestDescriptor::clear()
 pkgdb::PkgQueryArgs &
 ManifestDescriptor::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 {
-  /* Must exactly match either `pname' or `pkgAttrName'. */
-  if ( this->name.has_value() ) { pqa.pnameOrPkgAttrName = *this->name; }
+  /* Must exactly match either `pname' or `attrName'. */
+  if ( this->name.has_value() ) { pqa.pnameOrAttrName = *this->name; }
 
   if ( this->version.has_value() ) { pqa.version = *this->version; }
   else if ( this->semver.has_value() )

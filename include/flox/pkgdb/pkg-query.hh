@@ -124,14 +124,14 @@ struct PkgQueryArgs : public PkgDescriptorBase
    *   std::optional<std::string> semver;  //< Filter results by version range.
    */
 
-  /** Filter results by partial match on pname, pkgAttrName, or description. */
+  /** Filter results by partial match on pname, attrName, or description. */
   std::optional<std::string> partialMatch;
 
   /**
-   * Filter results by an exact match on either `pname` or `pkgAttrName`.
+   * Filter results by an exact match on either `pname` or `attrName`.
    * To match just `pname` see @a flox::pkgdb::PkgDescriptorBase.
    */
-  std::optional<std::string> pnameOrPkgAttrName;
+  std::optional<std::string> pnameOrAttrName;
 
   /**
    * Filter results to those explicitly marked with the given licenses.

@@ -48,7 +48,7 @@ struct SearchQuery : public pkgdb::PkgDescriptorBase
    *   std::optional<std::string> semver;
    */
 
-  /** Filter results by partial match on pname, pkgAttrName, or description */
+  /** Filter results by partial match on pname, attrName, or description */
   std::optional<std::string> partialMatch;
 
   /** @brief Reset to default state. */

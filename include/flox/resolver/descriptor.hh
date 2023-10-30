@@ -50,8 +50,8 @@ struct ManifestDescriptorRaw
 public:
 
   /**
-   * Match `name`, `pname`, or `pkgAttrName`.
-   * Maps to `flox::pkgdb::PkgQueryArgs::pnameOrPkgAttrName`.
+   * Match `name`, `pname`, or `attrName`.
+   * Maps to `flox::pkgdb::PkgQueryArgs::pnameOrAttrName`.
    */
   std::optional<std::string> name;
 
@@ -138,7 +138,7 @@ struct ManifestDescriptor
 
 public:
 
-  /** Match `name`, `pname`, or `pkgAttrName` */
+  /** Match `name`, `pname`, or `attrName` */
   std::optional<std::string> name;
 
   /** Whether resoution is allowed to fail without producing errors. */
