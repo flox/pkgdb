@@ -1,0 +1,161 @@
+name: "CI"
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "main"
+    paths:
+      - '**'
+      - '!**/README*'
+      - '!**/CONTRIBUTING*'
+  pull_request:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.event.pull_request.event.number || github.sha }}"
+  cancel-in-progress: true
+
+jobs:
+
+  test-and-publish:
+    name: "Test & Publish"
+    runs-on: "${{ matrix.os }}"
+
+    strategy:
+      matrix:
+        os: 
+        - "ubuntu-latest"
+        - "macos-latest"
+
+    steps:
+    - name: "Checkout"
+      uses: "actions/checkout@v3"
+
+    - name: "Install flox"
+      uses: "flox/install-flox-action@main"
+      with:
+        github-access-token:    "${{ secrets.NIX_GIT_TOKEN }}"
+        substituter:            "s3://flox-store"
+        substituter-key:        "${{ secrets.FLOX_STORE_PUBLIC_NIX_SECRET_KEY }}"
+        aws-access-key-id:      "${{ secrets.AWS_ACCESS_KEY_ID }}"
+        aws-secret-access-key:  "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+
+    - name: "Setup"
+      run: |
+        echo 'Runner Version' >&2;
+        { printf '    bash   version: '; bash   --version|head -n1; } >&2;
+        { printf '    nix    version: '; nix    --version; } >&2;
+        NO_WELCOME=: nix develop --extra-experimental-features "nix-command flakes" --no-update-lock-file --command sh -c '
+          echo "";
+          echo "Development Environment Versions";
+          printf "    nix    version: "; nix    --version;
+          printf "    CXX    version: "; $CXX --version|head -n1;
+        ' >&2;
+
+    # This is performed to reduce cpu/memory overhead in tests later.
+    # NOTE: Ensure this `rev' is aligned with `<pkgdb>/tests/setup_suite.bats'
+    - name: "Warm Nix Eval Caches"
+      run: |
+        set -eu;
+        set -o pipefail;
+        rev="e8039594435c68eb4f780f3e9bf3972a7399c4b1"
+        echo "Priming Eval Cache: nixpkgs/$rev" >&2;
+        NIX_SYSTEM="$(nix eval --raw --impure --expr builtins.currentSystem;)";
+        nix flake show \
+          --extra-experimental-features "nix-command flakes" \
+          --legacy "github:NixOS/nixpkgs/$rev"  \
+          --system "$NIX_SYSTEM" >/dev/null;
+
+    - name: "Build"
+      run: |
+        nix develop \
+          --extra-experimental-features "nix-command flakes" \
+          --no-update-lock-file \
+          --command make -j4
+
+    - name: "Build Tests"
+      run: |
+        nix develop \
+          --extra-experimental-features "nix-command flakes" \
+          --no-update-lock-file \
+          --command make tests -j4
+
+    - name: "Run Tests"
+      run: |
+        nix develop \
+          --extra-experimental-features "nix-command flakes" \
+          --no-update-lock-file \
+          --command make check -j4
+
+    - name: "Build Docs"
+      if: github.ref == 'refs/heads/main'
+      run: |
+        nix develop \
+          --extra-experimental-features "nix-command flakes" \
+          --no-update-lock-file \
+          --command make docs
+
+    - name: "Fix permissions"
+      if: github.ref == 'refs/heads/main'
+      run: |
+        chmod -c -R +rX "docs/" | while read line; do
+          echo "::warning title=Invalid file permissions fixed::$line"
+        done
+
+    - name: "Upload artifact"
+      if: github.ref == 'refs/heads/main'
+      uses: "actions/upload-pages-artifact@v2"
+      with:
+        path: 'docs'
+
+    - name: "Deploy to GitHub Pages"
+      if: github.ref == 'refs/heads/main'
+      uses: "actions/deploy-pages@v2"
+
+  nix-build:
+    name: "Build"
+    runs-on: "${{ matrix.os }}"
+
+    strategy:
+      matrix:
+        os: 
+        - "ubuntu-latest"
+        - "macos-latest"
+
+    steps:
+    - name: "Checkout"
+      uses: "actions/checkout@v3"
+
+    - name: "Install flox"
+      uses: "flox/install-flox-action@main"
+      with:
+        github-access-token:    "${{ secrets.NIX_GIT_TOKEN }}"
+        substituter:            "s3://flox-store"
+        substituter-key:        "${{ secrets.FLOX_STORE_PUBLIC_NIX_SECRET_KEY }}"
+        aws-access-key-id:      "${{ secrets.AWS_ACCESS_KEY_ID }}"
+        aws-secret-access-key:  "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+
+    - name: "Check"
+      run: |
+        nix flake check -L \
+          --extra-experimental-features "nix-command flakes" \
+          --no-update-lock-file
+
+    - name: "Build"
+      run: |
+        nix build -L \
+          --extra-experimental-features "nix-command flakes" \
+          --no-update-lock-file
+
+    - name: "Run"
+      run: |
+        nix run . \
+          --extra-experimental-features "nix-command flakes" \
+          --no-update-lock-file \
+            -- --help
