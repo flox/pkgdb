@@ -55,24 +55,26 @@ enum error_category {
   EC_NIX_LOCK_FLAKE = 109,
   /** Exception initializing a @a flox::FlakePackage. */
   EC_PACKAGE_INIT = 110,
+  /** Exception parsing `PkgDescriptorBase` from JSON. */
+  EC_PARSE_PKG_DESCRIPTOR_BASE = 111,
   /** Exception parsing @a flox::pkgdb::QueryParams from JSON. */
-  EC_PARSE_QUERY_PARAMS = 111,
+  EC_PARSE_QUERY_PARAMS = 112,
   /** Exception parsing @a flox::pkgdb::QueryPreferences from JSON. */
-  EC_PARSE_QUERY_PREFERENCES = 112,
+  EC_PARSE_QUERY_PREFERENCES = 113,
   /** Exception parsing `flox::resolver::Resolved` from JSON. */
-  EC_PARSE_RESOLVED = 113,
+  EC_PARSE_RESOLVED = 114,
   /** Exception parsing @a flox::search::SearchQuery from JSON. */
-  EC_PARSE_SEARCH_QUERY = 114,
+  EC_PARSE_SEARCH_QUERY = 115,
   /** For generic exceptions thrown by `flox::pkgdb::*` classes. */
-  EC_PKG_DB = 115,
+  EC_PKG_DB = 116,
   /** Exceptions thrown by SQLite3. */
-  EC_SQLITE3 = 116,
+  EC_SQLITE3 = 117,
   /** Exception parsing/processing JSON. */
-  EC_JSON = 117,
+  EC_JSON = 118,
   /** Exception converting TOML to JSON. */
-  EC_TOML_TO_JSON = 118,
+  EC_TOML_TO_JSON = 119,
   /** Exception converting YAML to JSON. */
-  EC_YAML_TO_JSON = 119
+  EC_YAML_TO_JSON = 120
 
 }; /* End enum `error_category' */
 
