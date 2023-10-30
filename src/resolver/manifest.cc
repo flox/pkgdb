@@ -176,7 +176,7 @@ ManifestFileMixin::lockDescriptor( const std::string        &iid,
   pkgdb::PkgQueryArgs baseArgs = this->getBaseQueryArgs();
 
   /* Iterate over the systems. */
-  for ( const auto & system : this->getSystems() )
+  for ( const auto &system : this->getSystems() )
     {
       /* See if this system is skippable. */
       if ( desc.systems.has_value()
@@ -209,15 +209,14 @@ ManifestFileMixin::lockDescriptor( const std::string        &iid,
       for ( const auto &[name, input] : *this->getPkgDbRegistry() )
         {
           auto rows = query.execute( input->getDbReadOnly()->db );
-          if ( rows.empty() )
-            {
-              continue;
-            }
+          if ( rows.empty() ) { continue; }
 
           found = true;
           ManifestDescriptorRaw lockedDescriptor;
           // TODO: limit attrs to those which are actually required.
           lockedDescriptor.packageRepository = input->getFlakeRef()->toAttrs();
+
+          /* Convert absolute attribute path to `flox::AttrPathGlob'. */
           AttrPathGlob absPath;
           for ( auto &part :
                 input->getDbReadOnly()->getPackagePath( rows.front() ) )

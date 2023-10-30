@@ -149,7 +149,7 @@ initManifestDescriptorAbsPath( ManifestDescriptor &          desc,
           throw InvalidManifestDescriptorException(
             "`absPath' may only have a glob as its second element" );
         }
-      desc.path      = AttrPath {};
+      desc.path = AttrPath {};
       for ( auto itr = glob.begin() + 3; itr != glob.end(); ++itr )
         {
           const auto & elem = *itr;
@@ -266,15 +266,15 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
 void
 ManifestDescriptor::clear()
 {
-  this->name      = std::nullopt;
-  this->optional  = false;
-  this->group     = std::nullopt;
-  this->version   = std::nullopt;
-  this->semver    = std::nullopt;
-  this->subtree   = std::nullopt;
-  this->systems   = std::nullopt;
-  this->path      = std::nullopt;
-  this->input     = std::nullopt;
+  this->name     = std::nullopt;
+  this->optional = false;
+  this->group    = std::nullopt;
+  this->version  = std::nullopt;
+  this->semver   = std::nullopt;
+  this->subtree  = std::nullopt;
+  this->systems  = std::nullopt;
+  this->path     = std::nullopt;
+  this->input    = std::nullopt;
 }
 
 

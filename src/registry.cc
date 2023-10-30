@@ -23,7 +23,7 @@ namespace flox {
 void
 InputPreferences::clear()
 {
-  this->subtrees    = std::nullopt;
+  this->subtrees = std::nullopt;
 }
 
 
@@ -32,7 +32,7 @@ InputPreferences::clear()
 pkgdb::PkgQueryArgs &
 InputPreferences::fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const
 {
-  pqa.subtrees    = this->subtrees;
+  pqa.subtrees = this->subtrees;
   return pqa;
 }
 
@@ -102,12 +102,12 @@ RegistryRaw::fillPkgQueryArgs( const std::string   &input,
   try
     {
       const RegistryInput &minput = this->inputs.at( input );
-      pqa.subtrees    = minput.subtrees.has_value() ? minput.subtrees
-                                                    : this->defaults.subtrees;
+      pqa.subtrees = minput.subtrees.has_value() ? minput.subtrees
+                                                 : this->defaults.subtrees;
     }
   catch ( ... )
     {
-      pqa.subtrees    = this->defaults.subtrees;
+      pqa.subtrees = this->defaults.subtrees;
     }
   return pqa;
 }
@@ -174,8 +174,7 @@ FloxFlakeInput::getSubtrees()
 RegistryInput
 FloxFlakeInput::getLockedInput()
 {
-  return { this->getSubtrees(),
-           this->getFlake()->lockedFlake.flake.lockedRef };
+  return { this->getSubtrees(), this->getFlake()->lockedFlake.flake.lockedRef };
 }
 
 

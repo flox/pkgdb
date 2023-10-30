@@ -229,7 +229,7 @@ public:
     lockedDescriptors;
 
 
-private:
+protected:
 
   const std::unordered_map<std::string, std::optional<ManifestDescriptorRaw>> &
   lockDescriptor( const std::string & iid, const ManifestDescriptor & desc );
