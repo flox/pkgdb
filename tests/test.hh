@@ -63,6 +63,9 @@ runTest( std::string_view name, F f, Args && ... args )
 
 /* -------------------------------------------------------------------------- */
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
+
 /**
  * @brief Wrap a test routine which returns an exit code, and set a provided
  *        variable to the resulting code on failure.
@@ -82,6 +85,8 @@ runTest( std::string_view name, F f, Args && ... args )
                        );                                         \
     if ( _exitCode != EXIT_SUCCESS ) { _EXIT_CODE = _exitCode; }  \
   }
+
+#pragma clang diagnostic pop
 
 
 /* -------------------------------------------------------------------------- */
