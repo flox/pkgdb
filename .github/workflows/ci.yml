@@ -71,10 +71,10 @@ jobs:
         rev="e8039594435c68eb4f780f3e9bf3972a7399c4b1"
         echo "Priming Eval Cache: nixpkgs/$rev" >&2;
         NIX_SYSTEM="$(
-          nix eval
-            --extra-experimental-features "nix-command flakes"
-            --raw
-            --impure
+          nix eval \
+            --extra-experimental-features "nix-command flakes" \
+            --raw \
+            --impure \
             --expr "builtins.currentSystem";
           )";
         nix flake show \
