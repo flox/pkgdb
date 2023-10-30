@@ -12,7 +12,6 @@ subtrees = [ "legacyPackages" ]
 
 [registry.inputs.nixpkgs-flox]
 subtrees = [ "catalog" ]
-stabilities = [ "stable" ]
 
   [registry.inputs.nixpkgs-flox.from]
   type = "github"

@@ -117,18 +117,6 @@ public:
   }
 
   /**
-   * @return For non-catalog packages `std::nullopt`, otherwise the catalog
-   *         stability the package resides in, being one of `stable`,
-   *         `staging`, or `unstable`.
-   */
-  virtual std::optional<std::string>
-  getStability() const
-  {
-    if ( this->getSubtreeType() != ST_CATALOG ) { return std::nullopt; }
-    return this->getPathStrs().at( 2 );
-  }
-
-  /**
    * @return The parsed "package name" prefix of @a this package's
    *         `name` field.
    */

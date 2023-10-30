@@ -161,15 +161,7 @@ struct PkgQueryArgs : public PkgDescriptorBase
   std::vector<std::string> systems = { nix::settings.thisSystem.get() };
 
   /**
-   * Stabilities to search ( if any ).
-   *
-   * NOTE: Stabilities must be one of `"stable"`, `"staging"`, or `"unstable"`.
-   */
-  std::optional<std::vector<std::string>> stabilities;
-
-  /**
    * Relative attribute path to package from its prefix.
-   * For catalogs this is the part following `stability`, and for regular flakes
    * it is the part following `system`.
    *
    * NOTE: @a flox::AttrPath is an alias of `std::vector<std::string>`.
@@ -185,7 +177,6 @@ struct PkgQueryArgs : public PkgDescriptorBase
    *        @a flox::pkgdb::InvalidPkgQueryArgs exception if they are invalid.
    *
    * Make sure `systems` are valid systems.
-   * Make sure `stabilities` are valid stabilities.
    * Make sure `name` is not set when `pname`, `version`, or `semver` are set.
    * Make sure `version` is not set when `semver` is set.
    * @return `std::nullopt` iff the above conditions are met, an error
@@ -299,13 +290,6 @@ private:
    */
   void
   initSystems();
-
-  /**
-   * @brief A helper of @a init() which handles
-   *        `stabilities` filtering/ranking.
-   */
-  void
-  initStabilities();
 
   /** @brief A helper of @a init() which constructs the `ORDER BY` block. */
   void

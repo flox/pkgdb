@@ -72,9 +72,6 @@ struct PkgDescriptorRaw : public pkgdb::PkgDescriptorBase
    */
   std::optional<std::string> subtree;
 
-  /** Restricts resolution to a given stability. */
-  std::optional<std::string> stability;
-
   /**
    * Whether pre-releases should be preferred over releases.
    *

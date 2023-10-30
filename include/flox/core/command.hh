@@ -80,8 +80,6 @@ public:
   argparse::Argument &
   addSubtreeArg( argparse::ArgumentParser & parser );
   argparse::Argument &
-  addStabilityArg( argparse::ArgumentParser & parser );
-  argparse::Argument &
   addFlakeRefArg( argparse::ArgumentParser & parser );
 
   /**
@@ -109,7 +107,6 @@ struct AttrPathMixin
    * @brief Sets the attribute path to be scraped.
    *
    * If no system is given use the current system.
-   * If we're searching a catalog and no stability is given, use "stable".
    */
   argparse::Argument &
   addAttrPathArgs( argparse::ArgumentParser & parser );
@@ -119,7 +116,6 @@ struct AttrPathMixin
    *
    * If `attrPath` is empty use, `packages.<SYTEM>`.
    * If `attrPath` is one element then add "current system" as `<SYSTEM>`.
-   * If `attrPath` is a catalog with no stability use `stable`.
    */
   void
   fixupAttrPath();

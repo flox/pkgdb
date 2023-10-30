@@ -136,12 +136,6 @@ initManifestDescriptorAbsPath( ManifestDescriptor &          desc,
     }
   desc.subtree = Subtree( *first );
 
-  if ( raw.stability.has_value() && ( first.value() != "catalog" ) )
-    {
-      throw InvalidManifestDescriptorException(
-        "`stability' cannot be used with non-catalog paths" );
-    }
-
   if ( first.value() == "catalog" )
     {
       if ( glob.size() < 4 )
@@ -155,7 +149,6 @@ initManifestDescriptorAbsPath( ManifestDescriptor &          desc,
           throw InvalidManifestDescriptorException(
             "`absPath' may only have a glob as its second element" );
         }
-      desc.stability = *third;
       desc.path      = AttrPath {};
       for ( auto itr = glob.begin() + 3; itr != glob.end(); ++itr )
         {
@@ -215,11 +208,6 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
   if ( raw.absPath.has_value() )
     {
       initManifestDescriptorAbsPath( *this, raw );
-    }
-  else if ( raw.stability.has_value() )
-    {
-      this->subtree   = Subtree( "catalog" );
-      this->stability = raw.stability;
     }
 
   /* Only set if it wasn't handled by `absPath`. */
@@ -285,7 +273,6 @@ ManifestDescriptor::clear()
   this->semver    = std::nullopt;
   this->subtree   = std::nullopt;
   this->systems   = std::nullopt;
-  this->stability = std::nullopt;
   this->path      = std::nullopt;
   this->input     = std::nullopt;
 }
@@ -318,11 +305,6 @@ ManifestDescriptor::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
     }
 
   if ( this->systems.has_value() ) { pqa.systems = *this->systems; }
-
-  if ( this->stability.has_value() )
-    {
-      pqa.stabilities = std::vector<std::string> { *this->stability };
-    }
 
   pqa.relPath = this->path;
 

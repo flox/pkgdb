@@ -95,7 +95,6 @@ PkgQueryArgs::clear()
   this->preferPreReleases  = false;
   this->subtrees           = std::nullopt;
   this->systems            = { nix::settings.thisSystem.get() };
-  this->stabilities        = std::nullopt;
   this->relPath            = std::nullopt;
 }
 
@@ -297,49 +296,6 @@ PkgQuery::initSystems()
 /* -------------------------------------------------------------------------- */
 
 void
-PkgQuery::initStabilities()
-{
-  /* Handle `stabilities' filtering. */
-  if ( this->stabilities.has_value() )
-    {
-      std::stringstream cond;
-      cond << "( stability IS NULL ) OR ( stability ";
-      addIn( cond, *this->stabilities );
-      cond << " )";
-      this->addWhere( cond.str() );
-      if ( 1 < this->stabilities->size() )
-        {
-          size_t            idx = 0;
-          std::stringstream rank;
-          rank << "iif( ( stability IS NULL ), NULL, ";
-          for ( const auto & stability : *this->stabilities )
-            {
-              rank << "iif( ( stability = '" << stability << "' ), " << idx;
-              rank << ", ";
-              ++idx;
-            }
-          rank << idx;
-          for ( size_t i = 0; i < idx; ++i ) { rank << " )"; }
-          rank << " ) AS stabilitiesRank";
-          this->addSelection( rank.str() );
-        }
-      else
-        {
-          /* Add a bogus rank so `ORDER BY stabilitiesRank' works. */
-          this->addSelection( "0 AS stabilitiesRank" );
-        }
-    }
-  else
-    {
-      /* Add a bogus rank so `ORDER BY stabilitiesRank' works. */
-      this->addSelection( "0 AS stabilitiesRank" );
-    }
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-void
 PkgQuery::initOrderBy()
 {
   /* Establish ordering. */
@@ -354,7 +310,6 @@ PkgQuery::initOrderBy()
 
   , subtreesRank ASC
   , systemsRank ASC
-  , stabilitiesRank ASC NULLS LAST
   , pname ASC
   , versionType ASC
   )SQL" );
@@ -464,7 +419,6 @@ PkgQuery::init()
 
   this->initSubtrees();
   this->initSystems();
-  this->initStabilities();
   this->initOrderBy();
 }
 

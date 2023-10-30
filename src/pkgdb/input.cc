@@ -156,11 +156,7 @@ PkgDbInput::scrapePrefix( const flox::AttrPath & prefix )
 void
 PkgDbInput::scrapeSystems( const std::vector<std::string> & systems )
 {
-  /* Set fallbacks */
-  std::vector<std::string> stabilities
-    = this->stabilities.value_or( std::vector<std::string> { "stable" } );
-
-  /* Loop and scrape over `subtrees', `systems', and `stabilities'. */
+  /* Loop and scrape over `subtrees' and `systems'. */
   for ( const auto & subtree : this->getSubtrees() )
     {
       flox::AttrPath prefix
@@ -168,16 +164,9 @@ PkgDbInput::scrapeSystems( const std::vector<std::string> & systems )
       for ( const auto & system : systems )
         {
           prefix.emplace_back( system );
-          if ( subtree != ST_CATALOG ) { this->scrapePrefix( prefix ); }
-          else
-            {
-              for ( const auto & stability : stabilities )
-                {
-                  prefix.emplace_back( stability );
-                  this->scrapePrefix( prefix );
-                  prefix.pop_back();
-                }
-            }
+          if ( subtree != ST_CATALOG ) {
+            this->scrapePrefix( prefix );
+          }
           prefix.pop_back();
         }
     }

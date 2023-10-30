@@ -32,17 +32,11 @@
                 },
                 "subtrees": [
                     "catalog"
-                ],
-                "stabilities": [
-                    "stable"
                 ]
             }
         },
         "defaults": {
-            "subtrees": null,
-            "stabilities": [
-                "stable"
-            ]
+            "subtrees": null
         },
         "priority": [
             "nixpkgs",

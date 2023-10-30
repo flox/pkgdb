@@ -255,16 +255,6 @@ getDefaultSubtrees()
 }
 
 
-/** @brief Catalog stabilities to resolve/search in. */
-inline static const std::vector<std::string> &
-getDefaultCatalogStabilities()
-{
-  static const std::vector<std::string> defaultCatalogStabilities
-    = { "stable", "staging", "unstable" };
-  return defaultCatalogStabilities;
-}
-
-
 /* -------------------------------------------------------------------------- */
 
 /**
