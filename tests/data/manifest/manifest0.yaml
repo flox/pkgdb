@@ -16,7 +16,6 @@ registry:
         repo: nixpkgs-flox
         rev: feb593b6844a96dd4e17497edaabac009be05709
       subtrees: ["catalog"]
-      stabilities: ["stable"]
 
     floco:
       from:

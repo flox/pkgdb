@@ -9,7 +9,6 @@
         , "rev": "e8039594435c68eb4f780f3e9bf3972a7399c4b1"
         }
       , "subtrees": ["legacyPackages"]
-      , "stabilities": ["stable"]
       }
     , "nixpkgs-flox": {
         "from": {
@@ -19,7 +18,6 @@
         , "rev": "feb593b6844a96dd4e17497edaabac009be05709"
         }
       , "subtrees": ["catalog"]
-      , "stabilities": ["stable", "staging"]
       }
     , "floco": {
         "from": {
@@ -29,7 +27,6 @@
         , "rev": "1e84b4b16bba5746e1195fa3a4d8addaaf2d9ef4"
         }
         , "subtrees": ["packages"]
-        , "stabilities": ["stable"]
       }
     , "floxpkgs": {
         "from": {
@@ -39,12 +36,10 @@
         , "rev": "bce319c5b00e7b6bbe795bdd53f050ce63e01ad2"
         }
       , "subtrees": ["catalog"]
-      , "stabilities": ["stable"]
       }
     }
   , "defaults": {
       "subtrees": ["packages"]
-    , "stabilities": ["stable"]
     }
   , "priority": ["nixpkgs", "nixpkgs-flox", "floco", "floxpkgs"]
   }

@@ -110,12 +110,11 @@ static const char * sql_views = R"SQL(
 
 -- A JSON list form of the _attribute path_ to an `AttrSets` row.
 CREATE VIEW IF NOT EXISTS v_AttrPaths AS
-  WITH Tree ( id, parent, attrName, subtree, system, stability, path ) AS
+  WITH Tree ( id, parent, attrName, subtree, system, path ) AS
   (
     SELECT id, parent, attrName
          , attrName                     AS subtree
          , NULL                         AS system
-         , NULL                         AS stability
          , ( '["' || attrName || '"]' ) AS path
     FROM AttrSets WHERE ( parent = 0 )
     UNION ALL SELECT O.id, O.parent
@@ -123,14 +122,6 @@ CREATE VIEW IF NOT EXISTS v_AttrPaths AS
                    , Parent.subtree
                    , iif( ( Parent.system IS NULL ), O.attrName, Parent.system )
                      AS system
-                   , iif( ( Parent.stability IS NOT NULL )
-                        , Parent.stability
-                        , iif( ( Parent.system IS NULL ) OR
-                               ( Parent.subtree != 'catalog' )
-                             , NULL
-                             , O.attrName
-                             )
-                        ) AS stability
                    , json_insert( Parent.path, '$[#]', O.attrName ) AS path
     FROM AttrSets O INNER JOIN Tree as Parent ON ( Parent.id = O.parent )
   ) SELECT * FROM Tree;
@@ -214,7 +205,6 @@ CREATE VIEW IF NOT EXISTS v_PackagesSearch AS SELECT
   Packages.id
 , v_AttrPaths.subtree
 , v_AttrPaths.system
-, v_AttrPaths.stability
 , v_PackagesPaths.path
 , v_PackagesPaths.relPath
 , v_PackagesPaths.depth

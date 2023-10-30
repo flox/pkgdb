@@ -40,21 +40,6 @@ resolve_v0( ResolverState & state, const Descriptor & descriptor, bool one )
         }
       auto args = state.getPkgQueryArgs( name );
 
-      if ( descriptor.stability.has_value() )
-        {
-          /* If the input lacks this stability, skip. */
-          if ( ( args.stabilities.has_value() )
-               && ( std::find( args.stabilities->begin(),
-                               args.stabilities->end(),
-                               *descriptor.stability )
-                    == args.stabilities->end() ) )
-            {
-              continue;
-            }
-          /* Otherwise, force catalog resolution. */
-          args.subtrees = std::vector<Subtree> { ST_CATALOG };
-        }
-
       /* If the input lacks the subtree we need then skip. */
       if ( args.subtrees.has_value() && ( descriptor.subtree.has_value() )
            && ( std::find( args.subtrees->begin(),

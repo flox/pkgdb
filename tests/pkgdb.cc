@@ -672,7 +672,7 @@ test_getPackages0( flox::pkgdb::PkgDb &db )
 /* -------------------------------------------------------------------------- */
 
 /**
- * Tests `getPackages', particularly `stability', `subtree`, and
+ * Tests `getPackages', particularly subtree`, and
  * `system` ordering. */
 bool
 test_getPackages1( flox::pkgdb::PkgDb &db )
@@ -743,19 +743,6 @@ test_getPackages1( flox::pkgdb::PkgDb &db )
     EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 5, 3 } ) );
     qargs.systems  = std::vector<std::string> {};
     qargs.subtrees = std::nullopt;
-  }
-
-  /* Test `stabilities` ordering */
-  {
-    qargs.subtrees    = std::vector<flox::Subtree> { flox::ST_CATALOG };
-    qargs.systems     = std::vector<std::string> { "x86_64-linux" };
-    qargs.stabilities = std::vector<std::string> { "stable", "unstable" };
-    EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 1, 2 } ) );
-    qargs.stabilities = std::vector<std::string> { "unstable", "stable" };
-    EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 2, 1 } ) );
-    qargs.stabilities = std::nullopt;
-    qargs.systems     = std::vector<std::string> {};
-    qargs.subtrees    = std::nullopt;
   }
 
   return true;

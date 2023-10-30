@@ -50,7 +50,7 @@ genParams() {
     genParams '.query.pname|="hello"';
   )' 2>/dev/null|jq -r 'length';";
   assert_success;
-  assert_output 13;
+  assert_output 1;
 }
 
 

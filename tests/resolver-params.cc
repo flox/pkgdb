@@ -31,11 +31,6 @@ printInput( const auto &pair )
   const flox::RegistryInput &params = pair.second;
   std::cout << "    " << name << std::endl
             << "      subtrees: " << nlohmann::json( params.subtrees ).dump()
-            << std::endl
-            << "      stabilities: "
-            << nlohmann::json(
-                 params.stabilities.value_or( std::vector<std::string> {} ) )
-                 .dump()
             << std::endl;
 }
 
@@ -76,7 +71,6 @@ main( int argc, char *argv[] )
               , "repo": "nixpkgs-flox"
               }
             , "subtrees": ["catalog"]
-            , "stabilities": ["stable", "staging", "unstable"]
             }
           }
         , "priority": ["nixpkgs", "floco", "nixpkgs-flox"]

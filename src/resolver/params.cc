@@ -28,7 +28,6 @@ PkgDescriptorRaw::clear()
   this->input             = std::nullopt;
   this->path              = std::nullopt;
   this->subtree           = std::nullopt;
-  this->stability         = std::nullopt;
   this->preferPreReleases = std::nullopt;
 }
 
@@ -98,7 +97,7 @@ PkgDescriptorRaw::fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const
                         std::back_inserter( relPath ),
                         []( const auto &s ) { return *s; } );
       };
-      /* If path is absolute set `subtree', `systems', and `stabilities'. */
+      /* If path is absolute set `subtree' and `systems'. */
       if ( std::find( getDefaultSubtrees().begin(),
                       getDefaultSubtrees().end(),
                       this->path->front() )
@@ -123,8 +122,6 @@ PkgDescriptorRaw::fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const
                     "Absolute attribute paths in catalogs must have at "
                     "least four elements" );
                 }
-              pqa.stabilities
-                = std::vector<std::string> { *this->path->at( 2 ) };
               fillRelPath( 3 );
             }
           else { fillRelPath( 2 ); }

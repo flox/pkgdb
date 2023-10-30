@@ -43,22 +43,13 @@ struct InputPreferences
    */
   std::optional<std::vector<Subtree>> subtrees;
 
-  /**
-   * Ordered list of stabilities to be searched.
-   * Catalog results will be grouped by stability in the order they
-   * appear here.
-   */
-  std::optional<std::vector<std::string>> stabilities;
-
-
   /* Copy/Move base class boilerplate */
   InputPreferences()                           = default;
   InputPreferences( const InputPreferences & ) = default;
   InputPreferences( InputPreferences && )      = default;
   InputPreferences(
-    const std::optional<std::vector<Subtree>> &     subtrees,
-    const std::optional<std::vector<std::string>> & stabilities )
-    : subtrees( subtrees ), stabilities( stabilities )
+    const std::optional<std::vector<Subtree>> &     subtrees)
+    : subtrees( subtrees )
   {}
 
   virtual ~InputPreferences() = default;
@@ -101,8 +92,7 @@ struct InputPreferences
  */
 /* Generate to_json/from_json functions. */
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT( InputPreferences,
-                                                 subtrees,
-                                                 stabilities );
+                                                 subtrees );
 
 
 /* -------------------------------------------------------------------------- */
@@ -128,7 +118,6 @@ struct RegistryInput : public InputPreferences
 
   /* From `InputPreferences':
    *   std::optional<std::vector<Subtree>>     subtrees;
-   *   std::optional<std::vector<std::string>> stabilities;
    */
 
   std::shared_ptr<nix::FlakeRef> from; /**< A parsed flake reference. */
@@ -136,9 +125,8 @@ struct RegistryInput : public InputPreferences
   RegistryInput() = default;
 
   RegistryInput( const std::optional<std::vector<Subtree>> &     subtrees,
-                 const std::optional<std::vector<std::string>> & stabilities,
                  const nix::FlakeRef &                           from )
-    : InputPreferences( subtrees, stabilities )
+    : InputPreferences( subtrees )
     , from( std::make_shared<nix::FlakeRef>( from ) )
   {}
 
@@ -261,12 +249,10 @@ static_assert( registry_input_factory<RegistryInputFactory> );
  *       , "repo": "floxpkgs"
  *       }
  *     , "subtrees": ["catalog"]
- *     , "stabilities": ["stable"]
  *     }
  *   }
  * , "defaults": {
  *     "subtrees": null
- *   , "stabilities": ["stable"]
  *   }
  * , "priority": ["nixpkgs", "floco", "floxpkgs"]
  * }
@@ -437,10 +423,6 @@ public:
           {
             input.subtrees = this->registryRaw.defaults.subtrees;
           }
-        if ( ! input.stabilities.has_value() )
-          {
-            input.stabilities = this->registryRaw.defaults.stabilities;
-          }
 
         /* Construct the input */
         this->inputs.emplace_back(
@@ -579,7 +561,6 @@ class FloxFlakeInput : public RegistryInput
   /* From `RegistryInput':
    *   public:
    *     std::optional<std::vector<Subtree>>     subtrees;
-   *     std::optional<std::vector<std::string>> stabilities;
    *     std::shared_ptr<nix::FlakeRef>          from;
    */
 
