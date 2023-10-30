@@ -97,6 +97,18 @@ concept pkg_descriptor_typename = std::derived_from<T, PkgDescriptorBase>;
 /* -------------------------------------------------------------------------- */
 
 /**
+ * @class flox::pkgdb::InvalidPkgQueryArg
+ * @brief Indicates invalid arguments were set in a
+ *        @a flox::resolver::PkgQueryArgs struct.
+ */
+FLOX_DEFINE_EXCEPTION( InvalidPkgQueryArg,
+                       EC_INVALID_PKG_QUERY_ARG,
+                       "invalid package query argument" )
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
  * @brief Collection of query parameters used to lookup packages in a database.
  *
  * These use a combination of SQL statements and post processing with
@@ -106,13 +118,13 @@ struct PkgQueryArgs : public PkgDescriptorBase
 {
 
   /* From `PkgDescriptorBase':
-   *   std::optional<std::string> name;
-   *   std::optional<std::string> pname;
-   *   std::optional<std::string> version;
-   *   std::optional<std::string> semver;
+   *   std::optional<std::string> name;    //< Filter results by exact `name`.
+   *   std::optional<std::string> pname;   //< Filter results by exact `pname`.
+   *   std::optional<std::string> version; //< Filter results by exact version.
+   *   std::optional<std::string> semver;  //< Filter results by version range.
    */
 
-  /** Filter results by partial match on pname, pkgAttrName, or description */
+  /** Filter results by partial match on pname, pkgAttrName, or description. */
   std::optional<std::string> partialMatch;
 
   /**
@@ -121,7 +133,11 @@ struct PkgQueryArgs : public PkgDescriptorBase
    */
   std::optional<std::string> pnameOrPkgAttrName;
 
-  /** Filter results to those explicitly marked with the given licenses. */
+  /**
+   * Filter results to those explicitly marked with the given licenses.
+   *
+   * NOTE: License strings should be SPDX Ids ( short names ).
+   */
   std::optional<std::vector<std::string>> licenses;
 
   /** Whether to include packages which are explicitly marked `broken`. */
@@ -133,88 +149,40 @@ struct PkgQueryArgs : public PkgDescriptorBase
   /** Whether pre-release versions should be ordered before releases. */
   bool preferPreReleases = false;
 
-  /** Subtrees to search. */
+  /**
+   * Subtrees to search.
+   *
+   * NOTE: `Subtree` is an enum of top level flake outputs, being one of
+   * `"catalog"`, `"packages"`, or `"legacyPackages"`.
+   */
   std::optional<std::vector<Subtree>> subtrees;
 
-  /** Systems to search */
+  /** Systems to search. Defaults to the current system. */
   std::vector<std::string> systems = { nix::settings.thisSystem.get() };
 
-  /** Stabilities to search ( if any ) */
+  /**
+   * Stabilities to search ( if any ).
+   *
+   * NOTE: Stabilities must be one of `"stable"`, `"staging"`, or `"unstable"`.
+   */
   std::optional<std::vector<std::string>> stabilities;
 
   /**
    * Relative attribute path to package from its prefix.
    * For catalogs this is the part following `stability`, and for regular flakes
    * it is the part following `system`.
+   *
+   * NOTE: @a flox::AttrPath is an alias of `std::vector<std::string>`.
    */
   std::optional<flox::AttrPath> relPath;
-
-
-  /** @brief Errors concerning validity of package query parameters. */
-  struct InvalidPkgQueryArgException : public flox::FloxException
-  {
-
-  public:
-
-    enum error_code {
-      /** Name/{pname,version,semver} are mutually exclusive */
-      PQEC_MIX_NAME = 2
-      /** Version/semver are mutually exclusive */
-      ,
-      PQEC_MIX_VERSION_SEMVER = 3,
-      PQEC_INVALID_SEMVER     = 4 /**< Semver Parse Error */
-      ,
-      PQEC_INVALID_LICENSE = 5 /**< License has invalid character */
-      ,
-      PQEC_INVALID_SUBTREE = 6 /**< Unrecognized subtree */
-      ,
-      PQEC_CONFLICTING_SUBTREE = 7 /**< Conflicting subtree/stability */
-      ,
-      PQEC_INVALID_SYSTEM = 8 /**< Unrecognized/unsupported system */
-      ,
-      PQEC_INVALID_STABILITY = 9 /**< Unrecognized stability */
-      ,
-      PQEC_INVALID_MATCH_STYLE = 10 /**< `match` without `matchStyle` */
-    } errorCode;
-
-
-  private:
-
-    static std::string
-    errorMessage( const error_code & ecode );
-
-
-  public:
-
-    explicit InvalidPkgQueryArgException( const error_code & ecode )
-      : flox::FloxException(
-        "encountered an error processing query arguments:",
-        InvalidPkgQueryArgException::errorMessage( ecode ) )
-      , errorCode( ecode )
-    {}
-
-    [[nodiscard]] flox::error_category
-    getErrorCode() const noexcept override
-    {
-      return EC_INVALID_PKG_QUERY_ARG;
-    }
-
-    [[nodiscard]] std::string_view
-    getCategoryMessage() const noexcept override
-    {
-      return "encountered an error processing query arguments";
-    }
-
-
-  }; /* End struct `InvalidPkgQueryArgException' */
-
 
   /** @brief Reset argset to its _default_ state. */
   void
   clear() override;
 
   /**
-   * @brief Sanity check parameters.
+   * @brief Sanity check parameters throwing a
+   *        @a flox::pkgdb::InvalidPkgQueryArgs exception if they are invalid.
    *
    * Make sure `systems` are valid systems.
    * Make sure `stabilities` are valid stabilities.
@@ -223,8 +191,9 @@ struct PkgQueryArgs : public PkgDescriptorBase
    * @return `std::nullopt` iff the above conditions are met, an error
    *         code otherwise.
    */
-  [[nodiscard]] std::optional<InvalidPkgQueryArgException::error_code>
-  validate() const;
+  void
+  check() const;
+
 
 }; /* End struct `PkgQueryArgs' */
 

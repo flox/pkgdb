@@ -8,11 +8,27 @@
  *
  * -------------------------------------------------------------------------- */
 
-/* Provides inline definitions of `allocValue', and `forceAttrs'. */
-#include <nix/eval-inline.hh>
+#include <assert.h>
+#include <exception>
+#include <functional>
+#include <memory>
+#include <nix/attr-set.hh>
+#include <nix/config.hh>
+#include <nix/eval-cache.hh>
+#include <nix/eval-inline.hh> /**< for inline `allocValue', and `forceAttrs'. */
+#include <nix/eval.hh>
+#include <nix/flake/flake.hh>
+#include <nix/flake/flakeref.hh>
+#include <nix/nixexpr.hh>
+#include <nix/ref.hh>
+#include <nix/symbol-table.hh>
+#include <nix/util.hh>
+#include <nix/value.hh>
+#include <optional>
+#include <string>
+#include <vector>
 
-#include "flox/core/exceptions.hh"
-#include "flox/core/util.hh"
+#include "flox/core/types.hh"
 #include "flox/flox-flake.hh"
 
 
