@@ -636,7 +636,54 @@ Contained by:
 ## TODO: Common Routines
 
 ### `fillPkgQueryArgs`
+
+This routine appears on most parameter sets and is used to move parameter fields
+into a `PkgQueryArgs` struct.
+
+In some cases these are implemented such that they will not override existing
+values or in other cases they will handle various fallbacks if a value is unset.
+
+
 ### `to_json` and `from_json`
+
+These routines allow a struct to be converted to/from JSON.
+These may be derived from templates, generated using `NLOHMANN_DEFINE_TYPE_*`
+macros, or explicitly defined.
+
+Our preference is to provide explicit definitions for these routines in order to
+emit customized `flox::FloxException` messages instead of the default messages
+created by `nlohmann::json::*` routines.
+
+In some cases `to_json` may not be required or implemented, but nearly all
+parameters have an implementation of `from_json`.
+
+
 ### `clear`
+
+Clears a set of parameters to their default state.
+This is largely used to recycle an existing parameter object
+without reallocating.
+
+
 ### `getRegistryRaw`
+
+This routine appears on parameter sets which contain a `flox::RegistryRaw`
+member or have the ability to reinterpret some of their fields to create
+a `flox::RegistryRaw`.
+
+It largely exists for convenience and to enforce privacy on member variables;
+however the constructor for `flox::pkgdb::PkgDbRegistryMixin`, which is
+responsible for instantiating `flox::pkgdb::PkgDbInput` elements from a
+`flox::RegistryRaw` requires child classes to implement this interface.
+
+
 ### `getSystems`
+
+This routine appears on parameter sets which contain a `systems` list
+member or have the ability to reinterpret some of their fields to create
+a list of _target_ `systems`.
+
+It largely exists for convenience and to enforce privacy on member variables;
+however the constructor for `flox::pkgdb::PkgDbRegistryMixin`, which is
+responsible for instantiating `flox::pkgdb::PkgDbInput` elements from a
+`flox::RegistryRaw` requires child classes to implement this interface.
