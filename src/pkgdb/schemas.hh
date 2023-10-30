@@ -199,7 +199,6 @@ CREATE VIEW IF NOT EXISTS v_PackagesSearch AS SELECT
   Packages.id
 , v_AttrPaths.subtree
 , v_AttrPaths.system
-, v_AttrPaths.stability
 , v_PackagesPaths.path
 , v_PackagesPaths.relPath
 , v_PackagesPaths.depth

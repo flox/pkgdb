@@ -694,7 +694,7 @@ test_getPackages1( flox::pkgdb::PkgDb &db )
     INSERT INTO Packages (
       id, parentId, attrName, name, outputs, descriptionId
     ) VALUES
-    , ( 1, :packagesLinuxId,  'hello', 'hello', '["out"]', :descriptionId )
+      ( 1, :packagesLinuxId,  'hello', 'hello', '["out"]', :descriptionId )
     , ( 2, :legacyDarwinId,   'hello', 'hello', '["out"]', :descriptionId )
     , ( 3, :packagesDarwinId, 'hello', 'hello', '["out"]', :descriptionId )
   )SQL" );
@@ -716,10 +716,10 @@ test_getPackages1( flox::pkgdb::PkgDb &db )
     qargs.systems = std::vector<std::string> { "x86_64-darwin" };
     qargs.subtrees
       = std::vector<flox::Subtree> { flox::ST_PACKAGES, flox::ST_LEGACY };
-    EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 5, 4 } ) );
+    EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 3, 2 } ) );
     qargs.subtrees
       = std::vector<flox::Subtree> { flox::ST_LEGACY, flox::ST_PACKAGES };
-    EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 4, 5 } ) );
+    EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 2, 3 } ) );
     qargs.subtrees = std::nullopt;
     qargs.systems  = std::vector<std::string> {};
   }
@@ -729,10 +729,10 @@ test_getPackages1( flox::pkgdb::PkgDb &db )
     qargs.subtrees = std::vector<flox::Subtree> { flox::ST_PACKAGES };
     qargs.systems
       = std::vector<std::string> { "x86_64-linux", "x86_64-darwin" };
-    EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 3, 5 } ) );
+    EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 1, 3 } ) );
     qargs.systems
       = std::vector<std::string> { "x86_64-darwin", "x86_64-linux" };
-    EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 5, 3 } ) );
+    EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 3, 1 } ) );
     qargs.systems  = std::vector<std::string> {};
     qargs.subtrees = std::nullopt;
   }
