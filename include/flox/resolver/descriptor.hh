@@ -49,10 +49,20 @@ struct ManifestDescriptorRaw
 
 public:
 
-  /** Match `name`, `pname`, or `pkgAttrName` */
+  /**
+   * Match `name`, `pname`, or `pkgAttrName`.
+   * Maps to `flox::pkgdb::PkgQueryArgs::pnameOrPkgAttrName`.
+   */
   std::optional<std::string> name;
 
-  /** Match `version` or `semver` if a modifier is present. */
+  /**
+   * Match `version` or `semver` if a modifier is present.
+   *
+   * Strings beginning with an `=` will filter by exact match on `version`.
+   * Any string which may be interpreted as a semantic version range will
+   * filter on the `semver` field.
+   * All other strings will filter by exact match on `version`.
+   */
   std::optional<std::string> version;
 
   /** @brief A dot separated attribut path, or list representation. */
@@ -63,6 +73,11 @@ public:
   /**
    * @brief A dot separated attribut path, or list representation.
    *        May contain `null` members to represent _globs_.
+   *
+   * NOTE: `AttrPathGlob` is a `std::vector<std::optional<std::string>>`
+   *       which represnts an absolute attribute path which may have
+           `std::nullopt` as its second element to avoid indicating a
+           particular system.
    */
   using AbsPath = std::variant<std::string, AttrPathGlob>;
   /** Match an absolute path, allowing globs for `system`. */

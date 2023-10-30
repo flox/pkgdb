@@ -120,7 +120,7 @@ public:
 /* -------------------------------------------------------------------------- */
 
 /**
- * @class LockFlakeException
+ * @class flox::LockFlakeException
  * @brief An exception thrown when locking a flake
  */
 FLOX_DEFINE_EXCEPTION( LockFlakeException,

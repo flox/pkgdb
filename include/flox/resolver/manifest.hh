@@ -86,6 +86,7 @@ struct ManifestRaw
   }; /* End struct `Options' */
   Options options;
 
+  // FIXME: This should be `ManifestDescriptorRaw`
   std::unordered_map<std::string, ManifestDescriptor> install;
 
   RegistryRaw registry;

@@ -34,37 +34,43 @@ enum error_category {
   /** Generic exception emitted by `flox` routines. */
   EC_FLOX_EXCEPTION = 100,
   /** A command line argument is invalid. */
-  EC_INVALID_ARG,
+  EC_INVALID_ARG = 101,
   /** A package descriptor in a manifest is invalid. */
-  EC_INVALID_MANIFEST_DESCRIPTOR,
+  EC_INVALID_MANIFEST_DESCRIPTOR = 102,
   /** A PkgDescriptorRaw is invalid. */
-  EC_INVALID_PKG_DESCRIPTOR,
+  EC_INVALID_PKG_DESCRIPTOR = 103,
   /** Errors concerning validity of package query parameters. */
-  EC_INVALID_PKG_QUERY_ARG,
+  EC_INVALID_PKG_QUERY_ARG = 104,
   /** A registry has invalid contents. */
-  EC_INVALID_REGISTRY,
+  EC_INVALID_REGISTRY = 105,
   /** The value of `manifestPath' is invalid. */
-  EC_INVALID_MANIFEST_FILE,
-  /** `nix::Error` that doesn't fall under a more specific EC_NIX_* category. */
-  EC_NIX,
+  EC_INVALID_MANIFEST_FILE = 106,
+  /**
+   * `nix::Error` that doesn't fall under a more specific `EC_NIX_*` category.
+   */
+  EC_NIX = 107,
   /** `nix::EvalError` */
-  EC_NIX_EVAL,
+  EC_NIX_EVAL = 108,
   /** Exception locking a flake. */
-  EC_NIX_LOCK_FLAKE,
-  /** Exception initializing a `FlakePackage`. */
-  EC_PACKAGE_INIT,
-  /** Exception parsing `QueryParams` from JSON. */
-  EC_PARSE_QUERY_PARAMS,
-  /** Exception parsing `QueryPreferences` from JSON. */
-  EC_PARSE_QUERY_PREFERENCES,
-  /** Exception parsing `SearchQuery` from JSON. */
-  EC_PARSE_SEARCH_QUERY,
+  EC_NIX_LOCK_FLAKE = 109,
+  /** Exception initializing a @a flox::FlakePackage. */
+  EC_PACKAGE_INIT = 110,
+  /** Exception parsing @a flox::pkgdb::QueryParams from JSON. */
+  EC_PARSE_QUERY_PARAMS = 111,
+  /** Exception parsing @a flox::pkgdb::QueryPreferences from JSON. */
+  EC_PARSE_QUERY_PREFERENCES = 112,
+  /** Exception parsing @a flox::search::SearchQuery from JSON. */
+  EC_PARSE_SEARCH_QUERY = 113,
   /** For generic exceptions thrown by `flox::pkgdb::*` classes. */
-  EC_PKG_DB,
+  EC_PKG_DB = 114,
+  /** Exceptions thrown by SQLite3. */
+  EC_SQLITE3 = 115,
+  /** Exception parsing/processing JSON. */
+  EC_JSON = 116,
   /** Exception converting TOML to JSON. */
-  EC_TOML_TO_JSON,
+  EC_TOML_TO_JSON = 117,
   /** Exception converting YAML to JSON. */
-  EC_YAML_TO_JSON,
+  EC_YAML_TO_JSON = 118
 
 }; /* End enum `error_category' */
 

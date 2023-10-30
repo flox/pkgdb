@@ -7,7 +7,7 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include <stddef.h>
+#include <cstddef>
 
 #include <nix/eval.hh>
 #include <nix/shared.hh>

@@ -40,10 +40,11 @@ struct PkgDescriptorRaw : public pkgdb::PkgDescriptorBase
 {
 
   /* From `pkgdb::PkgDescriptorBase':
-   *   std::optional<std::string> name;
-   *   std::optional<std::string> pname;
-   *   std::optional<std::string> version;
-   *   std::optional<std::string> semver;
+   *   std::optional<std::string> name;    //< Filter results by exact `name`.
+   *   std::optional<std::string> pname;   //< Filter results by exact `pname`.
+   *   std::optional<std::string> version; //< Filter results by exact version.
+   *   std::optional<std::string> semver;  //< Filter results by version range.
+
    */
 
   /**
@@ -101,30 +102,13 @@ struct PkgDescriptorRaw : public pkgdb::PkgDescriptorBase
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief An exception thrown a PkgDescriptorRaw is invalid */
-class InvalidPkgDescriptorException : public FloxException
-{
-
-public:
-
-  explicit InvalidPkgDescriptorException( std::string_view contextMsg )
-    : FloxException( contextMsg )
-  {}
-
-  [[nodiscard]] error_category
-  getErrorCode() const noexcept override
-  {
-    return EC_INVALID_PKG_DESCRIPTOR;
-  }
-
-  [[nodiscard]] std::string_view
-  getCategoryMessage() const noexcept override
-  {
-    return "invalid package query";
-  }
-
-
-}; /* End class `InvalidPkgDescriptorException' */
+/**
+ * @class flox::resolver::InvalidPkgDescriptorException
+ * @brief An exception thrown a PkgDescriptorRaw is invalid
+ */
+FLOX_DEFINE_EXCEPTION( InvalidPkgDescriptorException,
+                       EC_INVALID_PKG_DESCRIPTOR,
+                       "invalid package descriptor" )
 
 
 /* -------------------------------------------------------------------------- */
