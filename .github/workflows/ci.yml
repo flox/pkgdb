@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - "main"
+      - "improve-ci"
     paths:
       - '**'
       - '!**/README*'
@@ -104,7 +104,7 @@ jobs:
           --command make check -j4
 
     - name: "Build Docs"
-      if: github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/improve-ci'
       run: |
         nix develop \
           --extra-experimental-features "nix-command flakes" \
@@ -112,20 +112,20 @@ jobs:
           --command make docs
 
     - name: "Fix permissions"
-      if: github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/improve-ci'
       run: |
         chmod -c -R +rX "docs/" | while read line; do
           echo "::warning title=Invalid file permissions fixed::$line"
         done
 
     - name: "Upload artifact"
-      if: github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/improve-ci'
       uses: "actions/upload-pages-artifact@v2"
       with:
         path: 'docs'
 
     - name: "Deploy to GitHub Pages"
-      if: github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/improve-ci'
       uses: "actions/deploy-pages@v2"
 
   nix-build:
