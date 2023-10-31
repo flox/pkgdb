@@ -132,9 +132,7 @@ to_json( nlohmann::json &jto, const PkgDescriptorBase &pkgDescriptorBase )
 
 /* -------------------------------------------------------------------------- */
 
-std::string
-PkgQueryArgs::InvalidPkgQueryArgException::errorMessage(
-  const PkgQueryArgs::InvalidPkgQueryArgException::error_code &ecode )
+void
 PkgQueryArgs::check() const
 {
 
