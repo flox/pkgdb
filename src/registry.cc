@@ -97,20 +97,6 @@ from_json( const nlohmann::json &jfrom, RegistryInput &rip )
                   flox::extract_json_errmsg( e ).c_str() );
             }
         }
-      else if ( key == "stabilities" )
-        {
-          try
-            {
-              value.get_to( rip.stabilities );
-            }
-          catch ( nlohmann::json::exception &e )
-            {
-              throw flox::Registry<flox::pkgdb::PkgDbInputFactory>::
-                InvalidRegistryException(
-                  "couldn't interpret registry input field 'stabilities'",
-                  flox::extract_json_errmsg( e ).c_str() );
-            }
-        }
       else if ( key == "from" )
         {
           try
@@ -139,7 +125,6 @@ void
 to_json( nlohmann::json &jto, const RegistryInput &rip )
 {
   jto = {
-    { "stabilities", rip.stabilities },
     { "subtrees", rip.subtrees },
   };
   if ( rip.from == nullptr ) { jto.emplace( "from", nullptr ); }
