@@ -19,6 +19,7 @@
 #include "flox/pkgdb/input.hh"
 #include "flox/registry.hh"
 #include "flox/resolver/descriptor.hh"
+#include "flox/resolver/resolve.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -225,13 +226,13 @@ public:
    */
   std::unordered_map<std::string,                    /* _install ID_ */
                      std::unordered_map<std::string, /* system */
-                                        std::optional<ManifestDescriptorRaw>>>
+                                        std::optional<Resolved>>>
     lockedDescriptors;
 
 
 protected:
 
-  const std::unordered_map<std::string, std::optional<ManifestDescriptorRaw>> &
+  const std::unordered_map<std::string, std::optional<Resolved>> &
   lockDescriptor( const std::string & iid, const ManifestDescriptor & desc );
 
 

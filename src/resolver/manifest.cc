@@ -157,7 +157,7 @@ ManifestFileMixin::getBaseQueryArgs()
 
 /* -------------------------------------------------------------------------- */
 
-const std::unordered_map<std::string, std::optional<ManifestDescriptorRaw>> &
+const std::unordered_map<std::string, std::optional<Resolved>> &
 ManifestFileMixin::lockDescriptor( const std::string        &iid,
                                    const ManifestDescriptor &desc )
 {
@@ -171,7 +171,7 @@ ManifestFileMixin::lockDescriptor( const std::string        &iid,
   /* For each system we need to set `packageRepository' such that it has a `rev'
    * field, and set `absPath` to the absolute attribute path the
    * resolved package. */
-  std::unordered_map<std::string, std::optional<ManifestDescriptorRaw>> locked;
+  std::unordered_map<std::string, std::optional<Resolved>> locked;
 
   pkgdb::PkgQueryArgs baseArgs = this->getBaseQueryArgs();
 
@@ -211,21 +211,18 @@ ManifestFileMixin::lockDescriptor( const std::string        &iid,
           auto rows = query.execute( input->getDbReadOnly()->db );
           if ( rows.empty() ) { continue; }
 
-          found = true;
-          ManifestDescriptorRaw lockedDescriptor;
-          // TODO: limit attrs to those which are actually required.
-          lockedDescriptor.packageRepository = input->getFlakeRef()->toAttrs();
+          found     = true;
+          auto info = input->getDbReadOnly()->getPackage( rows.front() );
+          Resolved
+            resolved { .input = Resolved::Input( name, *input->getFlakeRef() ),
+                       .path  = std::move( info.at( "absPath" ) ),
+                       .info  = {
+                         { "pname", std::move( info.at( "pname" ) ) },
+                         { "version", std::move( info.at( "version" ) ) },
+                         { "license", std::move( info.at( "license" ) ) },
+                       } };
 
-          /* Convert absolute attribute path to `flox::AttrPathGlob'. */
-          AttrPathGlob absPath;
-          for ( auto &part :
-                input->getDbReadOnly()->getPackagePath( rows.front() ) )
-            {
-              absPath.emplace_back( part );
-            }
-          lockedDescriptor.absPath = std::move( absPath );
-
-          locked.emplace( system, std::move( lockedDescriptor ) );
+          locked.emplace( system, std::move( resolved ) );
           break;
         }
 

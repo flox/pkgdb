@@ -86,9 +86,8 @@ LockCommand::run()
 {
   auto lockedRegistry = this->getLockedRegistry();
 
-  std::unordered_map<
-    std::string,
-    std::unordered_map<std::string, std::optional<ManifestDescriptorRaw>>>
+  std::unordered_map<std::string,
+                     std::unordered_map<std::string, std::optional<Resolved>>>
     lockedDescriptors;
 
   for ( const auto &[iid, desc] : this->getDescriptors() )
@@ -97,24 +96,11 @@ LockCommand::run()
     }
 
   // TODO: to_json( ManifestRaw )
-  // TODO: strip nulls from `packages' field.
   nlohmann::json lockfile
     = { { "manifest", readAndCoerceJSON( this->getManifestPath() ) },
         { "registry", std::move( lockedRegistry ) },
         { "packages", std::move( lockedDescriptors ) },
         { "lockfileVersion", 0 } };
-  for ( const auto &[name, input] :
-        lockfile.at( "registry" ).at( "inputs" ).items() )
-    {
-      /* Delete a few metadata fields that we don't really care about. */
-      auto type = input.at( "from" ).at( "type" );
-      input.at( "from" ).erase( "lastModified" );
-      /* Only keep `narHash' for tarballs and files. */
-      if ( ! ( ( type == "tarball" ) || ( type == "file" ) ) )
-        {
-          input.at( "from" ).erase( "narHash" );
-        }
-    }
 
   /* Print that bad boii */
   std::cout << lockfile.dump() << std::endl;

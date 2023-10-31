@@ -100,7 +100,7 @@ test_resolve0()
 
 /** @brief Limit resolution to a single input. */
 bool
-test_resolveInput()
+test_resolveInput0()
 {
   flox::RegistryRaw             registry    = commonRegistry;
   flox::pkgdb::QueryPreferences preferences = commonPreferences;
@@ -114,7 +114,8 @@ test_resolveInput()
   auto rsl = flox::resolver::resolve_v0( state, descriptor );
 
   EXPECT_EQ( rsl.size(), std::size_t( 1 ) );
-  EXPECT_EQ( rsl.front().input.name, "nixpkgs" );
+  EXPECT( rsl.front().input.name.has_value() );
+  EXPECT_EQ( *rsl.front().input.name, "nixpkgs" );
 
   return true;
 }
@@ -140,7 +141,7 @@ main( int argc, char * argv[] )
   setenv( "PKGDB_CACHEDIR", cacheDir.c_str(), 1 );
 
   RUN_TEST( resolve0 );
-  RUN_TEST( resolveInput );
+  RUN_TEST( resolveInput0 );
 
   /* Cleanup the temporary directory. */
   nix::deletePath( cacheDir );

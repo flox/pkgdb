@@ -77,6 +77,7 @@ struct InputPreferences
   pkgdb::PkgQueryArgs &
   fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
 
+
 }; /* End struct `InputPreferences' */
 
 
