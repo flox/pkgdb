@@ -350,20 +350,6 @@ from_json( const nlohmann::json &jfrom, InputPreferences &prefs )
                   flox::extract_json_errmsg( e ).c_str() );
             }
         }
-      else if ( key == "stabilities" )
-        {
-          try
-            {
-              value.get_to( prefs.stabilities );
-            }
-          catch ( nlohmann::json::exception &e )
-            {
-              throw flox::Registry<flox::pkgdb::PkgDbInputFactory>::
-                InvalidRegistryException(
-                  "couldn't interpret field 'stabilities'",
-                  flox::extract_json_errmsg( e ).c_str() );
-            }
-        }
       else
         {
           throw flox::Registry<flox::pkgdb::PkgDbInputFactory>::
@@ -377,7 +363,7 @@ void
 to_json( nlohmann::json &jto, const InputPreferences &prefs )
 {
   jto
-    = { { "subtrees", prefs.subtrees }, { "stabilities", prefs.stabilities } };
+    = { { "subtrees", prefs.subtrees } };
 }
 
 
