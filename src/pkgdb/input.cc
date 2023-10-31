@@ -164,9 +164,7 @@ PkgDbInput::scrapeSystems( const std::vector<std::string> & systems )
       for ( const auto & system : systems )
         {
           prefix.emplace_back( system );
-          if ( subtree != ST_CATALOG ) {
-            this->scrapePrefix( prefix );
-          }
+          if ( subtree != ST_CATALOG ) { this->scrapePrefix( prefix ); }
           prefix.pop_back();
         }
     }

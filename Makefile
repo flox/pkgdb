@@ -97,32 +97,50 @@ TEST_DATA_DIR = $(MAKEFILE_DIR)/tests/data
 # ---------------------------------------------------------------------------- #
 
 # You can disable these optional gripes with `make EXTRA_CXXFLAGS='' ...;'
-EXTRA_CXXFLAGS ?= -Wall -Wextra -Wpedantic
+ifndef EXTRA_CXXFLAGS
+EXTRA_CXXFLAGS = -Wall -Wextra -Wpedantic
+ifneq (Linux,$(OS))
+# Clang
+EXTRA_CXXFLAGS += -Wno-gnu-zero-variadic-macro-arguments
+endif  # ifneq (Linux,$(OS))
+endif	# ifndef EXTRA_CXXFLAGS
+
 CXXFLAGS       ?= $(EXTRA_CFLAGS) $(EXTRA_CXXFLAGS)
 CXXFLAGS       += '-I$(MAKEFILE_DIR)/include'
 CXXFLAGS       += '-DFLOX_PKGDB_VERSION="$(VERSION)"'
 LDFLAGS        ?= $(EXTRA_LDFLAGS)
+
 ifeq (Linux,$(OS))
+# GCC
 lib_CXXFLAGS ?= -shared -fPIC
 lib_LDFLAGS  ?= -shared -fPIC -Wl,--no-undefined
 else
-lib_CXXFLAGS ?= -fPIC
-lib_LDFLAGS  ?= -shared -fPIC -Wl,-undefined,error
-endif
+# Clang
+lib_CXXFLAGS   ?= -fPIC
+lib_LDFLAGS    ?= -shared -fPIC -Wl,-undefined,error
+endif # ifeq (Linux,$(OS))
+
 bin_CXXFLAGS ?=
 bin_LDFLAGS  ?=
 
 # Debug Mode
 ifneq ($(DEBUG),)
+ifeq (Linux,$(OS))
+# GCC
 CXXFLAGS += -ggdb3 -pg
 LDFLAGS  += -ggdb3 -pg
-endif
+else
+# Clang
+CXXFLAGS += -g -pg
+LDFLAGS  += -g -pg
+endif # ifeq (Linux,$(OS))
+endif # ifneq ($(DEBUG),)
 
 # Coverage Mode
 ifneq ($(COV),)
 CXXFLAGS += -fprofile-arcs -ftest-coverage
 LDFLAGS  += -fprofile-arcs -ftest-coverage
-endif
+endif # ifneq ($(COV),)
 
 
 # ---------------------------------------------------------------------------- #
@@ -161,14 +179,14 @@ ifndef nix_CFLAGS
 nix_CFLAGS =  $(boost_CFLAGS)
 nix_CFLAGS += $(shell $(PKG_CONFIG) --cflags nix-main nix-cmd nix-expr)
 nix_CFLAGS += -isystem $(nix_INCDIR) -include $(nix_INCDIR)/nix/config.h
-endif
+endif # ifndef nix_CFLAGS
 nix_CFLAGS := $(nix_CFLAGS)
 
 ifndef nix_LDFLAGS
 nix_LDFLAGS =                                                        \
 	$(shell $(PKG_CONFIG) --libs nix-main nix-cmd nix-expr nix-store)
 nix_LDFLAGS += -lnixfetchers
-endif
+endif # ifndef nix_LDFLAGS
 nix_LDFLAGS := $(nix_LDFLAGS)
 
 ifndef flox_pkgdb_LDFLAGS
@@ -176,9 +194,9 @@ ifeq (Linux,$(OS))
 flox_pkgdb_LDFLAGS = -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
 else  # Darwin
 flox_pkgdb_LDFLAGS = '-L$(LIBDIR)'
-endif
+endif # ifeq (Linux,$(OS))
 flox_pkgdb_LDFLAGS += '-L$(MAKEFILE_DIR)/lib' -lflox-pkgdb
-endif
+endif # ifndef flox_pkgdb_LDFLAGS
 
 
 # ---------------------------------------------------------------------------- #
@@ -189,11 +207,13 @@ CXXFLAGS     += $(nix_CFLAGS) $(nljson_CFLAGS) $(toml_CFLAGS) $(yaml_CFLAGS)
 
 ifeq (Linux,$(OS))
 lib_LDFLAGS += -Wl,--as-needed
-endif
+endif # ifeq (Linux,$(OS))
+
 lib_LDFLAGS += $(nix_LDFLAGS) $(sqlite3_LDFLAGS)
+
 ifeq (Linux,$(OS))
 lib_LDFLAGS += -Wl,--no-as-needed
-endif
+endif # ifeq (Linux,$(OS))
 
 bin_LDFLAGS += $(nix_LDFLAGS) $(flox_pkgdb_LDFLAGS) $(sqlite3_LDFLAGS)
 LDFLAGS     += $(yaml_LDFLAGS)
@@ -296,7 +316,7 @@ $(LIBDIR)/$(LIBFLOXPKGDB): $(lib_SRCS:.cc=.o)
 $(BINDIR)/pkgdb: $(bin_SRCS:.cc=.o) $(LIBDIR)/$(LIBFLOXPKGDB)
 	$(MKDIR_P) $(@D)
 	$(CXX) $(filter %.o,$^) $(LDFLAGS) $(bin_LDFLAGS) -o $@
-endif
+endif # ifneq (Linux,$(OS))
 
 install-bin: $(addprefix $(BINDIR)/,$(BINS))
 install-lib: $(addprefix $(LIBDIR)/,$(LIBS))

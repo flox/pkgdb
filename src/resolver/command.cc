@@ -86,55 +86,21 @@ LockCommand::run()
 {
   auto lockedRegistry = this->getLockedRegistry();
 
-  // TODO: Handle multiple inputs
-  // TODO: Handle multiple systems
-  auto [name, input] = *this->getPkgDbRegistry()->begin();
-  auto dbRO = this->getPkgDbRegistry()->begin()->second->getDbReadOnly();
-  nlohmann::json install = nlohmann::json::object();
-  for ( const auto &[id, desc] :
-        this->getUnlockedManifest().getManifestRaw().install )
+  std::unordered_map<std::string,
+                     std::unordered_map<std::string, std::optional<Resolved>>>
+    lockedDescriptors;
+
+  for ( const auto &[iid, desc] : this->getDescriptors() )
     {
-      auto args = this->getBaseQueryArgs();
-      desc.fillPkgQueryArgs( args );
-      auto query = flox::pkgdb::PkgQuery( args );
-      auto rows  = query.execute( dbRO->db );
-      if ( rows.empty() )
-        {
-          if ( desc.optional )
-            {
-              install.emplace( id, nullptr );
-              continue;
-            }
-          throw FloxException( "No packages found for `install." + id + "'!" );
-        }
-      else
-        {
-          auto info = dbRO->getPackage( rows.front() );
-          install.emplace(
-            id,
-            nlohmann::json { { "input", name },
-                             { "abs-path", info.at( "absPath" ) } } );
-        }
+      lockedDescriptors.emplace( iid, this->lockDescriptor( iid, desc ) );
     }
 
   // TODO: to_json( ManifestRaw )
   nlohmann::json lockfile
     = { { "manifest", readAndCoerceJSON( this->getManifestPath() ) },
         { "registry", std::move( lockedRegistry ) },
-        { "install", std::move( install ) },
+        { "packages", std::move( lockedDescriptors ) },
         { "lockfileVersion", 0 } };
-  for ( const auto &[name, input] :
-        lockfile.at( "registry" ).at( "inputs" ).items() )
-    {
-      /* Delete a few metadata fields that we don't really care about. */
-      auto type = input.at( "from" ).at( "type" );
-      input.at( "from" ).erase( "lastModified" );
-      /* Only keep `narHash' for tarballs and files. */
-      if ( ! ( ( type == "tarball" ) || ( type == "file" ) ) )
-        {
-          input.at( "from" ).erase( "narHash" );
-        }
-    }
 
   /* Print that bad boii */
   std::cout << lockfile.dump() << std::endl;

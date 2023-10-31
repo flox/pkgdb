@@ -149,7 +149,7 @@ initManifestDescriptorAbsPath( ManifestDescriptor &          desc,
           throw InvalidManifestDescriptorException(
             "`absPath' may only have a glob as its second element" );
         }
-      desc.path      = AttrPath {};
+      desc.path = AttrPath {};
       for ( auto itr = glob.begin() + 3; itr != glob.end(); ++itr )
         {
           const auto & elem = *itr;
@@ -239,12 +239,6 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
 
   if ( raw.packageRepository.has_value() )
     {
-      if ( raw.input.has_value() )
-        {
-          throw InvalidManifestDescriptorException(
-            "`packageRepository' may not be used with `input'" );
-        }
-
       if ( std::holds_alternative<std::string>( *raw.packageRepository ) )
         {
           this->input
@@ -255,9 +249,9 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
           this->input = nix::FlakeRef::fromAttrs(
             std::get<nix::fetchers::Attrs>( *raw.packageRepository ) );
         }
-      assert( std::holds_alternative<nix::FlakeRef>( *this->input ) );
     }
-  else if ( raw.input.has_value() ) { this->input = *raw.input; }
+
+  if ( raw.priority.has_value() ) { this->priority = *raw.priority; }
 }
 
 
@@ -266,15 +260,16 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
 void
 ManifestDescriptor::clear()
 {
-  this->name      = std::nullopt;
-  this->optional  = false;
-  this->group     = std::nullopt;
-  this->version   = std::nullopt;
-  this->semver    = std::nullopt;
-  this->subtree   = std::nullopt;
-  this->systems   = std::nullopt;
-  this->path      = std::nullopt;
-  this->input     = std::nullopt;
+  this->name     = std::nullopt;
+  this->optional = false;
+  this->group    = std::nullopt;
+  this->version  = std::nullopt;
+  this->semver   = std::nullopt;
+  this->subtree  = std::nullopt;
+  this->systems  = std::nullopt;
+  this->path     = std::nullopt;
+  this->input    = std::nullopt;
+  this->priority = 5;
 }
 
 

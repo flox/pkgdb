@@ -17,10 +17,10 @@
 #include <argparse/argparse.hpp>
 #include <nlohmann/json.hpp>
 
+#include "flox/core/types.hh"
 #include "flox/pkgdb/params.hh"
 #include "flox/pkgdb/pkg-query.hh"
 #include "flox/registry.hh"
-#include "flox/resolver/manifest.hh"
 
 
 /* -------------------------------------------------------------------------- */

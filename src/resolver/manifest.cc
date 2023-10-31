@@ -117,6 +117,139 @@ ManifestFileMixin::getManifestPath()
 
 /* -------------------------------------------------------------------------- */
 
+const UnlockedManifest &
+ManifestFileMixin::getUnlockedManifest()
+{
+  if ( ! this->manifest.has_value() )
+    {
+      this->manifest = UnlockedManifest( this->getManifestPath() );
+    }
+  return *this->manifest;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+const RegistryRaw &
+ManifestFileMixin::getLockedRegistry()
+{
+  if ( ! this->lockedRegistry.has_value() )
+    {
+      this->lockedRegistry
+        = this->getUnlockedManifest().getLockedRegistry( this->getStore() );
+    }
+  return *this->lockedRegistry;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+const pkgdb::PkgQueryArgs &
+ManifestFileMixin::getBaseQueryArgs()
+{
+  if ( ! this->baseQueryArgs.has_value() )
+    {
+      this->baseQueryArgs = this->getUnlockedManifest().getBaseQueryArgs();
+    }
+  return *this->baseQueryArgs;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+const std::unordered_map<std::string, std::optional<Resolved>> &
+ManifestFileMixin::lockDescriptor( const std::string        &iid,
+                                   const ManifestDescriptor &desc )
+{
+  /* See if it was already locked. */
+  if ( auto locked = this->lockedDescriptors.find( iid );
+       locked != this->lockedDescriptors.end() )
+    {
+      return locked->second;
+    }
+
+  /* For each system we need to set `packageRepository' such that it has a `rev'
+   * field, and set `absPath` to the absolute attribute path the
+   * resolved package. */
+  std::unordered_map<std::string, std::optional<Resolved>> locked;
+
+  pkgdb::PkgQueryArgs baseArgs = this->getBaseQueryArgs();
+
+  /* Iterate over the systems. */
+  for ( const auto &system : this->getSystems() )
+    {
+      /* See if this system is skippable. */
+      if ( desc.systems.has_value()
+           && std::find( desc.systems->begin(), desc.systems->end(), system )
+                == desc.systems->end() )
+        {
+          /* This descriptor is not for this system. */
+          locked.emplace( system, std::nullopt );
+          continue;
+        }
+
+      /* Otherwise, try to lock it with an input. */
+      if ( desc.input.has_value() )
+        {
+          // TODO: Post-GA this is allowed!
+          throw InvalidManifestFileException(
+            "You cannot specify an input in manifest files." );
+        }
+
+      /* Prep our query. */
+      pkgdb::PkgQueryArgs args = baseArgs;
+      desc.fillPkgQueryArgs( args );
+      args.systems = { system };
+      pkgdb::PkgQuery query( args );
+
+      // TODO: handle groups.
+
+      /* Try each input. */
+      bool found = false;
+      for ( const auto &[name, input] : *this->getPkgDbRegistry() )
+        {
+          auto rows = query.execute( input->getDbReadOnly()->db );
+          if ( rows.empty() ) { continue; }
+
+          found     = true;
+          auto info = input->getDbReadOnly()->getPackage( rows.front() );
+          Resolved
+            resolved { .input = Resolved::Input( name, *input->getFlakeRef() ),
+                       .path  = std::move( info.at( "absPath" ) ),
+                       .info  = {
+                         { "pname", std::move( info.at( "pname" ) ) },
+                         { "version", std::move( info.at( "version" ) ) },
+                         { "license", std::move( info.at( "license" ) ) },
+                         { "priority", desc.priority }
+                       } };
+
+          locked.emplace( system, std::move( resolved ) );
+          break;
+        }
+
+      if ( ! found )
+        {
+          /* No match. */
+          if ( desc.optional )
+            {
+              locked.emplace( system, std::nullopt );
+              continue;
+            }
+          // TODO: make this a typed exception.
+          throw FloxException( "Failed to resolve descriptor for `install."
+                               + iid + "' on system `" + system + "'." );
+        }
+    }
+
+  /* Stash it in the collection. */
+  this->lockedDescriptors.emplace( iid, std::move( locked ) );
+
+  return this->lockedDescriptors.at( iid );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 }  // namespace flox::resolver
 
 

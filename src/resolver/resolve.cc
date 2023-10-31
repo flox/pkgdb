@@ -17,12 +17,29 @@ namespace flox::resolver {
 /* -------------------------------------------------------------------------- */
 
 void
+Resolved::Input::limitLocked()
+{
+  auto type = this->locked.at( "type" ).get<std::string>();
+  if ( ! ( ( type == "path" ) || ( type == "tarball" ) || ( type == "file" ) ) )
+    {
+      this->locked.erase( "narHash" );
+    }
+  this->locked.erase( "lastModified" );
+  this->locked.erase( "lastModifiedDate" );
+  this->locked.erase( "revCount" );
+  this->locked.erase( "shortRev" );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
 Resolved::clear()
 {
-  this->input.name.clear();
+  this->input.name   = std::nullopt;
+  this->input.locked = nullptr;
   this->path.clear();
-  this->input.locked = nlohmann::json::object();
-  this->info         = nlohmann::json::object();
+  this->info = nullptr;
 }
 
 
@@ -64,23 +81,15 @@ resolve_v0( ResolverState & state, const Descriptor & descriptor, bool one )
       for ( const auto & row : rows )
         {
           /* Strip some fields from the locked _flake ref_. */
-          auto locked = dbRO->lockedRef.attrs;
-          if ( locked.at( "type" ).get<std::string>() != "path" )
-            {
-              locked.erase( "narHash" );
-            }
-          locked.erase( "lastModified" );
-          locked.erase( "revCount" );
-
+          auto locked  = dbRO->lockedRef.attrs;
           auto info    = dbRO->getPackage( row );
           auto absPath = std::move( info.at( "absPath" ) );
           info.erase( "absPath" );
 
-          rsl.emplace_back( Resolved {
-            .input
-            = Resolved::Input { .name = name, .locked = std::move( locked ) },
-            .path = std::move( absPath ),
-            .info = std::move( info ) } );
+          rsl.emplace_back(
+            Resolved { .input = Resolved::Input( name, std::move( locked ) ),
+                       .path  = std::move( absPath ),
+                       .info  = std::move( info ) } );
           if ( one ) { return rsl; }
         }
     }

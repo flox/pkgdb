@@ -47,8 +47,7 @@ struct InputPreferences
   InputPreferences()                           = default;
   InputPreferences( const InputPreferences & ) = default;
   InputPreferences( InputPreferences && )      = default;
-  InputPreferences(
-    const std::optional<std::vector<Subtree>> &     subtrees)
+  InputPreferences( const std::optional<std::vector<Subtree>> & subtrees )
     : subtrees( subtrees )
   {}
 
@@ -78,6 +77,7 @@ struct InputPreferences
   pkgdb::PkgQueryArgs &
   fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
 
+
 }; /* End struct `InputPreferences' */
 
 
@@ -91,8 +91,7 @@ struct InputPreferences
  * @brief Convert an @a flox::InputPreferences to a JSON object.
  */
 /* Generate to_json/from_json functions. */
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT( InputPreferences,
-                                                 subtrees );
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT( InputPreferences, subtrees );
 
 
 /* -------------------------------------------------------------------------- */
@@ -124,8 +123,8 @@ struct RegistryInput : public InputPreferences
 
   RegistryInput() = default;
 
-  RegistryInput( const std::optional<std::vector<Subtree>> &     subtrees,
-                 const nix::FlakeRef &                           from )
+  RegistryInput( const std::optional<std::vector<Subtree>> & subtrees,
+                 const nix::FlakeRef &                       from )
     : InputPreferences( subtrees )
     , from( std::make_shared<nix::FlakeRef>( from ) )
   {}
