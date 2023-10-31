@@ -207,7 +207,7 @@ test_parseManifestDescriptor_input0()
 
   return true;
 }
-#endif  /* if 0 */
+#endif /* if 0 */
 
 
 /* -------------------------------------------------------------------------- */

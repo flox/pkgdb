@@ -170,7 +170,7 @@ public:
    * Packages with higher @a priority values will take precendence over those
    * with lower @a priority values.
    */
- unsigned priority = 5;
+  unsigned priority = 5;
 
 
   ManifestDescriptor() = default;

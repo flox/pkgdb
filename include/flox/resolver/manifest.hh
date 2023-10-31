@@ -213,10 +213,12 @@ public:
   std::optional<RegistryRaw>           lockedRegistry;
   std::optional<pkgdb::PkgQueryArgs>   baseQueryArgs;
 
-  // TODO: Handle groups
-  // bool                                                   didGroups = false;
-  // std::unordered_set<std::string>                        ungroupedIds;
-  // std::unordered_map<std::string, std::string>           groupIds;
+  std::unordered_map<
+    std::string,                                       /* group name */
+    std::unordered_map<std::string,                    /* input name */
+                       std::unordered_map<std::string, /* _install ID_ */
+                                          std::optional<pkgdb::row_id>>>>
+    groupedResolutions;
 
   /**
    * @brief A map of _locked_ descriptors organized by their _install ID_,
@@ -234,6 +236,10 @@ protected:
 
   const std::unordered_map<std::string, std::optional<Resolved>> &
   lockDescriptor( const std::string & iid, const ManifestDescriptor & desc );
+
+  /** @brief Assert that all _grouped_ descriptors resolve to a single input. */
+  void
+  checkGroups();
 
 
 public:
@@ -299,6 +305,11 @@ public:
   {
     return this->getUnlockedManifest().getManifestRaw().install;
   }
+
+  const std::unordered_map<
+    std::string,
+    std::unordered_map<std::string, std::optional<Resolved>>> &
+  getLockedDescriptors();
 
 
 }; /* End struct `ManifestFileMixin' */

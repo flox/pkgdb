@@ -86,20 +86,11 @@ LockCommand::run()
 {
   auto lockedRegistry = this->getLockedRegistry();
 
-  std::unordered_map<std::string,
-                     std::unordered_map<std::string, std::optional<Resolved>>>
-    lockedDescriptors;
-
-  for ( const auto &[iid, desc] : this->getDescriptors() )
-    {
-      lockedDescriptors.emplace( iid, this->lockDescriptor( iid, desc ) );
-    }
-
   // TODO: to_json( ManifestRaw )
   nlohmann::json lockfile
     = { { "manifest", readAndCoerceJSON( this->getManifestPath() ) },
         { "registry", std::move( lockedRegistry ) },
-        { "packages", std::move( lockedDescriptors ) },
+        { "packages", this->getLockedDescriptors() },
         { "lockfileVersion", 0 } };
 
   /* Print that bad boii */
