@@ -29,7 +29,7 @@ namespace flox {
 class RawPackage : public Package
 {
 
-protected:
+public:
 
   AttrPath                   path;
   std::string                name;
@@ -43,23 +43,17 @@ protected:
   std::optional<bool>        unfree;
   std::optional<std::string> description;
 
-
-  /* --------------------------------------------------------------------------
-   */
-
-public:
-
-  RawPackage( const AttrPath &                 path             = {},
-              std::string_view                 name             = {},
-              std::string_view                 pname            = {},
-              std::optional<std::string>       version          = std::nullopt,
-              std::optional<std::string>       semver           = std::nullopt,
-              std::optional<std::string>       license          = std::nullopt,
-              const std::vector<std::string> & outputs          = { "out" },
-              const std::vector<std::string> & outputsToInstall = { "out" },
-              std::optional<bool>              broken           = std::nullopt,
-              std::optional<bool>              unfree           = std::nullopt,
-              std::optional<std::string>       description      = std::nullopt )
+  RawPackage( const AttrPath                 &path             = {},
+              std::string_view                name             = {},
+              std::string_view                pname            = {},
+              std::optional<std::string>      version          = std::nullopt,
+              std::optional<std::string>      semver           = std::nullopt,
+              std::optional<std::string>      license          = std::nullopt,
+              const std::vector<std::string> &outputs          = { "out" },
+              const std::vector<std::string> &outputsToInstall = { "out" },
+              std::optional<bool>             broken           = std::nullopt,
+              std::optional<bool>             unfree           = std::nullopt,
+              std::optional<std::string>      description      = std::nullopt )
     : path( path )
     , name( name )
     , pname( pname )
@@ -143,37 +137,192 @@ public:
     return this->description;
   }
 
-
-  /* --------------------------------------------------------------------------
-   */
-
-  /**
-   * @fn void from_json( const nlohmann::json & jfrom, RawPackage & pkg )
-   * @brief Convert a JSON object to a @a flox::RawPackage.
-   *
-   * @fn void to_json( nlohmann::json & jto, const RawPackage & pkg )
-   * @brief Convert a @a flox::RawPackage to a JSON object.
-   */
-  /* Generate to_json/from_json functions */
-  NLOHMANN_DEFINE_TYPE_INTRUSIVE_WITH_DEFAULT( RawPackage,
-                                               path,
-                                               name,
-                                               pname,
-                                               version,
-                                               semver,
-                                               license,
-                                               outputs,
-                                               outputsToInstall,
-                                               broken,
-                                               unfree,
-                                               description )
-
-
-  /* --------------------------------------------------------------------------
-   */
-
 }; /* End class `RawPackage' */
 
+
+/** @brief Convert a JSON object to a @a flox::RawPackage. */
+void
+from_json( const nlohmann::json &jfrom, RawPackage &pkg )
+{
+  if ( ! jfrom.is_object() )
+    {
+      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
+      throw flox::pkgdb::PkgDbException(
+        "package must be an object, but is" + aOrAn
+        + std::string( jfrom.type_name() ) + '.' );
+    }
+  for ( const auto &[key, value] : jfrom.items() )
+    {
+      if ( key == "path" )
+        {
+          try
+            {
+              value.get_to( pkg.path );
+            }
+          catch ( nlohmann::json::exception &e )
+            {
+              throw flox::pkgdb::PkgDbException(
+                "couldn't interpret field 'path'",
+                flox::extract_json_errmsg( e ).c_str() );
+            }
+        }
+      else if ( key == "name" )
+        {
+          try
+            {
+              value.get_to( pkg.name );
+            }
+          catch ( nlohmann::json::exception &e )
+            {
+              throw flox::pkgdb::PkgDbException(
+                "couldn't interpret field 'name'",
+                flox::extract_json_errmsg( e ).c_str() );
+            }
+        }
+      else if ( key == "pname" )
+        {
+          try
+            {
+              value.get_to( pkg.pname );
+            }
+          catch ( nlohmann::json::exception &e )
+            {
+              throw flox::pkgdb::PkgDbException(
+                "couldn't interpret field 'pname'",
+                flox::extract_json_errmsg( e ).c_str() );
+            }
+        }
+      else if ( key == "version" )
+        {
+          try
+            {
+              value.get_to( pkg.version );
+            }
+          catch ( nlohmann::json::exception &e )
+            {
+              throw flox::pkgdb::PkgDbException(
+                "couldn't interpret field 'version'",
+                flox::extract_json_errmsg( e ).c_str() );
+            }
+        }
+      else if ( key == "semver" )
+        {
+          try
+            {
+              value.get_to( pkg.semver );
+            }
+          catch ( nlohmann::json::exception &e )
+            {
+              throw flox::pkgdb::PkgDbException(
+                "couldn't interpret field 'semver'",
+                flox::extract_json_errmsg( e ).c_str() );
+            }
+        }
+      else if ( key == "license" )
+        {
+          try
+            {
+              value.get_to( pkg.license );
+            }
+          catch ( nlohmann::json::exception &e )
+            {
+              throw flox::pkgdb::PkgDbException(
+                "couldn't interpret field 'license'",
+                flox::extract_json_errmsg( e ).c_str() );
+            }
+        }
+      else if ( key == "outputs" )
+        {
+          try
+            {
+              value.get_to( pkg.outputs );
+            }
+          catch ( nlohmann::json::exception &e )
+            {
+              throw flox::pkgdb::PkgDbException(
+                "couldn't interpret field 'outputs'",
+                flox::extract_json_errmsg( e ).c_str() );
+            }
+        }
+      else if ( key == "outputsToInstall" )
+        {
+          try
+            {
+              value.get_to( pkg.outputsToInstall );
+            }
+          catch ( nlohmann::json::exception &e )
+            {
+              throw flox::pkgdb::PkgDbException(
+                "couldn't interpret field 'outputsToInstall'",
+                flox::extract_json_errmsg( e ).c_str() );
+            }
+        }
+      else if ( key == "broken" )
+        {
+          try
+            {
+              value.get_to( pkg.broken );
+            }
+          catch ( nlohmann::json::exception &e )
+            {
+              throw flox::pkgdb::PkgDbException(
+                "couldn't interpret field 'broken'",
+                flox::extract_json_errmsg( e ).c_str() );
+            }
+        }
+      else if ( key == "unfree" )
+        {
+          try
+            {
+              value.get_to( pkg.unfree );
+            }
+          catch ( nlohmann::json::exception &e )
+            {
+              throw flox::pkgdb::PkgDbException(
+                "couldn't interpret field 'unfree'",
+                flox::extract_json_errmsg( e ).c_str() );
+            }
+        }
+      else if ( key == "description" )
+        {
+          try
+            {
+              value.get_to( pkg.description );
+            }
+          catch ( nlohmann::json::exception &e )
+            {
+              throw flox::pkgdb::PkgDbException(
+                "couldn't interpret field 'description'",
+                flox::extract_json_errmsg( e ).c_str() );
+            }
+        }
+      else
+        {
+          throw flox::pkgdb::PkgDbException( "unrecognized field '" + key
+                                             + "'" );
+        }
+    }
+}
+
+/** @brief Convert a @a flox::RawPackage to a JSON object. */
+void
+to_json( nlohmann::json &jto, const flox::RawPackage &pkg )
+{
+  jto = { { "path", pkg.path },
+          {
+            "name",
+            pkg.name,
+          },
+          { "pname", pkg.pname },
+          { "version", pkg.version },
+          { "semver", pkg.semver },
+          { "license", pkg.license },
+          { "outputs", pkg.outputs },
+          { "outputsToInstall", pkg.outputsToInstall },
+          { "broken", pkg.broken },
+          { "unfree", pkg.unfree },
+          { "description", pkg.description } };
+}
 
 /* -------------------------------------------------------------------------- */
 

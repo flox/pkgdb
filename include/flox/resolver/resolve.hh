@@ -95,30 +95,33 @@ struct Resolved
 
 }; /* End struct `Resolved' */
 
+/** @brief Convert a JSON object to a @a flox::resolver::Resolved::Input. */
+void
+from_json( const nlohmann::json & jfrom, Resolved::Input & input );
+
+/** @brief Convert a @a flox::resolver::Resolved::Input to a JSON object. */
+void
+to_json( nlohmann::json & jto, const Resolved::Input & input );
+
+/** @brief Convert a JSON object to a @a flox::resolver::Resolved. */
+void
+from_json( const nlohmann::json & jfrom, Resolved & resolved );
+
+/** @brief Convert a @a flox::resolver::Resolved to a JSON object. */
+void
+to_json( nlohmann::json & jto, const Resolved & resolved );
 
 /**
- * @fn void flox::resolver::from_json( const nlohmann::json & j,
- * flox::resolver::Resolved::Input & pdb )
- * @brief Convert a JSON object to a @a flox::resolver::Resolved::Input.
- *
- * @fn void flox::resolver::to_json( nlohmann::json & j, const
- * flox::resolver::Resolved::Input & pdb )
- * @brief Convert a @a flox::resolver::Resolved::Input to a JSON object.
- *
- * @fn void flox::resolver::from_json( const nlohmann::json & j,
- * flox::resolver::Resolved & pdb )
- * @brief Convert a JSON object to a @a flox::resolver::Resolved.
- *
- * @fn void flox::resolver::to_json( nlohmann::json & j, const
- * flox::resolver::Resolved & pdb )
- * @brief Convert a @a flox::resolver::Resolved to a JSON object.
+ * @class flox::pkgdb::ParseResolvedException
+ * @brief An exception thrown when parsing @a flox::resolver::Resolved
+ *        from JSON.
  */
-/* Generate `to_json' and `from_json' functions. */
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( Resolved::Input, name, locked )
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( Resolved, input, path, info )
+FLOX_DEFINE_EXCEPTION( ParseResolvedException,
+                       EC_PARSE_RESOLVED,
+                       "error parsing resolved installable" )
 
-
-/* -------------------------------------------------------------------------- */
+/* --------------------------------------------------------------------------
+ */
 
 using Descriptor = PkgDescriptorRaw;
 

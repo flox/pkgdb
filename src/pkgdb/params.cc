@@ -39,7 +39,7 @@ QueryPreferences::clear()
 /* -------------------------------------------------------------------------- */
 
 pkgdb::PkgQueryArgs &
-QueryPreferences::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
+QueryPreferences::fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const
 {
   pqa.clear();
   pqa.systems           = this->systems;
@@ -54,35 +54,82 @@ QueryPreferences::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 /* -------------------------------------------------------------------------- */
 
 void
-from_json( const nlohmann::json & jfrom, QueryPreferences & prefs )
+from_json( const nlohmann::json &jfrom, QueryPreferences &prefs )
 {
+  if ( ! jfrom.is_object() )
+    {
+      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
+      throw ParseQueryPreferencesException(
+        "preferences must be an object, but is" + aOrAn
+        + std::string( jfrom.type_name() ) + '.' );
+    }
   prefs.clear();
-  for ( const auto & [key, value] : jfrom.items() )
+  for ( const auto &[key, value] : jfrom.items() )
     {
       if ( key == "systems" )
         {
           if ( value.is_null() ) { continue; }
-          value.get_to( prefs.systems );
+          try
+            {
+              value.get_to( prefs.systems );
+            }
+          catch ( nlohmann::json::exception &e )
+            {
+              throw ParseQueryPreferencesException(
+                "couldn't interpret preferences field 'systems'",
+                extract_json_errmsg( e ).c_str() );
+            }
         }
       else if ( key == "allow" )
         {
           if ( value.is_null() ) { continue; }
-          for ( const auto & [akey, avalue] : value.items() )
+          for ( const auto &[akey, avalue] : value.items() )
             {
               if ( akey == "unfree" )
                 {
                   if ( avalue.is_null() ) { continue; }
-                  avalue.get_to( prefs.allow.unfree );
+
+                  try
+                    {
+                      avalue.get_to( prefs.allow.unfree );
+                    }
+                  catch ( nlohmann::json::exception &e )
+                    {
+                      throw ParseQueryPreferencesException(
+                        "couldn't interpret preferences "
+                        "field 'allow.unfree'",
+                        extract_json_errmsg( e ).c_str() );
+                    }
                 }
               else if ( akey == "broken" )
                 {
                   if ( avalue.is_null() ) { continue; }
-                  avalue.get_to( prefs.allow.broken );
+                  try
+                    {
+                      avalue.get_to( prefs.allow.broken );
+                    }
+                  catch ( nlohmann::json::exception &e )
+                    {
+                      throw ParseQueryPreferencesException(
+                        "couldn't interpret preferences "
+                        "field 'allow.broken'",
+                        extract_json_errmsg( e ).c_str() );
+                    }
                 }
               else if ( akey == "licenses" )
                 {
                   if ( avalue.is_null() ) { continue; }
-                  avalue.get_to( prefs.allow.licenses );
+                  try
+                    {
+                      avalue.get_to( prefs.allow.licenses );
+                    }
+                  catch ( nlohmann::json::exception &e )
+                    {
+                      throw ParseQueryPreferencesException(
+                        "couldn't interpret preferences "
+                        "field 'allow.licenses'",
+                        extract_json_errmsg( e ).c_str() );
+                    }
                 }
               else
                 {
@@ -94,12 +141,22 @@ from_json( const nlohmann::json & jfrom, QueryPreferences & prefs )
       else if ( key == "semver" )
         {
           if ( value.is_null() ) { continue; }
-          for ( const auto & [skey, svalue] : value.items() )
+          for ( const auto &[skey, svalue] : value.items() )
             {
               if ( skey == "preferPreReleases" )
                 {
                   if ( svalue.is_null() ) { continue; }
-                  svalue.get_to( prefs.semver.preferPreReleases );
+                  try
+                    {
+                      svalue.get_to( prefs.semver.preferPreReleases );
+                    }
+                  catch ( nlohmann::json::exception &e )
+                    {
+                      throw ParseQueryPreferencesException(
+                        "couldn't interpret preferences field "
+                        "'semver.preferPreReleases'",
+                        extract_json_errmsg( e ).c_str() );
+                    }
                 }
               else
                 {
@@ -113,7 +170,7 @@ from_json( const nlohmann::json & jfrom, QueryPreferences & prefs )
 
 
 void
-to_json( nlohmann::json & jto, const QueryPreferences & prefs )
+to_json( nlohmann::json &jto, const QueryPreferences &prefs )
 {
   jto = { { "systems", prefs.systems },
           { "allow",

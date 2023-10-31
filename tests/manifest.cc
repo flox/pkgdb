@@ -366,6 +366,35 @@ test_parseManifestRaw_toml0()
   return true;
 }
 
+/* -------------------------------------------------------------------------- */
+
+/** @brief Test `flox::resolver::ManifestDescriptorRaw` gets serialized correctly. */
+bool
+test_serialize_manifest()
+{
+  nlohmann::json raw = R"( {
+    "name": "foo",
+    "version": "4.2.0",
+    "path": ["legacyPackages", "x86_64-linux", "hello"],
+    "absPath": ["legacyPackages", "x86_64-linux", "hello"],
+    "optional": true,
+    "packageGroup": "blue",
+    "packageRepository": {
+      "type": "github",
+      "owner": "NixOS",
+      "repo": "nixpkgs"
+    },
+    "priority": 5
+  } )"_json;
+
+  auto descriptor = raw.template get<flox::resolver::ManifestDescriptorRaw>();
+
+  EXPECT_EQ( nlohmann::json( descriptor ).dump(), raw.dump() );
+
+  return true;
+}
+
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -396,6 +425,8 @@ main()
 
   RUN_TEST( parseManifestRaw_toml0 );
   test_parseManifestRaw_toml0();
+
+  RUN_TEST( serialize_manifest );
 
   return exitCode;
 }
