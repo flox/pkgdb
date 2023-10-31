@@ -213,7 +213,7 @@ from_json( const nlohmann::json &jfrom, ManifestDescriptorRaw &descriptor )
   descriptor.optional = std::nullopt;
   descriptor.packageGroup = std::nullopt;
   descriptor.packageRepository = std::nullopt;
-  descriptor.input = std::nullopt;
+  descriptor.priority = std::nullopt;
 
   for ( const auto &[key, value] : jfrom.items() )
     {
@@ -321,16 +321,16 @@ from_json( const nlohmann::json &jfrom, ManifestDescriptorRaw &descriptor )
                 flox::extract_json_errmsg( e ).c_str() );
             }
         }
-      else if ( key == "input" )
+      else if ( key == "priority" )
         {
           try
             {
-              value.get_to( descriptor.input );
+              value.get_to( descriptor.priority );
             }
           catch ( nlohmann::json::exception &e )
             {
               throw ParseManifestDescriptorRawException(
-                "couldn't interpret field 'input'",
+                "couldn't interpret field 'priority'",
                 flox::extract_json_errmsg( e ).c_str() );
             }
         }
@@ -369,8 +369,8 @@ to_json( nlohmann::json & jto, const ManifestDescriptorRaw & descriptor ) {
   if ( descriptor.packageRepository.has_value() ) {
     jto["packageRepository"] = *descriptor.packageRepository;
   }
-  if ( descriptor.input.has_value() ) {
-    jto["input"] = *descriptor.input;
+  if ( descriptor.priority.has_value() ) {
+    jto["priority"] = *descriptor.priority;
   }
 }
 

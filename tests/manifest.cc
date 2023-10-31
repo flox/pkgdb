@@ -384,7 +384,7 @@ test_serialize_manifest()
       "owner": "NixOS",
       "repo": "nixpkgs"
     },
-    "input": "./pkgs/foo/default.nix"
+    "priority": 5
   } )"_json;
 
   auto descriptor = raw.template get<flox::resolver::ManifestDescriptorRaw>();
