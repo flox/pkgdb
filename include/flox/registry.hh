@@ -91,8 +91,7 @@ from_json( const nlohmann::json & jfrom, InputPreferences & prefs );
 void
 to_json( nlohmann::json & jto, const InputPreferences & prefs );
 
-/* --------------------------------------------------------------------------
- */
+/* -------------------------------------------------------------------------- */
 
 /**
  * @brief Restricts types to those which are derived from

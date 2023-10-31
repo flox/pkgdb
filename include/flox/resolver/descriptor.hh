@@ -108,8 +108,9 @@ public:
  * @brief Convert a JSON object to an @a flox::ManifestDescriptorRaw. */
 void
 from_json( const nlohmann::json & jfrom, ManifestDescriptorRaw & descriptor );
-/** @brief Convert an @a flox::resolver::ManifestDescriptorRaw to a JSON
- * object.
+/**
+ * @brief Convert an @a flox::resolver::ManifestDescriptorRaw to a
+ *              JSON object.
  */
 void
 to_json( nlohmann::json & jto, const ManifestDescriptorRaw & descriptor );
