@@ -46,14 +46,14 @@ jobs:
         aws-access-key-id:      "${{ secrets.AWS_ACCESS_KEY_ID }}"
         aws-secret-access-key:  "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
 
-    - name: "Show Setup"
+    - name: "Setup"
       run: |
+        sudo echo "extra-experimental-features = nix-command flakes" >> /etc/nix/nix.conf
         echo 'Runner Version' >&2;
         { printf '    bash   version: '; bash   --version|head -n1; } >&2;
         { printf '    nix    version: '; nix    --version; } >&2;
         export NO_WELCOME=:
         nix develop \
-          --extra-experimental-features "nix-command flakes" \
           --no-update-lock-file \
           --command sh -c '
             echo "";
@@ -72,34 +72,29 @@ jobs:
         echo "Priming Eval Cache: nixpkgs/$rev" >&2;
         NIX_SYSTEM="$(
           nix eval \
-            --extra-experimental-features "nix-command flakes" \
             --raw \
             --impure \
             --expr "builtins.currentSystem";
           )";
         nix flake show \
-          --extra-experimental-features "nix-command flakes" \
           --legacy "github:NixOS/nixpkgs/$rev"  \
           --system "$NIX_SYSTEM" >/dev/null;
 
     - name: "Build"
       run: |
         nix develop \
-          --extra-experimental-features "nix-command flakes" \
           --no-update-lock-file \
           --command make -j4
 
     - name: "Build Tests"
       run: |
         nix develop \
-          --extra-experimental-features "nix-command flakes" \
           --no-update-lock-file \
           --command make tests -j4
 
     - name: "Run Tests"
       run: |
         nix develop \
-          --extra-experimental-features "nix-command flakes" \
           --no-update-lock-file \
           --command make check -j4
 
@@ -107,7 +102,6 @@ jobs:
       if: github.ref == 'refs/heads/improve-ci'
       run: |
         nix develop \
-          --extra-experimental-features "nix-command flakes" \
           --no-update-lock-file \
           --command make docs
 
@@ -154,18 +148,15 @@ jobs:
     - name: "Check"
       run: |
         nix flake check -L \
-          --extra-experimental-features "nix-command flakes" \
           --no-update-lock-file
 
     - name: "Build"
       run: |
         nix build -L \
-          --extra-experimental-features "nix-command flakes" \
           --no-update-lock-file
 
     - name: "Run"
       run: |
         nix run . \
-          --extra-experimental-features "nix-command flakes" \
           --no-update-lock-file \
             -- --help
