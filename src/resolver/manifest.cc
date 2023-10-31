@@ -220,6 +220,7 @@ ManifestFileMixin::lockDescriptor( const std::string        &iid,
                          { "pname", std::move( info.at( "pname" ) ) },
                          { "version", std::move( info.at( "version" ) ) },
                          { "license", std::move( info.at( "license" ) ) },
+                         { "priority", desc.priority }
                        } };
 
           locked.emplace( system, std::move( resolved ) );

@@ -78,15 +78,24 @@ public:
   /** Whether resoution is allowed to fail without producing errors. */
   std::optional<bool> optional;
 
+  // TODO: Not implemented.
   /** Named _group_ that the package is a member of. */
   std::optional<std::string> packageGroup;
 
-  /** Force resolution is a given input or _flake reference_. */
+  // TODO: Not implemented.
+  /** Force resolution is the named input or _flake reference_. */
   std::optional<std::variant<std::string, nix::fetchers::Attrs>>
     packageRepository;
 
-  /** Relative path to a `nix` expression file to be evaluated. */
-  std::optional<std::string> input;
+
+  /**
+   * Rank a package's priority for handling conflicting files.
+   * The default value is `5` ( set in @a flox::resolver::ManifestDescriptor ).
+   *
+   * Packages with higher @a priority values will take precendence over those
+   * with lower @a priority values.
+   */
+  std::optional<unsigned> priority;
 
 
 }; /* End struct `ManifestDescriptorRaw' */
@@ -94,6 +103,7 @@ public:
 
 /* -------------------------------------------------------------------------- */
 
+// TODO: support `packageRepository' field
 /**
  * @fn void from_json( const nlohmann::json        & jfrom
  *                   ,       ManifestDescriptorRaw & desc
@@ -112,8 +122,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT( ManifestDescriptorRaw,
                                                  systems,
                                                  optional,
                                                  packageGroup,
-                                                 packageRepository,
-                                                 input )
+                                                 priority )
 
 
 /* -------------------------------------------------------------------------- */
@@ -151,8 +160,17 @@ public:
   /** Match a relative attribute path. */
   std::optional<flox::AttrPath> path;
 
-  /** Force resolution is a given input, _flake reference_, or file. */
-  std::optional<std::variant<nix::FlakeRef, std::string>> input;
+  /** Force resolution is a given input, _flake reference_. */
+  std::optional<nix::FlakeRef> input;
+
+  /**
+   * Rank a package's priority for handling conflicting files.
+   * The default value is `5` ( set in @a flox::resolver::ManifestDescriptor ).
+   *
+   * Packages with higher @a priority values will take precendence over those
+   * with lower @a priority values.
+   */
+ unsigned priority = 5;
 
 
   ManifestDescriptor() = default;
