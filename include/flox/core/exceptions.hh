@@ -55,22 +55,28 @@ enum error_category {
   EC_NIX_LOCK_FLAKE = 109,
   /** Exception initializing a @a flox::FlakePackage. */
   EC_PACKAGE_INIT = 110,
+  /** Exception parsing `flox::resolver::ManifestDescriptorRaw` from JSON. */
+  EC_PARSE_MANIFEST_DESCRIPTOR_RAW = 111,
+  /** Exception parsing `PkgDescriptorBase` from JSON. */
+  EC_PARSE_PKG_DESCRIPTOR_BASE = 112,
   /** Exception parsing @a flox::pkgdb::QueryParams from JSON. */
-  EC_PARSE_QUERY_PARAMS = 111,
+  EC_PARSE_QUERY_PARAMS = 113,
   /** Exception parsing @a flox::pkgdb::QueryPreferences from JSON. */
-  EC_PARSE_QUERY_PREFERENCES = 112,
+  EC_PARSE_QUERY_PREFERENCES = 114,
+  /** Exception parsing `flox::resolver::Resolved` from JSON. */
+  EC_PARSE_RESOLVED = 115,
   /** Exception parsing @a flox::search::SearchQuery from JSON. */
-  EC_PARSE_SEARCH_QUERY = 113,
+  EC_PARSE_SEARCH_QUERY = 116,
   /** For generic exceptions thrown by `flox::pkgdb::*` classes. */
-  EC_PKG_DB = 114,
+  EC_PKG_DB = 117,
   /** Exceptions thrown by SQLite3. */
-  EC_SQLITE3 = 115,
+  EC_SQLITE3 = 118,
   /** Exception parsing/processing JSON. */
-  EC_JSON = 116,
+  EC_JSON = 119,
   /** Exception converting TOML to JSON. */
-  EC_TOML_TO_JSON = 117,
+  EC_TOML_TO_JSON = 120,
   /** Exception converting YAML to JSON. */
-  EC_YAML_TO_JSON = 118
+  EC_YAML_TO_JSON = 121
 
 }; /* End enum `error_category' */
 
