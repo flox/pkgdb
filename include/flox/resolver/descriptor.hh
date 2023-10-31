@@ -105,25 +105,23 @@ public:
 
 // TODO: support `packageRepository' field
 /**
- * @fn void from_json( const nlohmann::json        & jfrom
- *                   ,       ManifestDescriptorRaw & desc
- *                   )
- * @brief Convert a JSON object to an @a flox::InputPreferences.
- *
- * @fn void to_json( nlohmann::json & jto, const ManifestDescriptorRaw & desc )
- * @brief Convert an @a flox::resolver::ManifestDescriptorRaw to a JSON object.
+ * @brief Convert a JSON object to an @a flox::ManifestDescriptorRaw. */
+void
+from_json( const nlohmann::json & jfrom, ManifestDescriptorRaw & descriptor );
+/** @brief Convert an @a flox::resolver::ManifestDescriptorRaw to a JSON
+ * object.
  */
-/* Generate to_json/from_json functions. */
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT( ManifestDescriptorRaw,
-                                                 name,
-                                                 version,
-                                                 path,
-                                                 absPath,
-                                                 systems,
-                                                 optional,
-                                                 packageGroup,
-                                                 priority )
+void
+to_json( nlohmann::json & jto, const ManifestDescriptorRaw & descriptor );
 
+/**
+ * @class flox::pkgdb::ParseManifestDescriptorRawException
+ * @brief An exception thrown when parsing @a flox::resolver::ManifestDescriptorRaw
+ *        from JSON.
+ */
+FLOX_DEFINE_EXCEPTION( ParseManifestDescriptorRawException,
+                       EC_PARSE_MANIFEST_DESCRIPTOR_RAW,
+                       "error parsing manifest descriptor" )
 
 /* -------------------------------------------------------------------------- */
 

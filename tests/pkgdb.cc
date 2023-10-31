@@ -276,7 +276,7 @@ test_descriptions0( flox::pkgdb::PkgDb &db )
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief Test `PkgDescriptorBase` gets deserialized correctly. */
+/** @brief Test `flox::pkgdb::PkgDescriptorBase` gets deserialized correctly. */
 bool
 test_deserialize_PkgDescriptorBase()
 {
@@ -294,7 +294,7 @@ test_deserialize_PkgDescriptorBase()
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief Test `PkgDescriptorBase` gets serialized correctly. */
+/** @brief Test `flox::pkgdb::PkgDescriptorBase` gets serialized correctly. */
 bool
 test_serialize_PkgDescriptorBase()
 {
