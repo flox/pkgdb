@@ -204,6 +204,7 @@ from_json( const nlohmann::json &jfrom, ManifestDescriptorRaw &descriptor )
     }
 
   /* Clear fields. */
+  // TODO add ManifestDescriptorRaw::clear();
   descriptor.name = std::nullopt;
   descriptor.version = std::nullopt;
   descriptor.path = std::nullopt;
