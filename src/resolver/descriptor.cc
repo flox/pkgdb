@@ -158,19 +158,17 @@ initManifestDescriptorAbsPath( ManifestDescriptor &          desc,
           desc.path->emplace_back( *elem );
         }
     }
-  else
+
+  desc.path = AttrPath {};
+  for ( auto itr = glob.begin() + 2; itr != glob.end(); ++itr )
     {
-      desc.path = AttrPath {};
-      for ( auto itr = glob.begin() + 2; itr != glob.end(); ++itr )
+      const auto & elem = *itr;
+      if ( ! elem.has_value() )
         {
-          const auto & elem = *itr;
-          if ( ! elem.has_value() )
-            {
-              throw InvalidManifestDescriptorException(
-                "`absPath' may only have a glob as its second element" );
-            }
-          desc.path->emplace_back( *elem );
+          throw InvalidManifestDescriptorException(
+            "`absPath' may only have a glob as its second element" );
         }
+      desc.path->emplace_back( *elem );
     }
 
   const auto & second = glob.at( 1 );
