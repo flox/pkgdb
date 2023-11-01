@@ -74,17 +74,21 @@ struct PkgDescriptorBase
 /**
  * @brief Convert a JSON object to a @a flox::pkgdb::PkgDescriptorBase.
  */
-void from_json( const nlohmann::json & jfrom, PkgDescriptorBase & pkgDescriptorBase );
+void
+from_json( const nlohmann::json & jfrom,
+           PkgDescriptorBase &    pkgDescriptorBase );
 /**
  *
  * @brief Convert a @a flox::pkgdb::PkgDescriptorBase to a JSON object.
  */
- void to_json( nlohmann::json & jto, const PkgDescriptorBase & pkgDescriptorBase );
+void
+to_json( nlohmann::json & jto, const PkgDescriptorBase & pkgDescriptorBase );
 
 /**
  * @class flox::pkgdb::ParsePkgDescriptorBaseException
- * @brief An exception thrown when parsing @a flox::pkgdb::PkgDescriptorBase from JSON.
-*/
+ * @brief An exception thrown when parsing @a flox::pkgdb::PkgDescriptorBase
+ * from JSON.
+ */
 FLOX_DEFINE_EXCEPTION( ParsePkgDescriptorBaseException,
                        EC_PARSE_PKG_DESCRIPTOR_BASE,
                        "error parsing package descriptor base" )

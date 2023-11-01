@@ -101,7 +101,8 @@ static const nlohmann::json resolvedRaw = R"( {
 bool
 test_deserialize_resolved()
 {
-  flox::resolver::Resolved resolved = resolvedRaw.template get<flox::resolver::Resolved>();
+  flox::resolver::Resolved resolved
+    = resolvedRaw.template get<flox::resolver::Resolved>();
 
   // Do a non-exhaustive sanity check for now
   EXPECT_EQ( resolved.input.locked["owner"], "NixOS" );
@@ -117,7 +118,8 @@ test_deserialize_resolved()
 bool
 test_serialize_resolved()
 {
-  flox::resolver::Resolved resolved = resolvedRaw.template get<flox::resolver::Resolved>();
+  flox::resolver::Resolved resolved
+    = resolvedRaw.template get<flox::resolver::Resolved>();
 
   EXPECT_EQ( nlohmann::json( resolved ).dump(), resolvedRaw.dump() );
 

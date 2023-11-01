@@ -146,8 +146,7 @@ to_json( nlohmann::json &jto, const Resolved &resolved )
 {
   jto = { { "input", resolved.input },
           { "path", resolved.path },
-          {"info",
-          resolved.info }};
+          { "info", resolved.info } };
 }
 
 
@@ -157,9 +156,9 @@ from_json( const nlohmann::json &jfrom, Resolved::Input &input )
   if ( ! jfrom.is_object() )
     {
       std::string aOrAn = jfrom.is_array() ? " an " : " a ";
-      throw ParseResolvedException(
-        "registry input must be an object, but is" + aOrAn
-        + std::string( jfrom.type_name() ) + '.' );
+      throw ParseResolvedException( "registry input must be an object, but is"
+                                    + aOrAn + std::string( jfrom.type_name() )
+                                    + '.' );
     }
   for ( const auto &[key, value] : jfrom.items() )
     {
@@ -179,9 +178,8 @@ from_json( const nlohmann::json &jfrom, Resolved::Input &input )
       else if ( key == "locked" ) { input.locked = value; }
       else
         {
-          throw ParseResolvedException( "encountered unrecognized field '"
-                                             + key
-                                             + "' while parsing locked input" );
+          throw ParseResolvedException( "encountered unrecognized field '" + key
+                                        + "' while parsing locked input" );
         }
     }
 }

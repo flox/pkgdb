@@ -207,7 +207,7 @@ test_parseManifestDescriptor_input0()
 
   return true;
 }
-#endif  /* if 0 */
+#endif /* if 0 */
 
 
 /* -------------------------------------------------------------------------- */
@@ -343,7 +343,8 @@ test_parseManifestRaw_toml0()
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief Test `flox::resolver::ManifestDescriptorRaw` gets serialized correctly. */
+/** @brief Test `flox::resolver::ManifestDescriptorRaw` gets serialized
+ * correctly. */
 bool
 test_serialize_manifest()
 {
@@ -368,7 +369,6 @@ test_serialize_manifest()
 
   return true;
 }
-
 
 
 /* -------------------------------------------------------------------------- */

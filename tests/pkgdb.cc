@@ -301,7 +301,8 @@ test_serialize_PkgDescriptorBase()
   flox::pkgdb::PkgDescriptorBase pkgDescriptorBase
     = pkgDescriptorBaseRaw.template get<flox::pkgdb::PkgDescriptorBase>();
 
-  EXPECT_EQ( nlohmann::json( pkgDescriptorBase ).dump(), pkgDescriptorBaseRaw.dump() );
+  EXPECT_EQ( nlohmann::json( pkgDescriptorBase ).dump(),
+             pkgDescriptorBaseRaw.dump() );
 
   return true;
 }

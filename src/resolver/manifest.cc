@@ -211,17 +211,16 @@ ManifestFileMixin::lockDescriptor( const std::string        &iid,
           auto rows = query.execute( input->getDbReadOnly()->db );
           if ( rows.empty() ) { continue; }
 
-          found     = true;
-          auto info = input->getDbReadOnly()->getPackage( rows.front() );
-          Resolved
-            resolved { .input = Resolved::Input( name, *input->getFlakeRef() ),
-                       .path  = std::move( info.at( "absPath" ) ),
-                       .info  = {
-                         { "pname", std::move( info.at( "pname" ) ) },
-                         { "version", std::move( info.at( "version" ) ) },
-                         { "license", std::move( info.at( "license" ) ) },
-                         { "priority", desc.priority }
-                       } };
+          found         = true;
+          auto     info = input->getDbReadOnly()->getPackage( rows.front() );
+          Resolved resolved {
+            .input = Resolved::Input( name, *input->getFlakeRef() ),
+            .path  = std::move( info.at( "absPath" ) ),
+            .info  = { { "pname", std::move( info.at( "pname" ) ) },
+                       { "version", std::move( info.at( "version" ) ) },
+                       { "license", std::move( info.at( "license" ) ) },
+                       { "priority", desc.priority } }
+          };
 
           locked.emplace( system, std::move( resolved ) );
           break;

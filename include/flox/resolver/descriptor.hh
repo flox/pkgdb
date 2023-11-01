@@ -117,8 +117,8 @@ to_json( nlohmann::json & jto, const ManifestDescriptorRaw & descriptor );
 
 /**
  * @class flox::pkgdb::ParseManifestDescriptorRawException
- * @brief An exception thrown when parsing @a flox::resolver::ManifestDescriptorRaw
- *        from JSON.
+ * @brief An exception thrown when parsing @a
+ * flox::resolver::ManifestDescriptorRaw from JSON.
  */
 FLOX_DEFINE_EXCEPTION( ParseManifestDescriptorRawException,
                        EC_PARSE_MANIFEST_DESCRIPTOR_RAW,
@@ -169,7 +169,7 @@ public:
    * Packages with higher @a priority values will take precendence over those
    * with lower @a priority values.
    */
- unsigned priority = 5;
+  unsigned priority = 5;
 
 
   ManifestDescriptor() = default;

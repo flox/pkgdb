@@ -358,8 +358,7 @@ from_json( const nlohmann::json &jfrom, InputPreferences &prefs )
 void
 to_json( nlohmann::json &jto, const InputPreferences &prefs )
 {
-  jto
-    = { { "subtrees", prefs.subtrees } };
+  jto = { { "subtrees", prefs.subtrees } };
 }
 
 
