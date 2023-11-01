@@ -186,15 +186,15 @@ void
 PkgQueryArgs::clear()
 {
   this->PkgDescriptorBase::clear();
-  this->partialMatch       = std::nullopt;
-  this->pnameOrPkgAttrName = std::nullopt;
-  this->licenses           = std::nullopt;
-  this->allowBroken        = false;
-  this->allowUnfree        = true;
-  this->preferPreReleases  = false;
-  this->subtrees           = std::nullopt;
-  this->systems            = { nix::settings.thisSystem.get() };
-  this->relPath            = std::nullopt;
+  this->partialMatch      = std::nullopt;
+  this->pnameOrAttrName   = std::nullopt;
+  this->licenses          = std::nullopt;
+  this->allowBroken       = false;
+  this->allowUnfree       = true;
+  this->preferPreReleases = false;
+  this->subtrees          = std::nullopt;
+  this->systems           = { nix::settings.thisSystem.get() };
+  this->relPath           = std::nullopt;
 }
 
 
@@ -262,24 +262,23 @@ addIn( std::stringstream &oss, const std::vector<std::string> &elems )
 void
 PkgQuery::initMatch()
 {
-  /* Filter by exact matches on `pname' or `pkgAttrName'. */
-  if ( this->pnameOrPkgAttrName.has_value()
-       && ( ! this->pnameOrPkgAttrName->empty() ) )
+  /* Filter by exact matches on `pname' or `attrName'. */
+  if ( this->pnameOrAttrName.has_value()
+       && ( ! this->pnameOrAttrName->empty() ) )
     {
-      this->addSelection( "( :pnameOrPkgAttrName = pname ) AS exactPname" );
-      this->addSelection(
-        "( :pnameOrPkgAttrName = pkgAttrName ) AS exactPkgAttrName" );
-      binds.emplace( ":pnameOrPkgAttrName", *this->pnameOrPkgAttrName );
-      this->addWhere( "( exactPname OR exactPkgAttrName )" );
+      this->addSelection( "( :pnameOrAttrName = pname ) AS exactPname" );
+      this->addSelection( "( :pnameOrAttrName = attrName ) AS exactAttrName" );
+      binds.emplace( ":pnameOrAttrName", *this->pnameOrAttrName );
+      this->addWhere( "( exactPname OR exactAttrName )" );
     }
   else
     {
       /* Add bogus `match*` values so that later `ORDER BY` works. */
       this->addSelection( "NULL AS exactPname" );
-      this->addSelection( "NULL AS exactPkgAttrName" );
+      this->addSelection( "NULL AS exactAttrName" );
     }
 
-  /* Filter by partial matches on `pname', `pkgAttrName', or `description'. */
+  /* Filter by partial matches on `pname', `attrName', or `description'. */
   if ( this->partialMatch.has_value() && ( ! this->partialMatch->empty() ) )
     {
       /* We have to add '%' around `:match' because they were added for
@@ -288,17 +287,17 @@ PkgQuery::initMatch()
         "( ( '%' || LOWER( pname ) || '%' ) = LOWER( :partialMatch ) ) "
         "AS matchExactPname" );
       this->addSelection(
-        "( ( '%' || LOWER( pkgAttrName ) || '%' ) = LOWER( :partialMatch ) ) "
-        "AS matchExactPkgAttrName" );
+        "( ( '%' || LOWER( attrName ) || '%' ) = LOWER( :partialMatch ) ) "
+        "AS matchExactAttrName" );
       this->addSelection( "( pname LIKE :partialMatch ) AS matchPartialPname" );
       this->addSelection(
-        "( pkgAttrName LIKE :partialMatch ) AS matchPartialPkgAttrName" );
+        "( attrName LIKE :partialMatch ) AS matchPartialAttrName" );
       this->addSelection(
         "( description LIKE :partialMatch ) AS matchPartialDescription" );
       /* Add `%` before binding so `LIKE` works. */
       binds.emplace( ":partialMatch", "%" + ( *this->partialMatch ) + "%" );
-      this->addWhere( "( matchExactPname OR matchExactPkgAttrName OR"
-                      "  matchPartialPname OR matchPartialPkgAttrName OR"
+      this->addWhere( "( matchExactPname OR matchExactAttrName OR"
+                      "  matchPartialPname OR matchPartialAttrName OR"
                       "  matchPartialDescription "
                       ")" );
     }
@@ -306,9 +305,9 @@ PkgQuery::initMatch()
     {
       /* Add bogus `match*` values so that later `ORDER BY` works. */
       this->addSelection( "NULL AS matchExactPname" );
-      this->addSelection( "NULL AS matchExactPkgAttrName" );
+      this->addSelection( "NULL AS matchExactAttrName" );
       this->addSelection( "NULL AS matchPartialPname" );
-      this->addSelection( "NULL AS matchPartialPkgAttrName" );
+      this->addSelection( "NULL AS matchPartialAttrName" );
       this->addSelection( "NULL AS matchPartialDescription" );
     }
 }
@@ -400,11 +399,11 @@ PkgQuery::initOrderBy()
   /* Establish ordering. */
   this->addOrderBy( R"SQL(
     exactPname              DESC
-  , exactPkgAttrName        DESC
+  , exactAttrName           DESC
   , matchExactPname         DESC
-  , matchExactPkgAttrName   DESC
+  , matchExactAttrName      DESC
   , matchPartialPname       DESC
-  , matchPartialPkgAttrName DESC
+  , matchPartialAttrName    DESC
   , matchPartialDescription DESC
 
   , subtreesRank ASC

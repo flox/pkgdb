@@ -276,11 +276,7 @@ FloxFlakeInput::getSubtrees()
           try
             {
               auto root = this->getFlake()->openEvalCache()->getRoot();
-              if ( root->maybeGetAttr( "catalog" ) != nullptr )
-                {
-                  this->enabledSubtrees = std::vector<Subtree> { ST_CATALOG };
-                }
-              else if ( root->maybeGetAttr( "packages" ) != nullptr )
+              if ( root->maybeGetAttr( "packages" ) != nullptr )
                 {
                   this->enabledSubtrees = std::vector<Subtree> { ST_PACKAGES };
                 }
@@ -362,8 +358,7 @@ from_json( const nlohmann::json &jfrom, InputPreferences &prefs )
 void
 to_json( nlohmann::json &jto, const InputPreferences &prefs )
 {
-  jto
-    = { { "subtrees", prefs.subtrees } };
+  jto = { { "subtrees", prefs.subtrees } };
 }
 
 

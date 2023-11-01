@@ -160,7 +160,7 @@ genParamsNixpkgsFlox() {
   assert_output --partial 'id number';
   assert_output --partial 'input string';
   assert_output --partial 'license string';
-  assert_output --partial 'pkgSubPath array';
+  assert_output --partial 'relPath array';
   assert_output --partial 'pname string';
   assert_output --partial 'subtree string';
   assert_output --partial 'system string';

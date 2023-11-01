@@ -329,31 +329,6 @@ test_parseManifestDescriptor_path4()
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief Test descriptor `path`/`absPath` parsing. */
-bool
-test_parseManifestDescriptor_path5()
-{
-
-  flox::resolver::ManifestDescriptorRaw raw = R"( {
-    "absPath": ["catalog", "x86_64-linux", "stable", "hello", "4.2.0"]
-  } )"_json;
-
-  flox::resolver::ManifestDescriptor descriptor( raw );
-
-  EXPECT( descriptor.subtree.has_value() );
-  EXPECT_EQ( *descriptor.subtree, flox::ST_CATALOG );
-  EXPECT( descriptor.systems.has_value() );
-  EXPECT( ( *descriptor.systems )
-          == ( std::vector<std::string> { "x86_64-linux" } ) );
-  EXPECT( descriptor.path.has_value() );
-  EXPECT( ( *descriptor.path ) == ( flox::AttrPath { "hello", "4.2.0" } ) );
-
-  return true;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
 bool
 test_parseManifestRaw_toml0()
 {
@@ -368,7 +343,8 @@ test_parseManifestRaw_toml0()
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief Test `flox::resolver::ManifestDescriptorRaw` gets serialized correctly. */
+/** @brief Test `flox::resolver::ManifestDescriptorRaw` gets serialized
+ * correctly. */
 bool
 test_serialize_manifest()
 {
@@ -393,7 +369,6 @@ test_serialize_manifest()
 
   return true;
 }
-
 
 
 /* -------------------------------------------------------------------------- */
@@ -421,7 +396,6 @@ main()
   RUN_TEST( parseManifestDescriptor_path2 );
   RUN_TEST( parseManifestDescriptor_path3 );
   RUN_TEST( parseManifestDescriptor_path4 );
-  RUN_TEST( parseManifestDescriptor_path5 );
 
   RUN_TEST( parseManifestRaw_toml0 );
   test_parseManifestRaw_toml0();

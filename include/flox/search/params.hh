@@ -48,7 +48,7 @@ struct SearchQuery : public pkgdb::PkgDescriptorBase
    *   std::optional<std::string> semver;
    */
 
-  /** Filter results by partial match on pname, pkgAttrName, or description */
+  /** Filter results by partial match on pname, attrName, or description */
   std::optional<std::string> partialMatch;
 
   /** @brief Reset to default state. */
@@ -120,19 +120,11 @@ to_json( nlohmann::json &jto, const SearchQuery &qry );
  *         }
  *       , "subtrees": ["packages"]
  *       }
- *     , "floxpkgs": {
- *         "from": {
- *           "type": "github"
- *         , "owner": "flox"
- *         , "repo": "floxpkgs"
- *         }
- *       , "subtrees": ["catalog"]
- *       }
  *     }
  *   , "defaults": {
  *       "subtrees": null
  *     }
- *   , "priority": ["nixpkgs", "floco", "floxpkgs"]
+ *   , "priority": ["nixpkgs", "floco"]
  *   }
  * , "systems": ["x86_64-linux"]
  * , "allow":   { "unfree": true, "broken": false, "licenses": ["MIT"] }

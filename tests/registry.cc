@@ -45,7 +45,7 @@ test_FloxFlakeInputRegistry0()
       ++count;
     }
 
-  EXPECT_EQ( count, std::size_t( 3 ) );
+  EXPECT_EQ( count, std::size_t( 2 ) );
 
   return true;
 }

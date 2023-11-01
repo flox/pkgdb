@@ -250,7 +250,7 @@ inline static const std::vector<std::string> &
 getDefaultSubtrees()
 {
   static const std::vector<std::string> defaultSubtrees
-    = { "catalog", "packages", "legacyPackages" };
+    = { "packages", "legacyPackages" };
   return defaultSubtrees;
 }
 
@@ -318,7 +318,7 @@ yamlToJSON( std::string_view yaml );
  * Files with the extension `.toml` are converted to JSON from TOML.
  */
 nlohmann::json
-readAndCoerceJSON( const std::filesystem::path & path );
+readAndCoerceJSON( const std::filesystem::path &path );
 
 
 /* -------------------------------------------------------------------------- */

@@ -45,20 +45,11 @@ static const nlohmann::json commonRegistry = R"( {
       }
     , "subtrees": ["packages"]
     }
-  , "nixpkgs-flox": {
-      "from": {
-        "type": "github"
-      , "owner": "flox"
-      , "repo": "nixpkgs-flox"
-      , "rev": "feb593b6844a96dd4e17497edaabac009be05709"
-      }
-    , "subtrees": ["catalog"]
-    }
   }
   , "defaults": {
     "subtrees": null
   }
-, "priority": ["nixpkgs", "floco", "nixpkgs-flox"]
+, "priority": ["nixpkgs", "floco"]
 } )"_json;
 
 static const nlohmann::json commonPreferences = R"( {
@@ -97,7 +88,6 @@ static const nlohmann::json resolvedRaw = R"( {
       "hello"
     ],
     "pname": "hello",
-    "stability": null,
     "subtree": "legacyPackages",
     "system": "x86_64-linux",
     "unfree": false,
@@ -111,7 +101,8 @@ static const nlohmann::json resolvedRaw = R"( {
 bool
 test_deserialize_resolved()
 {
-  flox::resolver::Resolved resolved = resolvedRaw.template get<flox::resolver::Resolved>();
+  flox::resolver::Resolved resolved
+    = resolvedRaw.template get<flox::resolver::Resolved>();
 
   // Do a non-exhaustive sanity check for now
   EXPECT_EQ( resolved.input.locked["owner"], "NixOS" );
@@ -127,7 +118,8 @@ test_deserialize_resolved()
 bool
 test_serialize_resolved()
 {
-  flox::resolver::Resolved resolved = resolvedRaw.template get<flox::resolver::Resolved>();
+  flox::resolver::Resolved resolved
+    = resolvedRaw.template get<flox::resolver::Resolved>();
 
   EXPECT_EQ( nlohmann::json( resolved ).dump(), resolvedRaw.dump() );
 

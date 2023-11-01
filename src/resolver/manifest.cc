@@ -164,13 +164,13 @@ mkResolved( std::string_view         inputName,
             unsigned                 priority )
 {
   auto info = input.getDbReadOnly()->getPackage( row );
-  return { .input
-           = Resolved::Input( std::string( inputName ), input.getFlakeRef()->to_string() ),
-           .path = std::move( info.at( "absPath" ) ),
-           .info = { { "pname", std::move( info.at( "pname" ) ) },
-                     { "version", std::move( info.at( "version" ) ) },
-                     { "license", std::move( info.at( "license" ) ) },
-                     { "priority", priority } } };
+  return { .input = Resolved::Input( std::string( inputName ),
+                                     input.getFlakeRef()->to_string() ),
+           .path  = std::move( info.at( "absPath" ) ),
+           .info  = { { "pname", std::move( info.at( "pname" ) ) },
+                      { "version", std::move( info.at( "version" ) ) },
+                      { "license", std::move( info.at( "license" ) ) },
+                      { "priority", priority } } };
 }
 
 
@@ -355,10 +355,9 @@ ManifestFileMixin::getLockedDescriptors()
       /* First check to see if any member of the group already has a
        * `lockedDescriptor' entry ( potentially filled by a lockfile ).
        * If they do, align unlocked group members to the same rev. */
-      std::unordered_map<
-        std::string,  /* system */
-        std::optional<Resolved::Input>
-      > input;
+      std::unordered_map<std::string, /* system */
+                         std::optional<Resolved::Input>>
+           input;
       bool hadInput = false;
       for ( const auto iid : iids )
         {
@@ -366,12 +365,13 @@ ManifestFileMixin::getLockedDescriptors()
           if ( maybeLocked != this->lockedDescriptors.end() )
             {
               hadInput = true;
-              for ( const auto & [system, resolved] : maybeLocked->second )
+              for ( const auto &[system, resolved] : maybeLocked->second )
                 {
                   input.try_emplace( system, std::nullopt );
                   if ( resolved.has_value() )
                     {
-                      input.at( system ) = input.at( system ).value_or( * resolved );
+                      input.at( system )
+                        = input.at( system ).value_or( *resolved );
                     }
                 }
             }
@@ -390,14 +390,16 @@ ManifestFileMixin::getLockedDescriptors()
               std::unordered_map<std::string, std::optional<Resolved>> locked;
 
               pkgdb::PkgQueryArgs args = baseArgs;
-              auto desc = this->getDescriptors().at( iid );
+              auto                desc = this->getDescriptors().at( iid );
 
-              for ( const auto & system : this->getSystems() )
+              for ( const auto &system : this->getSystems() )
                 {
                   /* See if this system is skippable. */
-                  if ( desc.systems.has_value() &&
-                       ( std::find( desc.systems->begin(), desc.systems->end(), system )
-                         == desc.systems->end() ) )
+                  if ( desc.systems.has_value()
+                       && ( std::find( desc.systems->begin(),
+                                       desc.systems->end(),
+                                       system )
+                            == desc.systems->end() ) )
                     {
                       /* This descriptor is not for this system. */
                       locked.emplace( system, std::nullopt );
@@ -419,15 +421,13 @@ ManifestFileMixin::getLockedDescriptors()
                   pkgdb::PkgQuery query( args );
 
                   auto registryInput = this->getPkgDbRegistry()->at(
-                    input.at( system )->name.value()
-                  );
+                    input.at( system )->name.value() );
 
-                  auto rows = query.execute( registryInput->getDbReadOnly()->db );
-
+                  auto rows
+                    = query.execute( registryInput->getDbReadOnly()->db );
                 }
             }
         }
-
     }
 
   this->checkGroups();

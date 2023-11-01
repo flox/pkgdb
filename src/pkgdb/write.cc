@@ -444,7 +444,7 @@ PkgDb::scrape( nix::SymbolTable & syms, const Target & target, Todos & todo )
         }
       catch ( const nix::EvalError & err )
         {
-          /* Ignore errors in `legacyPackages' and `catalog' */
+          /* Ignore errors in `legacyPackages' */
           if ( tryRecur )
             {
               /* Only print eval errors in "debug" mode. */

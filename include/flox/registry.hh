@@ -238,19 +238,11 @@ static_assert( registry_input_factory<RegistryInputFactory> );
  *       }
  *     , "subtrees": ["packages"]
  *     }
- *   , "floxpkgs": {
- *       "from": {
- *         "type": "github"
- *       , "owner": "flox"
- *       , "repo": "floxpkgs"
- *       }
- *     , "subtrees": ["catalog"]
- *     }
  *   }
  * , "defaults": {
  *     "subtrees": null
  *   }
- * , "priority": ["nixpkgs", "floco", "floxpkgs"]
+ * , "priority": ["nixpkgs", "floco"]
  * }
  * ```
  */
@@ -301,21 +293,18 @@ struct RegistryRaw
    *     "floco": {
    *       "from": { "type": "github", "owner": "aakropotkin", "repo": "floco" }
    *     }
-   *   , "floxpkgs": {
-   *       "from": { "type": "github", "owner": "flox", "repo": "floxpkgs" }
-   *     }
    *   , "nixpkgs": {
    *       "from": { "type": "github", "owner": "NixOS", "repo": "nixpkgs" }
    *     }
    *   }
-   * , "priority": ["nixpkgs", "floxpkgs"]
+   * , "priority": ["nixpkgs"]
    * } )"_json;
    * for ( const auto & name : reg.getOrder() )
    *   {
    *     std::cout << name.get() << " ";
    *   }
    * std::cout << std::endl;
-   * // => nixpkgs floxpkgs floco
+   * // => nixpkgs floco
    * ```
    *
    * @return A list of input names in order of priority.
@@ -589,9 +578,8 @@ public:
    * If the user has explicitly defined a list of subtrees, then simply use
    * that list.
    * If the list is undefined, pick the first of:
-   *   1. "catalog"
-   *   2. "package"
-   *   3. "legacyPackages"
+   *   1. "package"
+   *   2. "legacyPackages"
    */
   [[nodiscard]] const std::vector<Subtree> &
   getSubtrees();

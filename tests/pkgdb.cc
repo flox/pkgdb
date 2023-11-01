@@ -301,7 +301,8 @@ test_serialize_PkgDescriptorBase()
   flox::pkgdb::PkgDescriptorBase pkgDescriptorBase
     = pkgDescriptorBaseRaw.template get<flox::pkgdb::PkgDescriptorBase>();
 
-  EXPECT_EQ( nlohmann::json( pkgDescriptorBase ).dump(), pkgDescriptorBaseRaw.dump() );
+  EXPECT_EQ( nlohmann::json( pkgDescriptorBase ).dump(),
+             pkgDescriptorBaseRaw.dump() );
 
   return true;
 }
@@ -482,7 +483,7 @@ test_PkgQuery1( flox::pkgdb::PkgDb &db )
 
 /* -------------------------------------------------------------------------- */
 
-/* Tests `partialMatch' and `pnameOrPkgAttrName' filtering. */
+/* Tests `partialMatch' and `pnameOrAttrName' filtering. */
 bool
 test_PkgQuery2( flox::pkgdb::PkgDb &db )
 {
@@ -591,49 +592,49 @@ test_PkgQuery2( flox::pkgdb::PkgDb &db )
     EXPECT_EQ( count, std::size_t( 2 ) );
   }
 
-  /* Run `pnameOrPkgAttrName = "hello"' query, which matches pname */
+  /* Run `pnameOrAttrName = "hello"' query, which matches pname */
   {
-    qargs.pnameOrPkgAttrName = "hello";
+    qargs.pnameOrAttrName = "hello";
     flox::pkgdb::PkgQuery qry(
       qargs,
-      std::vector<std::string> { "exactPname", "exactPkgAttrName" } );
-    qargs.pnameOrPkgAttrName = std::nullopt;
-    size_t count             = 0;
-    auto   bound             = qry.bind( db.db );
+      std::vector<std::string> { "exactPname", "exactAttrName" } );
+    qargs.pnameOrAttrName = std::nullopt;
+    size_t count          = 0;
+    auto   bound          = qry.bind( db.db );
     for ( const auto &row : *bound )
       {
         ++count;
         // exactPname is true
         EXPECT( row.get<bool>( 0 ) );
-        // exactPkgAttrName is false
+        // exactAttrName is false
         EXPECT( ! row.get<bool>( 1 ) );
       }
     EXPECT_EQ( count, std::size_t( 1 ) );
   }
 
-  /* Run `pnameOrPkgAttrName = "hel"' query */
+  /* Run `pnameOrAttrName = "hel"' query */
   {
-    qargs.pnameOrPkgAttrName = "hel";
+    qargs.pnameOrAttrName = "hel";
     flox::pkgdb::PkgQuery qry( qargs );
-    qargs.pnameOrPkgAttrName = std::nullopt;
+    qargs.pnameOrAttrName = std::nullopt;
     EXPECT( qry.execute( db.db ).empty() );
   }
 
-  /* Run `pnameOrPkgAttrName = "pkg0"' query, which matches attrName */
+  /* Run `pnameOrAttrName = "pkg0"' query, which matches attrName */
   {
-    qargs.pnameOrPkgAttrName = "pkg0";
+    qargs.pnameOrAttrName = "pkg0";
     flox::pkgdb::PkgQuery qry(
       qargs,
-      std::vector<std::string> { "exactPname", "exactPkgAttrName" } );
-    qargs.pnameOrPkgAttrName = std::nullopt;
-    size_t count             = 0;
-    auto   bound             = qry.bind( db.db );
+      std::vector<std::string> { "exactPname", "exactAttrName" } );
+    qargs.pnameOrAttrName = std::nullopt;
+    size_t count          = 0;
+    auto   bound          = qry.bind( db.db );
     for ( const auto &row : *bound )
       {
         ++count;
         // exactPname is false
         EXPECT( ! row.get<bool>( 0 ) );
-        // exactPkgAttrName is true
+        // exactAttrName is true
         EXPECT( row.get<bool>( 1 ) );
       }
     EXPECT_EQ( count, std::size_t( 1 ) );
@@ -720,10 +721,6 @@ test_getPackages1( flox::pkgdb::PkgDb &db )
   clearTables( db );
 
   /* Make a package */
-  row_id stableLinux = db.addOrGetAttrSetId(
-    flox::AttrPath { "catalog", "x86_64-linux", "stable" } );
-  row_id unstableLinux = db.addOrGetAttrSetId(
-    flox::AttrPath { "catalog", "x86_64-linux", "unstable" } );
   row_id packagesLinux
     = db.addOrGetAttrSetId( flox::AttrPath { "packages", "x86_64-linux" } );
   row_id legacyDarwin = db.addOrGetAttrSetId(
@@ -738,15 +735,11 @@ test_getPackages1( flox::pkgdb::PkgDb &db )
     INSERT INTO Packages (
       id, parentId, attrName, name, outputs, descriptionId
     ) VALUES
-      ( 1, :stableLinuxId,    'hello', 'hello', '["out"]', :descriptionId )
-    , ( 2, :unstableLinuxId,  'hello', 'hello', '["out"]', :descriptionId )
-    , ( 3, :packagesLinuxId,  'hello', 'hello', '["out"]', :descriptionId )
-    , ( 4, :legacyDarwinId,   'hello', 'hello', '["out"]', :descriptionId )
-    , ( 5, :packagesDarwinId, 'hello', 'hello', '["out"]', :descriptionId )
+      ( 1, :packagesLinuxId,  'hello', 'hello', '["out"]', :descriptionId )
+    , ( 2, :legacyDarwinId,   'hello', 'hello', '["out"]', :descriptionId )
+    , ( 3, :packagesDarwinId, 'hello', 'hello', '["out"]', :descriptionId )
   )SQL" );
   cmd.bind( ":descriptionId", static_cast<long long>( desc ) );
-  cmd.bind( ":stableLinuxId", static_cast<long long>( stableLinux ) );
-  cmd.bind( ":unstableLinuxId", static_cast<long long>( unstableLinux ) );
   cmd.bind( ":packagesLinuxId", static_cast<long long>( packagesLinux ) );
   cmd.bind( ":legacyDarwinId", static_cast<long long>( legacyDarwin ) );
   cmd.bind( ":packagesDarwinId", static_cast<long long>( packagesDarwin ) );
@@ -764,10 +757,10 @@ test_getPackages1( flox::pkgdb::PkgDb &db )
     qargs.systems = std::vector<std::string> { "x86_64-darwin" };
     qargs.subtrees
       = std::vector<flox::Subtree> { flox::ST_PACKAGES, flox::ST_LEGACY };
-    EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 5, 4 } ) );
+    EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 3, 2 } ) );
     qargs.subtrees
       = std::vector<flox::Subtree> { flox::ST_LEGACY, flox::ST_PACKAGES };
-    EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 4, 5 } ) );
+    EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 2, 3 } ) );
     qargs.subtrees = std::nullopt;
     qargs.systems  = std::vector<std::string> {};
   }
@@ -777,10 +770,10 @@ test_getPackages1( flox::pkgdb::PkgDb &db )
     qargs.subtrees = std::vector<flox::Subtree> { flox::ST_PACKAGES };
     qargs.systems
       = std::vector<std::string> { "x86_64-linux", "x86_64-darwin" };
-    EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 3, 5 } ) );
+    EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 1, 3 } ) );
     qargs.systems
       = std::vector<std::string> { "x86_64-darwin", "x86_64-linux" };
-    EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 5, 3 } ) );
+    EXPECT( db.getPackages( qargs ) == ( std::vector<row_id> { 3, 1 } ) );
     qargs.systems  = std::vector<std::string> {};
     qargs.subtrees = std::nullopt;
   }

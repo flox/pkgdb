@@ -75,9 +75,8 @@ argparse::Argument &
 InlineInputMixin::addSubtreeArg( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "--subtree" )
-    .help( "A subtree name, being one of `packages`, `legacyPackages`, "
-           "or `catalog', that should be processed. "
-           "May be used multiple times." )
+    .help( "A subtree name, being one of `packages` or `legacyPackages`, "
+           "that should be processed. May be used multiple times." )
     .required()
     .metavar( "SUBTREE" )
     .action(
