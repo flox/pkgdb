@@ -1,15 +1,8 @@
 name: Test
 on:
+  # No need to run on `main` since we have `merge_group' and `pull_request'.
   workflow_dispatch:
-  push:
-    branches:
-      -  main
-    paths:
-      - '**'
-      - '!**/README*'
-      - '!**/CONTRIBUTING*'
   pull_request:
-    types: [opened, synchronize, reopened]
   merge_group:
 
 concurrency:
