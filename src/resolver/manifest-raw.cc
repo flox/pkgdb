@@ -86,8 +86,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::EnvBase & env )
   env.check();
 }
 
-// TODO: remove `maybe_unused' when you write `to_json' for `ManifestRaw'.
-[[maybe_unused]] static void
+static void
 to_json( nlohmann::json & jto, const ManifestRaw::EnvBase & env )
 {
   env.check();
@@ -415,28 +414,6 @@ ManifestRaw::Hook::check() const
 
 /* -------------------------------------------------------------------------- */
 
-/**
- * @brief Add a `name' field to the descriptor if it is missing, and no
- *        other acceptable field is present.
- *
- * The fields `absPath` or `path` may be used instead of the `name` field, but
- * if none are present use the `install.<ID>` identifier as `name`.
- *
- * @param[in] iid The `install.<ID>` identifier associated with the descriptor.
- * @param[in,out] desc The descriptor to fixup.
- */
-static void
-fixupDescriptor( const std::string & iid, ManifestDescriptor & desc )
-{
-  if ( ! ( desc.name.has_value() || desc.path.has_value() ) )
-    {
-      desc.name = iid;
-    }
-}
-
-
-/* -------------------------------------------------------------------------- */
-
 static void
 varsFromJSON( const nlohmann::json &                         jfrom,
               std::unordered_map<std::string, std::string> & vars )
@@ -484,23 +461,20 @@ from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
     {
       if ( key == "install" )
         {
+          std::unordered_map<std::string, std::optional<ManifestDescriptorRaw>> install;
           for ( const auto & [name, desc] : value.items() )
             {
               /* An empty/null descriptor uses `name' of the attribute. */
               if ( desc.is_null() )
                 {
-                  ManifestDescriptor manDesc;
-                  manDesc.name = name;
-                  manifest.install.emplace( name, std::move( manDesc ) );
+                  install.emplace( name, std::nullopt );
                 }
               else  // TODO: strings
                 {
-                  auto manDesc
-                    = ManifestDescriptor( desc.get<ManifestDescriptorRaw>() );
-                  fixupDescriptor( name, manDesc );
-                  manifest.install.emplace( name, std::move( manDesc ) );
+                  install.emplace( name, desc.get<ManifestDescriptorRaw>() );
                 }
             }
+          manifest.install = std::move( install );
         }
       else if ( key == "registry" ) { value.get_to( manifest.registry ); }
       else if ( key == "vars" )
@@ -518,6 +492,31 @@ from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
                                               + key + "'." );
         }
     }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+to_json( nlohmann::json & jto, const ManifestRaw & manifest )
+{
+  jto = nlohmann::json::object();
+
+  if ( manifest.envBase.has_value() ) { jto["env-base"] = *manifest.envBase; }
+
+  if ( manifest.options.has_value() ) { jto["options"] = *manifest.options; }
+
+  if ( manifest.install.has_value() )
+    {
+      // FIXME: change ManifestRaw to carry `ManifestDescriptorRaw'
+      // jto["install"] = * manifest.install;
+    }
+
+  if ( manifest.registry.has_value() ) { jto["registry"] = *manifest.registry; }
+
+  if ( manifest.vars.has_value() ) { jto["vars"] = *manifest.vars; }
+
+  if ( manifest.hook.has_value() ) { jto["hook"] = *manifest.hook; }
 }
 
 

@@ -119,10 +119,13 @@ to_json( nlohmann::json & jto, const ManifestDescriptorRaw & descriptor );
  * @class flox::pkgdb::ParseManifestDescriptorRawException
  * @brief An exception thrown when parsing @a
  * flox::resolver::ManifestDescriptorRaw from JSON.
+ * @{
  */
 FLOX_DEFINE_EXCEPTION( ParseManifestDescriptorRawException,
                        EC_PARSE_MANIFEST_DESCRIPTOR_RAW,
                        "error parsing manifest descriptor" )
+/** @} */
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -175,6 +178,13 @@ public:
   ManifestDescriptor() = default;
 
   explicit ManifestDescriptor( const ManifestDescriptorRaw & raw );
+
+  explicit ManifestDescriptor( std::string_view              installID,
+                               const ManifestDescriptorRaw & raw )
+    : ManifestDescriptor( raw )
+  {
+    if ( ! this->name.has_value() ) { this->name = installID; }
+  }
 
 
   /** @brief Reset to default state. */

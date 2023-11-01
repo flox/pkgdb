@@ -34,9 +34,31 @@ readManifestFromPath( const std::filesystem::path &manifestPath )
 /* -------------------------------------------------------------------------- */
 
 UnlockedManifest::UnlockedManifest( std::filesystem::path manifestPath )
-  : manifestPath( std::move( manifestPath ) )
-  , manifestRaw( readManifestFromPath( this->manifestPath ) )
+  : UnlockedManifest( std::move( manifestPath ), readManifestFromPath( this->manifestPath ) )
 {}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+UnlockedManifest::initDescriptors()
+{
+  if ( ! this->manifestRaw.install.has_value() ) { return; }
+  for ( const auto &[iid, raw] : *this->manifestRaw.install )
+    {
+      /* An empty/null descriptor uses `name' of the attribute. */
+      if ( raw.has_value() )
+        {
+          this->descriptors.emplace( iid, ManifestDescriptor( iid, *raw ) );
+        }
+      else
+        {
+          ManifestDescriptor manDesc;
+          manDesc.name = iid;
+          this->descriptors.emplace( iid, std::move( manDesc ) );
+        }
+    }
+}
 
 
 /* -------------------------------------------------------------------------- */
@@ -45,29 +67,31 @@ pkgdb::PkgQueryArgs
 UnlockedManifest::getBaseQueryArgs() const
 {
   pkgdb::PkgQueryArgs args;
-  if ( this->manifestRaw.options.systems.has_value() )
+  if ( ! this->manifestRaw.options.has_value() ) { return args; }
+
+  if ( this->manifestRaw.options->systems.has_value() )
     {
-      args.systems = *this->manifestRaw.options.systems;
+      args.systems = *this->manifestRaw.options->systems;
     }
 
-  if ( this->manifestRaw.options.allow.has_value() )
+  if ( this->manifestRaw.options->allow.has_value() )
     {
-      if ( this->manifestRaw.options.allow->unfree.has_value() )
+      if ( this->manifestRaw.options->allow->unfree.has_value() )
         {
-          args.allowUnfree = *this->manifestRaw.options.allow->unfree;
+          args.allowUnfree = *this->manifestRaw.options->allow->unfree;
         }
-      if ( this->manifestRaw.options.allow->broken.has_value() )
+      if ( this->manifestRaw.options->allow->broken.has_value() )
         {
-          args.allowBroken = *this->manifestRaw.options.allow->broken;
+          args.allowBroken = *this->manifestRaw.options->allow->broken;
         }
-      args.licenses = this->manifestRaw.options.allow->licenses;
+      args.licenses = this->manifestRaw.options->allow->licenses;
     }
 
-  if ( this->manifestRaw.options.semver.has_value()
-       && this->manifestRaw.options.semver->preferPreReleases.has_value() )
+  if ( this->manifestRaw.options->semver.has_value()
+       && this->manifestRaw.options->semver->preferPreReleases.has_value() )
     {
       args.preferPreReleases
-        = *this->manifestRaw.options.semver->preferPreReleases;
+        = *this->manifestRaw.options->semver->preferPreReleases;
     }
   return args;
 }

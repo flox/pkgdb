@@ -526,6 +526,7 @@ public:
     return this->inputs.cend();
   }
 
+
 }; /* End class `Registry' */
 
 
