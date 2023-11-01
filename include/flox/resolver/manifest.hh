@@ -235,7 +235,8 @@ public:
 protected:
 
   const std::unordered_map<std::string, std::optional<Resolved>> &
-  lockDescriptor( const std::string & iid, const ManifestDescriptor & desc );
+  lockUngroupedDescriptor( const std::string &        iid,
+                           const ManifestDescriptor & desc );
 
   /** @brief Assert that all _grouped_ descriptors resolve to a single input. */
   void

@@ -288,7 +288,7 @@ ManifestFileMixin::checkGroups()
                 }
               else { inputs.emplace( system, std::nullopt ); }
             }
-          groupInputs.emplace( *maybeGroup, std::move( inputs ) );
+          groupInputs.emplace( maybeGroup->first, std::move( inputs ) );
         }
       else
         {
@@ -359,7 +359,7 @@ ManifestFileMixin::getLockedDescriptors()
                          std::optional<Resolved::Input>>
            input;
       bool hadInput = false;
-      for ( const auto iid : iids )
+      for ( const auto & iid : iids )
         {
           auto maybeLocked = this->lockedDescriptors.find( iid );
           if ( maybeLocked != this->lockedDescriptors.end() )
@@ -371,7 +371,7 @@ ManifestFileMixin::getLockedDescriptors()
                   if ( resolved.has_value() )
                     {
                       input.at( system )
-                        = input.at( system ).value_or( *resolved );
+                        = input.at( system ).value_or( resolved->input );
                     }
                 }
             }
@@ -381,7 +381,7 @@ ManifestFileMixin::getLockedDescriptors()
       if ( hadInput )
         {
           pkgdb::PkgQueryArgs baseArgs = this->getBaseQueryArgs();
-          for ( const auto iid : iids )
+          for ( const auto & iid : iids )
             {
               /* Skip if the descriptor is already locked. */
               auto maybeLocked = this->lockedDescriptors.find( iid );
