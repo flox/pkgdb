@@ -84,7 +84,7 @@ operator<<( std::ostream & oss, const SqlVersions & versions );
 
 
 /** The current SQLite3 schema versions. */
-constexpr SqlVersions sqlVersions = { .tables = 2, .views = 2 };
+constexpr SqlVersions sqlVersions = { .tables = 2, .views = 3 };
 
 
 /* -------------------------------------------------------------------------- */

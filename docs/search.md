@@ -46,10 +46,9 @@ SearchParams ::= {
 
 - `query.match` strings are used to test partial matches found in a package's
   `name`, `pname`, or `description` fields as well as partial matches on a
-  calculated column `pkgAttrName`.
-  + `pkgAttrName` is _the last attribute path element_ for `packages` and
-     `legacyPackages` subtrees, and _the second to last attribute path element_
-     for `catalog` subtrees.
+  calculated column `attrName`.
+  + `attrName` is _the last attribute path element_ for `packages` and
+     `legacyPackages` subtrees.
   + Exact matches cause search results to appear before ( higher ) than
     partial matches.
 - `query.semver` strings are a
@@ -113,27 +112,11 @@ on `x86_64-linux`.
         }
       , "subtrees": ["legacyPackages"]
       }
-    , "nixpkgs-flox": {
-        "from": {
-          "type": "github"
-        , "owner": "flox"
-        , "repo": "nixpkgs-flox"
-        , "rev": "feb593b6844a96dd4e17497edaabac009be05709"
-        }
-      , "subtrees": ["catalog"]
-      , "stabilities": ["stable", "staging"]
-      }
     , "floco": { "from": "github:aakropotkin/floco" }
-    , "floxpkgs": {
-        "from": "github:flox/floxpkgs"
-      , "subtrees": ["catalog"]
-      }
-    }
   , "defaults": {
       "subtrees": ["packages"]
-    , "stabilities": ["stable"]
     }
-  , "priority": ["nixpkgs", "nixpkgs-flox"]
+  , "priority": ["nixpkgs"]
   }
 , "systems": ["x86_64-linux"]
 , "query": { "match": "hello", "semver": "2" }
@@ -155,17 +138,6 @@ applied to `inputs` by showing the _explicit_ form of the same params:
         , "rev": "e8039594435c68eb4f780f3e9bf3972a7399c4b1"
         }
       , "subtrees": ["legacyPackages"]
-      , "stabilities": ["stable"]
-      }
-    , "nixpkgs-flox": {
-        "from": {
-          "type": "github"
-        , "owner": "flox"
-        , "repo": "nixpkgs-flox"
-        , "rev": "feb593b6844a96dd4e17497edaabac009be05709"
-        }
-      , "subtrees": ["catalog"]
-      , "stabilities": ["stable", "staging"]
       }
     , "floco": {
         "from": {
@@ -175,24 +147,12 @@ applied to `inputs` by showing the _explicit_ form of the same params:
         , "rev": "1e84b4b16bba5746e1195fa3a4d8addaaf2d9ef4"
         }
         , "subtrees": ["packages"]
-        , "stabilities": ["stable"]
-      }
-    , "floxpkgs": {
-        "from": {
-          "type": "github"
-        , "owner": "flox"
-        , "repo": "floxpkgs"
-        , "rev": "bce319c5b00e7b6bbe795bdd53f050ce63e01ad2"
-        }
-      , "subtrees": ["catalog"]
-      , "stabilities": ["stable"]
       }
     }
   , "defaults": {
       "subtrees": ["packages"]
-    , "stabilities": ["stable"]
     }
-  , "priority": ["nixpkgs", "nixpkgs-flox", "floco", "floxpkgs"]
+  , "priority": ["nixpkgs", "floco"]
   }
 , "systems": ["x86_64-linux"]
 , "allow": {
@@ -213,8 +173,6 @@ applied to `inputs` by showing the _explicit_ form of the same params:
 }
 ```
 
-- `inputs.<NAME>stabilities` was applied to all inputs which didn't explicitly
-   specify them.
 - `inputs.<NAME>.subtrees` was applied to all inputs which didn't explicitly
    specify them.
 - `inputs.<NAME>.from` _flake references_ were parsed and locked.
@@ -242,10 +200,9 @@ Each output line has the following format:
 Result ::= {
   id           = <INT>
 , input        = <INPUT-NAME>
-, subtree      = "packages" | "legacyPackages" | "catalog"
-, stability    = null | "stable" | "staging" | "unstable"
+, subtree      = "packages" | "legacyPackages"
 , absPath      = [<STRING>...]
-, pkgSubPath   = [<STRING>...]
+, relPath   = [<STRING>...]
 , pname        = <STRING>
 , version      = null | <STRING>
 , description  = null | <STRING>
@@ -264,13 +221,5 @@ it is **strongly recommended** that the caller use _locked flake references_.
 For the example query parameters given above, we get the following results:
 
 ```json
-{"absPath":["legacyPackages","x86_64-linux","hello"],"broken":false,"description":"A program that produces a familiar, friendly greeting","id":6095,"input":"nixpkgs","license":"GPL-3.0-or-later","pname":"hello","pkgSubPath":["hello"],"stability":null,"subtree":"legacyPackages","system":"x86_64-linux","unfree":false,"version":"2.12.1"}
-{"absPath":["catalog","x86_64-linux","stable","hello","2_12_1"],"broken":null,"description":"A program that produces a familiar, friendly greeting","id":19938,"input":"nixpkgs-flox","license":null,"pname":"hello","pkgSubPath":["hello"],"stability":"stable","subtree":"catalog","system":"x86_64-linux","unfree":false,"version":"2.12.1"}
-{"absPath":["catalog","x86_64-linux","stable","hello","latest"],"broken":null,"description":"A program that produces a familiar, friendly greeting","id":19939,"input":"nixpkgs-flox","license":null,"pname":"hello","pkgSubPath":["hello"],"stability":"stable","subtree":"catalog","system":"x86_64-linux","unfree":false,"version":"2.12.1"}
-{"absPath":["catalog","x86_64-linux","stable","hello","2_12"],"broken":null,"description":"A program that produces a familiar, friendly greeting","id":19937,"input":"nixpkgs-flox","license":null,"pname":"hello","pkgSubPath":["hello"],"stability":"stable","subtree":"catalog","system":"x86_64-linux","unfree":false,"version":"2.12"}
-{"absPath":["catalog","x86_64-linux","stable","hello","2_10"],"broken":null,"description":"A program that produces a familiar, friendly greeting","id":19936,"input":"nixpkgs-flox","license":null,"pname":"hello","pkgSubPath":["hello"],"stability":"stable","subtree":"catalog","system":"x86_64-linux","unfree":false,"version":"2.10"}
-{"absPath":["catalog","x86_64-linux","staging","hello","2_12_1"],"broken":null,"description":"A program that produces a familiar, friendly greeting","id":111900,"input":"nixpkgs-flox","license":null,"pname":"hello","pkgSubPath":["hello"],"stability":"staging","subtree":"catalog","system":"x86_64-linux","unfree":false,"version":"2.12.1"}
-{"absPath":["catalog","x86_64-linux","staging","hello","latest"],"broken":null,"description":"A program that produces a familiar, friendly greeting","id":111901,"input":"nixpkgs-flox","license":null,"pname":"hello","pkgSubPath":["hello"],"stability":"staging","subtree":"catalog","system":"x86_64-linux","unfree":false,"version":"2.12.1"}
-{"absPath":["catalog","x86_64-linux","staging","hello","2_12"],"broken":null,"description":"A program that produces a familiar, friendly greeting","id":111899,"input":"nixpkgs-flox","license":null,"pname":"hello","pkgSubPath":["hello"],"stability":"staging","subtree":"catalog","system":"x86_64-linux","unfree":false,"version":"2.12"}
-{"absPath":["catalog","x86_64-linux","staging","hello","2_10"],"broken":null,"description":"A program that produces a familiar, friendly greeting","id":111898,"input":"nixpkgs-flox","license":null,"pname":"hello","pkgSubPath":["hello"],"stability":"staging","subtree":"catalog","system":"x86_64-linux","unfree":false,"version":"2.10"}
+{"absPath":["legacyPackages","x86_64-linux","hello"],"broken":false,"description":"A program that produces a familiar, friendly greeting","id":6095,"input":"nixpkgs","license":"GPL-3.0-or-later","pname":"hello","relPath":["hello"],"subtree":"legacyPackages","system":"x86_64-linux","unfree":false,"version":"2.12.1"}
 ```

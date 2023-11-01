@@ -1,5 +1,5 @@
 registry:
-  priority: ["nixpkgs", "floco", "nixpkgs-flox"]
+  priority: ["nixpkgs", "floco"]
   inputs:
     nixpkgs:
       from:
@@ -8,14 +8,6 @@ registry:
         repo: nixpkgs
         rev: e8039594435c68eb4f780f3e9bf3972a7399c4b1
       subtrees: ["legacyPackages"]
-
-    nixpkgs-flox:
-      from:
-        type: github
-        owner: flox
-        repo: nixpkgs-flox
-        rev: feb593b6844a96dd4e17497edaabac009be05709
-      subtrees: ["catalog"]
 
     floco:
       from:

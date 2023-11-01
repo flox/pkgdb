@@ -64,16 +64,8 @@ main( int argc, char *argv[] )
               }
             , "subtrees": ["packages"]
             }
-          , "nixpkgs-flox": {
-              "from": {
-                "type": "github"
-              , "owner": "flox"
-              , "repo": "nixpkgs-flox"
-              }
-            , "subtrees": ["catalog"]
-            }
           }
-        , "priority": ["nixpkgs", "floco", "nixpkgs-flox"]
+        , "priority": ["nixpkgs", "floco"]
         }
       , "systems": ["x86_64-linux"]
       , "query":   {

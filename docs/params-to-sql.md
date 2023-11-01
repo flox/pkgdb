@@ -26,6 +26,8 @@ identify common patterns among them.
 
 - Registry : A collection of _flake ref inputs_ assigned _short names_
              or _aliases_ which comprise the pool of package sets to be queried.
+             Not the same as Nix registry, but fucking close. We added
+             additional fields (See [registry](./registry.md)).
 - Descriptor : An abstract description of a dependency by indicating
                _requirements_ to be satisfied.
                These are simply put a collection of user defined filters.
@@ -110,7 +112,7 @@ Declared in [<pkgdb>/include/flox/registry.hh](../include/flox/registry.hh).
 
 This structure holds information about _flake inputs_ whose package databases
 should be scraped, some settings associated with each to indicate which
-_subtrees_/_stabilities_ should be searched, and the _priority_ order results
+_subtrees_ should be searched, and the _priority_ order results
 should be _ranked_ by.
 
 A more detailed look at _registries_ and their fields can be
@@ -141,14 +143,14 @@ struct PkgQueryArgs : public PkgDescriptorBase
    *   std::optional<std::string> semver;  //< Filter results by version range.
    */
 
-  /** Filter results by partial match on pname, pkgAttrName, or description */
+  /** Filter results by partial match on pname, attrName, or description */
   std::optional<std::string> partialMatch;
 
   /**
-   * Filter results by an exact match on either `pname` or `pkgAttrName`.
+   * Filter results by an exact match on either `pname` or `attrName`.
    * To match just `pname` see @a flox::pkgdb::PkgDescriptorBase.
    */
-  std::optional<std::string> pnameOrPkgAttrName;
+  std::optional<std::string> pnameOrAttrName;
 
   /** 
    * Filter results to those explicitly marked with the given licenses.
@@ -170,24 +172,16 @@ struct PkgQueryArgs : public PkgDescriptorBase
    * Subtrees to search.
    * 
    * NOTE: `Subtree` is an enum of top level flake outputs, being one of
-   * `"catalog"`, `"packages"`, or `"legacyPackages"`.
+   * `"packages"` or `"legacyPackages"`.
    */
   std::optional<std::vector<Subtree>> subtrees;
 
   /** Systems to search. Defaults to the current system. */
   std::vector<std::string> systems = { nix::settings.thisSystem.get() };
 
-  /** 
-   * Stabilities to search ( if any ).
-   *
-   * NOTE: Stabilities must be one of `"stable"`, `"staging"`, or `"unstable"`.
-   */
-  std::optional<std::vector<std::string>> stabilities;
-
   /**
    * Relative attribute path to package from its prefix.
-   * For catalogs this is the part following `stability`, and for regular flakes
-   * it is the part following `system`.
+   * For regular flakes it is the part following `system`.
    *
    * NOTE: @a flox::AttrPath is an alias of `std::vector<std::string>`.
    */
@@ -346,7 +340,7 @@ This set of parameters is used by `pkgdb search` in order to support
 
 This is an incredibly lightweight extension of `flox::pkgdb::PkgDescriptorBase`
 which simply adds the ability to filter by a partial match on
-`pname`, `pkgAttrName`, or `description` fields ( using `partialMatch` field
+`pname`, `attrName`, or `description` fields ( using `partialMatch` field
 in `flox::pkgdb::PkgQueryArgs` ).
 It has the following declaration:
 
@@ -369,7 +363,7 @@ struct SearchQuery : public pkgdb::PkgDescriptorBase
    *   std::optional<std::string> semver;
    */
 
-  /** Filter results by partial match on pname, pkgAttrName, or description */
+  /** Filter results by partial match on pname, attrName, or description */
   std::optional<std::string> partialMatch;
   
   // ...<SNIP>...
@@ -404,8 +398,8 @@ struct ManifestDescriptorRaw
 public:
 
   /** 
-   * Match `name`, `pname`, or `pkgAttrName`.
-   * Maps to `flox::pkgdb::PkgQueryArgs::pnameOrPkgAttrName`.
+   * Match `name`, `pname`, or `attrName`.
+   * Maps to `flox::pkgdb::PkgQueryArgs::pnameOrAttrName`.
    */
   std::optional<std::string> name;
 
@@ -418,9 +412,6 @@ public:
    * All other strings will filter by exact match on `version`.
    */
   std::optional<std::string> version;
-
-  /** Match a catalog stability. */
-  std::optional<std::string> stability;
 
   /** @brief A dot separated attribut path, or list representation. */
   using Path = std::variant<std::string, flox::AttrPath>;
@@ -590,10 +581,10 @@ struct PkgDescriptorRaw : public pkgdb::PkgDescriptorBase
    */
 
   /**
-   * Filter results by an exact match on either `pname` or `pkgAttrName`.
+   * Filter results by an exact match on either `pname` or `attrName`.
    * To match just `pname` see @a flox::pkgdb::PkgDescriptorBase.
    */
-  std::optional<std::string> pnameOrPkgAttrName;
+  std::optional<std::string> pnameOrAttrName;
 
   /** Restricts resolution to the named registry input. */
   std::optional<std::string> input;
@@ -613,9 +604,6 @@ struct PkgDescriptorRaw : public pkgdb::PkgDescriptorBase
    * This field must not conflict with the @a path field.
    */
   std::optional<std::string> subtree;
-
-  /** Restricts resolution to a given stability. */
-  std::optional<std::string> stability;
 
   /**
    * Whether pre-releases should be preferred over releases.

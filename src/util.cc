@@ -79,7 +79,7 @@ parseOrReadJSONObject( const std::string &jsonOrPath )
 /* -------------------------------------------------------------------------- */
 
 nlohmann::json
-readAndCoerceJSON( const std::filesystem::path & path )
+readAndCoerceJSON( const std::filesystem::path &path )
 {
   if ( ! std::filesystem::exists( path ) )
     {

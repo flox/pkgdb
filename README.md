@@ -92,21 +92,9 @@ something along the lines of:
 ```shell
 $ lockedRef="github:NixOS/nixpkgs/e8039594435c68eb4f780f3e9bf3972a7399c4b1";
 $ dbPath=;
-$ for subtree in packages legacyPackages catalog; do
+$ for subtree in packages legacyPackages; do
     for system in x86_64-linux x86_64-darwin aarch64-darwin aarch64-linux; do
-      if [[ "$subtree" = 'catalog' ]]; then
-        for stability in unstable staging stable; do
-          if [[ -z "$dbPath" ]]; then  # get the DB name
-            dbPath="$(
-              pkgdb scrape "$lockedRef" "$subtree" "$system" "$stability";
-            )";
-          else
-            pkgdb scrape "$lockedRef" "$subtree" "$system" "$stability";
-          fi
-        done
-      else
-        pkgdb scrape "$lockedRef" "$subtree" "$system";
-      fi
+      pkgdb scrape "$lockedRef" "$subtree" "$system";
     done
   done
 $ sqlite3 "$dbPath" 'SELECT COUNT( * ) FROM Packages';
@@ -180,8 +168,6 @@ Otherwise, they will be parsed from the `name`.
 If `version` can be converted to a semver, it will be.
 
 Note that the `attrName` for a package is the actual name in the tree.
-Therefore, for catalogs the `attrName` will be the package version, not
-the name.
 
 If `outputsToInstall` is not defined, it will be the set of `outputs` up to and
 including `"out"`.

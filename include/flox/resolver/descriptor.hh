@@ -39,8 +39,8 @@ struct ManifestDescriptorRaw
 public:
 
   /**
-   * Match `name`, `pname`, or `pkgAttrName`.
-   * Maps to `flox::pkgdb::PkgQueryArgs::pnameOrPkgAttrName`.
+   * Match `name`, `pname`, or `attrName`.
+   * Maps to `flox::pkgdb::PkgQueryArgs::pnameOrAttrName`.
    */
   std::optional<std::string> name;
 
@@ -117,8 +117,8 @@ to_json( nlohmann::json & jto, const ManifestDescriptorRaw & descriptor );
 
 /**
  * @class flox::pkgdb::ParseManifestDescriptorRawException
- * @brief An exception thrown when parsing @a flox::resolver::ManifestDescriptorRaw
- *        from JSON.
+ * @brief An exception thrown when parsing @a
+ * flox::resolver::ManifestDescriptorRaw from JSON.
  */
 FLOX_DEFINE_EXCEPTION( ParseManifestDescriptorRawException,
                        EC_PARSE_MANIFEST_DESCRIPTOR_RAW,
@@ -135,7 +135,7 @@ struct ManifestDescriptor
 
 public:
 
-  /** Match `name`, `pname`, or `pkgAttrName` */
+  /** Match `name`, `pname`, or `attrName` */
   std::optional<std::string> name;
 
   /** Whether resoution is allowed to fail without producing errors. */
@@ -169,7 +169,7 @@ public:
    * Packages with higher @a priority values will take precendence over those
    * with lower @a priority values.
    */
- unsigned priority = 5;
+  unsigned priority = 5;
 
 
   ManifestDescriptor() = default;

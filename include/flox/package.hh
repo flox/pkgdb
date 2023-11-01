@@ -108,7 +108,7 @@ public:
 
   /**
    * @return The flake `outputs` subtree the package resides in, being one of
-   *         `legacyPackages`, `packages`, or `catalog`.
+   *         `legacyPackages` or `packages`.
    */
   virtual Subtree
   getSubtreeType() const

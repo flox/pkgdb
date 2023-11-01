@@ -403,17 +403,8 @@ PkgDbReadOnly::getPackage( row_id row )
   rsl.emplace( "subtree", path.at( 0 ) );
   rsl.emplace( "system", std::move( path.at( 1 ) ) );
 
-  if ( path.at( 0 ) == "catalog" )
-    {
-      path.erase( path.begin(), path.begin() + 3 );
-      path.pop_back();
-      rsl.emplace( "pkgSubPath", std::move( path ) );
-    }
-  else
-    {
-      path.erase( path.begin(), path.begin() + 2 );
-      rsl.emplace( "pkgSubPath", std::move( path ) );
-    }
+  path.erase( path.begin(), path.begin() + 2 );
+  rsl.emplace( "relPath", std::move( path ) );
 
   return rsl;
 }
