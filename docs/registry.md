@@ -52,8 +52,6 @@ At the top level the _abstract_ schema for the whole registry is:
 ```
 Subtree :: "packages" | "legacyPackages"
 
-Stability :: "stable" | "staging" | "unstable"
-
 FlakeRef :: ? URL string or Attr Set ?
 
 InputPreferences :: {

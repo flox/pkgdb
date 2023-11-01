@@ -88,7 +88,6 @@ static const nlohmann::json resolvedRaw = R"( {
       "hello"
     ],
     "pname": "hello",
-    "stability": null,
     "subtree": "legacyPackages",
     "system": "x86_64-linux",
     "unfree": false,

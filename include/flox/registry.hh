@@ -293,21 +293,18 @@ struct RegistryRaw
    *     "floco": {
    *       "from": { "type": "github", "owner": "aakropotkin", "repo": "floco" }
    *     }
-   *   , "floxpkgs": {
-   *       "from": { "type": "github", "owner": "flox", "repo": "floxpkgs" }
-   *     }
    *   , "nixpkgs": {
    *       "from": { "type": "github", "owner": "NixOS", "repo": "nixpkgs" }
    *     }
    *   }
-   * , "priority": ["nixpkgs", "floxpkgs"]
+   * , "priority": ["nixpkgs"]
    * } )"_json;
    * for ( const auto & name : reg.getOrder() )
    *   {
    *     std::cout << name.get() << " ";
    *   }
    * std::cout << std::endl;
-   * // => nixpkgs floxpkgs floco
+   * // => nixpkgs floco
    * ```
    *
    * @return A list of input names in order of priority.
