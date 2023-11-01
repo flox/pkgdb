@@ -27,17 +27,6 @@ namespace flox::resolver {
 /* -------------------------------------------------------------------------- */
 
 /**
- * @brief An attribute path which may contain `null` members to
- *        represent _globs_.
- *
- * Globs may only appear as the second element representing `system`.
- */
-using AttrPathGlob = std::vector<std::optional<std::string>>;
-
-
-/* -------------------------------------------------------------------------- */
-
-/**
  * @brief Extend and remap fields from @a flox::resolver::PkgDescriptorRaw to
  *        those found in a `flox` _manifest_.
  *
@@ -89,15 +78,24 @@ public:
   /** Whether resoution is allowed to fail without producing errors. */
   std::optional<bool> optional;
 
+  // TODO: Not implemented.
   /** Named _group_ that the package is a member of. */
   std::optional<std::string> packageGroup;
 
-  /** Force resolution is a given input or _flake reference_. */
+  // TODO: Not implemented.
+  /** Force resolution is the named input or _flake reference_. */
   std::optional<std::variant<std::string, nix::fetchers::Attrs>>
     packageRepository;
 
-  /** Relative path to a `nix` expression file to be evaluated. */
-  std::optional<std::string> input;
+
+  /**
+   * Rank a package's priority for handling conflicting files.
+   * The default value is `5` ( set in @a flox::resolver::ManifestDescriptor ).
+   *
+   * Packages with higher @a priority values will take precendence over those
+   * with lower @a priority values.
+   */
+  std::optional<unsigned> priority;
 
 
 }; /* End struct `ManifestDescriptorRaw' */
@@ -105,27 +103,26 @@ public:
 
 /* -------------------------------------------------------------------------- */
 
+// TODO: support `packageRepository' field
 /**
- * @fn void from_json( const nlohmann::json        & jfrom
- *                   ,       ManifestDescriptorRaw & desc
- *                   )
- * @brief Convert a JSON object to an @a flox::InputPreferences.
- *
- * @fn void to_json( nlohmann::json & jto, const ManifestDescriptorRaw & desc )
- * @brief Convert an @a flox::resolver::ManifestDescriptorRaw to a JSON object.
+ * @brief Convert a JSON object to an @a flox::ManifestDescriptorRaw. */
+void
+from_json( const nlohmann::json & jfrom, ManifestDescriptorRaw & descriptor );
+/**
+ * @brief Convert an @a flox::resolver::ManifestDescriptorRaw to a
+ *              JSON object.
  */
-/* Generate to_json/from_json functions. */
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT( ManifestDescriptorRaw,
-                                                 name,
-                                                 version,
-                                                 path,
-                                                 absPath,
-                                                 systems,
-                                                 optional,
-                                                 packageGroup,
-                                                 packageRepository,
-                                                 input )
+void
+to_json( nlohmann::json & jto, const ManifestDescriptorRaw & descriptor );
 
+/**
+ * @class flox::pkgdb::ParseManifestDescriptorRawException
+ * @brief An exception thrown when parsing @a flox::resolver::ManifestDescriptorRaw
+ *        from JSON.
+ */
+FLOX_DEFINE_EXCEPTION( ParseManifestDescriptorRawException,
+                       EC_PARSE_MANIFEST_DESCRIPTOR_RAW,
+                       "error parsing manifest descriptor" )
 
 /* -------------------------------------------------------------------------- */
 
@@ -162,8 +159,17 @@ public:
   /** Match a relative attribute path. */
   std::optional<flox::AttrPath> path;
 
-  /** Force resolution is a given input, _flake reference_, or file. */
-  std::optional<std::variant<nix::FlakeRef, std::string>> input;
+  /** Force resolution is a given input, _flake reference_. */
+  std::optional<nix::FlakeRef> input;
+
+  /**
+   * Rank a package's priority for handling conflicting files.
+   * The default value is `5` ( set in @a flox::resolver::ManifestDescriptor ).
+   *
+   * Packages with higher @a priority values will take precendence over those
+   * with lower @a priority values.
+   */
+ unsigned priority = 5;
 
 
   ManifestDescriptor() = default;

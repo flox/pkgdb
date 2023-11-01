@@ -33,6 +33,14 @@ namespace flox {
 using AttrPath = std::vector<std::string>;
 
 /**
+ * @brief An attribute path which may contain `null` members to
+ *        represent _globs_.
+ *
+ * Globs may only appear as the second element representing `system`.
+ */
+using AttrPathGlob = std::vector<std::optional<std::string>>;
+
+/**
  * @brief A `std::shared_ptr<nix::eval_cache::AttrCursor>` which may
  *        be `nullptr`.
  */

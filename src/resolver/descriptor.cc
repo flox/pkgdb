@@ -11,6 +11,7 @@
 #include <regex>
 
 #include "flox/core/exceptions.hh"
+#include "flox/pkgdb/read.hh"
 #include "flox/resolver/descriptor.hh"
 #include "versions.hh"
 
@@ -145,7 +146,31 @@ initManifestDescriptorAbsPath( ManifestDescriptor &          desc,
           throw InvalidManifestDescriptorException(
             "`absPath' may only have a glob as its second element" );
         }
-      desc.path->emplace_back( *elem );
+      desc.path = AttrPath {};
+      for ( auto itr = glob.begin() + 3; itr != glob.end(); ++itr )
+        {
+          const auto & elem = *itr;
+          if ( ! elem.has_value() )
+            {
+              throw InvalidManifestDescriptorException(
+                "`absPath' may only have a glob as its second element" );
+            }
+          desc.path->emplace_back( *elem );
+        }
+    }
+  else
+    {
+      desc.path = AttrPath {};
+      for ( auto itr = glob.begin() + 2; itr != glob.end(); ++itr )
+        {
+          const auto & elem = *itr;
+          if ( ! elem.has_value() )
+            {
+              throw InvalidManifestDescriptorException(
+                "`absPath' may only have a glob as its second element" );
+            }
+          desc.path->emplace_back( *elem );
+        }
     }
 
   const auto & second = glob.at( 1 );
@@ -159,6 +184,190 @@ initManifestDescriptorAbsPath( ManifestDescriptor &          desc,
             "`systems' list conflicts with `absPath' system specification" );
         }
     }
+}
+
+/* -------------------------------------------------------------------------- */
+
+void
+from_json( const nlohmann::json &jfrom, ManifestDescriptorRaw &descriptor )
+{
+  if ( ! jfrom.is_object() )
+    {
+      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
+      throw ParseManifestDescriptorRawException(
+        "manifest descriptor must be an object, but is" + aOrAn
+        + std::string( jfrom.type_name() ) + '.' );
+    }
+
+  /* Clear fields. */
+  // TODO add ManifestDescriptorRaw::clear();
+  descriptor.name = std::nullopt;
+  descriptor.version = std::nullopt;
+  descriptor.path = std::nullopt;
+  descriptor.absPath = std::nullopt;
+  descriptor.systems = std::nullopt;
+  descriptor.optional = std::nullopt;
+  descriptor.packageGroup = std::nullopt;
+  descriptor.packageRepository = std::nullopt;
+  descriptor.priority = std::nullopt;
+
+  for ( const auto &[key, value] : jfrom.items() )
+    {
+      if ( key == "name" )
+        {
+          try
+            {
+              value.get_to( descriptor.name );
+            }
+          catch ( nlohmann::json::exception &e )
+            {
+              throw ParseManifestDescriptorRawException(
+                "couldn't interpret field 'name'",
+                flox::extract_json_errmsg( e ).c_str() );
+            }
+        }
+      else if ( key == "version" )
+        {
+          try
+            {
+              value.get_to( descriptor.version );
+            }
+          catch ( nlohmann::json::exception &e )
+            {
+              throw ParseManifestDescriptorRawException(
+                "couldn't interpret field 'version'",
+                flox::extract_json_errmsg( e ).c_str() );
+            }
+        }
+      else if ( key == "path" )
+        {
+          try
+            {
+              value.get_to( descriptor.path );
+            }
+          catch ( nlohmann::json::exception &e )
+            {
+              throw ParseManifestDescriptorRawException(
+                "couldn't interpret field 'path'",
+                flox::extract_json_errmsg( e ).c_str() );
+            }
+        }
+      else if ( key == "absPath" )
+        {
+          try
+            {
+              value.get_to( descriptor.absPath );
+            }
+          catch ( nlohmann::json::exception &e )
+            {
+              throw ParseManifestDescriptorRawException(
+                "couldn't interpret field 'absPath'",
+                flox::extract_json_errmsg( e ).c_str() );
+            }
+        }
+      else if ( key == "systems" )
+        {
+          try
+            {
+              value.get_to( descriptor.systems );
+            }
+          catch ( nlohmann::json::exception &e )
+            {
+              throw ParseManifestDescriptorRawException(
+                "couldn't interpret field 'systems'",
+                flox::extract_json_errmsg( e ).c_str() );
+            }
+        }
+      else if ( key == "optional" )
+        {
+          try
+            {
+              value.get_to( descriptor.optional );
+            }
+          catch ( nlohmann::json::exception &e )
+            {
+              throw ParseManifestDescriptorRawException(
+                "couldn't interpret field 'optional'",
+                flox::extract_json_errmsg( e ).c_str() );
+            }
+        }
+      else if ( key == "packageGroup" )
+        {
+          try
+            {
+              value.get_to( descriptor.packageGroup );
+            }
+          catch ( nlohmann::json::exception &e )
+            {
+              throw ParseManifestDescriptorRawException(
+                "couldn't interpret field 'packageGroup'",
+                flox::extract_json_errmsg( e ).c_str() );
+            }
+        }
+      else if ( key == "packageRepository" )
+        {
+          try
+            {
+              value.get_to( descriptor.packageRepository );
+            }
+          catch ( nlohmann::json::exception &e )
+            {
+              throw ParseManifestDescriptorRawException(
+                "couldn't interpret field 'packageRepository'",
+                flox::extract_json_errmsg( e ).c_str() );
+            }
+        }
+      else if ( key == "priority" )
+        {
+          try
+            {
+              value.get_to( descriptor.priority );
+            }
+          catch ( nlohmann::json::exception &e )
+            {
+              throw ParseManifestDescriptorRawException(
+                "couldn't interpret field 'priority'",
+                flox::extract_json_errmsg( e ).c_str() );
+            }
+        }
+      else
+        {
+          throw ParseManifestDescriptorRawException(
+            "encountered unrecognized field '" + key
+            + "' while parsing manifest descriptor" );
+        }
+    }
+}
+
+void
+to_json( nlohmann::json & jto, const ManifestDescriptorRaw & descriptor ) {
+  if ( descriptor.name.has_value() ) {
+    jto["name"] = *descriptor.name;
+  }
+  if ( descriptor.version.has_value() ) {
+    jto["version"] = *descriptor.version;
+  }
+  if ( descriptor.path.has_value() ) {
+    jto["path"] = *descriptor.path;
+  }
+  if ( descriptor.absPath.has_value() ) {
+    jto["absPath"] = *descriptor.absPath;
+  }
+  if ( descriptor.systems.has_value() ) {
+    jto["systems"] = *descriptor.systems;
+  }
+  if ( descriptor.optional.has_value() ) {
+    jto["optional"] = *descriptor.optional;
+  }
+  if ( descriptor.packageGroup.has_value() ) {
+    jto["packageGroup"] = *descriptor.packageGroup;
+  }
+  if ( descriptor.packageRepository.has_value() ) {
+    jto["packageRepository"] = *descriptor.packageRepository;
+  }
+  if ( descriptor.priority.has_value() ) {
+    jto["priority"] = *descriptor.priority;
+  }
 }
 
 
@@ -211,12 +420,6 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
 
   if ( raw.packageRepository.has_value() )
     {
-      if ( raw.input.has_value() )
-        {
-          throw InvalidManifestDescriptorException(
-            "`packageRepository' may not be used with `input'" );
-        }
-
       if ( std::holds_alternative<std::string>( *raw.packageRepository ) )
         {
           this->input
@@ -227,9 +430,9 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
           this->input = nix::FlakeRef::fromAttrs(
             std::get<nix::fetchers::Attrs>( *raw.packageRepository ) );
         }
-      assert( std::holds_alternative<nix::FlakeRef>( *this->input ) );
     }
-  else if ( raw.input.has_value() ) { this->input = *raw.input; }
+
+  if ( raw.priority.has_value() ) { this->priority = *raw.priority; }
 }
 
 
@@ -247,6 +450,7 @@ ManifestDescriptor::clear()
   this->systems  = std::nullopt;
   this->path     = std::nullopt;
   this->input    = std::nullopt;
+  this->priority = 5;
 }
 
 

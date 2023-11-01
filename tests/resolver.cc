@@ -64,6 +64,66 @@ static const nlohmann::json commonPreferences = R"( {
   }
 } )"_json;
 
+static const nlohmann::json resolvedRaw = R"( {
+  "input": {
+    "locked": {
+      "owner": "NixOS",
+      "repo": "nixpkgs",
+      "rev": "e8039594435c68eb4f780f3e9bf3972a7399c4b1",
+      "type": "github"
+    },
+    "name": "nixpkgs"
+  },
+  "path": [
+    "legacyPackages",
+    "x86_64-linux",
+    "hello"
+  ],
+  "info": {
+    "broken": false,
+    "description": "A program that produces a familiar, friendly greeting",
+    "id": 6095,
+    "license": "GPL-3.0-or-later",
+    "pkgSubPath": [
+      "hello"
+    ],
+    "pname": "hello",
+    "stability": null,
+    "subtree": "legacyPackages",
+    "system": "x86_64-linux",
+    "unfree": false,
+    "version": "2.12.1"
+  }
+} )"_json;
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Test `flox::resolver::Resolved` gets deserialized correctly. */
+bool
+test_deserialize_resolved()
+{
+  flox::resolver::Resolved resolved = resolvedRaw.template get<flox::resolver::Resolved>();
+
+  // Do a non-exhaustive sanity check for now
+  EXPECT_EQ( resolved.input.locked["owner"], "NixOS" );
+  EXPECT_EQ( resolved.path[0], "legacyPackages" );
+  EXPECT_EQ( resolved.info["broken"], false );
+
+  return true;
+}
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Test `flox::resolver::Resolved` gets serialized correctly. */
+bool
+test_serialize_resolved()
+{
+  flox::resolver::Resolved resolved = resolvedRaw.template get<flox::resolver::Resolved>();
+
+  EXPECT_EQ( nlohmann::json( resolved ).dump(), resolvedRaw.dump() );
+
+  return true;
+}
 
 /* -------------------------------------------------------------------------- */
 
@@ -91,7 +151,7 @@ test_resolve0()
 
 /** @brief Limit resolution to a single input. */
 bool
-test_resolveInput()
+test_resolveInput0()
 {
   flox::RegistryRaw             registry    = commonRegistry;
   flox::pkgdb::QueryPreferences preferences = commonPreferences;
@@ -105,7 +165,8 @@ test_resolveInput()
   auto rsl = flox::resolver::resolve_v0( state, descriptor );
 
   EXPECT_EQ( rsl.size(), std::size_t( 1 ) );
-  EXPECT_EQ( rsl.front().input.name, "nixpkgs" );
+  EXPECT( rsl.front().input.name.has_value() );
+  EXPECT_EQ( *rsl.front().input.name, "nixpkgs" );
 
   return true;
 }
@@ -130,8 +191,10 @@ main( int argc, char * argv[] )
   std::string cacheDir = nix::createTempDir();
   setenv( "PKGDB_CACHEDIR", cacheDir.c_str(), 1 );
 
+  RUN_TEST( deserialize_resolved );
+  RUN_TEST( serialize_resolved );
   RUN_TEST( resolve0 );
-  RUN_TEST( resolveInput );
+  RUN_TEST( resolveInput0 );
 
   /* Cleanup the temporary directory. */
   nix::deletePath( cacheDir );

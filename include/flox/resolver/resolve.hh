@@ -15,6 +15,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "flox/registry.hh"
 #include "flox/resolver/state.hh"
 
 
@@ -32,9 +33,56 @@ struct Resolved
   /** @brief A registry input. */
   struct Input
   {
-    std::string    name;   /**< Registry input name/id. */
-    nlohmann::json locked; /**< Locked flake ref attributes. */
-  };                       /* End struct `Resolved::Input' */
+  private:
+
+    /**
+     * @brief Reduce @a locked fields to those needed to fetch the flake
+     *        in pure evaluation mode.
+     */
+    void
+    limitLocked();
+
+
+  public:
+
+    std::optional<std::string> name;   /**< Registry input name/id. */
+    nlohmann::json             locked; /**< Locked flake ref attributes. */
+
+    Input()                = default;
+    Input( const Input & ) = default;
+    Input( Input && )      = default;
+
+    Input( std::string name, nlohmann::json locked )
+      : name( std::move( name ) ), locked( std::move( locked ) )
+    {
+      this->limitLocked();
+    }
+
+    Input( std::string name, const nix::FlakeRef & locked )
+      : name( std::move( name ) ), locked( locked )
+    {
+      this->limitLocked();
+    }
+
+    explicit Input( nlohmann::json locked ) : locked( std::move( locked ) )
+    {
+      this->limitLocked();
+    }
+
+    explicit Input( const nix::FlakeRef & locked ) : locked( locked )
+    {
+      this->limitLocked();
+    }
+
+    ~Input() = default;
+    Input &
+    operator=( const Input & )
+      = default;
+    Input &
+    operator=( Input && )
+      = default;
+
+  }; /* End struct `Resolved::Input' */
 
   Input          input; /**< Registry input. */
   AttrPath       path;  /**< Attribute path to the package. */
@@ -44,27 +92,36 @@ struct Resolved
   void
   clear();
 
+
 }; /* End struct `Resolved' */
 
+/** @brief Convert a JSON object to a @a flox::resolver::Resolved::Input. */
+void
+from_json( const nlohmann::json & jfrom, Resolved::Input & input );
+
+/** @brief Convert a @a flox::resolver::Resolved::Input to a JSON object. */
+void
+to_json( nlohmann::json & jto, const Resolved::Input & input );
+
+/** @brief Convert a JSON object to a @a flox::resolver::Resolved. */
+void
+from_json( const nlohmann::json & jfrom, Resolved & resolved );
+
+/** @brief Convert a @a flox::resolver::Resolved to a JSON object. */
+void
+to_json( nlohmann::json & jto, const Resolved & resolved );
+
 /**
- * @fn void from_json( const nlohmann::json & j, Resolved::Input & pdb )
- * @brief Convert a JSON object to a @a flox::resolver::Resolved::Input.
- *
- * @fn void to_json( nlohmann::json & j, const Resolved::Input & pdb )
- * @brief Convert a @a flox::resolver::Resolved::Input to a JSON object.
- *
- * @fn void from_json( const nlohmann::json & j, Resolved & pdb )
- * @brief Convert a JSON object to a @a flox::resolver::Resolved.
- *
- * @fn void to_json( nlohmann::json & j, const Resolved & pdb )
- * @brief Convert a @a flox::resolver::Resolved to a JSON object.
+ * @class flox::pkgdb::ParseResolvedException
+ * @brief An exception thrown when parsing @a flox::resolver::Resolved
+ *        from JSON.
  */
-/* Generate `to_json' and `from_json' functions. */
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( Resolved::Input, name, locked )
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( Resolved, input, path, info )
+FLOX_DEFINE_EXCEPTION( ParseResolvedException,
+                       EC_PARSE_RESOLVED,
+                       "error parsing resolved installable" )
 
-
-/* -------------------------------------------------------------------------- */
+/* --------------------------------------------------------------------------
+ */
 
 using Descriptor = PkgDescriptorRaw;
 
@@ -102,7 +159,7 @@ resolve_v0( ResolverState &    state,
  * @param descriptor The package descriptor.
  * @return The best resolved installable or `std:nullopt` if resolution failed.
  */
-[[nodiscard]] std::optional<Resolved>
+[[nodiscard]] inline std::optional<Resolved>
 resolveOne_v0( ResolverState & state, const Descriptor & descriptor )
 {
   auto resolved = resolve( state, descriptor, true );

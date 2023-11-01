@@ -77,21 +77,19 @@ struct InputPreferences
   pkgdb::PkgQueryArgs &
   fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
 
+
 }; /* End struct `InputPreferences' */
 
 
 /* -------------------------------------------------------------------------- */
 
-/**
- * @fn void from_json( const nlohmann::json & jfrom, InputPreferences & prefs )
- * @brief Convert a JSON object to an @a flox::InputPreferences.
- *
- * @fn void to_json( nlohmann::json & jto, const InputPreferences & prefs )
- * @brief Convert an @a flox::InputPreferences to a JSON object.
- */
-/* Generate to_json/from_json functions. */
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT( InputPreferences, subtrees );
+/** @brief Convert a JSON object to an @a flox::InputPreferences. */
+void
+from_json( const nlohmann::json & jfrom, InputPreferences & prefs );
 
+/** @brief Convert an @a flox::InputPreferences to a JSON object. */
+void
+to_json( nlohmann::json & jto, const InputPreferences & prefs );
 
 /* -------------------------------------------------------------------------- */
 
@@ -337,18 +335,13 @@ struct RegistryRaw
 
 /* -------------------------------------------------------------------------- */
 
-/**
- * @fn void from_json( const nlohmann::json & jfrom, RegistryRaw & reg )
- * @brief Convert a JSON object to a @a flox::RegistryRaw.
- *
- * @fn void to_json( nlohmann::json & jto, const RegistryRaw & reg )
- * @brief Convert a @a flox::RegistryRaw to a JSON object.
- */
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT( RegistryRaw,
-                                                 inputs,
-                                                 defaults,
-                                                 priority );
+/** @brief Convert a JSON object to a @a flox::RegistryRaw. */
+void
+from_json( const nlohmann::json & jfrom, RegistryRaw & reg );
 
+/** @brief Convert a @a flox::RegistryRaw to a JSON object. */
+void
+to_json( nlohmann::json & jto, const RegistryRaw & reg );
 
 /* -------------------------------------------------------------------------- */
 

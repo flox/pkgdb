@@ -70,7 +70,6 @@ test_parseManifestDescriptor0()
   , "version": "4.2.0"
   , "optional": true
   , "packageGroup": "blue"
-  , "packageRepository": "nixpkgs"
   } )"_json;
 
   flox::resolver::ManifestDescriptor descriptor( raw );
@@ -86,17 +85,6 @@ test_parseManifestDescriptor0()
   EXPECT( descriptor.group.has_value() );
   EXPECT_EQ( *descriptor.group, "blue" );
   EXPECT_EQ( descriptor.optional, true );
-
-  /* We expect this to be recognized as an _indirect flake reference_. */
-  EXPECT( descriptor.input.has_value() );
-  EXPECT( std::holds_alternative<nix::FlakeRef>( *descriptor.input ) );
-  auto flakeRef = std::get<nix::FlakeRef>( *descriptor.input );
-
-  EXPECT_EQ( flakeRef.input.getType(), "indirect" );
-
-  auto alias = flakeRef.input.attrs.at( "id" );
-  EXPECT( std::holds_alternative<std::string>( alias ) );
-  EXPECT_EQ( std::get<std::string>( alias ), "nixpkgs" );
 
   return true;
 }
@@ -197,6 +185,8 @@ test_parseManifestDescriptor_version3()
 
 /* -------------------------------------------------------------------------- */
 
+// TODO: Not supported yet
+#if 0
 /** @brief Test descriptor parsing inline inputs. */
 bool
 test_parseManifestDescriptor_input0()
@@ -214,31 +204,10 @@ test_parseManifestDescriptor_input0()
   flox::resolver::ManifestDescriptor descriptor( raw );
 
   EXPECT( descriptor.input.has_value() );
-  EXPECT( std::holds_alternative<nix::FlakeRef>( *descriptor.input ) );
 
   return true;
 }
-
-
-/* -------------------------------------------------------------------------- */
-
-/** @brief Test descriptor parsing inline inputs. */
-bool
-test_parseManifestDescriptor_input1()
-{
-
-  flox::resolver::ManifestDescriptorRaw raw = R"( {
-    "name": "foo"
-  , "input": "./pkgs/foo/default.nix"
-  } )"_json;
-
-  flox::resolver::ManifestDescriptor descriptor( raw );
-
-  EXPECT( descriptor.input.has_value() );
-  EXPECT( std::holds_alternative<std::string>( *descriptor.input ) );
-
-  return true;
-}
+#endif  /* if 0 */
 
 
 /* -------------------------------------------------------------------------- */
@@ -372,6 +341,35 @@ test_parseManifestRaw_toml0()
   return true;
 }
 
+/* -------------------------------------------------------------------------- */
+
+/** @brief Test `flox::resolver::ManifestDescriptorRaw` gets serialized correctly. */
+bool
+test_serialize_manifest()
+{
+  nlohmann::json raw = R"( {
+    "name": "foo",
+    "version": "4.2.0",
+    "path": ["legacyPackages", "x86_64-linux", "hello"],
+    "absPath": ["legacyPackages", "x86_64-linux", "hello"],
+    "optional": true,
+    "packageGroup": "blue",
+    "packageRepository": {
+      "type": "github",
+      "owner": "NixOS",
+      "repo": "nixpkgs"
+    },
+    "priority": 5
+  } )"_json;
+
+  auto descriptor = raw.template get<flox::resolver::ManifestDescriptorRaw>();
+
+  EXPECT_EQ( nlohmann::json( descriptor ).dump(), raw.dump() );
+
+  return true;
+}
+
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -393,9 +391,6 @@ main()
   RUN_TEST( parseManifestDescriptor_version2 );
   RUN_TEST( parseManifestDescriptor_version3 );
 
-  RUN_TEST( parseManifestDescriptor_input0 );
-  RUN_TEST( parseManifestDescriptor_input1 );
-
   RUN_TEST( parseManifestDescriptor_path0 );
   RUN_TEST( parseManifestDescriptor_path1 );
   RUN_TEST( parseManifestDescriptor_path2 );
@@ -404,6 +399,8 @@ main()
 
   RUN_TEST( parseManifestRaw_toml0 );
   test_parseManifestRaw_toml0();
+
+  RUN_TEST( serialize_manifest );
 
   return exitCode;
 }

@@ -65,7 +65,7 @@ struct adl_serializer<std::optional<T>>
    *         as `null`.
    */
   static void
-  to_json( json & jto, const std::optional<T> & opt )
+  to_json( json &jto, const std::optional<T> &opt )
   {
     if ( opt.has_value() ) { jto = *opt; }
     else { jto = nullptr; }
@@ -76,7 +76,7 @@ struct adl_serializer<std::optional<T>>
    *        `null` as `std::nullopt`.
    */
   static void
-  from_json( const json & jfrom, std::optional<T> & opt )
+  from_json( const json &jfrom, std::optional<T> &opt )
   {
     if ( jfrom.is_null() ) { opt = std::nullopt; }
     else { opt = std::make_optional( jfrom.template get<T>() ); }
@@ -94,7 +94,7 @@ struct adl_serializer<std::variant<A, B>>
 
   /** @brief Convert a @a std::variant<A, B> to a JSON type. */
   static void
-  to_json( json & jto, const std::variant<A, B> & var )
+  to_json( json &jto, const std::variant<A, B> &var )
   {
     if ( std::holds_alternative<A>( var ) ) { jto = std::get<A>( var ); }
     else { jto = std::get<B>( var ); }
@@ -102,7 +102,7 @@ struct adl_serializer<std::variant<A, B>>
 
   /** @brief Convert a JSON type to a @a std::variant<A, B>. */
   static void
-  from_json( const json & jfrom, std::variant<A, B> & var )
+  from_json( const json &jfrom, std::variant<A, B> &var )
   {
     try
       {
@@ -138,7 +138,7 @@ struct adl_serializer<std::variant<A, Types...>>
 
   /** @brief Convert a @a std::variant<A, Types...> to a JSON type. */
   static void
-  to_json( json & jto, const std::variant<A, Types...> & var )
+  to_json( json &jto, const std::variant<A, Types...> &var )
   {
     /* This _unwraps_ the inner type and calls the proper `to_json'.
      * The compiler does the heavy lifting for us here <3. */
@@ -147,7 +147,7 @@ struct adl_serializer<std::variant<A, Types...>>
 
   /** @brief Convert a JSON type to a @a std::variant<Types...>. */
   static void
-  from_json( const json & jfrom, std::variant<A, Types...> & var )
+  from_json( const json &jfrom, std::variant<A, Types...> &var )
   {
     /* Try getting typename `A', or recur. */
     try
@@ -177,7 +177,7 @@ struct adl_serializer<nix::fetchers::Attrs>
 
   /** @brief Convert a @a nix::fetchers::Attrs to a JSON object. */
   static void
-  to_json( json & jto, const nix::fetchers::Attrs & attrs )
+  to_json( json &jto, const nix::fetchers::Attrs &attrs )
   {
     /* That was easy. */
     jto = nix::fetchers::attrsToJSON( attrs );
@@ -185,7 +185,7 @@ struct adl_serializer<nix::fetchers::Attrs>
 
   /** @brief Convert a JSON object to a @a nix::fetchers::Attrs. */
   static void
-  from_json( const json & jfrom, nix::fetchers::Attrs & attrs )
+  from_json( const json &jfrom, nix::fetchers::Attrs &attrs )
   {
     /* That was easy. */
     attrs = nix::fetchers::jsonToAttrs( jfrom );
@@ -203,7 +203,7 @@ struct adl_serializer<nix::FlakeRef>
 
   /** @brief Convert a @a nix::FlakeRef to a JSON object. */
   static void
-  to_json( json & jto, const nix::FlakeRef & ref )
+  to_json( json &jto, const nix::FlakeRef &ref )
   {
     /* That was easy. */
     jto = nix::fetchers::attrsToJSON( ref.toAttrs() );
@@ -211,7 +211,7 @@ struct adl_serializer<nix::FlakeRef>
 
   /** @brief _Move-only_ conversion of a JSON object to a @a nix::FlakeRef. */
   static nix::FlakeRef
-  from_json( const json & jfrom )
+  from_json( const json &jfrom )
   {
     if ( jfrom.is_object() )
       {
@@ -263,7 +263,7 @@ getDefaultSubtrees()
  * @return `true` iff @a path is a SQLite3 database file.
  */
 bool
-isSQLiteDb( const std::string & dbPath );
+isSQLiteDb( const std::string &dbPath );
 
 
 /* -------------------------------------------------------------------------- */
@@ -274,7 +274,7 @@ isSQLiteDb( const std::string & dbPath );
  * @return Parsed flake reference object.
  */
 static inline nix::FlakeRef
-parseFlakeRef( const std::string & flakeRef )
+parseFlakeRef( const std::string &flakeRef )
 {
   return ( flakeRef.find( '{' ) == std::string::npos )
            ? nix::parseFlakeRef( flakeRef )
@@ -291,7 +291,7 @@ parseFlakeRef( const std::string & flakeRef )
  * @return A parsed JSON object.
  */
 nlohmann::json
-parseOrReadJSONObject( const std::string & jsonOrPath );
+parseOrReadJSONObject( const std::string &jsonOrPath );
 
 
 /* -------------------------------------------------------------------------- */
@@ -359,15 +359,15 @@ hasPrefix( std::string_view prefix, std::string_view str );
 
 /** @brief trim from start ( in place ). */
 std::string &
-ltrim( std::string & str );
+ltrim( std::string &str );
 
 /** @brief trim from end ( in place ). */
 std::string &
-rtrim( std::string & str );
+rtrim( std::string &str );
 
 /** @brief trim from both ends ( in place ). */
 std::string &
-trim( std::string & str );
+trim( std::string &str );
 
 
 /** @brief trim from start ( copying ). */
@@ -382,6 +382,15 @@ rtrim_copy( std::string_view str );
 [[nodiscard]] std::string
 trim_copy( std::string_view str );
 
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief Extract the user-friendly portion of a @a nlohmann::json::exception.
+ *
+ */
+std::string
+extract_json_errmsg( nlohmann::json::exception &e );
 
 /* -------------------------------------------------------------------------- */
 
