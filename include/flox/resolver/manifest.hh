@@ -272,7 +272,7 @@ public:
    *
    * @return The path to the manifest file.
    */
-  std::filesystem::path
+  [[nodiscard]] std::filesystem::path
   getManifestPath();
 
   /**
@@ -292,22 +292,22 @@ public:
   argparse::Argument &
   addManifestFileArg( argparse::ArgumentParser & parser, bool required = true );
 
-  const UnlockedManifest &
+  [[nodiscard]] const UnlockedManifest &
   getUnlockedManifest();
 
-  const RegistryRaw &
+  [[nodiscard]] const RegistryRaw &
   getLockedRegistry();
 
-  const pkgdb::PkgQueryArgs &
+  [[nodiscard]] const pkgdb::PkgQueryArgs &
   getBaseQueryArgs();
 
-  const std::unordered_map<std::string, ManifestDescriptor> &
+  [[nodiscard]] const std::unordered_map<std::string, ManifestDescriptor> &
   getDescriptors()
   {
     return this->getUnlockedManifest().getManifestRaw().install;
   }
 
-  const std::unordered_map<
+  [[nodiscard]] const std::unordered_map<
     std::string,
     std::unordered_map<std::string, std::optional<Resolved>>> &
   getLockedDescriptors();
