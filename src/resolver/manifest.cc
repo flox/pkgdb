@@ -37,6 +37,7 @@ UnlockedManifest::UnlockedManifest( std::filesystem::path manifestPath )
   : manifestPath( std::move( manifestPath ) )
   , manifestRaw( readManifestFromPath( this->manifestPath ) )
 {
+  this->manifestRaw.check();
   if ( this->manifestRaw.registry.has_value() )
     {
       this->registryRaw = *this->manifestRaw.registry;

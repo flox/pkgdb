@@ -508,6 +508,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
 void
 to_json( nlohmann::json & jto, const ManifestRaw & manifest )
 {
+  manifest.check();
   jto = nlohmann::json::object();
 
   if ( manifest.envBase.has_value() ) { jto["env-base"] = *manifest.envBase; }
@@ -530,12 +531,11 @@ void
 ManifestRaw::check() const
 {
   if ( this->envBase.has_value() ) { this->envBase->check(); }
-  // FIXME:
-  // if ( this->options.has_value() ) { this->options->check(); }
   if ( this->install.has_value() )
     {
-      for ( const auto & [iid, desc] : *this->install ) { desc->check(); }
+      for ( const auto & [iid, desc] : *this->install ) { desc->check( iid ); }
     }
+  if ( this->hook.has_value() ) { this->hook->check(); }
 }
 
 

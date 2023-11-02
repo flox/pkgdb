@@ -174,6 +174,7 @@ public:
   UnlockedManifest( std::filesystem::path manifestPath, ManifestRaw raw )
     : manifestPath( std::move( manifestPath ) ), manifestRaw( std::move( raw ) )
   {
+    this->manifestRaw.check();
     if ( this->manifestRaw.registry.has_value() )
       {
         this->registryRaw = *this->manifestRaw.registry;
