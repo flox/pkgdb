@@ -13,8 +13,8 @@
 
 #include "flox/core/types.hh"
 #include "flox/core/util.hh"
-#include "flox/resolver/manifest.hh"
 #include "flox/resolver/lockfile.hh"
+#include "flox/resolver/manifest.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -24,7 +24,7 @@ namespace flox::resolver {
 /* -------------------------------------------------------------------------- */
 
 /**
- * @brief A state blob with a manifest loaded from path.
+ * @brief A state blob with files associated with an environment.
  *
  * This structure stashes several fields to avoid repeatedly calculating them.
  */
@@ -43,7 +43,7 @@ private:
   /** Path to user level manifest. */
   std::optional<std::filesystem::path> globalManifestPath;
   /** Contents of user level manifest with global registry and settings. */
-  std::optional<UnlockedManifest>      globalManifest;
+  std::optional<UnlockedManifest> globalManifest;
 
   std::optional<std::filesystem::path> manifestPath;
   std::optional<UnlockedManifest>      manifest;
@@ -52,7 +52,7 @@ private:
   std::optional<LockfileRaw>           lockfileRaw;
 
   /** A registry of locked inputs. */
-  std::optional<RegistryRaw>           lockedRegistry;
+  std::optional<RegistryRaw> lockedRegistry;
 
 
 public:
@@ -61,7 +61,7 @@ public:
    * @brief Get a registry which is the combined contents of the
    *        _global_, _local_, and _lockfile_ registries.
    */
-  const RegistryRaw &
+  RegistryRaw
   getCombinedRegistryRaw();
 
   /**
@@ -72,7 +72,7 @@ public:
   getLockedRegistry();
 
 
-};  /* End class `EnvironmentMixin' */
+}; /* End class `EnvironmentMixin' */
 
 /* -------------------------------------------------------------------------- */
 
