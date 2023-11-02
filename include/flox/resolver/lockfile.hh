@@ -91,7 +91,7 @@ struct LockfileRaw
 
 
 // FIXME
-//NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( LockfileRaw,
+// NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( LockfileRaw,
 //                                    manifest,
 //                                    registry,
 //                                    packages,

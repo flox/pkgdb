@@ -101,7 +101,7 @@ public:
    * @brief Ensure that a raw descriptor's fields are valid or
    *        throws an exception if the descriptor is invalid.
    *
-   * This requires that the `abs-path` field is valid, and consistent with
+   * This requires that the `abspath` field is valid, and consistent with
    * `path` and/or `systems` fields if they are set.
    */
   void

@@ -218,7 +218,7 @@ test_parseManifestDescriptor_path0()
 {
 
   flox::resolver::ManifestDescriptorRaw raw = R"( {
-    "abs-path": "legacyPackages.null.hello"
+    "abspath": "legacyPackages.null.hello"
   } )"_json;
 
   flox::resolver::ManifestDescriptor descriptor( raw );
@@ -241,7 +241,7 @@ test_parseManifestDescriptor_path1()
 {
 
   flox::resolver::ManifestDescriptorRaw raw = R"( {
-    "abs-path": "legacyPackages.*.hello"
+    "abspath": "legacyPackages.*.hello"
   } )"_json;
 
   flox::resolver::ManifestDescriptor descriptor( raw );
@@ -264,7 +264,7 @@ test_parseManifestDescriptor_path2()
 {
 
   flox::resolver::ManifestDescriptorRaw raw = R"( {
-    "abs-path": ["legacyPackages", null, "hello"]
+    "abspath": ["legacyPackages", null, "hello"]
   } )"_json;
 
   flox::resolver::ManifestDescriptor descriptor( raw );
@@ -287,7 +287,7 @@ test_parseManifestDescriptor_path3()
 {
 
   flox::resolver::ManifestDescriptorRaw raw = R"( {
-    "abs-path": ["legacyPackages", "*", "hello"]
+    "abspath": ["legacyPackages", "*", "hello"]
   } )"_json;
 
   flox::resolver::ManifestDescriptor descriptor( raw );
@@ -310,7 +310,7 @@ test_parseManifestDescriptor_path4()
 {
 
   flox::resolver::ManifestDescriptorRaw raw = R"( {
-    "abs-path": ["legacyPackages", "x86_64-linux", "hello"]
+    "abspath": ["legacyPackages", "x86_64-linux", "hello"]
   } )"_json;
 
   flox::resolver::ManifestDescriptor descriptor( raw );
@@ -352,7 +352,7 @@ test_serialize_manifest()
     "name": "foo",
     "version": "4.2.0",
     "path": ["legacyPackages", "x86_64-linux", "hello"],
-    "abs-path": ["legacyPackages", "x86_64-linux", "hello"],
+    "abspath": ["legacyPackages", "x86_64-linux", "hello"],
     "optional": true,
     "package-group": "blue",
     "package-repository": {

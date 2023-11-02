@@ -54,7 +54,7 @@ ManifestDescriptorRaw::check( std::string iid ) const
       if ( glob.size() < 3 )
         {
           throw InvalidManifestDescriptorException(
-            "`install." + iid + ".abs-path' must have at least three parts." );
+            "`install." + iid + ".abspath' must have at least three parts." );
         }
       if ( ! ( glob.at( 0 ).has_value()
                && ( std::find( getDefaultSubtrees().begin(),
@@ -64,7 +64,7 @@ ManifestDescriptorRaw::check( std::string iid ) const
         {
           throw InvalidManifestDescriptorException(
             "`install." + iid
-            + ".abs-path' must have a subtree as its first element" );
+            + ".abspath' must have a subtree as its first element" );
         }
 
       if ( this->path.has_value() )
@@ -75,12 +75,12 @@ ManifestDescriptorRaw::check( std::string iid ) const
                 {
                   throw InvalidManifestDescriptorException(
                     "`install." + iid
-                    + ".abs-path' may only have a glob as its "
+                    + ".abspath' may only have a glob as its "
                       "second element" );
                 }
             }
           throw InvalidManifestDescriptorException(
-            "`install." + iid + ".path' conflicts with `install.*.abs-path'" );
+            "`install." + iid + ".path' conflicts with `install.*.abspath'" );
         }
 
       if ( this->systems.has_value() && glob.at( 1 ).has_value() )
@@ -92,7 +92,7 @@ ManifestDescriptorRaw::check( std::string iid ) const
             {
               throw InvalidManifestDescriptorException(
                 "`install." + iid
-                + ".systems' list conflicts with `install.*.abs-path' "
+                + ".systems' list conflicts with `install.*.abspath' "
                   "system specification" );
             }
         }
@@ -196,7 +196,7 @@ initManifestDescriptorAbsPath( ManifestDescriptor          &desc,
   if ( ! raw.absPath.has_value() )
     {
       throw InvalidManifestDescriptorException(
-        "`abs-path' must be set when calling "
+        "`abspath' must be set when calling "
         "`flox::resolver::ManifestDescriptor::initManifestDescriptorAbsPath'" );
     }
 
@@ -206,14 +206,14 @@ initManifestDescriptorAbsPath( ManifestDescriptor          &desc,
   if ( glob.size() < 3 )
     {
       throw InvalidManifestDescriptorException(
-        "`abs-path' must have at least three parts" );
+        "`abspath' must have at least three parts" );
     }
 
   const auto &first = glob.front();
   if ( ! first.has_value() )
     {
       throw InvalidManifestDescriptorException(
-        "`abs-path' may only have a glob as its second element" );
+        "`abspath' may only have a glob as its second element" );
     }
   desc.subtree = Subtree( *first );
 
@@ -224,7 +224,7 @@ initManifestDescriptorAbsPath( ManifestDescriptor          &desc,
       if ( ! elem.has_value() )
         {
           throw InvalidManifestDescriptorException(
-            "`abs-path' may only have a glob as its second element" );
+            "`abspath' may only have a glob as its second element" );
         }
       desc.path = AttrPath {};
       for ( auto itr = glob.begin() + 3; itr != glob.end(); ++itr )
@@ -233,7 +233,7 @@ initManifestDescriptorAbsPath( ManifestDescriptor          &desc,
           if ( ! elem.has_value() )
             {
               throw InvalidManifestDescriptorException(
-                "`abs-path' may only have a glob as its second element" );
+                "`abspath' may only have a glob as its second element" );
             }
           desc.path->emplace_back( *elem );
         }
@@ -246,7 +246,7 @@ initManifestDescriptorAbsPath( ManifestDescriptor          &desc,
       if ( ! elem.has_value() )
         {
           throw InvalidManifestDescriptorException(
-            "`abs-path' may only have a glob as its second element" );
+            "`abspath' may only have a glob as its second element" );
         }
       desc.path->emplace_back( *elem );
     }
@@ -259,7 +259,7 @@ initManifestDescriptorAbsPath( ManifestDescriptor          &desc,
       if ( raw.systems.has_value() && ( *raw.systems != *desc.systems ) )
         {
           throw InvalidManifestDescriptorException(
-            "`systems' list conflicts with `abs-path' system specification" );
+            "`systems' list conflicts with `abspath' system specification" );
         }
     }
 }
@@ -321,7 +321,7 @@ from_json( const nlohmann::json &jfrom, ManifestDescriptorRaw &descriptor )
                 flox::extract_json_errmsg( e ).c_str() );
             }
         }
-      else if ( key == "abs-path" )
+      else if ( key == "abspath" )
         {
           try
             {
@@ -330,7 +330,7 @@ from_json( const nlohmann::json &jfrom, ManifestDescriptorRaw &descriptor )
           catch ( nlohmann::json::exception &e )
             {
               throw ParseManifestDescriptorRawException(
-                "couldn't interpret field `abs-path'",
+                "couldn't interpret field `abspath'",
                 flox::extract_json_errmsg( e ).c_str() );
             }
         }
@@ -419,7 +419,7 @@ to_json( nlohmann::json &jto, const ManifestDescriptorRaw &descriptor )
   if ( descriptor.path.has_value() ) { jto["path"] = *descriptor.path; }
   if ( descriptor.absPath.has_value() )
     {
-      jto["abs-path"] = *descriptor.absPath;
+      jto["abspath"] = *descriptor.absPath;
     }
   if ( descriptor.systems.has_value() )
     {
@@ -458,7 +458,7 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw &raw )
       initManifestDescriptorVersion( *this, *raw.version );
     }
 
-  /* You have to split `abs-path' before doing most other fields. */
+  /* You have to split `abspath' before doing most other fields. */
   if ( raw.absPath.has_value() )
     {
       initManifestDescriptorAbsPath( *this, raw );
@@ -485,7 +485,7 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw &raw )
           if ( this->path != path )
             {
               throw InvalidManifestDescriptorException(
-                "`path' conflicts with with `abs-path'" );
+                "`path' conflicts with with `abspath'" );
             }
         }
       else { this->path = path; }
