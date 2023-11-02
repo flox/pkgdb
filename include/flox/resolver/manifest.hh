@@ -239,7 +239,7 @@ public:
  *
  * This structure stashes several fields to avoid repeatedly calculating them.
  */
-struct ManifestFileMixin : public pkgdb::PkgDbRegistryMixin
+class ManifestFileMixin : public pkgdb::PkgDbRegistryMixin
 {
 
 public:
