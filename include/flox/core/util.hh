@@ -57,39 +57,49 @@ namespace nlohmann {
 
 /** @brief Variants ( Eithers ) of two elements to/from JSON. */
 template<typename A, typename B>
-struct adl_serializer<std::variant<A, B>> {
+struct adl_serializer<std::variant<A, B>>
+{
 
   /** @brief Convert a @a std::variant<A, B> to a JSON type. */
-    static void
-  to_json( json & jto, const std::variant<A, B> & var )
+  static void
+  to_json( json &jto, const std::variant<A, B> &var )
   {
-    if ( std::holds_alternative<A>( var ) )
-      {
-        jto = std::get<A>( var );
-      }
-    else
-      {
-        jto = std::get<B>( var );
-      }
+    if ( std::holds_alternative<A>( var ) ) { jto = std::get<A>( var ); }
+    else { jto = std::get<B>( var ); }
   }
 
   /** @brief Convert a JSON type to a @a std::variant<A, B>. */
-    static void
-  from_json( const json & jfrom, std::variant<A, B> & var )
+  static void
+  from_json( const json &jfrom, std::variant<A, B> &var )
   {
     try
       {
         var = jfrom.template get<A>();
       }
-    catch( ... )
+    catch ( ... )
       {
         var = jfrom.template get<B>();
       }
   }
 
-};  /* End struct `adl_serializer<std::variant<A, B>>' */
+}; /* End struct `adl_serializer<std::variant<A, B>>' */
+
 
 /* -------------------------------------------------------------------------- */
+
+/**
+ * @brief Variants ( Eithers ) of any number of elements to/from JSON.
+ *
+ * The order of your types effects priority.
+ * Any valid parse or coercion from a type named _early_ in the variant list
+ * will succeed before attempting to parse alternatives.
+ *
+ * For example, always attempt `bool` first, then `int`, then `float`, and
+ * alway attempt `std::string` LAST.
+ *
+ * It's important to note that you must never nest multiple `std::optional`
+ * types in a variant, instead make `std::optional<std::variant<...>>`.
+ */
 template<typename A, typename... Types>
 struct adl_serializer<std::variant<A, Types...>>
 {
@@ -124,6 +134,7 @@ struct adl_serializer<std::variant<A, Types...>>
   }
 
 }; /* End struct `adl_serializer<std::variant<A, Types...>>' */
+
 
 /* -------------------------------------------------------------------------- */
 
