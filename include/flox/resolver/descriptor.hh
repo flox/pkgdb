@@ -97,6 +97,21 @@ public:
    */
   std::optional<unsigned> priority;
 
+  /**
+   * @brief Ensure that a descriptor has at least `name`, `path`, or
+   *        `absPath` fields.
+   *        Throws an exception if the descriptor is invalid.
+   *
+   * Unlike most `to_json` routines, it is not required for a
+   * @a flox::resolver::ManifestDescriptorRaw to be checked.
+   * This allows us to emit the exact JSON that was parsed.
+   */
+  void
+  check( const std::string iid = "*" ) const;
+
+  /** @brief Reset to default/empty state. */
+  void
+  clear();
 
 }; /* End struct `ManifestDescriptorRaw' */
 
@@ -186,6 +201,13 @@ public:
     if ( ! this->name.has_value() ) { this->name = installID; }
   }
 
+  /**
+   * @brief Ensure that a descriptor has at least `name`, `path`, or
+   *        `absPath` fields.
+   *        Throws an exception if the descriptor is invalid.
+   */
+  void
+  check() const;
 
   /** @brief Reset to default state. */
   void

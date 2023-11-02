@@ -86,6 +86,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::EnvBase & env )
   env.check();
 }
 
+
 static void
 to_json( nlohmann::json & jto, const ManifestRaw::EnvBase & env )
 {
@@ -311,7 +312,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options & opts )
 }
 
 
-[[maybe_unused]] void
+void
 to_json( nlohmann::json & jto, const ManifestRaw::Options & opts )
 {
   if ( opts.systems.has_value() ) { jto = { { "systems", *opts.systems } }; }
@@ -389,7 +390,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Hook & hook )
 }
 
 
-[[maybe_unused]] static void
+static void
 to_json( nlohmann::json & jto, const ManifestRaw::Hook & hook )
 {
   hook.check();
@@ -449,6 +450,7 @@ varsFromJSON( const nlohmann::json &                         jfrom,
 void
 from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
 {
+  manifest.check();
   if ( ! jfrom.is_object() )
     {
       std::string aOrAn = jfrom.is_array() ? " an " : " a ";
@@ -503,8 +505,6 @@ from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
 }
 
 
-/* -------------------------------------------------------------------------- */
-
 void
 to_json( nlohmann::json & jto, const ManifestRaw & manifest )
 {
@@ -521,6 +521,21 @@ to_json( nlohmann::json & jto, const ManifestRaw & manifest )
   if ( manifest.vars.has_value() ) { jto["vars"] = *manifest.vars; }
 
   if ( manifest.hook.has_value() ) { jto["hook"] = *manifest.hook; }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+ManifestRaw::check() const
+{
+  if ( this->envBase.has_value() ) { this->envBase->check(); }
+  // FIXME:
+  // if ( this->options.has_value() ) { this->options->check(); }
+  if ( this->install.has_value() )
+    {
+      for ( const auto & [iid, desc] : *this->install ) { desc->check(); }
+    }
 }
 
 

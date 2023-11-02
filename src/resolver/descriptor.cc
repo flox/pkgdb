@@ -22,6 +22,84 @@ namespace flox::resolver {
 
 /* -------------------------------------------------------------------------- */
 
+static AttrPathGlob
+maybeSplitAttrPathGlob( const ManifestDescriptorRaw::AbsPath &absPath );
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+ManifestDescriptorRaw::clear()
+{
+  this->name              = std::nullopt;
+  this->version           = std::nullopt;
+  this->path              = std::nullopt;
+  this->absPath           = std::nullopt;
+  this->systems           = std::nullopt;
+  this->optional          = std::nullopt;
+  this->packageGroup      = std::nullopt;
+  this->packageRepository = std::nullopt;
+  this->priority          = std::nullopt;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+ManifestDescriptorRaw::check( std::string iid ) const
+{
+  if ( this->absPath.has_value() )
+    {
+      AttrPathGlob glob = maybeSplitAttrPathGlob( *this->absPath );
+      if ( glob.size() < 3 )
+        {
+          throw InvalidManifestDescriptorException(
+            "`install." + iid + ".abs-path' must have at least three parts." );
+        }
+      if ( ! ( glob.at( 0 ).has_value()
+               && ( std::find( getDefaultSubtrees().begin(),
+                               getDefaultSubtrees().end(),
+                               *glob.at( 0 ) )
+                    == getDefaultSubtrees().end() ) ) )
+        {
+          throw InvalidManifestDescriptorException(
+            "`install." + iid
+            + ".abs-path' must have a subtree as its first element" );
+        }
+      if ( this->path.has_value() )
+        {
+          for ( auto part = glob.begin() + 2; part != glob.end(); part++ )
+            {
+              if ( ! part->has_value() )
+                {
+                  throw InvalidManifestDescriptorException(
+                    "`install." + iid
+                    + ".abs-path' may only have a glob as its "
+                      "second element" );
+                }
+            }
+          throw InvalidManifestDescriptorException(
+            "`install." + iid + ".path' conflicts with `install.*.abs-path'" );
+        }
+      if ( this->systems.has_value() && glob.at( 1 ).has_value() )
+        {
+          if ( std::find( this->systems->begin(),
+                          this->systems->end(),
+                          *glob.at( 1 ) )
+               == this->systems->end() )
+            {
+              throw InvalidManifestDescriptorException(
+                "`install." + iid
+                + ".systems' list conflicts with `install.*.abs-path' "
+                  "system specification" );
+            }
+        }
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 /**
  * @brief Sets either `version` or `semver` on
  *        a `flox::resolver::ManifestDescriptor`.

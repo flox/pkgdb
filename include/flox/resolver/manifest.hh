@@ -116,6 +116,13 @@ struct ManifestRaw
   }; /* End struct `ManifestRaw::Hook' */
   std::optional<Hook> hook;
 
+  /**
+   * @brief Validate manifest fields, throwing an exception if its contents
+   *        are invalid.
+   */
+  void
+  check() const;
+
   void
   clear()
   {
