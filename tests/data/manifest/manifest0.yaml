@@ -29,7 +29,7 @@ install:
   hello:
 
   python3:
-    packageRepository:
+    package-repository:
       type: github
       owner: NixOS
       repo: nixpkgs

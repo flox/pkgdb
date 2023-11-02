@@ -98,13 +98,11 @@ public:
   std::optional<unsigned> priority;
 
   /**
-   * @brief Ensure that a descriptor has at least `name`, `path`, or
-   *        `absPath` fields.
-   *        Throws an exception if the descriptor is invalid.
+   * @brief Ensure that a raw descriptor's fields are valid or
+   *        throws an exception if the descriptor is invalid.
    *
-   * Unlike most `to_json` routines, it is not required for a
-   * @a flox::resolver::ManifestDescriptorRaw to be checked.
-   * This allows us to emit the exact JSON that was parsed.
+   * This requires that the `abs-path` field is valid, and consistent with
+   * `path` and/or `systems` fields if they are set.
    */
   void
   check( const std::string iid = "*" ) const;

@@ -69,7 +69,7 @@ test_parseManifestDescriptor0()
     "name": "foo"
   , "version": "4.2.0"
   , "optional": true
-  , "packageGroup": "blue"
+  , "package-group": "blue"
   } )"_json;
 
   flox::resolver::ManifestDescriptor descriptor( raw );
@@ -194,7 +194,7 @@ test_parseManifestDescriptor_input0()
 
   flox::resolver::ManifestDescriptorRaw raw = R"( {
     "name": "foo"
-  , "packageRepository": {
+  , "package-repository": {
       "type": "github"
     , "owner": "NixOS"
     , "repo": "nixpkgs"
@@ -218,7 +218,7 @@ test_parseManifestDescriptor_path0()
 {
 
   flox::resolver::ManifestDescriptorRaw raw = R"( {
-    "absPath": "legacyPackages.null.hello"
+    "abs-path": "legacyPackages.null.hello"
   } )"_json;
 
   flox::resolver::ManifestDescriptor descriptor( raw );
@@ -241,7 +241,7 @@ test_parseManifestDescriptor_path1()
 {
 
   flox::resolver::ManifestDescriptorRaw raw = R"( {
-    "absPath": "legacyPackages.*.hello"
+    "abs-path": "legacyPackages.*.hello"
   } )"_json;
 
   flox::resolver::ManifestDescriptor descriptor( raw );
@@ -264,7 +264,7 @@ test_parseManifestDescriptor_path2()
 {
 
   flox::resolver::ManifestDescriptorRaw raw = R"( {
-    "absPath": ["legacyPackages", null, "hello"]
+    "abs-path": ["legacyPackages", null, "hello"]
   } )"_json;
 
   flox::resolver::ManifestDescriptor descriptor( raw );
@@ -287,7 +287,7 @@ test_parseManifestDescriptor_path3()
 {
 
   flox::resolver::ManifestDescriptorRaw raw = R"( {
-    "absPath": ["legacyPackages", "*", "hello"]
+    "abs-path": ["legacyPackages", "*", "hello"]
   } )"_json;
 
   flox::resolver::ManifestDescriptor descriptor( raw );
@@ -310,7 +310,7 @@ test_parseManifestDescriptor_path4()
 {
 
   flox::resolver::ManifestDescriptorRaw raw = R"( {
-    "absPath": ["legacyPackages", "x86_64-linux", "hello"]
+    "abs-path": ["legacyPackages", "x86_64-linux", "hello"]
   } )"_json;
 
   flox::resolver::ManifestDescriptor descriptor( raw );
@@ -352,10 +352,10 @@ test_serialize_manifest()
     "name": "foo",
     "version": "4.2.0",
     "path": ["legacyPackages", "x86_64-linux", "hello"],
-    "absPath": ["legacyPackages", "x86_64-linux", "hello"],
+    "abs-path": ["legacyPackages", "x86_64-linux", "hello"],
     "optional": true,
-    "packageGroup": "blue",
-    "packageRepository": {
+    "package-group": "blue",
+    "package-repository": {
       "type": "github",
       "owner": "NixOS",
       "repo": "nixpkgs"
