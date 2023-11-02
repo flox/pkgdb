@@ -84,23 +84,11 @@ LockCommand::LockCommand() : parser( "lock" )
 int
 LockCommand::run()
 {
-  auto lockedRegistry = this->getLockedRegistry();
-
-  std::unordered_map<std::string,
-                     std::unordered_map<std::string, std::optional<Resolved>>>
-    lockedDescriptors;
-
-  for ( const auto &[iid, desc] : this->getDescriptors() )
-    {
-      lockedDescriptors.emplace( iid, this->lockDescriptor( iid, desc ) );
-    }
-
-  // TODO: to_json( ManifestRaw )
-  nlohmann::json lockfile
-    = { { "manifest", readAndCoerceJSON( this->getManifestPath() ) },
-        { "registry", std::move( lockedRegistry ) },
-        { "packages", std::move( lockedDescriptors ) },
-        { "lockfileVersion", 0 } };
+  // TODO: `RegistryRaw' should drop empty fields.
+  nlohmann::json lockfile = { { "manifest", this->getManifestRaw() },
+                              { "registry", this->getLockedRegistry() },
+                              { "packages", this->getLockedDescriptors() },
+                              { "lockfileVersion", 0 } };
 
   /* Print that bad boii */
   std::cout << lockfile.dump() << std::endl;

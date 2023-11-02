@@ -86,8 +86,8 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::EnvBase & env )
   env.check();
 }
 
-// TODO: remove `maybe_unused' when you write `to_json' for `ManifestRaw'.
-[[maybe_unused]] static void
+
+static void
 to_json( nlohmann::json & jto, const ManifestRaw::EnvBase & env )
 {
   env.check();
@@ -312,7 +312,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options & opts )
 }
 
 
-[[maybe_unused]] void
+void
 to_json( nlohmann::json & jto, const ManifestRaw::Options & opts )
 {
   if ( opts.systems.has_value() ) { jto = { { "systems", *opts.systems } }; }
@@ -390,7 +390,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Hook & hook )
 }
 
 
-[[maybe_unused]] static void
+static void
 to_json( nlohmann::json & jto, const ManifestRaw::Hook & hook )
 {
   hook.check();
@@ -409,28 +409,6 @@ ManifestRaw::Hook::check() const
     {
       throw InvalidManifestFileException(
         "hook may only define one of `hook.script' or `hook.file' fields." );
-    }
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-/**
- * @brief Add a `name' field to the descriptor if it is missing, and no
- *        other acceptable field is present.
- *
- * The fields `absPath` or `path` may be used instead of the `name` field, but
- * if none are present use the `install.<ID>` identifier as `name`.
- *
- * @param[in] iid The `install.<ID>` identifier associated with the descriptor.
- * @param[in,out] desc The descriptor to fixup.
- */
-static void
-fixupDescriptor( const std::string & iid, ManifestDescriptor & desc )
-{
-  if ( ! ( desc.name.has_value() || desc.path.has_value() ) )
-    {
-      desc.name = iid;
     }
 }
 
@@ -472,6 +450,7 @@ varsFromJSON( const nlohmann::json &                         jfrom,
 void
 from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
 {
+  manifest.check();
   if ( ! jfrom.is_object() )
     {
       std::string aOrAn = jfrom.is_array() ? " an " : " a ";
@@ -484,23 +463,28 @@ from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
     {
       if ( key == "install" )
         {
+          std::unordered_map<std::string, std::optional<ManifestDescriptorRaw>>
+            install;
           for ( const auto & [name, desc] : value.items() )
             {
               /* An empty/null descriptor uses `name' of the attribute. */
-              if ( desc.is_null() )
+              if ( desc.is_null() ) { install.emplace( name, std::nullopt ); }
+              else  // TODO: parse CLI strings
                 {
-                  ManifestDescriptor manDesc;
-                  manDesc.name = name;
-                  manifest.install.emplace( name, std::move( manDesc ) );
-                }
-              else  // TODO: strings
-                {
-                  auto manDesc
-                    = ManifestDescriptor( desc.get<ManifestDescriptorRaw>() );
-                  fixupDescriptor( name, manDesc );
-                  manifest.install.emplace( name, std::move( manDesc ) );
+                  try
+                    {
+                      install.emplace( name,
+                                       desc.get<ManifestDescriptorRaw>() );
+                    }
+                  catch ( const nlohmann::json::exception & )
+                    {
+                      throw InvalidManifestFileException(
+                        "failed to parse manifest field `install." + name
+                        + "'." );
+                    }
                 }
             }
+          manifest.install = std::move( install );
         }
       else if ( key == "registry" ) { value.get_to( manifest.registry ); }
       else if ( key == "vars" )
@@ -518,6 +502,40 @@ from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
                                               + key + "'." );
         }
     }
+}
+
+
+void
+to_json( nlohmann::json & jto, const ManifestRaw & manifest )
+{
+  manifest.check();
+  jto = nlohmann::json::object();
+
+  if ( manifest.envBase.has_value() ) { jto["env-base"] = *manifest.envBase; }
+
+  if ( manifest.options.has_value() ) { jto["options"] = *manifest.options; }
+
+  if ( manifest.install.has_value() ) { jto["install"] = *manifest.install; }
+
+  if ( manifest.registry.has_value() ) { jto["registry"] = *manifest.registry; }
+
+  if ( manifest.vars.has_value() ) { jto["vars"] = *manifest.vars; }
+
+  if ( manifest.hook.has_value() ) { jto["hook"] = *manifest.hook; }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+ManifestRaw::check() const
+{
+  if ( this->envBase.has_value() ) { this->envBase->check(); }
+  if ( this->install.has_value() )
+    {
+      for ( const auto & [iid, desc] : *this->install ) { desc->check( iid ); }
+    }
+  if ( this->hook.has_value() ) { this->hook->check(); }
 }
 
 

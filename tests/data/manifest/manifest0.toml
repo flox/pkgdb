@@ -28,7 +28,7 @@ activation-strategy = "etc-profiles"
 package-grouping-strategy = "auto"
 
 [install]
-[install.python3.packageRepository]
+[install.python3.package-repository]
 type = "github"
 owner = "NixOS"
 repo = "nixpkgs"

@@ -97,6 +97,19 @@ public:
    */
   std::optional<unsigned> priority;
 
+  /**
+   * @brief Ensure that a raw descriptor's fields are valid or
+   *        throws an exception if the descriptor is invalid.
+   *
+   * This requires that the `abspath` field is valid, and consistent with
+   * `path` and/or `systems` fields if they are set.
+   */
+  void
+  check( const std::string iid = "*" ) const;
+
+  /** @brief Reset to default/empty state. */
+  void
+  clear();
 
 }; /* End struct `ManifestDescriptorRaw' */
 
@@ -119,10 +132,13 @@ to_json( nlohmann::json & jto, const ManifestDescriptorRaw & descriptor );
  * @class flox::pkgdb::ParseManifestDescriptorRawException
  * @brief An exception thrown when parsing @a
  * flox::resolver::ManifestDescriptorRaw from JSON.
+ * @{
  */
 FLOX_DEFINE_EXCEPTION( ParseManifestDescriptorRawException,
                        EC_PARSE_MANIFEST_DESCRIPTOR_RAW,
                        "error parsing manifest descriptor" )
+/** @} */
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -176,6 +192,20 @@ public:
 
   explicit ManifestDescriptor( const ManifestDescriptorRaw & raw );
 
+  explicit ManifestDescriptor( std::string_view              installID,
+                               const ManifestDescriptorRaw & raw )
+    : ManifestDescriptor( raw )
+  {
+    if ( ! this->name.has_value() ) { this->name = installID; }
+  }
+
+  /**
+   * @brief Ensure that a descriptor has at least `name`, `path`, or
+   *        `absPath` fields.
+   *        Throws an exception if the descriptor is invalid.
+   */
+  void
+  check() const;
 
   /** @brief Reset to default state. */
   void

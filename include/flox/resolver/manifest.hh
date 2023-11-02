@@ -58,6 +58,13 @@ struct ManifestRaw
 
     void
     check() const;
+
+    void
+    clear()
+    {
+      this->floxhub = std::nullopt;
+      this->dir     = std::nullopt;
+    }
   }; /* End struct `EnvBase' */
   std::optional<EnvBase> envBase;
 
@@ -85,14 +92,15 @@ struct ManifestRaw
     // TODO: Other options
 
   }; /* End struct `Options' */
-  Options options;
+  std::optional<Options> options;
 
-  // FIXME: This should be `ManifestDescriptorRaw`
-  std::unordered_map<std::string, ManifestDescriptor> install;
+  std::optional<
+    std::unordered_map<std::string, std::optional<ManifestDescriptorRaw>>>
+    install;
 
-  RegistryRaw registry;
+  std::optional<RegistryRaw> registry;
 
-  std::unordered_map<std::string, std::string> vars;
+  std::optional<std::unordered_map<std::string, std::string>> vars;
 
   struct Hook
   {
@@ -108,6 +116,23 @@ struct ManifestRaw
   }; /* End struct `ManifestRaw::Hook' */
   std::optional<Hook> hook;
 
+  /**
+   * @brief Validate manifest fields, throwing an exception if its contents
+   *        are invalid.
+   */
+  void
+  check() const;
+
+  void
+  clear()
+  {
+    this->envBase  = std::nullopt;
+    this->options  = std::nullopt;
+    this->install  = std::nullopt;
+    this->registry = std::nullopt;
+    this->vars     = std::nullopt;
+    this->hook     = std::nullopt;
+  }
 
 }; /* End struct `ManifestRaw' */
 
@@ -118,9 +143,9 @@ struct ManifestRaw
 void
 from_json( const nlohmann::json & jfrom, ManifestRaw & manifest );
 
-// TODO:
 /** @brief Convert a @a flox::resolver::ManifestRaw to a JSON object. */
-// void to_json( nlohmann::json & jto, const ManifestRaw & manifest );
+void
+to_json( nlohmann::json & jto, const ManifestRaw & manifest );
 
 
 /* -------------------------------------------------------------------------- */
@@ -130,8 +155,13 @@ class UnlockedManifest
 
 private:
 
-  std::filesystem::path manifestPath;
-  ManifestRaw           manifestRaw;
+  std::filesystem::path                               manifestPath;
+  ManifestRaw                                         manifestRaw;
+  RegistryRaw                                         registryRaw;
+  std::unordered_map<std::string, ManifestDescriptor> descriptors;
+
+  void
+  initDescriptors();
 
 
 public:
@@ -143,7 +173,14 @@ public:
 
   UnlockedManifest( std::filesystem::path manifestPath, ManifestRaw raw )
     : manifestPath( std::move( manifestPath ) ), manifestRaw( std::move( raw ) )
-  {}
+  {
+    this->manifestRaw.check();
+    if ( this->manifestRaw.registry.has_value() )
+      {
+        this->registryRaw = *this->manifestRaw.registry;
+      }
+    this->initDescriptors();
+  }
 
   explicit UnlockedManifest( std::filesystem::path manifestPath );
 
@@ -172,7 +209,7 @@ public:
   [[nodiscard]] const RegistryRaw &
   getRegistryRaw() const
   {
-    return this->manifestRaw.registry;
+    return this->registryRaw;
   }
 
   [[nodiscard]] RegistryRaw
@@ -185,6 +222,12 @@ public:
   [[nodiscard]] pkgdb::PkgQueryArgs
   getBaseQueryArgs() const;
 
+  [[nodiscard]] const std::unordered_map<std::string, ManifestDescriptor> &
+  getDescriptors() const
+  {
+    return this->descriptors;
+  }
+
 
 }; /* End class `UnlockedManifest' */
 
@@ -196,7 +239,7 @@ public:
  *
  * This structure stashes several fields to avoid repeatedly calculating them.
  */
-struct ManifestFileMixin : public pkgdb::PkgDbRegistryMixin
+class ManifestFileMixin : public pkgdb::PkgDbRegistryMixin
 {
 
 public:
@@ -213,10 +256,12 @@ public:
   std::optional<RegistryRaw>           lockedRegistry;
   std::optional<pkgdb::PkgQueryArgs>   baseQueryArgs;
 
-  // TODO: Handle groups
-  // bool                                                   didGroups = false;
-  // std::unordered_set<std::string>                        ungroupedIds;
-  // std::unordered_map<std::string, std::string>           groupIds;
+  std::unordered_map<
+    std::string,                                       /* group name */
+    std::unordered_map<std::string,                    /* input name */
+                       std::unordered_map<std::string, /* _install ID_ */
+                                          std::optional<pkgdb::row_id>>>>
+    groupedResolutions;
 
   /**
    * @brief A map of _locked_ descriptors organized by their _install ID_,
@@ -233,7 +278,12 @@ public:
 protected:
 
   const std::unordered_map<std::string, std::optional<Resolved>> &
-  lockDescriptor( const std::string & iid, const ManifestDescriptor & desc );
+  lockUngroupedDescriptor( const std::string &        iid,
+                           const ManifestDescriptor & desc );
+
+  /** @brief Assert that all _grouped_ descriptors resolve to a single input. */
+  void
+  checkGroups();
 
 
 public:
@@ -265,8 +315,14 @@ public:
    *
    * @return The path to the manifest file.
    */
-  std::filesystem::path
+  [[nodiscard]] std::filesystem::path
   getManifestPath();
+
+  [[nodiscard]] const ManifestRaw &
+  getManifestRaw()
+  {
+    return this->getUnlockedManifest().getManifestRaw();
+  }
 
   /**
    * @brief Sets the path to the registry file to load with `--manifest`.
@@ -285,20 +341,25 @@ public:
   argparse::Argument &
   addManifestFileArg( argparse::ArgumentParser & parser, bool required = true );
 
-  const UnlockedManifest &
+  [[nodiscard]] const UnlockedManifest &
   getUnlockedManifest();
 
-  const RegistryRaw &
+  [[nodiscard]] const RegistryRaw &
   getLockedRegistry();
 
-  const pkgdb::PkgQueryArgs &
+  [[nodiscard]] const pkgdb::PkgQueryArgs &
   getBaseQueryArgs();
 
-  const std::unordered_map<std::string, ManifestDescriptor> &
+  [[nodiscard]] const std::unordered_map<std::string, ManifestDescriptor> &
   getDescriptors()
   {
-    return this->getUnlockedManifest().getManifestRaw().install;
+    return this->getUnlockedManifest().getDescriptors();
   }
+
+  [[nodiscard]] const std::unordered_map<
+    std::string,
+    std::unordered_map<std::string, std::optional<Resolved>>> &
+  getLockedDescriptors();
 
 
 }; /* End struct `ManifestFileMixin' */
