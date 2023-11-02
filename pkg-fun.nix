@@ -8,14 +8,17 @@
 , sqlite
 , pkg-config
 , nlohmann_json
-, nix
+, nixVersions
 , boost
 , argparse
 , semver
 , sqlite3pp
 , toml11
 , yaml-cpp
-}: stdenv.mkDerivation {
+}: let
+  nix = nixVersions.nix_2_15;
+in
+  stdenv.mkDerivation {
   pname   = "flox-pkgdb";
   version = builtins.replaceStrings ["\n"] [""] ( builtins.readFile ./version );
   src     = builtins.path {
