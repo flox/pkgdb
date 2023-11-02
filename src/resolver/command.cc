@@ -85,11 +85,10 @@ int
 LockCommand::run()
 {
   // TODO: `RegistryRaw' should drop empty fields.
-  nlohmann::json lockfile
-    = { { "manifest", this->getManifestRaw() },
-        { "registry", this->getLockedRegistry() },
-        { "packages", this->getLockedDescriptors() },
-        { "lockfileVersion", 0 } };
+  nlohmann::json lockfile = { { "manifest", this->getManifestRaw() },
+                              { "registry", this->getLockedRegistry() },
+                              { "packages", this->getLockedDescriptors() },
+                              { "lockfileVersion", 0 } };
 
   /* Print that bad boii */
   std::cout << lockfile.dump() << std::endl;

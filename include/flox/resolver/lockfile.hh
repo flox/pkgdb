@@ -48,10 +48,13 @@ struct LockedInputRaw
 }; /* End struct `LockedInputRaw::Input' */
 
 
+/** @brief Convert a JSON object to a @a flox::resolver::LockedInputRaw. */
 void
-from_json( const nlohmann::json & j, LockedInputRaw & raw );
+from_json( const nlohmann::json & jfrom, LockedInputRaw & raw );
+
+/** @brief Convert a @a flox::resolver::LockedInputRaw to a JSON object. */
 void
-to_json( nlohmann::json & j, const LockedInputRaw & raw );
+to_json( nlohmann::json & jto, const LockedInputRaw & raw );
 
 
 /* -------------------------------------------------------------------------- */
@@ -65,19 +68,21 @@ struct LockedPackageRaw
 };                     /* End struct `LockedPackageRaw' */
 
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( LockedPackageRaw,
-                                    input,
-                                    attrPath,
-                                    priority,
-                                    info )
+/** @brief Convert a JSON object to a @a flox::resolver::LockedPackageRaw. */
+void
+from_json( const nlohmann::json & jfrom, LockedPackageRaw & raw );
+
+/** @brief Convert a @a flox::resolver::LockedPackageRaw to a JSON object. */
+void
+to_json( nlohmann::json & jto, const LockedPackageRaw & raw );
 
 
 /* -------------------------------------------------------------------------- */
 
+using SystemPackages = std::unordered_map<std::string, LockedPackageRaw>;
+
 struct LockfileRaw
 {
-  using SystemPackages = std::unordered_map<std::string, LockedPackageRaw>;
-
   ManifestRaw                                     manifest;
   RegistryRaw                                     registry;
   std::unordered_map<std::string, SystemPackages> packages;
@@ -85,15 +90,12 @@ struct LockfileRaw
 }; /* End struct `LockfileRaw' */
 
 
-// TODO: to_json( ManifestRaw )
-// NLOHMANN_JSON_DEFINE_TYPE_NON_INTRUSIVE( LockfileRaw,
-//                                         manifest,
-//                                         registry,
-//                                         packages,
-//                                         lockfileVersion )
-
-
-/* -------------------------------------------------------------------------- */
+// FIXME
+//NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( LockfileRaw,
+//                                    manifest,
+//                                    registry,
+//                                    packages,
+//                                    lockfileVersion )
 
 
 /* -------------------------------------------------------------------------- */
