@@ -84,11 +84,10 @@ LockCommand::LockCommand() : parser( "lock" )
 int
 LockCommand::run()
 {
-  auto lockedRegistry = this->getLockedRegistry();
-
+  // TODO: `RegistryRaw' should drop empty fields.
   nlohmann::json lockfile
     = { { "manifest", this->getManifestRaw() },
-        { "registry", std::move( lockedRegistry ) },
+        { "registry", this->getLockedRegistry() },
         { "packages", this->getLockedDescriptors() },
         { "lockfileVersion", 0 } };
 
