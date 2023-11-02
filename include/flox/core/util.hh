@@ -55,85 +55,75 @@ namespace nlohmann {
 
 /* -------------------------------------------------------------------------- */
 
-  /** @brief Variants ( Eithers ) of two elements to/from JSON. */
-  template<typename A, typename B>
-  struct adl_serializer<std::variant<A, B>> {
+/** @brief Variants ( Eithers ) of two elements to/from JSON. */
+template<typename A, typename B>
+struct adl_serializer<std::variant<A, B>> {
 
-    /** @brief Convert a @a std::variant<A, B> to a JSON type. */
-      static void
-    to_json( json & jto, const std::variant<A, B> & var )
-    {
-      if ( std::holds_alternative<A>( var ) )
-        {
-          jto = std::get<A>( var );
-        }
-      else
-        {
-          jto = std::get<B>( var );
-        }
-    }
+  /** @brief Convert a @a std::variant<A, B> to a JSON type. */
+    static void
+  to_json( json & jto, const std::variant<A, B> & var )
+  {
+    if ( std::holds_alternative<A>( var ) )
+      {
+        jto = std::get<A>( var );
+      }
+    else
+      {
+        jto = std::get<B>( var );
+      }
+  }
 
-    /** @brief Convert a JSON type to a @a std::variant<A, B>. */
-      static void
-    from_json( const json & jfrom, std::variant<A, B> & var )
-    {
-      try
-        {
-          var = jfrom.template get<A>();
-        }
-      catch( ... )
-        {
-          var = jfrom.template get<B>();
-        }
-    }
+  /** @brief Convert a JSON type to a @a std::variant<A, B>. */
+    static void
+  from_json( const json & jfrom, std::variant<A, B> & var )
+  {
+    try
+      {
+        var = jfrom.template get<A>();
+      }
+    catch( ... )
+      {
+        var = jfrom.template get<B>();
+      }
+  }
 
-  };  /* End struct `adl_serializer<std::variant<A, B>>' */
+};  /* End struct `adl_serializer<std::variant<A, B>>' */
 
 /* -------------------------------------------------------------------------- */
+template<typename A, typename... Types>
+struct adl_serializer<std::variant<A, Types...>>
+{
 
-  /** @brief Variants ( Eithers ) of three elements to/from JSON. */
-  template<typename A, typename B, typename C>
-  struct adl_serializer<std::variant<A, B, C>> {
+  /** @brief Convert a @a std::variant<A, Types...> to a JSON type. */
+  static void
+  to_json( json &jto, const std::variant<A, Types...> &var )
+  {
+    /* This _unwraps_ the inner type and calls the proper `to_json'.
+     * The compiler does the heavy lifting for us here <3. */
+    std::visit( [&]( auto unwrapped ) -> void { jto = unwrapped; }, var );
+  }
 
-    /** @brief Convert a @a std::variant<A, B, C> to a JSON type. */
-      static void
-    to_json( json & jto, const std::variant<A, B, C> & var )
-    {
-      if ( std::holds_alternative<A>( var ) )
-        {
-          jto = std::get<A>( var );
-        }
-      else if ( std::holds_alternative<B>( var ) )
-        {
-          jto = std::get<B>( var );
-        }
-      else
-        {
-          jto = std::get<C>( var );
-        }
-    }
+  /** @brief Convert a JSON type to a @a std::variant<Types...>. */
+  static void
+  from_json( const json &jfrom, std::variant<A, Types...> &var )
+  {
+    /* Try getting typename `A', or recur. */
+    try
+      {
+        var = jfrom.template get<A>();
+      }
+    catch ( ... )
+      {
+        /* Strip typename `A' from variant, and call recursively. */
+        using next_variant = std::variant<Types...>;
 
-    /** @brief Convert a JSON type to a @a std::variant<A, B, C>. */
-      static void
-    from_json( const json & jfrom, std::variant<A, B, C> & var )
-    {
-      try
-        {
-          var = jfrom.template get<A>();
-        }
-      catch( ... )
-        {
-          try {
-              var = jfrom.template get<B>();
-          }
-          catch (...) {
-              var = jfrom.template get<C>();
-          }
-        }
-    }
+        /* Coerce to `next_variant' type. */
+        next_variant next = jfrom.template get<next_variant>();
+        std::visit( [&]( auto unwrapped ) -> void { var = unwrapped; }, next );
+      }
+  }
 
-  };  /* End struct `adl_serializer<std::variant<A, B, C>>' */
-
+}; /* End struct `adl_serializer<std::variant<A, Types...>>' */
 
 /* -------------------------------------------------------------------------- */
 
