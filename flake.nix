@@ -38,8 +38,8 @@
     /* Use nix@2.17 */
     overlays.nix = final: prev: { nix = prev.nixVersions.nix_2_17.overrideAttrs (old: {
       patches = old.patches or [] ++ [
-        ./nix-patches/nix-9147.patch
-        ./nix-patches/multiple-github-tokens.2.13.2.patch
+        (builtins.path {path = ./nix-patches/nix-9147.patch;})
+        (builtins.path {path = ./nix-patches/multiple-github-tokens.2.13.2.patch;})
       ];
     }); };
     /* Aggregate dependency overlays. */
@@ -106,7 +106,7 @@
           if pkgsFor.stdenv.isLinux or false then [pkgsFor.valgrind] else []
         );
         inherit (pkgsFor.flox-pkgdb)
-          nix_INCDIR toml_CFLAGS yaml_PREFIX libExt SEMVER_PATH
+          nix_INCDIR boost_CFLAGS toml_CFLAGS yaml_PREFIX libExt SEMVER_PATH
         ;
         shellHook = ''
           shopt -s autocd;

@@ -15,8 +15,7 @@
 , sqlite3pp
 , toml11
 , yaml-cpp
-}:
-  stdenv.mkDerivation {
+}: stdenv.mkDerivation {
   pname   = "flox-pkgdb";
   version = builtins.replaceStrings ["\n"] [""] ( builtins.readFile ./version );
   src     = builtins.path {
