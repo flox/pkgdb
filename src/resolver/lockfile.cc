@@ -164,6 +164,117 @@ to_json( nlohmann::json &jto, const LockedPackageRaw &raw )
 
 /* -------------------------------------------------------------------------- */
 
+void
+LockfileRaw::clear()
+{
+  this->manifest.clear();
+  this->registry.clear();
+  this->packages        = std::unordered_map<std::string, SystemPackages> {};
+  this->lockfileVersion = 0;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+from_json( const nlohmann::json &jfrom, LockfileRaw &raw )
+{
+  if ( ! jfrom.is_object() )
+    {
+      // TODO: real exception
+      throw FloxException( "lockfile must be an object." );
+    }
+  for ( const auto &[key, value] : jfrom.items() )
+    {
+      if ( key == "manifest" )
+        {
+          try
+            {
+              value.get_to( raw.manifest );
+            }
+          catch ( nlohmann::json::exception &err )
+            {
+              throw FloxException( "couldn't parse lockfile field '" + key
+                                     + "'",
+                                   extract_json_errmsg( err ).c_str() );
+            }
+        }
+      else if ( key == "registry" )
+        {
+          try
+            {
+              value.get_to( raw.registry );
+            }
+          catch ( nlohmann::json::exception &err )
+            {
+              throw FloxException( "couldn't parse lockfile field '" + key
+                                     + "'",
+                                   extract_json_errmsg( err ).c_str() );
+            }
+        }
+      else if ( key == "packages" )
+        {
+          if ( ! value.is_object() )
+            {
+              // TODO: real exception.
+              throw FloxException(
+                "lockfile field `packages' must be an object." );
+            }
+          for ( const auto &[system, descriptors] : value.items() )
+            {
+              SystemPackages sysPkgs;
+              for ( const auto &[pid, descriptor] : descriptors.items() )
+                {
+                  try
+                    {
+                      sysPkgs.emplace( pid,
+                                       descriptor.get<LockedPackageRaw>() );
+                    }
+                  catch ( nlohmann::json::exception &err )
+                    {
+                      throw FloxException(
+                        "couldn't parse lockfile field `packages." + system
+                          + "." + pid + "'",
+                        extract_json_errmsg( err ).c_str() );
+                    }
+                }
+              raw.packages.emplace( system, std::move( sysPkgs ) );
+            }
+        }
+      else if ( key == "lockfile-version" )
+        {
+          try
+            {
+              value.get_to( raw.lockfileVersion );
+            }
+          catch ( nlohmann::json::exception &err )
+            {
+              throw FloxException( "couldn't parse lockfile field '" + key
+                                     + "'",
+                                   extract_json_errmsg( err ).c_str() );
+            }
+        }
+      else
+        {
+          throw FloxException( "encountered unexpected field `" + key
+                               + "' while parsing locked package" );
+        }
+    }
+}
+
+
+void
+to_json( nlohmann::json &jto, const LockfileRaw &raw )
+{
+  jto = { { "manifest", raw.manifest },
+          { "registry", raw.registry },
+          { "packages", raw.packages },
+          { "lockfile-version", raw.lockfileVersion } };
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 }  // namespace flox::resolver
 
 

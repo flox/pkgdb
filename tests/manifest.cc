@@ -398,7 +398,6 @@ main()
   RUN_TEST( parseManifestDescriptor_path4 );
 
   RUN_TEST( parseManifestRaw_toml0 );
-  test_parseManifestRaw_toml0();
 
   RUN_TEST( serialize_manifest );
 

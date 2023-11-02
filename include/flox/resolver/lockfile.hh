@@ -34,6 +34,9 @@ struct LockedInputRaw
   /** Exploded form of URI as an attr-set. */
   nlohmann::json attrs;
 
+  LockedInputRaw() : fingerprint( nix::htSHA256 ) {}
+  ~LockedInputRaw() = default;
+
   explicit LockedInputRaw( const pkgdb::PkgDbReadOnly & pdb )
     : fingerprint( pdb.fingerprint )
     , url( pdb.lockedRef.string )
@@ -87,15 +90,20 @@ struct LockfileRaw
   RegistryRaw                                     registry;
   std::unordered_map<std::string, SystemPackages> packages;
   unsigned                                        lockfileVersion = 0;
+
+  /** @brief Reset to default/empty state. */
+  void
+  clear();
 }; /* End struct `LockfileRaw' */
 
 
-// FIXME
-// NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( LockfileRaw,
-//                                    manifest,
-//                                    registry,
-//                                    packages,
-//                                    lockfileVersion )
+/** @brief Convert a JSON object to a @a flox::resolver::LockfileRaw. */
+void
+from_json( const nlohmann::json & jfrom, LockfileRaw & raw );
+
+/** @brief Convert a @a flox::resolver::LockfileRaw to a JSON object. */
+void
+to_json( nlohmann::json & jto, const LockfileRaw & raw );
 
 
 /* -------------------------------------------------------------------------- */
