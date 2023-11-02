@@ -94,7 +94,9 @@ struct ManifestRaw
   }; /* End struct `Options' */
   std::optional<Options> options;
 
-  std::optional<std::unordered_map<std::string, std::optional<ManifestDescriptorRaw>>> install;
+  std::optional<
+    std::unordered_map<std::string, std::optional<ManifestDescriptorRaw>>>
+    install;
 
   std::optional<RegistryRaw> registry;
 
@@ -146,9 +148,9 @@ class UnlockedManifest
 
 private:
 
-  std::filesystem::path manifestPath;
-  ManifestRaw           manifestRaw;
-  RegistryRaw           registryRaw;
+  std::filesystem::path                               manifestPath;
+  ManifestRaw                                         manifestRaw;
+  RegistryRaw                                         registryRaw;
   std::unordered_map<std::string, ManifestDescriptor> descriptors;
 
   void
@@ -163,10 +165,14 @@ public:
   UnlockedManifest( UnlockedManifest && )      = default;
 
   UnlockedManifest( std::filesystem::path manifestPath, ManifestRaw raw )
-    : manifestPath( std::move( manifestPath ) )
-    , manifestRaw( std::move( raw ) )
-    , registryRaw( this->manifestRaw.registry.value_or( RegistryRaw {} ) )
-  {}
+    : manifestPath( std::move( manifestPath ) ), manifestRaw( std::move( raw ) )
+  {
+    if ( this->manifestRaw.registry.has_value() )
+      {
+        this->registryRaw = *this->manifestRaw.registry;
+      }
+    this->initDescriptors();
+  }
 
   explicit UnlockedManifest( std::filesystem::path manifestPath );
 

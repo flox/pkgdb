@@ -34,8 +34,15 @@ readManifestFromPath( const std::filesystem::path &manifestPath )
 /* -------------------------------------------------------------------------- */
 
 UnlockedManifest::UnlockedManifest( std::filesystem::path manifestPath )
-  : UnlockedManifest( std::move( manifestPath ), readManifestFromPath( this->manifestPath ) )
-{}
+  : manifestPath( std::move( manifestPath ) )
+  , manifestRaw( readManifestFromPath( this->manifestPath ) )
+{
+  if ( this->manifestRaw.registry.has_value() )
+    {
+      this->registryRaw = *this->manifestRaw.registry;
+    }
+  this->initDescriptors();
+}
 
 
 /* -------------------------------------------------------------------------- */

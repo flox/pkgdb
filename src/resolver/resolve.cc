@@ -20,15 +20,19 @@ namespace flox::resolver {
 void
 Resolved::Input::limitLocked()
 {
-  auto type = this->locked.at( "type" ).get<std::string>();
-  if ( ! ( ( type == "path" ) || ( type == "tarball" ) || ( type == "file" ) ) )
+  if ( this->locked.is_object() )
     {
-      this->locked.erase( "narHash" );
+      auto type = this->locked.at( "type" ).get<std::string>();
+      if ( ! ( ( type == "path" ) || ( type == "tarball" )
+               || ( type == "file" ) ) )
+        {
+          this->locked.erase( "narHash" );
+        }
+      this->locked.erase( "lastModified" );
+      this->locked.erase( "lastModifiedDate" );
+      this->locked.erase( "revCount" );
+      this->locked.erase( "shortRev" );
     }
-  this->locked.erase( "lastModified" );
-  this->locked.erase( "lastModifiedDate" );
-  this->locked.erase( "revCount" );
-  this->locked.erase( "shortRev" );
 }
 
 

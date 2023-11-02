@@ -461,17 +461,25 @@ from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
     {
       if ( key == "install" )
         {
-          std::unordered_map<std::string, std::optional<ManifestDescriptorRaw>> install;
+          std::unordered_map<std::string, std::optional<ManifestDescriptorRaw>>
+            install;
           for ( const auto & [name, desc] : value.items() )
             {
               /* An empty/null descriptor uses `name' of the attribute. */
-              if ( desc.is_null() )
+              if ( desc.is_null() ) { install.emplace( name, std::nullopt ); }
+              else  // TODO: parse CLI strings
                 {
-                  install.emplace( name, std::nullopt );
-                }
-              else  // TODO: strings
-                {
-                  install.emplace( name, desc.get<ManifestDescriptorRaw>() );
+                  try
+                    {
+                      install.emplace( name,
+                                       desc.get<ManifestDescriptorRaw>() );
+                    }
+                  catch ( const nlohmann::json::exception & )
+                    {
+                      throw InvalidManifestFileException(
+                        "failed to parse manifest field `install." + name
+                        + "'." );
+                    }
                 }
             }
           manifest.install = std::move( install );
@@ -506,11 +514,7 @@ to_json( nlohmann::json & jto, const ManifestRaw & manifest )
 
   if ( manifest.options.has_value() ) { jto["options"] = *manifest.options; }
 
-  if ( manifest.install.has_value() )
-    {
-      // FIXME: change ManifestRaw to carry `ManifestDescriptorRaw'
-      // jto["install"] = * manifest.install;
-    }
+  if ( manifest.install.has_value() ) { jto["install"] = *manifest.install; }
 
   if ( manifest.registry.has_value() ) { jto["registry"] = *manifest.registry; }
 
