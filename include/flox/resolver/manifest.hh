@@ -318,6 +318,12 @@ public:
   [[nodiscard]] std::filesystem::path
   getManifestPath();
 
+  [[nodiscard]] const ManifestRaw &
+  getManifestRaw()
+  {
+    return this->getUnlockedManifest().getManifestRaw();
+  }
+
   /**
    * @brief Sets the path to the registry file to load with `--manifest`.
    * @param parser The parser to add the argument to.

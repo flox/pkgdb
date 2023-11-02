@@ -86,9 +86,8 @@ LockCommand::run()
 {
   auto lockedRegistry = this->getLockedRegistry();
 
-  // TODO: to_json( ManifestRaw )
   nlohmann::json lockfile
-    = { { "manifest", readAndCoerceJSON( this->getManifestPath() ) },
+    = { { "manifest", this->getManifestRaw() },
         { "registry", std::move( lockedRegistry ) },
         { "packages", this->getLockedDescriptors() },
         { "lockfileVersion", 0 } };
