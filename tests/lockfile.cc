@@ -27,11 +27,8 @@ test_LockedInputRawFromJSON0()
   nlohmann::json json = {
     { "fingerprint", nixpkgsFingerprintStr },
     { "url", nixpkgsRef },
-    { "attrs", {
-      { "owner", "NixOS" },
-      { "repo", "nixpkgs" },
-      { "rev", nixpkgsRev }
-    } }
+    { "attrs",
+      { { "owner", "NixOS" }, { "repo", "nixpkgs" }, { "rev", nixpkgsRev } } }
   };
   LockedInputRaw raw( json );
   return true;
@@ -44,20 +41,17 @@ bool
 test_LockedPackageRawFromJSON0()
 {
   using namespace flox::resolver;
-  nlohmann::json json = {
-    { "input", {
-      { "fingerprint", nixpkgsFingerprintStr },
-      { "url", nixpkgsRef },
-      { "attrs", {
-        { "owner", "NixOS" },
-        { "repo", "nixpkgs" },
-        { "rev", nixpkgsRev }
-      } }
-    } },
-    { "attr-path", { "legacyPackages", "x86_64-linux", "hello" } },
-    { "priority", 5 },
-    { "info", {} }
-  };
+  nlohmann::json json
+    = { { "input",
+          { { "fingerprint", nixpkgsFingerprintStr },
+            { "url", nixpkgsRef },
+            { "attrs",
+              { { "owner", "NixOS" },
+                { "repo", "nixpkgs" },
+                { "rev", nixpkgsRev } } } } },
+        { "attr-path", { "legacyPackages", "x86_64-linux", "hello" } },
+        { "priority", 5 },
+        { "info", {} } };
   LockedPackageRaw raw( json );
   return true;
 }
