@@ -43,10 +43,10 @@ private:
   /** Path to user level manifest. */
   std::optional<std::filesystem::path> globalManifestPath;
   /** Contents of user level manifest with global registry and settings. */
-  std::optional<UnlockedManifest> globalManifest;
+  std::optional<GlobalManifest> globalManifest;
 
   std::optional<std::filesystem::path> manifestPath;
-  std::optional<UnlockedManifest>      manifest;
+  std::optional<Manifest>      manifest;
 
   std::optional<std::filesystem::path> lockfilePath;
   std::optional<LockfileRaw>           lockfileRaw;
