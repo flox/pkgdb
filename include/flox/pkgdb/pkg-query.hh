@@ -172,7 +172,7 @@ struct PkgQueryArgs : public PkgDescriptorBase
   std::optional<std::vector<Subtree>> subtrees;
 
   /** Systems to search. Defaults to the current system. */
-  std::vector<std::string> systems = { nix::settings.thisSystem.get() };
+  std::vector<System> systems = { nix::settings.thisSystem.get() };
 
   /**
    * Relative attribute path to package from its prefix.

@@ -59,7 +59,7 @@ private:
   std::string                _pname;
   std::string                _version;
   std::optional<std::string> _semver;
-  std::string                _system;
+  System                     _system;
   Subtree                    _subtree;
   std::optional<std::string> _license;
 

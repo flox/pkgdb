@@ -154,7 +154,7 @@ PkgDbInput::scrapePrefix( const flox::AttrPath & prefix )
 /* -------------------------------------------------------------------------- */
 
 void
-PkgDbInput::scrapeSystems( const std::vector<std::string> & systems )
+PkgDbInput::scrapeSystems( const std::vector<System> & systems )
 {
   /* Loop and scrape over `subtrees' and `systems'. */
   for ( const auto & subtree : this->getSubtrees() )

@@ -170,42 +170,47 @@ public:
   virtual nlohmann::json
   getInfo( bool withDescription = false ) const
   {
-    std::string                system = this->getPathStrs().at( 1 );
-    nlohmann::json             j      = { { system,
-                                            { { "name", this->getFullName() },
-                                              { "pname", this->getPname() } } } };
-    std::optional<std::string> os     = this->getVersion();
+    System system = this->getPathStrs().at( 1 );
 
-    if ( os.has_value() ) { j[system].emplace( "version", *os ); }
-    else { j[system].emplace( "version", nlohmann::json() ); }
+    nlohmann::json jto = { { system,
+                             { { "name", this->getFullName() },
+                               { "pname", this->getPname() } } } };
 
-    os = this->getSemver();
-    if ( os.has_value() ) { j[system].emplace( "semver", *os ); }
-    else { j[system].emplace( "semver", nlohmann::json() ); }
+    std::optional<std::string> oos = this->getVersion();
 
-    j[system].emplace( "outputs", this->getOutputs() );
-    j[system].emplace( "outputsToInstall", this->getOutputsToInstall() );
+    if ( oos.has_value() ) { jto[system].emplace( "version", *oos ); }
+    else { jto[system].emplace( "version", nlohmann::json() ); }
 
-    os = this->getLicense();
-    if ( os.has_value() ) { j[system].emplace( "license", *os ); }
-    else { j[system].emplace( "license", nlohmann::json() ); }
+    oos = this->getSemver();
+    if ( oos.has_value() ) { jto[system].emplace( "semver", *oos ); }
+    else { jto[system].emplace( "semver", nlohmann::json() ); }
 
-    std::optional<bool> ob = this->isBroken();
-    if ( ob.has_value() ) { j[system].emplace( "broken", *ob ); }
-    else { j[system].emplace( "broken", nlohmann::json() ); }
+    jto[system].emplace( "outputs", this->getOutputs() );
+    jto[system].emplace( "outputsToInstall", this->getOutputsToInstall() );
 
-    ob = this->isUnfree();
-    if ( ob.has_value() ) { j[system].emplace( "unfree", *ob ); }
-    else { j[system].emplace( "unfree", nlohmann::json() ); }
+    oos = this->getLicense();
+    if ( oos.has_value() ) { jto[system].emplace( "license", *oos ); }
+    else { jto[system].emplace( "license", nlohmann::json() ); }
+
+    std::optional<bool> obool = this->isBroken();
+    if ( obool.has_value() ) { jto[system].emplace( "broken", *obool ); }
+    else { jto[system].emplace( "broken", nlohmann::json() ); }
+
+    obool = this->isUnfree();
+    if ( obool.has_value() ) { jto[system].emplace( "unfree", *obool ); }
+    else { jto[system].emplace( "unfree", nlohmann::json() ); }
 
     if ( withDescription )
       {
-        std::optional<std::string> od = this->getDescription();
-        if ( od.has_value() ) { j[system].emplace( "description", *od ); }
-        else { j[system].emplace( "description", nlohmann::json() ); }
+        std::optional<std::string> odesc = this->getDescription();
+        if ( odesc.has_value() )
+          {
+            jto[system].emplace( "description", *odesc );
+          }
+        else { jto[system].emplace( "description", nlohmann::json() ); }
       }
 
-    return j;
+    return jto;
   }
 
 

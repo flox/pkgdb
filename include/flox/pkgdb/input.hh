@@ -203,7 +203,7 @@ public:
    * @param systems Systems to be scraped.
    */
   void
-  scrapeSystems( const std::vector<std::string> & systems );
+  scrapeSystems( const std::vector<System> & systems );
 
   /** @brief Add/set a shortname for this input. */
   void
@@ -320,7 +320,7 @@ protected:
     = 0;
 
   /** @return A list of systems to be scraped. */
-  [[nodiscard]] virtual const std::vector<std::string> &
+  [[nodiscard]] virtual const std::vector<System> &
   getSystems()
     = 0;
 

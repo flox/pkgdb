@@ -168,7 +168,7 @@ LockfileRaw::clear()
 {
   this->manifest.clear();
   this->registry.clear();
-  this->packages        = std::unordered_map<std::string, SystemPackages> {};
+  this->packages        = std::unordered_map<System, SystemPackages> {};
   this->lockfileVersion = 0;
 }
 

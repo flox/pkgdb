@@ -33,7 +33,7 @@ struct QueryPreferences
    *
    * Defaults to the current system.
    */
-  std::vector<std::string> systems = { nix::settings.thisSystem.get() };
+  std::vector<System> systems = { nix::settings.thisSystem.get() };
 
 
   /** @brief Allow/disallow packages with certain metadata. */

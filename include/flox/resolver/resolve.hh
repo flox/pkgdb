@@ -95,6 +95,9 @@ struct Resolved
 
 }; /* End struct `Resolved' */
 
+
+/* -------------------------------------------------------------------------- */
+
 /** @brief Convert a JSON object to a @a flox::resolver::Resolved::Input. */
 void
 from_json( const nlohmann::json & jfrom, Resolved::Input & input );
@@ -103,6 +106,9 @@ from_json( const nlohmann::json & jfrom, Resolved::Input & input );
 void
 to_json( nlohmann::json & jto, const Resolved::Input & input );
 
+
+/* -------------------------------------------------------------------------- */
+
 /** @brief Convert a JSON object to a @a flox::resolver::Resolved. */
 void
 from_json( const nlohmann::json & jfrom, Resolved & resolved );
@@ -110,6 +116,9 @@ from_json( const nlohmann::json & jfrom, Resolved & resolved );
 /** @brief Convert a @a flox::resolver::Resolved to a JSON object. */
 void
 to_json( nlohmann::json & jto, const Resolved & resolved );
+
+
+/* -------------------------------------------------------------------------- */
 
 /**
  * @class flox::pkgdb::ParseResolvedException
@@ -124,8 +133,7 @@ FLOX_DEFINE_EXCEPTION( ParseResolvedException,
 /** @} */
 
 
-/* --------------------------------------------------------------------------
- */
+/* -------------------------------------------------------------------------- */
 
 using Descriptor = PkgDescriptorRaw;
 

@@ -328,9 +328,8 @@ ManifestFileMixin::lockUngroupedDescriptor( const std::string        &iid,
 void
 ManifestFileMixin::checkGroups()
 {
-  std::unordered_map<std::string,                    /* group name */
-                     std::unordered_map<std::string, /* system */
-                                        std::optional<Resolved::Input>>>
+  std::unordered_map<GroupName,
+                     std::unordered_map<System, std::optional<Resolved::Input>>>
     groupInputs;
   for ( const auto &[iid, systemsResolved] : this->lockedDescriptors )
     {
@@ -418,9 +417,7 @@ ManifestFileMixin::getLockedDescriptors()
       /* First check to see if any member of the group already has a
        * `lockedDescriptor' entry ( potentially filled by a lockfile ).
        * If they do, align unlocked group members to the same rev. */
-      std::unordered_map<std::string, /* system */
-                         std::optional<Resolved::Input>>
-           input;
+      std::unordered_map<System, std::optional<Resolved::Input>> input;
       bool hadInput = false;
       for ( const auto &iid : iids )
         {
