@@ -52,6 +52,18 @@ using Cursor = nix::ref<nix::eval_cache::AttrCursor>;
 
 /* -------------------------------------------------------------------------- */
 
+// TODO: Make this a real type/enum.
+/**
+ * @brief A system pair indicating architecture and platform.
+ *
+ * Examples:
+ *   `x86_64-linux`, `aarch64-linux`, `x86_64-darwin`, or `aarch64-darwin`
+ */
+using System = std::string;
+
+
+/* -------------------------------------------------------------------------- */
+
 /** @brief A _top level_ key in a `nix` flake */
 enum subtree_type { ST_NONE = 0, ST_LEGACY = 1, ST_PACKAGES = 2 };
 

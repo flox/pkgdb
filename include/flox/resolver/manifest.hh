@@ -17,6 +17,7 @@
 #include <nlohmann/json.hpp>
 
 #include "flox/core/exceptions.hh"
+#include "flox/core/types.hh"
 #include "flox/pkgdb/input.hh"
 #include "flox/registry.hh"
 #include "flox/resolver/descriptor.hh"
@@ -43,26 +44,30 @@ FLOX_DEFINE_EXCEPTION( InvalidManifestFileException,
 /* -------------------------------------------------------------------------- */
 
 /**
- * @brief A _global_ manifest containing only `registry` and `options` fields.
- *
- * This is intended for use outside of any particular project to supply inputs
- * for `flox search`, `flox show`, and similar commands.
- *
- * In the context of a project this file may be referenced, but its contents
- * will always yield priority to the project's own manifest, and in cases where
- * settings or inputs are not declared in a project, they may be automatically
- * added from the global manifest.
+ * @brief The `install.<INSTALL-ID>` field name associated with a package
+ *        or descriptor.
+ */
+using InstallID = std::string;
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief A _global_ manifest containing only `registry` and `options` fields
+ *        in its _raw_ form.
  *
  * This _raw_ struct is defined to generate parsers, and its declarations simply
  * represent what is considered _valid_.
  * On its own, it performs no real work, other than to validate the input.
+ *
+ * @see flox::resolver::GlobalManifest
  */
 struct GlobalManifestRaw
 {
   struct Options
   {
 
-    std::optional<std::vector<std::string>> systems;
+    std::optional<std::vector<System>> systems;
 
     struct Allows
     {
@@ -139,6 +144,8 @@ to_json( nlohmann::json & jto, const GlobalManifestRaw & raw );
  * This _raw_ struct is defined to generate parsers, and its declarations simply
  * represent what is considered _valid_.
  * On its own, it performs no real work, other than to validate the input.
+ *
+ * @see flox::resolver::Manifest
  */
 struct ManifestRaw : public GlobalManifestRaw
 {
@@ -161,7 +168,7 @@ struct ManifestRaw : public GlobalManifestRaw
   std::optional<EnvBase> envBase;
 
   std::optional<
-    std::unordered_map<std::string, std::optional<ManifestDescriptorRaw>>>
+    std::unordered_map<InstallID, std::optional<ManifestDescriptorRaw>>>
     install;
 
   std::optional<std::unordered_map<std::string, std::string>> vars;
@@ -250,6 +257,17 @@ to_json( nlohmann::json & jto, const ManifestRaw & manifest );
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * @brief A _global_ manifest containing only `registry` and `options` fields.
+ *
+ * This is intended for use outside of any particular project to supply inputs
+ * for `flox search`, `flox show`, and similar commands.
+ *
+ * In the context of a project this file may be referenced, but its contents
+ * will always yield priority to the project's own manifest, and in cases where
+ * settings or inputs are not declared in a project, they may be automatically
+ * added from the global manifest.
+ */
 class GlobalManifest
 {
 
@@ -329,12 +347,13 @@ public:
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief Description of an environment in its _unlocked_ form. */
 class Manifest : public GlobalManifest
 {
 
 private:
 
-  std::unordered_map<std::string, ManifestDescriptor> descriptors;
+  std::unordered_map<InstallID, ManifestDescriptor> descriptors;
 
   void
   initDescriptors();
@@ -359,7 +378,7 @@ public:
   operator=( Manifest && )
     = default;
 
-  [[nodiscard]] const std::unordered_map<std::string, ManifestDescriptor> &
+  [[nodiscard]] const std::unordered_map<InstallID, ManifestDescriptor> &
   getDescriptors() const
   {
     return this->descriptors;
@@ -371,6 +390,12 @@ public:
 
 /* -------------------------------------------------------------------------- */
 
+// TODO: class GlobalManifestMixin : public pkgdb::PkgDbRegistryMixin
+
+
+/* -------------------------------------------------------------------------- */
+
+// TODO: Move routines associated with locking to a separate class/functor.
 /**
  * @brief A state blob with a manifest loaded from path.
  *
@@ -393,28 +418,32 @@ public:
   std::optional<RegistryRaw>           lockedRegistry;
   std::optional<pkgdb::PkgQueryArgs>   baseQueryArgs;
 
+  // TODO: Move to class/functor associated with locking.
   std::unordered_map<
-    std::string,                                       /* group name */
-    std::unordered_map<std::string,                    /* input name */
-                       std::unordered_map<std::string, /* _install ID_ */
-                                          std::optional<pkgdb::row_id>>>>
+    GroupName,
+    std::unordered_map<
+      std::string, /* input name */
+      std::unordered_map<InstallID, std::optional<pkgdb::row_id>>>>
     groupedResolutions;
 
+  // TODO: Fix to be `<SYSTEM>.<IID>.*'
+  // TODO: Move to class/functor associated with locking.
   /**
    * @brief A map of _locked_ descriptors organized by their _install ID_,
    *        and then by `system`.
    *        For optional packages, or those which are explicitly declared for
    *        a subset of systems, the value may be `std::nullopt`.
    */
-  std::unordered_map<std::string,                    /* _install ID_ */
-                     std::unordered_map<std::string, /* system */
+  std::unordered_map<InstallID,                 /* _install ID_ */
+                     std::unordered_map<System, /* system */
                                         std::optional<Resolved>>>
     lockedDescriptors;
 
 
 protected:
 
-  const std::unordered_map<std::string, std::optional<Resolved>> &
+  // TODO: Move to class/functor associated with locking.
+  const std::unordered_map<System, std::optional<Resolved>> &
   lockUngroupedDescriptor( const std::string &        iid,
                            const ManifestDescriptor & desc );
 
@@ -494,11 +523,22 @@ public:
     return this->getManifest().getDescriptors();
   }
 
+  // TODO: Fix to be `<SYSTEM>.<IID>.*'. ( see `./lockfile.hh' )
   // TODO: Move to `Lockfile' ( or some locking functor )
   [[nodiscard]] const std::unordered_map<
-    std::string,
-    std::unordered_map<std::string, std::optional<Resolved>>> &
+    InstallID,
+    std::unordered_map<System, std::optional<Resolved>>> &
   getLockedDescriptors();
+
+  /* TODO:
+   * std::unordered_map<GroupName,
+   *                    std::unordered_map<InstallID, ManifestDescriptor>
+   *                   >
+   * getGroupedDescriptors() const;
+   *
+   * std::unordered_map<InstallId, ManifestDescriptor>
+   * getUngroupedDescriptors() const;
+   */
 
 
 }; /* End struct `ManifestFileMixin' */

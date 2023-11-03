@@ -16,6 +16,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "flox/core/types.hh"
 #include "flox/pkgdb/pkg-query.hh"
 #include "flox/registry.hh"
 
@@ -23,6 +24,12 @@
 /* -------------------------------------------------------------------------- */
 
 namespace flox::resolver {
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief A named group which a descriptor/package can be a member of. */
+using GroupName = std::string;
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -73,14 +80,14 @@ public:
   std::optional<AbsPath> absPath;
 
   /** Only resolve for a given set of systems. */
-  std::optional<std::vector<std::string>> systems;
+  std::optional<std::vector<System>> systems;
 
   /** Whether resoution is allowed to fail without producing errors. */
   std::optional<bool> optional;
 
   // TODO: Not implemented.
   /** Named _group_ that the package is a member of. */
-  std::optional<std::string> packageGroup;
+  std::optional<GroupName> packageGroup;
 
   // TODO: Not implemented.
   /** Force resolution is the named input or _flake reference_. */
@@ -158,7 +165,7 @@ public:
   bool optional = false;
 
   /** Named _group_ that the package is a member of. */
-  std::optional<std::string> group;
+  std::optional<GroupName> group;
 
   /** Match `version`. */
   std::optional<std::string> version;
@@ -170,7 +177,7 @@ public:
   std::optional<Subtree> subtree;
 
   /** Only resolve for a given set of systems. */
-  std::optional<std::vector<std::string>> systems;
+  std::optional<std::vector<System>> systems;
 
   /** Match a relative attribute path. */
   std::optional<flox::AttrPath> path;
