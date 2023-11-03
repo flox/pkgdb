@@ -24,6 +24,81 @@ namespace flox::resolver {
 /* -------------------------------------------------------------------------- */
 
 /**
+ * @brief A collection of data associated with an environment and its state.
+ *
+ * This structure provides a number of helper routines which require knowledge
+ * of manifests and lockfiles together - most importantly, locking descriptors.
+ *
+ * @see flox::resolver::GlobalManifest
+ * @see flox::resolver::Manifest
+ * @see flox::resolver::Lockfile
+ */
+class Environment : virtual private NixStoreMixin
+{
+
+private:
+
+  /* From `NixStoreMixin':
+   *   std::shared_ptr<nix::Store> store
+   */
+
+  /** Contents of user level manifest with global registry and settings. */
+  std::optional<GlobalManifest> globalManifest;
+
+  /** The environment manifest. */
+  Manifest manifest;
+
+  /** Previous generation of the lockfile ( if any ). */
+  std::optional<Lockfile> oldLockfile;
+
+  /** New/modified lockfile being edited. */
+  Lockfile lockfile;
+
+  std::optional<RegistryRaw> combinedRegistryRaw;
+
+  /** A registry of locked inputs. */
+  std::optional<RegistryRaw> lockedRegistry;
+
+  std::shared_ptr<pkgdb::PkgDbInputFactory> dbFactory;
+
+
+public:
+
+    [[nodiscard]] std::optional<GlobalManifest> &
+    getGlobalManifest() const
+    {
+      return this->globalManifest;
+    }
+
+    [[nodiscard]] const Manifest &
+    getManifest() const
+    {
+      return this->manifest;
+    }
+
+    [[nodiscard]] std::optional<Lockfile>
+    getOldLockfile() const
+    {
+      return this->oldLockfile;
+    }
+
+    [[nodiscard]] const Lockfile &
+    getLockfile() const
+    {
+      return this->lockfile;
+    }
+
+    // TODO
+    [[nodiscard]] RegistryRaw &
+    getCombinedRegistryRaw();
+
+
+};  /* End class `Environment' */
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
  * @brief A state blob with files associated with an environment.
  *
  * This structure stashes several fields to avoid repeatedly calculating them.

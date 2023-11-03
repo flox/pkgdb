@@ -43,6 +43,7 @@ FLOX_DEFINE_EXCEPTION( InvalidLockfileException,
 
 struct LockedInputRaw
 {
+
   pkgdb::Fingerprint fingerprint; /**< Unique hash of associated flake. */
   std::string        url;         /**< Locked URI string.  */
   /** Exploded form of URI as an attr-set. */
@@ -78,6 +79,7 @@ to_json( nlohmann::json & jto, const LockedInputRaw & raw );
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief A locked package's _installable URI_. */
 struct LockedPackageRaw
 {
   LockedInputRaw input;
@@ -102,6 +104,12 @@ to_json( nlohmann::json & jto, const LockedPackageRaw & raw );
 
 using SystemPackages = std::unordered_map<InstallID, LockedPackageRaw>;
 
+/**
+ * @brief An environment lockfile in its _raw_ form.
+ *
+ * This form is suitable for _instantiating_ ( _i.e._, realizing ) an
+ * environment using `mkEnv`.
+ */
 struct LockfileRaw
 {
 
@@ -110,6 +118,16 @@ struct LockfileRaw
   std::unordered_map<System, SystemPackages> packages;
   unsigned                                   lockfileVersion = 0;
 
+
+  /**
+   * @brief Check the lockfile for validity, throw and exception if it
+   *        is invalid.
+   */
+  void
+  check() const
+  {
+    // TODO: Implement in `lockfile.cc'.
+  }
 
   /** @brief Reset to default/empty state. */
   void
@@ -128,6 +146,15 @@ from_json( const nlohmann::json & jfrom, LockfileRaw & raw );
 /** @brief Convert a @a flox::resolver::LockfileRaw to a JSON object. */
 void
 to_json( nlohmann::json & jto, const LockfileRaw & raw );
+
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief A locked representation of an environment. */
+class Lockfile
+{
+
+};  /* End class `Lockfile' */
 
 
 /* -------------------------------------------------------------------------- */
