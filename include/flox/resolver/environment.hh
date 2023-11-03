@@ -46,7 +46,7 @@ private:
   std::optional<GlobalManifest> globalManifest;
 
   std::optional<std::filesystem::path> manifestPath;
-  std::optional<Manifest>      manifest;
+  std::optional<Manifest>              manifest;
 
   std::optional<std::filesystem::path> lockfilePath;
   std::optional<LockfileRaw>           lockfileRaw;

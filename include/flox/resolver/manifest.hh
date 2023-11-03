@@ -332,8 +332,8 @@ private:
 
 public:
 
-  ~Manifest()                          = default;
-  Manifest()                           = default;
+  ~Manifest()                  = default;
+  Manifest()                   = default;
   Manifest( const Manifest & ) = default;
   Manifest( Manifest && )      = default;
 
@@ -379,7 +379,7 @@ public:
    */
 
   std::optional<std::filesystem::path> manifestPath;
-  std::optional<Manifest>      manifest;
+  std::optional<Manifest>              manifest;
   std::optional<RegistryRaw>           lockedRegistry;
   std::optional<pkgdb::PkgQueryArgs>   baseQueryArgs;
 

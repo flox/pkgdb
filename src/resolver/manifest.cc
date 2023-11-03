@@ -49,8 +49,7 @@ GlobalManifest::GlobalManifest( std::filesystem::path manifestPath )
 
 /* -------------------------------------------------------------------------- */
 
-Manifest::Manifest( std::filesystem::path manifestPath,
-                                    ManifestRaw           raw )
+Manifest::Manifest( std::filesystem::path manifestPath, ManifestRaw raw )
 {
   this->manifestPath = std::move( manifestPath );
   this->manifestRaw  = std::move( raw );
