@@ -239,7 +239,7 @@ from_json( const nlohmann::json &jfrom, QueryParams<QueryType> &params )
         }
       else
         {
-          throw ParseQueryParamsException( "unexpected preferences field '"
+          throw ParseQueryParamsException( "unexpected preferences field `"
                                            + key + '\'' );
         }
     }

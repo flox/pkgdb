@@ -157,7 +157,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
           catch ( nlohmann::json::exception &e )
             {
               throw flox::pkgdb::PkgDbException(
-                "couldn't interpret field 'path'",
+                "couldn't interpret field `path'",
                 flox::extract_json_errmsg( e ) );
             }
         }
@@ -170,7 +170,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
           catch ( nlohmann::json::exception &e )
             {
               throw flox::pkgdb::PkgDbException(
-                "couldn't interpret field 'name'",
+                "couldn't interpret field `name'",
                 flox::extract_json_errmsg( e ) );
             }
         }
@@ -183,7 +183,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
           catch ( nlohmann::json::exception &e )
             {
               throw flox::pkgdb::PkgDbException(
-                "couldn't interpret field 'pname'",
+                "couldn't interpret field `pname'",
                 flox::extract_json_errmsg( e ) );
             }
         }
@@ -196,7 +196,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
           catch ( nlohmann::json::exception &e )
             {
               throw flox::pkgdb::PkgDbException(
-                "couldn't interpret field 'version'",
+                "couldn't interpret field `version'",
                 flox::extract_json_errmsg( e ) );
             }
         }
@@ -209,7 +209,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
           catch ( nlohmann::json::exception &e )
             {
               throw flox::pkgdb::PkgDbException(
-                "couldn't interpret field 'semver'",
+                "couldn't interpret field `semver'",
                 flox::extract_json_errmsg( e ) );
             }
         }
@@ -222,7 +222,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
           catch ( nlohmann::json::exception &e )
             {
               throw flox::pkgdb::PkgDbException(
-                "couldn't interpret field 'license'",
+                "couldn't interpret field `license'",
                 flox::extract_json_errmsg( e ) );
             }
         }
@@ -235,7 +235,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
           catch ( nlohmann::json::exception &e )
             {
               throw flox::pkgdb::PkgDbException(
-                "couldn't interpret field 'outputs'",
+                "couldn't interpret field `outputs'",
                 flox::extract_json_errmsg( e ) );
             }
         }
@@ -248,7 +248,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
           catch ( nlohmann::json::exception &e )
             {
               throw flox::pkgdb::PkgDbException(
-                "couldn't interpret field 'outputsToInstall'",
+                "couldn't interpret field `outputsToInstall'",
                 flox::extract_json_errmsg( e ) );
             }
         }
@@ -261,7 +261,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
           catch ( nlohmann::json::exception &e )
             {
               throw flox::pkgdb::PkgDbException(
-                "couldn't interpret field 'broken'",
+                "couldn't interpret field `broken'",
                 flox::extract_json_errmsg( e ) );
             }
         }
@@ -274,7 +274,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
           catch ( nlohmann::json::exception &e )
             {
               throw flox::pkgdb::PkgDbException(
-                "couldn't interpret field 'unfree'",
+                "couldn't interpret field `unfree'",
                 flox::extract_json_errmsg( e ) );
             }
         }
@@ -287,13 +287,13 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
           catch ( nlohmann::json::exception &e )
             {
               throw flox::pkgdb::PkgDbException(
-                "couldn't interpret field 'description'",
+                "couldn't interpret field `description'",
                 flox::extract_json_errmsg( e ) );
             }
         }
       else
         {
-          throw flox::pkgdb::PkgDbException( "unrecognized field '" + key
+          throw flox::pkgdb::PkgDbException( "unrecognized field `" + key
                                              + "'" );
         }
     }

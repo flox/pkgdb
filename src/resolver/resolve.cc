@@ -124,7 +124,7 @@ from_json( const nlohmann::json &jfrom, Resolved &resolved )
             }
           catch ( nlohmann::json::exception &e )
             {
-              throw ParseResolvedException( "couldn't interpret field 'path'",
+              throw ParseResolvedException( "couldn't interpret field `path'",
                                             flox::extract_json_errmsg( e ) );
             }
         }
@@ -132,7 +132,7 @@ from_json( const nlohmann::json &jfrom, Resolved &resolved )
       else
         {
           throw ParseResolvedException(
-            "encountered unrecognized field '" + key
+            "encountered unrecognized field `" + key
             + "' while parsing resolved installable" );
         }
     }

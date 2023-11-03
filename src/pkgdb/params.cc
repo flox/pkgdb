@@ -72,7 +72,7 @@ from_json( const nlohmann::json &jfrom, QueryPreferences &prefs )
           catch ( nlohmann::json::exception &e )
             {
               throw ParseQueryPreferencesException(
-                "couldn't interpret preferences field 'systems'",
+                "couldn't interpret preferences field `systems'",
                 extract_json_errmsg( e ) );
             }
         }
@@ -93,7 +93,7 @@ from_json( const nlohmann::json &jfrom, QueryPreferences &prefs )
                     {
                       throw ParseQueryPreferencesException(
                         "couldn't interpret preferences "
-                        "field 'allow.unfree'",
+                        "field `allow.unfree'",
                         extract_json_errmsg( e ) );
                     }
                 }
@@ -108,7 +108,7 @@ from_json( const nlohmann::json &jfrom, QueryPreferences &prefs )
                     {
                       throw ParseQueryPreferencesException(
                         "couldn't interpret preferences "
-                        "field 'allow.broken'",
+                        "field `allow.broken'",
                         extract_json_errmsg( e ) );
                     }
                 }
@@ -123,14 +123,14 @@ from_json( const nlohmann::json &jfrom, QueryPreferences &prefs )
                     {
                       throw ParseQueryPreferencesException(
                         "couldn't interpret preferences "
-                        "field 'allow.licenses'",
+                        "field `allow.licenses'",
                         extract_json_errmsg( e ) );
                     }
                 }
               else
                 {
                   throw ParseQueryPreferencesException(
-                    "unexpected preferences field 'allow." + akey + '\'' );
+                    "unexpected preferences field `allow." + akey + '\'' );
                 }
             }
         }
@@ -150,14 +150,14 @@ from_json( const nlohmann::json &jfrom, QueryPreferences &prefs )
                     {
                       throw ParseQueryPreferencesException(
                         "couldn't interpret preferences field "
-                        "'semver.preferPreReleases'",
+                        "`semver.preferPreReleases'",
                         extract_json_errmsg( e ) );
                     }
                 }
               else
                 {
                   throw ParseQueryPreferencesException(
-                    "unexpected preferences field 'semver." + skey + '\'' );
+                    "unexpected preferences field `semver." + skey + '\'' );
                 }
             }
         }
