@@ -59,7 +59,7 @@ private:
   std::string                _pname;
   std::string                _version;
   std::optional<std::string> _semver;
-  std::string                _system;
+  System                     _system;
   Subtree                    _subtree;
   std::optional<std::string> _license;
 
@@ -199,10 +199,13 @@ public:
 /**
  * @class flox::PackageInitException
  * @brief An exception thrown when initializing a @a flox::FlakePackage.
+ *
+ * @{
  */
 FLOX_DEFINE_EXCEPTION( PackageInitException,
                        EC_PACKAGE_INIT,
                        "error initializing FlakePackage" )
+/** @} */
 
 
 /* -------------------------------------------------------------------------- */

@@ -22,8 +22,15 @@
 
 /* -------------------------------------------------------------------------- */
 
+static const std::string nixpkgsRev =
+  "e8039594435c68eb4f780f3e9bf3972a7399c4b1";
+
 static const std::string nixpkgsRef =
   "github:NixOS/nixpkgs/e8039594435c68eb4f780f3e9bf3972a7399c4b1";
+
+static const std::string nixpkgsFingerprintStr =
+  "5fde12e3424840cc2752dae09751b09b03f5a33c3ec4de672fc89d236720bdc7";
+
 
 /**
  * These counts indicate the total number of derivations under

@@ -88,7 +88,7 @@ LockCommand::run()
   nlohmann::json lockfile = { { "manifest", this->getManifestRaw() },
                               { "registry", this->getLockedRegistry() },
                               { "packages", this->getLockedDescriptors() },
-                              { "lockfileVersion", 0 } };
+                              { "lockfile-version", 0 } };
 
   /* Print that bad boii */
   std::cout << lockfile.dump() << std::endl;

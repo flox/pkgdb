@@ -11,9 +11,8 @@
 
 #include <nix/eval-cache.hh>
 #include <nix/logging.hh>
-#include <nix/store-api.hh>
-#include <nix/eval-cache.hh>
 #include <nix/search-path.hh>
+#include <nix/store-api.hh>
 
 #include <nlohmann/json.hpp>
 
@@ -141,16 +140,14 @@ public:
    *
    * Evaluator remains open for lifetime of object.
    */
-    nix::ref<nix::EvalState>
+  nix::ref<nix::EvalState>
   getState()
   {
     if ( this->state == nullptr )
       {
-        this->state = std::make_shared<nix::EvalState>(
-          nix::SearchPath()
-        , this->getStore()
-        , this->getStore()
-        );
+        this->state = std::make_shared<nix::EvalState>( nix::SearchPath(),
+                                                        this->getStore(),
+                                                        this->getStore() );
         this->state->repair = nix::NoRepair;
       }
     return static_cast<nix::ref<nix::EvalState>>( this->state );

@@ -203,7 +203,7 @@ public:
    * @param systems Systems to be scraped.
    */
   void
-  scrapeSystems( const std::vector<std::string> & systems );
+  scrapeSystems( const std::vector<System> & systems );
 
   /** @brief Add/set a shortname for this input. */
   void
@@ -288,10 +288,11 @@ private:
    *   std::shared_ptr<nix::Store> store
    */
 
-  [[maybe_unused]] bool force
-    = false; /**< Whether to force re-evaluation of flakes. */
-
   std::shared_ptr<Registry<PkgDbInputFactory>> registry;
+
+  // TODO: Implement
+  /** Whether to force re-evaluation of flakes. */
+  bool force = false;
 
 
 protected:
@@ -320,7 +321,7 @@ protected:
     = 0;
 
   /** @return A list of systems to be scraped. */
-  [[nodiscard]] virtual const std::vector<std::string> &
+  [[nodiscard]] virtual const std::vector<System> &
   getSystems()
     = 0;
 
@@ -334,6 +335,20 @@ public:
    */
   [[nodiscard]] nix::ref<Registry<PkgDbInputFactory>>
   getPkgDbRegistry();
+
+  /** @brief Whether DBs will be regenerated from scratch. */
+  [[nodiscard]] bool
+  isPkgDbForced() const
+  {
+    return this->force;
+  }
+
+  /** @brief Set whether DBs will be regenerated from scratch. */
+  void
+  setPkgDbForced( bool force )
+  {
+    this->force = force;
+  }
 
 
 }; /* End class `PkgDbRegistryMixin' */

@@ -46,9 +46,9 @@ try : state( state ),
 catch ( const std::exception &err )
   {
 
-    throw LockFlakeException(
-      "failed to lock flake \"" + ref.to_string() + "\"",
-      nix::filterANSIEscapes( err.what(), true ).c_str() );
+    throw LockFlakeException( "failed to lock flake \"" + ref.to_string()
+                                + "\"",
+                              nix::filterANSIEscapes( err.what(), true ) );
   }
 catch ( ... )
   {

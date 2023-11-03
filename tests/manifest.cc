@@ -343,15 +343,14 @@ test_parseManifestRaw_toml0()
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief Test `flox::resolver::ManifestDescriptorRaw` gets serialized
- * correctly. */
+/** @brief Test `flox::resolver::ManifestDescriptorRaw` gets
+ *         serialized correctly. */
 bool
-test_serialize_manifest()
+test_serialize_manifest0()
 {
   nlohmann::json raw = R"( {
     "name": "foo",
     "version": "4.2.0",
-    "path": ["legacyPackages", "x86_64-linux", "hello"],
     "abspath": ["legacyPackages", "x86_64-linux", "hello"],
     "optional": true,
     "package-group": "blue",
@@ -398,9 +397,8 @@ main()
   RUN_TEST( parseManifestDescriptor_path4 );
 
   RUN_TEST( parseManifestRaw_toml0 );
-  test_parseManifestRaw_toml0();
 
-  RUN_TEST( serialize_manifest );
+  RUN_TEST( serialize_manifest0 );
 
   return exitCode;
 }

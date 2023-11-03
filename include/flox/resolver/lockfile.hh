@@ -15,6 +15,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "flox/core/exceptions.hh"
 #include "flox/core/types.hh"
 #include "flox/pkgdb/read.hh"
 #include "flox/registry.hh"
@@ -27,12 +28,29 @@ namespace flox::resolver {
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * @class flox::resolver::InvalidLockfileException
+ * @brief An exception thrown when a lockfile is invalid.
+ * @{
+ */
+FLOX_DEFINE_EXCEPTION( InvalidLockfileException,
+                       EC_INVALID_LOCKFILE,
+                       "invalid lockfile" )
+/** @} */
+
+
+/* -------------------------------------------------------------------------- */
+
 struct LockedInputRaw
 {
+
   pkgdb::Fingerprint fingerprint; /**< Unique hash of associated flake. */
   std::string        url;         /**< Locked URI string.  */
   /** Exploded form of URI as an attr-set. */
   nlohmann::json attrs;
+
+  LockedInputRaw() : fingerprint( nix::htSHA256 ) {}
+  ~LockedInputRaw() = default;
 
   explicit LockedInputRaw( const pkgdb::PkgDbReadOnly & pdb )
     : fingerprint( pdb.fingerprint )
@@ -48,6 +66,8 @@ struct LockedInputRaw
 }; /* End struct `LockedInputRaw::Input' */
 
 
+/* -------------------------------------------------------------------------- */
+
 /** @brief Convert a JSON object to a @a flox::resolver::LockedInputRaw. */
 void
 from_json( const nlohmann::json & jfrom, LockedInputRaw & raw );
@@ -59,6 +79,7 @@ to_json( nlohmann::json & jto, const LockedInputRaw & raw );
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief A locked package's _installable URI_. */
 struct LockedPackageRaw
 {
   LockedInputRaw input;
@@ -67,6 +88,8 @@ struct LockedPackageRaw
   nlohmann::json info; /* pname, version, license */
 };                     /* End struct `LockedPackageRaw' */
 
+
+/* -------------------------------------------------------------------------- */
 
 /** @brief Convert a JSON object to a @a flox::resolver::LockedPackageRaw. */
 void
@@ -79,23 +102,59 @@ to_json( nlohmann::json & jto, const LockedPackageRaw & raw );
 
 /* -------------------------------------------------------------------------- */
 
-using SystemPackages = std::unordered_map<std::string, LockedPackageRaw>;
+using SystemPackages = std::unordered_map<InstallID, LockedPackageRaw>;
 
+/**
+ * @brief An environment lockfile in its _raw_ form.
+ *
+ * This form is suitable for _instantiating_ ( _i.e._, realizing ) an
+ * environment using `mkEnv`.
+ */
 struct LockfileRaw
 {
-  ManifestRaw                                     manifest;
-  RegistryRaw                                     registry;
-  std::unordered_map<std::string, SystemPackages> packages;
-  unsigned                                        lockfileVersion = 0;
+
+  ManifestRaw                                manifest;
+  RegistryRaw                                registry;
+  std::unordered_map<System, SystemPackages> packages;
+  unsigned                                   lockfileVersion = 0;
+
+
+  /**
+   * @brief Check the lockfile for validity, throw and exception if it
+   *        is invalid.
+   */
+  void
+  check() const
+  {
+    // TODO: Implement in `lockfile.cc'.
+  }
+
+  /** @brief Reset to default/empty state. */
+  void
+  clear();
+
+
 }; /* End struct `LockfileRaw' */
 
 
-// FIXME
-// NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( LockfileRaw,
-//                                    manifest,
-//                                    registry,
-//                                    packages,
-//                                    lockfileVersion )
+/* -------------------------------------------------------------------------- */
+
+/** @brief Convert a JSON object to a @a flox::resolver::LockfileRaw. */
+void
+from_json( const nlohmann::json & jfrom, LockfileRaw & raw );
+
+/** @brief Convert a @a flox::resolver::LockfileRaw to a JSON object. */
+void
+to_json( nlohmann::json & jto, const LockfileRaw & raw );
+
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief A locked representation of an environment. */
+class Lockfile
+{
+
+};  /* End class `Lockfile' */
 
 
 /* -------------------------------------------------------------------------- */

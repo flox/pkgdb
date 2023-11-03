@@ -199,7 +199,7 @@ NOTE: This structure is expected to be deprecated and replaced by a subset of
       the `flox::resolver::ManifestRaw::Options` fields.
       The current fields and fallback behavior there are identical, but
       fallback handling was moved to an intermediate struct
-      `flox::resolver::UnlockedManifest`.
+      `flox::resolver::Manifest`.
 
 Declared in
 [<pkgdb>/include/flox/pkgdb/params.hh](../include/flox/pkgdb/params.hh).
@@ -474,7 +474,7 @@ of the file so that it can be used to validate its syntax, and be converted
 without any loss of detail into JSON ( to become a part of a lockfile ).
 With that in mind, no default fields are handled in this struct; instead
 handling of fallbacks is done in a related class
-`flox::resolver::UnlockedManifest`.
+`flox::resolver::Manifest`.
 
 While some fields in this file are not relevant to resolution/search all of them
 will be shown here.
@@ -628,7 +628,7 @@ Contained by:
 This routine provides a _base_ set of `PkgQueryArgs` based on global settings
 so that they may be used to create individual descriptors' queries.
 
-This is currently only in use by `flox::resolver::UnlockedManifest`, but is
+This is currently only in use by `flox::resolver::Manifest`, but is
 preferred for any parameter set containing _global_ settings.
 
 

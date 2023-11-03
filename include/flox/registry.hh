@@ -343,6 +343,19 @@ to_json( nlohmann::json & jto, const RegistryRaw & reg );
 /* -------------------------------------------------------------------------- */
 
 /**
+ * @class flox::InvalidRegistryException
+ * @brief An exception thrown when a registry has invalid contents.
+ * @{
+ */
+FLOX_DEFINE_EXCEPTION( InvalidRegistryException,
+                       EC_INVALID_REGISTRY,
+                       "invalid registry" )
+/** @} */
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
  * @brief An input registry that may hold arbitrary types of inputs.
  *
  * Unlike @a flox::RegistryRaw, inputs are held in order, and any default
@@ -410,16 +423,6 @@ public:
                           factory.mkInput( pair->first, input ) ) );
       }
   }
-
-  /**
-   * @class flox::Registry::InvalidRegistryException
-   * @brief An exception thrown when a registry has invalid contents.
-   * @{
-   */
-  FLOX_DEFINE_EXCEPTION( InvalidRegistryException,
-                         EC_INVALID_REGISTRY,
-                         "invalid registry" )
-  /** @} */
 
   /**
    * @brief Get an input by name.

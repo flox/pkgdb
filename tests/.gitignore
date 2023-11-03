@@ -1,5 +1,6 @@
 exceptions
 is_sqlite3
+lockfile
 manifest
 pkgdb
 registry
