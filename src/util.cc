@@ -269,13 +269,13 @@ trim_copy( std::string_view str )
 /* -------------------------------------------------------------------------- */
 
 std::string
-extract_json_errmsg( nlohmann::json::exception &e )
+extract_json_errmsg( nlohmann::json::exception &err )
 {
-  // All of the nlohmann::json::exception messages are formatted like so:
-  // [something] actually useful message
-  std::string            full( e.what() );
+  /* All of the nlohmann::json::exception messages are formatted like so:
+   * [something] actually useful message. */
+  std::string            full( err.what() );
   std::string::size_type idx = full.find( "]" );
-  idx += 1;  // Don't include the leading space
+  idx += 1; /* Don't include the leading space */
   std::string userFriendly = full.substr( idx, full.size() );
   return userFriendly;
 }

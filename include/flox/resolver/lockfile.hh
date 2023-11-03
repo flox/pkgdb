@@ -15,6 +15,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "flox/core/exceptions.hh"
 #include "flox/core/types.hh"
 #include "flox/pkgdb/read.hh"
 #include "flox/registry.hh"
@@ -24,6 +25,19 @@
 /* -------------------------------------------------------------------------- */
 
 namespace flox::resolver {
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @class flox::resolver::InvalidLockfileException
+ * @brief An exception thrown when a lockfile is invalid.
+ * @{
+ */
+FLOX_DEFINE_EXCEPTION( InvalidLockfileException,
+                       EC_INVALID_LOCKFILE,
+                       "invalid lockfile" )
+/** @} */
+
 
 /* -------------------------------------------------------------------------- */
 

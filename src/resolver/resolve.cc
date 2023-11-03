@@ -108,13 +108,7 @@ resolve_v0( ResolverState &state, const Descriptor &descriptor, bool one )
 void
 from_json( const nlohmann::json &jfrom, Resolved &resolved )
 {
-  if ( ! jfrom.is_object() )
-    {
-      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
-      throw ParseResolvedException(
-        "resolved installable must be an object, but is" + aOrAn
-        + std::string( jfrom.type_name() ) + '.' );
-    }
+  assertIsJSONObject<ParseResolvedException>( jfrom, "resolved installable" );
   for ( const auto &[key, value] : jfrom.items() )
     {
       if ( key == "input" )
@@ -130,9 +124,8 @@ from_json( const nlohmann::json &jfrom, Resolved &resolved )
             }
           catch ( nlohmann::json::exception &e )
             {
-              throw ParseResolvedException(
-                "couldn't interpret field 'path'",
-                flox::extract_json_errmsg( e ).c_str() );
+              throw ParseResolvedException( "couldn't interpret field 'path'",
+                                            flox::extract_json_errmsg( e ) );
             }
         }
       else if ( key == "info" ) { resolved.info = value; }
@@ -157,13 +150,7 @@ to_json( nlohmann::json &jto, const Resolved &resolved )
 void
 from_json( const nlohmann::json &jfrom, Resolved::Input &input )
 {
-  if ( ! jfrom.is_object() )
-    {
-      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
-      throw ParseResolvedException( "registry input must be an object, but is"
-                                    + aOrAn + std::string( jfrom.type_name() )
-                                    + '.' );
-    }
+  assertIsJSONObject<ParseResolvedException>( jfrom, "registry input" );
   for ( const auto &[key, value] : jfrom.items() )
     {
       if ( key == "name" )
@@ -175,14 +162,14 @@ from_json( const nlohmann::json &jfrom, Resolved::Input &input )
           catch ( nlohmann::json::exception &e )
             {
               throw ParseResolvedException(
-                "couldn't parse resolved input field '" + key + "'",
-                extract_json_errmsg( e ).c_str() );
+                "couldn't parse resolved input field `" + key + "'",
+                extract_json_errmsg( e ) );
             }
         }
       else if ( key == "locked" ) { input.locked = value; }
       else
         {
-          throw ParseResolvedException( "encountered unrecognized field '" + key
+          throw ParseResolvedException( "encountered unrecognized field `" + key
                                         + "' while parsing locked input" );
         }
     }

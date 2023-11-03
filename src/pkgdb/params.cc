@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 
+#include "flox/core/util.hh"
 #include "flox/pkgdb/params.hh"
 #include "flox/pkgdb/pkg-query.hh"
 
@@ -56,13 +57,8 @@ QueryPreferences::fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const
 void
 from_json( const nlohmann::json &jfrom, QueryPreferences &prefs )
 {
-  if ( ! jfrom.is_object() )
-    {
-      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
-      throw ParseQueryPreferencesException(
-        "preferences must be an object, but is" + aOrAn
-        + std::string( jfrom.type_name() ) + '.' );
-    }
+  assertIsJSONObject<ParseQueryPreferencesException>( jfrom,
+                                                      "query preferences" );
   prefs.clear();
   for ( const auto &[key, value] : jfrom.items() )
     {
@@ -77,7 +73,7 @@ from_json( const nlohmann::json &jfrom, QueryPreferences &prefs )
             {
               throw ParseQueryPreferencesException(
                 "couldn't interpret preferences field 'systems'",
-                extract_json_errmsg( e ).c_str() );
+                extract_json_errmsg( e ) );
             }
         }
       else if ( key == "allow" )
@@ -98,7 +94,7 @@ from_json( const nlohmann::json &jfrom, QueryPreferences &prefs )
                       throw ParseQueryPreferencesException(
                         "couldn't interpret preferences "
                         "field 'allow.unfree'",
-                        extract_json_errmsg( e ).c_str() );
+                        extract_json_errmsg( e ) );
                     }
                 }
               else if ( akey == "broken" )
@@ -113,7 +109,7 @@ from_json( const nlohmann::json &jfrom, QueryPreferences &prefs )
                       throw ParseQueryPreferencesException(
                         "couldn't interpret preferences "
                         "field 'allow.broken'",
-                        extract_json_errmsg( e ).c_str() );
+                        extract_json_errmsg( e ) );
                     }
                 }
               else if ( akey == "licenses" )
@@ -128,7 +124,7 @@ from_json( const nlohmann::json &jfrom, QueryPreferences &prefs )
                       throw ParseQueryPreferencesException(
                         "couldn't interpret preferences "
                         "field 'allow.licenses'",
-                        extract_json_errmsg( e ).c_str() );
+                        extract_json_errmsg( e ) );
                     }
                 }
               else
@@ -155,7 +151,7 @@ from_json( const nlohmann::json &jfrom, QueryPreferences &prefs )
                       throw ParseQueryPreferencesException(
                         "couldn't interpret preferences field "
                         "'semver.preferPreReleases'",
-                        extract_json_errmsg( e ).c_str() );
+                        extract_json_errmsg( e ) );
                     }
                 }
               else

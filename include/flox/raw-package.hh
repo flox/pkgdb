@@ -10,6 +10,7 @@
 #pragma once
 
 #include "flox/core/types.hh"
+#include "flox/core/util.hh"
 #include "flox/package.hh"
 #include <nix/flake/flake.hh>
 #include <nlohmann/json.hpp>
@@ -144,13 +145,7 @@ public:
 void
 from_json( const nlohmann::json &jfrom, RawPackage &pkg )
 {
-  if ( ! jfrom.is_object() )
-    {
-      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
-      throw flox::pkgdb::PkgDbException(
-        "package must be an object, but is" + aOrAn
-        + std::string( jfrom.type_name() ) + '.' );
-    }
+  assertIsJSONObject<flox::pkgdb::PkgDbException>( jfrom, "package" );
   for ( const auto &[key, value] : jfrom.items() )
     {
       if ( key == "path" )
@@ -163,7 +158,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
             {
               throw flox::pkgdb::PkgDbException(
                 "couldn't interpret field 'path'",
-                flox::extract_json_errmsg( e ).c_str() );
+                flox::extract_json_errmsg( e ) );
             }
         }
       else if ( key == "name" )
@@ -176,7 +171,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
             {
               throw flox::pkgdb::PkgDbException(
                 "couldn't interpret field 'name'",
-                flox::extract_json_errmsg( e ).c_str() );
+                flox::extract_json_errmsg( e ) );
             }
         }
       else if ( key == "pname" )
@@ -189,7 +184,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
             {
               throw flox::pkgdb::PkgDbException(
                 "couldn't interpret field 'pname'",
-                flox::extract_json_errmsg( e ).c_str() );
+                flox::extract_json_errmsg( e ) );
             }
         }
       else if ( key == "version" )
@@ -202,7 +197,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
             {
               throw flox::pkgdb::PkgDbException(
                 "couldn't interpret field 'version'",
-                flox::extract_json_errmsg( e ).c_str() );
+                flox::extract_json_errmsg( e ) );
             }
         }
       else if ( key == "semver" )
@@ -215,7 +210,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
             {
               throw flox::pkgdb::PkgDbException(
                 "couldn't interpret field 'semver'",
-                flox::extract_json_errmsg( e ).c_str() );
+                flox::extract_json_errmsg( e ) );
             }
         }
       else if ( key == "license" )
@@ -228,7 +223,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
             {
               throw flox::pkgdb::PkgDbException(
                 "couldn't interpret field 'license'",
-                flox::extract_json_errmsg( e ).c_str() );
+                flox::extract_json_errmsg( e ) );
             }
         }
       else if ( key == "outputs" )
@@ -241,7 +236,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
             {
               throw flox::pkgdb::PkgDbException(
                 "couldn't interpret field 'outputs'",
-                flox::extract_json_errmsg( e ).c_str() );
+                flox::extract_json_errmsg( e ) );
             }
         }
       else if ( key == "outputsToInstall" )
@@ -254,7 +249,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
             {
               throw flox::pkgdb::PkgDbException(
                 "couldn't interpret field 'outputsToInstall'",
-                flox::extract_json_errmsg( e ).c_str() );
+                flox::extract_json_errmsg( e ) );
             }
         }
       else if ( key == "broken" )
@@ -267,7 +262,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
             {
               throw flox::pkgdb::PkgDbException(
                 "couldn't interpret field 'broken'",
-                flox::extract_json_errmsg( e ).c_str() );
+                flox::extract_json_errmsg( e ) );
             }
         }
       else if ( key == "unfree" )
@@ -280,7 +275,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
             {
               throw flox::pkgdb::PkgDbException(
                 "couldn't interpret field 'unfree'",
-                flox::extract_json_errmsg( e ).c_str() );
+                flox::extract_json_errmsg( e ) );
             }
         }
       else if ( key == "description" )
@@ -293,7 +288,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
             {
               throw flox::pkgdb::PkgDbException(
                 "couldn't interpret field 'description'",
-                flox::extract_json_errmsg( e ).c_str() );
+                flox::extract_json_errmsg( e ) );
             }
         }
       else

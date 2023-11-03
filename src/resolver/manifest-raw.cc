@@ -37,13 +37,9 @@ ManifestRaw::EnvBase::check() const
 static void
 from_json( const nlohmann::json & jfrom, ManifestRaw::EnvBase & env )
 {
-  if ( ! jfrom.is_object() )
-    {
-      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
-      throw InvalidManifestFileException(
-        "manifest field `options.env-base' must be an object, but is" + aOrAn
-        + std::string( jfrom.type_name() ) + '.' );
-    }
+  assertIsJSONObject<InvalidManifestFileException>(
+    jfrom,
+    "manifest field `options.env-base'" );
 
   /* Clear fields. */
   env.dir     = std::nullopt;
@@ -102,13 +98,9 @@ to_json( nlohmann::json & jto, const ManifestRaw::EnvBase & env )
 static void
 from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Semver & semver )
 {
-  if ( ! jfrom.is_object() )
-    {
-      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
-      throw InvalidManifestFileException(
-        "manifest field `options.semver' must be an object, but is" + aOrAn
-        + std::string( jfrom.type_name() ) + '.' );
-    }
+  assertIsJSONObject<InvalidManifestFileException>(
+    jfrom,
+    "manifest field `options.semver'" );
 
   /* Clear fields. */
   semver.preferPreReleases = std::nullopt;
@@ -155,13 +147,9 @@ to_json( nlohmann::json & jto, const ManifestRaw::Options::Semver & semver )
 static void
 from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Allows & allow )
 {
-  if ( ! jfrom.is_object() )
-    {
-      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
-      throw InvalidManifestFileException(
-        "manifest field `options.allow' must be an object, but is" + aOrAn
-        + std::string( jfrom.type_name() ) + '.' );
-    }
+  assertIsJSONObject<InvalidManifestFileException>(
+    jfrom,
+    "manifest field `options.allow'" );
 
   /* Clear fields. */
   allow.licenses = std::nullopt;
@@ -240,13 +228,9 @@ to_json( nlohmann::json & jto, const ManifestRaw::Options::Allows & allow )
 void
 from_json( const nlohmann::json & jfrom, ManifestRaw::Options & opts )
 {
-  if ( ! jfrom.is_object() )
-    {
-      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
-      throw InvalidManifestFileException(
-        "manifest field `options' must be an object, but is" + aOrAn
-        + std::string( jfrom.type_name() ) + '.' );
-    }
+  assertIsJSONObject<InvalidManifestFileException>(
+    jfrom,
+    "manifest field `options'" );
 
   for ( const auto & [key, value] : jfrom.items() )
     {
@@ -339,13 +323,8 @@ to_json( nlohmann::json & jto, const ManifestRaw::Options & opts )
 static void
 from_json( const nlohmann::json & jfrom, ManifestRaw::Hook & hook )
 {
-  if ( ! jfrom.is_object() )
-    {
-      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
-      throw InvalidManifestFileException(
-        "manifest field `options' must be an object, but is" + aOrAn
-        + std::string( jfrom.type_name() ) + '.' );
-    }
+  assertIsJSONObject<InvalidManifestFileException>( jfrom,
+                                                    "manifest field `hook'" );
 
   /* Clear fields. */
   hook.file   = std::nullopt;
@@ -419,13 +398,8 @@ static void
 varsFromJSON( const nlohmann::json &                         jfrom,
               std::unordered_map<std::string, std::string> & vars )
 {
-  if ( ! jfrom.is_object() )
-    {
-      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
-      throw InvalidManifestFileException(
-        "manifest `vars' field must be an object, but is" + aOrAn
-        + std::string( jfrom.type_name() ) + '.' );
-    }
+  assertIsJSONObject<InvalidManifestFileException>( jfrom,
+                                                    "manifest field `vars'" );
   vars.clear();
   for ( const auto & [key, value] : jfrom.items() )
     {
@@ -451,13 +425,7 @@ void
 from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
 {
   manifest.check();
-  if ( ! jfrom.is_object() )
-    {
-      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
-      throw InvalidManifestFileException(
-        "manifest must be an object, but is" + aOrAn
-        + std::string( jfrom.type_name() ) + '.' );
-    }
+  assertIsJSONObject<InvalidManifestFileException>( jfrom, "manifest" );
 
   for ( const auto & [key, value] : jfrom.items() )
     {

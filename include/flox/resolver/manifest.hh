@@ -16,6 +16,7 @@
 #include <argparse/argparse.hpp>
 #include <nlohmann/json.hpp>
 
+#include "flox/core/exceptions.hh"
 #include "flox/pkgdb/input.hh"
 #include "flox/registry.hh"
 #include "flox/resolver/descriptor.hh"
@@ -30,7 +31,7 @@ namespace flox::resolver {
 
 /**
  * @class flox::resolver::InvalidManifestFileException
- * @brief An exception thrown when the value of manifestPath is invalid.
+ * @brief An exception thrown when a manifest file is invalid.
  * @{
  */
 FLOX_DEFINE_EXCEPTION( InvalidManifestFileException,

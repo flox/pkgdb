@@ -74,9 +74,9 @@ main()
   // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define RUN_TEST( ... ) _RUN_TEST( exitCode, __VA_ARGS__ )
 
-  //RUN_TEST( LockedInputRawFromJSON0 );
+  // RUN_TEST( LockedInputRawFromJSON0 );
 
-  //RUN_TEST( LockedPackageRawFromJSON0 );
+  // RUN_TEST( LockedPackageRawFromJSON0 );
 
   return exitCode;
 }
