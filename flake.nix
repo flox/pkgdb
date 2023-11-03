@@ -35,8 +35,13 @@
 
 # ---------------------------------------------------------------------------- #
 
-    /* Use nix@2.15 */
-    overlays.nix = final: prev: { nix = prev.nixVersions.nix_2_15; };
+    /* Use nix@2.17 */
+    overlays.nix = final: prev: { nix = prev.nixVersions.nix_2_17.overrideAttrs (old: {
+      patches = old.patches or [] ++ [
+        (builtins.path {path = ./nix-patches/nix-9147.patch;})
+        (builtins.path {path = ./nix-patches/multiple-github-tokens.2.13.2.patch;})
+      ];
+    }); };
     /* Aggregate dependency overlays. */
     overlays.deps = nixpkgs.lib.composeManyExtensions [
       overlays.nix
@@ -57,7 +62,7 @@
       pkgsFor = ( builtins.getAttr system nixpkgs.legacyPackages ).extend
                   overlays.default;
     in {
-      inherit (pkgsFor) flox-pkgdb;
+      inherit (pkgsFor) flox-pkgdb semver;
       default = pkgsFor.flox-pkgdb;
     } );
 

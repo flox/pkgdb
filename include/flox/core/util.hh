@@ -55,38 +55,6 @@ namespace nlohmann {
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief Optional types to/from JSON. */
-template<typename T>
-struct adl_serializer<std::optional<T>>
-{
-
-  /**
-   *  @brief Convert an optional type to a JSON type  treating `std::nullopt`
-   *         as `null`.
-   */
-  static void
-  to_json( json &jto, const std::optional<T> &opt )
-  {
-    if ( opt.has_value() ) { jto = *opt; }
-    else { jto = nullptr; }
-  }
-
-  /**
-   * @brief Convert a JSON type to an `optional<T>` treating
-   *        `null` as `std::nullopt`.
-   */
-  static void
-  from_json( const json &jfrom, std::optional<T> &opt )
-  {
-    if ( jfrom.is_null() ) { opt = std::nullopt; }
-    else { opt = std::make_optional( jfrom.template get<T>() ); }
-  }
-
-}; /* End struct `adl_serializer<std::optional<T>>' */
-
-
-/* -------------------------------------------------------------------------- */
-
 /** @brief Variants ( Eithers ) of two elements to/from JSON. */
 template<typename A, typename B>
 struct adl_serializer<std::variant<A, B>>
