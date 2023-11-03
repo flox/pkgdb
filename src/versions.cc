@@ -186,11 +186,45 @@ runSemver( const std::list<std::string> & args )
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief Strip any '*', 'x', or 'X' characters from the range. */
+[[nodiscard]] static std::string
+cleanRange( const std::string & range )
+{
+  std::string rsl;
+  rsl.reserve( range.size() );
+  for ( size_t idx = 0; idx < range.size(); ++idx )
+    {
+      const char chr = range[idx];
+      if ( ( chr != '*' ) && ( chr != 'x' ) && ( chr != 'X' ) )
+        {
+          rsl.push_back( chr );
+          continue;
+        }
+      else
+        {
+          /* Handle `18.x' by also dropping trailing '.'. */
+          if ( rsl.back() == '.' ) { rsl.pop_back(); }
+          while ( ( idx < range.size() ) &&
+                  ( range[idx] != ' ' ) &&
+                  ( range[idx] != ',' ) &&
+                  ( range[idx] != '&' ) &&
+                  ( range[idx] != '|' )
+                ) { ++idx; }
+          if ( idx < range.size() ) { rsl.push_back( range[idx] ); }
+        }
+    }
+  rsl.shrink_to_fit();
+  return rsl;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 std::list<std::string>
 semverSat( const std::string & range, const std::list<std::string> & versions )
 {
   std::list<std::string> args
-    = { "--include-prerelease", "--loose", "--range", range };
+    = { "--include-prerelease", "--loose", "--range", cleanRange( range ) };
   for ( const auto & version : versions ) { args.push_back( version ); }
   auto [ec, lines] = runSemver( args );
   /* TODO: determine parse error vs. empty list result. */

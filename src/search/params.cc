@@ -98,11 +98,15 @@ SearchQuery::fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const
 
 /* Instantiate templates. */
 namespace flox::pkgdb {
+
 template struct QueryParams<search::SearchQuery>;
+
 template void
 from_json( const nlohmann::json &, QueryParams<search::SearchQuery> & );
+
 template void
 to_json( nlohmann::json &, const QueryParams<search::SearchQuery> & );
+
 }  // namespace flox::pkgdb
 
 
