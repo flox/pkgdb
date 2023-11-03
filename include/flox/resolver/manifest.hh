@@ -88,7 +88,7 @@ struct GlobalManifestRaw
   std::optional<RegistryRaw> registry;
 
 
-  ~GlobalManifestRaw()                           = default;
+  virtual ~GlobalManifestRaw()                   = default;
   GlobalManifestRaw()                            = default;
   GlobalManifestRaw( const GlobalManifestRaw & ) = default;
   GlobalManifestRaw( GlobalManifestRaw && )      = default;
@@ -105,11 +105,11 @@ struct GlobalManifestRaw
    * @brief Validate manifest fields, throwing an exception if its contents
    *        are invalid.
    */
-  void
+  virtual void
   check() const
   {}
 
-  void
+  virtual void
   clear()
   {
     this->options  = std::nullopt;
@@ -125,7 +125,6 @@ struct GlobalManifestRaw
 /** @brief Convert a JSON object to a @a flox::resolver::GlobalManifest. */
 void
 from_json( const nlohmann::json & jfrom, GlobalManifestRaw & raw );
-
 
 /** @brief Convert a @a flox::resolver::GlobalManifest to a JSON object. */
 void
@@ -181,16 +180,16 @@ struct ManifestRaw : public GlobalManifestRaw
   }; /* End struct `ManifestRaw::Hook' */
   std::optional<Hook> hook;
 
-  ~ManifestRaw()                     = default;
+  ~ManifestRaw() override            = default;
   ManifestRaw()                      = default;
   ManifestRaw( const ManifestRaw & ) = default;
   ManifestRaw( ManifestRaw && )      = default;
 
-  ManifestRaw( const GlobalManifestRaw & globalManifestRaw )
+  explicit ManifestRaw( const GlobalManifestRaw & globalManifestRaw )
     : GlobalManifestRaw( globalManifestRaw )
   {}
 
-  ManifestRaw( GlobalManifestRaw && globalManifestRaw )
+  explicit ManifestRaw( GlobalManifestRaw && globalManifestRaw )
     : GlobalManifestRaw( globalManifestRaw )
   {}
 
@@ -219,17 +218,21 @@ struct ManifestRaw : public GlobalManifestRaw
    *        are invalid.
    */
   void
-  check() const;
+  check() const override;
 
   void
-  clear()
+  clear() override
   {
-    GlobalManifestRaw::clear();
+    /* From `GlobalManifestRaw' */
+    this->options  = std::nullopt;
+    this->registry = std::nullopt;
+    /* From `ManifestRaw' */
     this->envBase = std::nullopt;
     this->install = std::nullopt;
     this->vars    = std::nullopt;
     this->hook    = std::nullopt;
   }
+
 
 }; /* End struct `ManifestRaw' */
 
@@ -252,9 +255,12 @@ class GlobalManifest
 
 protected:
 
+  /* We need these `protected' so they can be set by `Manifest'. */
+  // NOLINTBEGIN(cppcoreguidelines-non-private-member-variables-in-classes)
   std::filesystem::path manifestPath;
   ManifestRaw           manifestRaw;
   RegistryRaw           registryRaw;
+  // NOLINTEND(cppcoreguidelines-non-private-member-variables-in-classes)
 
 
 public:
@@ -303,12 +309,16 @@ public:
     return this->registryRaw;
   }
 
+  /* Ignore linter warning about copying params because `nix::ref` is just
+   * a pointer ( `std::shared_pointer' with a `nullptr` check ). */
+  // NOLINTBEGIN(performance-unnecessary-value-param)
   [[nodiscard]] RegistryRaw
   getLockedRegistry( nix::ref<nix::Store> store
                      = NixStoreMixin().getStore() ) const
   {
     return lockRegistry( this->getRegistryRaw(), store );
   }
+  // NOLINTEND(performance-unnecessary-value-param)
 
   [[nodiscard]] pkgdb::PkgQueryArgs
   getBaseQueryArgs() const;
