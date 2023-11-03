@@ -92,10 +92,13 @@ struct QueryPreferences
  * @class flox::pkgdb::ParseQueryPreferencesException
  * @brief An exception thrown when parsing @a flox::pkgdb::QueryPreferences
  *        from JSON.
+ *
+ * @{
  */
 FLOX_DEFINE_EXCEPTION( ParseQueryPreferencesException,
                        EC_PARSE_QUERY_PREFERENCES,
                        "error parsing query preferences" )
+/** @} */
 
 
 /* -------------------------------------------------------------------------- */
@@ -200,10 +203,13 @@ struct QueryParams : public QueryPreferences
  * @class flox::pkgdb::ParseQueryParamsException
  * @brief An exception thrown when parsing @a flox::pkgdb::QueryParams
  *        from JSON.
+ *
+ * @{
  */
 FLOX_DEFINE_EXCEPTION( ParseQueryParamsException,
                        EC_PARSE_QUERY_PARAMS,
                        "error parsing query parameters" )
+/** @} */
 
 
 /* -------------------------------------------------------------------------- */

@@ -100,8 +100,11 @@ using sql_rc      = int;                 /**< `SQLITE_*` result code. */
 /**
  * @class flox::pkgdb::PkgDbException
  * @brief A generic exception thrown by `flox::pkgdb::*` classes.
+ *
+ * @{
  */
 FLOX_DEFINE_EXCEPTION( PkgDbException, EC_PKG_DB, "error running pkgdb" )
+/** @} */
 
 
 /* -------------------------------------------------------------------------- */

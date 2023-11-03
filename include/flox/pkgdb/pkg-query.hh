@@ -88,10 +88,13 @@ to_json( nlohmann::json & jto, const PkgDescriptorBase & pkgDescriptorBase );
  * @class flox::pkgdb::ParsePkgDescriptorBaseException
  * @brief An exception thrown when parsing @a flox::pkgdb::PkgDescriptorBase
  * from JSON.
+ *
+ * @{
  */
 FLOX_DEFINE_EXCEPTION( ParsePkgDescriptorBaseException,
                        EC_PARSE_PKG_DESCRIPTOR_BASE,
                        "error parsing package descriptor base" )
+/** @} */
 
 
 /**
@@ -108,10 +111,13 @@ concept pkg_descriptor_typename = std::derived_from<T, PkgDescriptorBase>;
  * @class flox::pkgdb::InvalidPkgQueryArg
  * @brief Indicates invalid arguments were set in a
  *        @a flox::resolver::PkgQueryArgs struct.
+ *
+ * @{
  */
 FLOX_DEFINE_EXCEPTION( InvalidPkgQueryArg,
                        EC_INVALID_PKG_QUERY_ARG,
                        "invalid package query argument" )
+/** @} */
 
 
 /* -------------------------------------------------------------------------- */

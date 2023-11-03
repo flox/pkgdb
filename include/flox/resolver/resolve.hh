@@ -115,10 +115,14 @@ to_json( nlohmann::json & jto, const Resolved & resolved );
  * @class flox::pkgdb::ParseResolvedException
  * @brief An exception thrown when parsing @a flox::resolver::Resolved
  *        from JSON.
+ *
+ * @{
  */
 FLOX_DEFINE_EXCEPTION( ParseResolvedException,
                        EC_PARSE_RESOLVED,
                        "error parsing resolved installable" )
+/** @} */
+
 
 /* --------------------------------------------------------------------------
  */

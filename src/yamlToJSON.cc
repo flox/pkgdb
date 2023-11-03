@@ -24,10 +24,13 @@ namespace flox {
 /**
  * @class flox::YAMLToJSONException
  * @brief An exception thrown when converting YAML to JSON.
+ *
+ * @{
  */
 FLOX_DEFINE_EXCEPTION( YAMLToJSONException,
                        EC_YAML_TO_JSON,
                        "error converting YAML to JSON" )
+/** @} */
 
 
 /* -------------------------------------------------------------------------- */

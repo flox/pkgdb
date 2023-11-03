@@ -118,6 +118,7 @@ public:
   void
   clear();
 
+
 }; /* End struct `ManifestDescriptorRaw' */
 
 
@@ -128,12 +129,16 @@ public:
  * @brief Convert a JSON object to an @a flox::ManifestDescriptorRaw. */
 void
 from_json( const nlohmann::json & jfrom, ManifestDescriptorRaw & descriptor );
+
 /**
  * @brief Convert an @a flox::resolver::ManifestDescriptorRaw to a
  *              JSON object.
  */
 void
 to_json( nlohmann::json & jto, const ManifestDescriptorRaw & descriptor );
+
+
+/* -------------------------------------------------------------------------- */
 
 /**
  * @class flox::pkgdb::ParseManifestDescriptorRawException
@@ -240,10 +245,13 @@ public:
  * @class flox::resolver::InvalidManifestDescriptorException
  * @brief An exception thrown when a package descriptor in a manifest
  *        is invalid.
+ *
+ * @{
  */
 FLOX_DEFINE_EXCEPTION( InvalidManifestDescriptorException,
                        EC_INVALID_MANIFEST_DESCRIPTOR,
                        "invalid manifest descriptor" )
+/** @} */
 
 
 /* -------------------------------------------------------------------------- */

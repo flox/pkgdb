@@ -199,10 +199,13 @@ public:
 /**
  * @class flox::PackageInitException
  * @brief An exception thrown when initializing a @a flox::FlakePackage.
+ *
+ * @{
  */
 FLOX_DEFINE_EXCEPTION( PackageInitException,
                        EC_PACKAGE_INIT,
                        "error initializing FlakePackage" )
+/** @} */
 
 
 /* -------------------------------------------------------------------------- */
