@@ -65,6 +65,8 @@ struct LockedInputRaw
 }; /* End struct `LockedInputRaw::Input' */
 
 
+/* -------------------------------------------------------------------------- */
+
 /** @brief Convert a JSON object to a @a flox::resolver::LockedInputRaw. */
 void
 from_json( const nlohmann::json & jfrom, LockedInputRaw & raw );
@@ -85,6 +87,8 @@ struct LockedPackageRaw
 };                     /* End struct `LockedPackageRaw' */
 
 
+/* -------------------------------------------------------------------------- */
+
 /** @brief Convert a JSON object to a @a flox::resolver::LockedPackageRaw. */
 void
 from_json( const nlohmann::json & jfrom, LockedPackageRaw & raw );
@@ -96,20 +100,26 @@ to_json( nlohmann::json & jto, const LockedPackageRaw & raw );
 
 /* -------------------------------------------------------------------------- */
 
-using SystemPackages = std::unordered_map<std::string, LockedPackageRaw>;
+using SystemPackages = std::unordered_map<InstallID, LockedPackageRaw>;
 
 struct LockfileRaw
 {
-  ManifestRaw                                     manifest;
-  RegistryRaw                                     registry;
-  std::unordered_map<std::string, SystemPackages> packages;
-  unsigned                                        lockfileVersion = 0;
+
+  ManifestRaw                                manifest;
+  RegistryRaw                                registry;
+  std::unordered_map<System, SystemPackages> packages;
+  unsigned                                   lockfileVersion = 0;
+
 
   /** @brief Reset to default/empty state. */
   void
   clear();
+
+
 }; /* End struct `LockfileRaw' */
 
+
+/* -------------------------------------------------------------------------- */
 
 /** @brief Convert a JSON object to a @a flox::resolver::LockfileRaw. */
 void
