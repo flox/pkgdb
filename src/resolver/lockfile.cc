@@ -22,6 +22,20 @@ namespace flox::resolver {
 /* -------------------------------------------------------------------------- */
 
 void
+LockfileRaw::check() const
+{
+  if ( this->lockfileVersion != 0 )
+    {
+      throw InvalidLockfileException(
+        "unsupported lockfile version "
+        + std::to_string( this->lockfileVersion ) );
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
 Lockfile::check() const
 {
   this->lockfileRaw.check();
@@ -41,11 +55,20 @@ Lockfile::init()
     {
       for ( const auto &[pid, pkg] : sysPkgs )
         {
+          if ( ! pkg.has_value() ) { continue; }
           this->packagesRegistryRaw.inputs.try_emplace(
-            pkg.input.fingerprint.to_string( nix::Base16, false ),
-            static_cast<RegistryInput>( pkg.input ) );
+            pkg->input.fingerprint.to_string( nix::Base16, false ),
+            static_cast<RegistryInput>( pkg->input ) );
         }
     }
+
+  std::string manifestPath = "manifest.json";  /* Phony */
+  if ( this->lockfilePath.has_value() )
+    {
+      manifestPath = this->lockfilePath->parent_path() / manifestPath;
+    }
+
+  this->manifest = Manifest( manifestPath, this->lockfileRaw.manifest );
 
   this->check();
 }
@@ -321,6 +344,42 @@ to_json( nlohmann::json &jto, const LockfileRaw &raw )
           { "registry", raw.registry },
           { "packages", raw.packages },
           { "lockfile-version", raw.lockfileVersion } };
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+Lockfile::LockedInstallInfo
+Lockfile::getLockedInstallInfo( const InstallID &installID ) const
+{
+  if ( ( ! this->getManifestRaw().install.has_value() )
+       || ( this->getManifestRaw().install->find( installID )
+            == this->getManifestRaw().install->end() ) )
+    {
+      throw InvalidLockfileException(
+        "lockfile does not contain field `manifest.install." + installID
+        + "'." );
+    }
+  Lockfile::LockedInstallInfo info;
+  for ( const auto &[system, pkgs] : this->getLockfileRaw().packages )
+    {
+      if ( pkgs.find( installID ) == pkgs.end() )
+        {
+          throw InvalidLockfileException(
+            "lockfile does not contain field `packages." + system + '.'
+            + installID + "'." );
+        }
+      if ( pkgs.at( installID ).has_value() )
+        {
+          info.systemLocks.emplace( system, &( * pkgs.at( installID ) ) );
+        }
+      else { info.systemLocks.emplace( system, std::nullopt ); }
+    }
+
+  info.installID = installID;
+  info.descriptor = & this->getManifest().getDescriptors().at( installID );
+
+  return info;
 }
 
 
