@@ -9,10 +9,15 @@
 
 #pragma once
 
+#include <memory>
 #include <optional>
+
+#include <nix/ref.hh>
 
 #include "flox/core/types.hh"
 #include "flox/core/util.hh"
+#include "flox/pkgdb/input.hh"
+#include "flox/registry.hh"
 #include "flox/resolver/lockfile.hh"
 #include "flox/resolver/manifest.hh"
 
@@ -33,7 +38,7 @@ namespace flox::resolver {
  * @see flox::resolver::Manifest
  * @see flox::resolver::Lockfile
  */
-class Environment : virtual private NixStoreMixin
+class Environment : private NixStoreMixin
 {
 
 private:
@@ -98,7 +103,7 @@ private:
 
 public:
 
-  [[nodiscard]] std::optional<GlobalManifest> &
+  [[nodiscard]] const std::optional<GlobalManifest> &
   getGlobalManifest() const
   {
     return this->globalManifest;

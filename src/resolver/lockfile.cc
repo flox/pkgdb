@@ -62,7 +62,7 @@ Lockfile::init()
         }
     }
 
-  std::string manifestPath = "manifest.json";  /* Phony */
+  std::string manifestPath = "manifest.json"; /* Phony */
   if ( this->lockfilePath.has_value() )
     {
       manifestPath = this->lockfilePath->parent_path() / manifestPath;
@@ -371,13 +371,13 @@ Lockfile::getLockedInstallInfo( const InstallID &installID ) const
         }
       if ( pkgs.at( installID ).has_value() )
         {
-          info.systemLocks.emplace( system, &( * pkgs.at( installID ) ) );
+          info.systemLocks.emplace( system, &( *pkgs.at( installID ) ) );
         }
       else { info.systemLocks.emplace( system, std::nullopt ); }
     }
 
-  info.installID = installID;
-  info.descriptor = & this->getManifest().getDescriptors().at( installID );
+  info.installID  = installID;
+  info.descriptor = &this->getManifest().getDescriptors().at( installID );
 
   return info;
 }

@@ -294,7 +294,7 @@ public:
     /** The _install id_ of the package. */
     InstallID installID;
     /** The original _manifest descriptor_. */
-    const ManifestDescriptor * descriptor;
+    const ManifestDescriptor *descriptor;
     /** Resolutions for each system. */
     std::unordered_map<System, std::optional<const LockedPackageRaw *>>
       systemLocks;
