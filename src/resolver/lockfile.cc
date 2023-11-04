@@ -69,7 +69,7 @@ readLockfileFromPath( const std::filesystem::path &lockfilePath )
 
 Lockfile::Lockfile( std::filesystem::path lockfilePath )
   : lockfilePath( std::move( lockfilePath ) )
-  , lockfileRaw( readLockfileFromPath( this->lockfilePath ) )
+  , lockfileRaw( readLockfileFromPath( this->lockfilePath.value() ) )
 {
   this->init();
 }

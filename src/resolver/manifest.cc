@@ -64,55 +64,6 @@ GlobalManifest::GlobalManifest( std::filesystem::path manifestPath )
 
 /* -------------------------------------------------------------------------- */
 
-void
-Manifest::init()
-{
-  this->manifestRaw.check();
-  if ( this->manifestRaw.registry.has_value() )
-    {
-      this->registryRaw = *this->manifestRaw.registry;
-    }
-
-  if ( ! this->manifestRaw.install.has_value() ) { return; }
-  for ( const auto &[iid, raw] : *this->manifestRaw.install )
-    {
-      /* An empty/null descriptor uses `name' of the attribute. */
-      if ( raw.has_value() )
-        {
-          this->descriptors.emplace( iid, ManifestDescriptor( iid, *raw ) );
-        }
-      else
-        {
-          ManifestDescriptor manDesc;
-          manDesc.name = iid;
-          this->descriptors.emplace( iid, std::move( manDesc ) );
-        }
-    }
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-Manifest::Manifest( std::filesystem::path manifestPath, ManifestRaw raw )
-{
-  this->manifestPath = std::move( manifestPath );
-  this->manifestRaw  = std::move( raw );
-  this->init();
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-Manifest::Manifest( std::filesystem::path manifestPath )
-{
-  this->manifestPath = std::move( manifestPath );
-  this->manifestRaw  = readManifestFromPath<ManifestRaw>( this->manifestPath );
-  this->init();
-}
-
-
-/* -------------------------------------------------------------------------- */
-
 pkgdb::PkgQueryArgs
 GlobalManifest::getBaseQueryArgs() const
 {
@@ -144,6 +95,122 @@ GlobalManifest::getBaseQueryArgs() const
         = *this->manifestRaw.options->semver->preferPreReleases;
     }
   return args;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+Manifest::check() const
+{
+  this->manifestRaw.check();
+  for ( const auto &[iid, desc] : this->descriptors )
+    {
+      if ( desc.systems.has_value() )
+        {
+          if ( ( ! this->manifestRaw.options.has_value() )
+               || ( ! this->manifestRaw.options->systems.has_value() ) )
+            {
+              throw InvalidManifestFileException(
+                "descriptor `install." + iid
+                + "' specifies `systems' but no `options.systems' are specified"
+                  " in the manifest." );
+            }
+          for ( const auto &system : *desc.systems )
+            {
+              if ( std::find( this->manifestRaw.options->systems->begin(),
+                              this->manifestRaw.options->systems->end(),
+                              system )
+                   == this->manifestRaw.options->systems->end() )
+                {
+                  throw InvalidManifestFileException(
+                    "descriptor `install." + iid + "' specifies system `"
+                    + system
+                    + "' which is not in `options.systems' in the manifest." );
+                }
+            }
+        }
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+Manifest::init()
+{
+  this->manifestRaw.check();
+  if ( this->manifestRaw.registry.has_value() )
+    {
+      this->registryRaw = *this->manifestRaw.registry;
+    }
+
+  if ( ! this->manifestRaw.install.has_value() ) { return; }
+  for ( const auto &[iid, raw] : *this->manifestRaw.install )
+    {
+      /* An empty/null descriptor uses `name' of the attribute. */
+      if ( raw.has_value() )
+        {
+          this->descriptors.emplace( iid, ManifestDescriptor( iid, *raw ) );
+        }
+      else
+        {
+          ManifestDescriptor manDesc;
+          manDesc.name = iid;
+          this->descriptors.emplace( iid, std::move( manDesc ) );
+        }
+    }
+  this->check();
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+Manifest::Manifest( std::filesystem::path manifestPath, ManifestRaw raw )
+{
+  this->manifestPath = std::move( manifestPath );
+  this->manifestRaw  = std::move( raw );
+  this->init();
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+Manifest::Manifest( std::filesystem::path manifestPath )
+{
+  this->manifestPath = std::move( manifestPath );
+  this->manifestRaw  = readManifestFromPath<ManifestRaw>( this->manifestPath );
+  this->init();
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+std::unordered_map<GroupName, InstallDescriptors>
+Manifest::getGroupedDescriptors() const
+{
+  std::unordered_map<GroupName, InstallDescriptors> grouped;
+  for ( const auto &[iid, desc] : this->descriptors )
+    {
+      if ( ! desc.group.has_value() ) { continue; }
+      grouped.try_emplace( *desc.group, InstallDescriptors {} );
+      grouped.at( *desc.group ).emplace( iid, desc );
+    }
+  return grouped;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+InstallDescriptors
+Manifest::getUngroupedDescriptors() const
+{
+  InstallDescriptors ungrouped;
+  for ( const auto &[iid, desc] : this->descriptors )
+    {
+      if ( ! desc.group.has_value() ) { ungrouped.emplace( iid, desc ); }
+    }
+  return ungrouped;
 }
 
 

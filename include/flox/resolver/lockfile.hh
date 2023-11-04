@@ -253,7 +253,7 @@ public:
   [[nodiscard]] const ManifestRaw &
   getManifestRaw() const
   {
-    this->getLockfileRaw().manifest;
+    return this->getLockfileRaw().manifest;
   }
 
   /** @brief Get the locked registry from the _raw_ lockfile. */

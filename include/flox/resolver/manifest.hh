@@ -344,6 +344,18 @@ public:
   }
   // NOLINTEND(performance-unnecessary-value-param)
 
+  /** @brief Get the list of systems requested by the manifest. */
+  [[nodiscard]] std::vector<System>
+  getSystems() const
+  {
+    if ( this->getManifestRaw().options.has_value() )
+      {
+        return std::vector<System> { nix::settings.thisSystem.get() };
+      }
+    return this->getManifestRaw().options->systems.value_or(
+      std::vector<System> { nix::settings.thisSystem.get() } );
+  }
+
   [[nodiscard]] pkgdb::PkgQueryArgs
   getBaseQueryArgs() const;
 
@@ -353,17 +365,38 @@ public:
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief A map of _install IDs_ to _manifest descriptors_. */
+using InstallDescriptors = std::unordered_map<InstallID, ManifestDescriptor>;
+
+
 /** @brief Description of an environment in its _unlocked_ form. */
 class Manifest : public GlobalManifest
 {
 
 private:
 
-  std::unordered_map<InstallID, ManifestDescriptor> descriptors;
+  /**
+   * A map of _install ID_ to _descriptors_, being descriptions/requirements
+   * of a dependency.
+   */
+  InstallDescriptors descriptors;
 
 
   /**
-   * @brief Initialize @a registryRaw and @a descriptors from @a manifestRaw. */
+   * @brief Assert the validity of the manifest, throwing an exception if it
+   *        contains invalid fields.
+   *
+   * This checks that:
+   * - The raw manifest is valid.
+   * - If `install.<IID>.systems` is set, then `options.systems` is also set.
+   * - All `install.<IID>.systems` are in `options.systems`.
+   */
+  void
+  check() const;
+
+  /**
+   * @brief Initialize @a registryRaw and @a descriptors from @a manifestRaw.
+   */
   void
   init() override;
 
@@ -387,11 +420,20 @@ public:
   operator=( Manifest && )
     = default;
 
-  [[nodiscard]] const std::unordered_map<InstallID, ManifestDescriptor> &
+  /** @brief Get _descriptors_ from the manifest's `install' field. */
+  [[nodiscard]] const InstallDescriptors &
   getDescriptors() const
   {
     return this->descriptors;
   }
+
+  /** @brief Organize a set of descriptors by their _group_ field. */
+  [[nodiscard]] std::unordered_map<GroupName, InstallDescriptors>
+  getGroupedDescriptors() const;
+
+  /** @brief Get descriptors which are not part of a group. */
+  [[nodiscard]] InstallDescriptors
+  getUngroupedDescriptors() const;
 
 
 }; /* End class `Manifest' */
@@ -538,16 +580,6 @@ public:
     InstallID,
     std::unordered_map<System, std::optional<Resolved>>> &
   getLockedDescriptors();
-
-  /* TODO:
-   * std::unordered_map<GroupName,
-   *                    std::unordered_map<InstallID, ManifestDescriptor>
-   *                   >
-   * getGroupedDescriptors() const;
-   *
-   * std::unordered_map<InstallId, ManifestDescriptor>
-   * getUngroupedDescriptors() const;
-   */
 
 
 }; /* End struct `ManifestFileMixin' */
