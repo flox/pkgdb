@@ -72,14 +72,7 @@ RegistryRaw::getOrder() const
 void
 from_json( const nlohmann::json &jfrom, RegistryInput &rip )
 {
-  if ( ! jfrom.is_object() )
-    {
-      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
-      throw flox::Registry<flox::pkgdb::PkgDbInputFactory>::
-        InvalidRegistryException( "registry input must be an object, but is"
-                                  + aOrAn + std::string( jfrom.type_name() )
-                                  + '.' );
-    }
+  assertIsJSONObject<InvalidRegistryException>( jfrom, "registry input" );
   for ( const auto &[key, value] : jfrom.items() )
     {
       if ( key == "subtrees" )
@@ -90,10 +83,9 @@ from_json( const nlohmann::json &jfrom, RegistryInput &rip )
             }
           catch ( nlohmann::json::exception &e )
             {
-              throw flox::Registry<flox::pkgdb::PkgDbInputFactory>::
-                InvalidRegistryException(
-                  "couldn't interpret registry input field 'subtrees'",
-                  flox::extract_json_errmsg( e ).c_str() );
+              throw InvalidRegistryException(
+                "couldn't interpret registry input field `subtrees'",
+                flox::extract_json_errmsg( e ) );
             }
         }
       else if ( key == "from" )
@@ -105,17 +97,12 @@ from_json( const nlohmann::json &jfrom, RegistryInput &rip )
             }
           catch ( nlohmann::json::exception &e )
             {
-              throw flox::Registry<flox::pkgdb::PkgDbInputFactory>::
-                InvalidRegistryException(
-                  "couldn't interpret registry input field 'from'",
-                  flox::extract_json_errmsg( e ).c_str() );
+              throw InvalidRegistryException(
+                "couldn't interpret registry input field `from'",
+                flox::extract_json_errmsg( e ) );
             }
         }
-      else
-        {
-          throw flox::Registry<flox::pkgdb::PkgDbInputFactory>::
-            InvalidRegistryException( "unknown field '" + key + "'" );
-        }
+      else { throw InvalidRegistryException( "unknown field `" + key + "'" ); }
     }
 }
 
@@ -139,13 +126,7 @@ to_json( nlohmann::json &jto, const RegistryInput &rip )
 void
 from_json( const nlohmann::json &jfrom, RegistryRaw &reg )
 {
-  if ( ! jfrom.is_object() )
-    {
-      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
-      throw flox::Registry<flox::pkgdb::PkgDbInputFactory>::
-        InvalidRegistryException( "registry must be an object, but is" + aOrAn
-                                  + std::string( jfrom.type_name() ) + '.' );
-    }
+  assertIsJSONObject<InvalidRegistryException>( jfrom, "registry" );
   reg.clear();
   for ( const auto &[key, value] : jfrom.items() )
     {
@@ -162,10 +143,9 @@ from_json( const nlohmann::json &jfrom, RegistryRaw &reg )
                 }
               catch ( nlohmann::json::exception &e )
                 {
-                  throw flox::Registry<flox::pkgdb::PkgDbInputFactory>::
-                    InvalidRegistryException(
-                      "couldn't extract input '" + ikey + "'",
-                      flox::extract_json_errmsg( e ).c_str() );
+                  throw InvalidRegistryException(
+                    "couldn't extract input `" + ikey + "'",
+                    flox::extract_json_errmsg( e ) );
                 }
               inputs.insert( { ikey, input } );
             }
@@ -180,10 +160,9 @@ from_json( const nlohmann::json &jfrom, RegistryRaw &reg )
             }
           catch ( nlohmann::json::exception &e )
             {
-              throw flox::Registry<flox::pkgdb::PkgDbInputFactory>::
-                InvalidRegistryException(
-                  "couldn't extract input preferences",
-                  flox::extract_json_errmsg( e ).c_str() );
+              throw InvalidRegistryException(
+                "couldn't extract input preferences",
+                flox::extract_json_errmsg( e ) );
             }
           reg.defaults = prefs;
         }
@@ -196,18 +175,15 @@ from_json( const nlohmann::json &jfrom, RegistryRaw &reg )
             }
           catch ( nlohmann::json::exception &e )
             {
-              throw flox::Registry<flox::pkgdb::PkgDbInputFactory>::
-                InvalidRegistryException(
-                  "couldn't extract input priority",
-                  flox::extract_json_errmsg( e ).c_str() );
+              throw InvalidRegistryException( "couldn't extract input priority",
+                                              flox::extract_json_errmsg( e ) );
             }
           reg.priority = p;
         }
       else
         {
-          throw flox::Registry<flox::pkgdb::PkgDbInputFactory>::
-            InvalidRegistryException( "unrecognized registry field '" + key
-                                      + "'" );
+          throw InvalidRegistryException( "unrecognized registry field `" + key
+                                          + "'" );
         }
     }
 }
@@ -321,14 +297,7 @@ FlakeRegistry::getLockedInputs()
 void
 from_json( const nlohmann::json &jfrom, InputPreferences &prefs )
 {
-  if ( ! jfrom.is_object() )
-    {
-      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
-      throw flox::Registry<flox::pkgdb::PkgDbInputFactory>::
-        InvalidRegistryException( "preferences must be an object, but is"
-                                  + aOrAn + std::string( jfrom.type_name() )
-                                  + '.' );
-    }
+  assertIsJSONObject<InvalidRegistryException>( jfrom, "input preferences" );
   for ( const auto &[key, value] : jfrom.items() )
     {
       if ( key == "subtrees" )
@@ -339,17 +308,12 @@ from_json( const nlohmann::json &jfrom, InputPreferences &prefs )
             }
           catch ( nlohmann::json::exception &e )
             {
-              throw flox::Registry<flox::pkgdb::PkgDbInputFactory>::
-                InvalidRegistryException(
-                  "couldn't interpret field 'subtrees'",
-                  flox::extract_json_errmsg( e ).c_str() );
+              throw InvalidRegistryException(
+                "couldn't interpret field `subtrees'",
+                flox::extract_json_errmsg( e ) );
             }
         }
-      else
-        {
-          throw flox::Registry<flox::pkgdb::PkgDbInputFactory>::
-            InvalidRegistryException( "unknown field '" + key + "'" );
-        }
+      else { throw InvalidRegistryException( "unknown field `" + key + "'" ); }
     }
 }
 

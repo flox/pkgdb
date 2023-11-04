@@ -11,6 +11,7 @@
 #include <set>
 #include <sstream>
 
+#include "flox/core/util.hh"
 #include "flox/pkgdb/pkg-query.hh"
 #include "flox/pkgdb/write.hh"
 
@@ -36,13 +37,8 @@ PkgDescriptorBase::clear()
 void
 from_json( const nlohmann::json &jfrom, PkgDescriptorBase &pkgDescriptorBase )
 {
-  if ( ! jfrom.is_object() )
-    {
-      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
-      throw ParsePkgDescriptorBaseException(
-        "package descriptor must be an object, but is" + aOrAn
-        + std::string( jfrom.type_name() ) + '.' );
-    }
+  assertIsJSONObject<ParsePkgDescriptorBaseException>( jfrom,
+                                                       "package descriptor" );
   /* Clear fields. */
   pkgDescriptorBase.clear();
   for ( const auto &[key, value] : jfrom.items() )
@@ -56,8 +52,8 @@ from_json( const nlohmann::json &jfrom, PkgDescriptorBase &pkgDescriptorBase )
           catch ( nlohmann::json::exception &e )
             {
               throw ParsePkgDescriptorBaseException(
-                "couldn't interpret field 'name'",
-                flox::extract_json_errmsg( e ).c_str() );
+                "couldn't interpret field `name'",
+                flox::extract_json_errmsg( e ) );
             }
         }
       else if ( key == "pname" )
@@ -69,8 +65,8 @@ from_json( const nlohmann::json &jfrom, PkgDescriptorBase &pkgDescriptorBase )
           catch ( nlohmann::json::exception &e )
             {
               throw ParsePkgDescriptorBaseException(
-                "couldn't interpret field 'pname'",
-                flox::extract_json_errmsg( e ).c_str() );
+                "couldn't interpret field `pname'",
+                flox::extract_json_errmsg( e ) );
             }
         }
       else if ( key == "version" )
@@ -82,8 +78,8 @@ from_json( const nlohmann::json &jfrom, PkgDescriptorBase &pkgDescriptorBase )
           catch ( nlohmann::json::exception &e )
             {
               throw ParsePkgDescriptorBaseException(
-                "couldn't interpret field 'version'",
-                flox::extract_json_errmsg( e ).c_str() );
+                "couldn't interpret field `version'",
+                flox::extract_json_errmsg( e ) );
             }
         }
       else if ( key == "semver" )
@@ -95,14 +91,14 @@ from_json( const nlohmann::json &jfrom, PkgDescriptorBase &pkgDescriptorBase )
           catch ( nlohmann::json::exception &e )
             {
               throw ParsePkgDescriptorBaseException(
-                "couldn't interpret field 'semver'",
-                flox::extract_json_errmsg( e ).c_str() );
+                "couldn't interpret field `semver'",
+                flox::extract_json_errmsg( e ) );
             }
         }
       else
         {
           throw ParsePkgDescriptorBaseException(
-            "encountered unrecognized field '" + key
+            "encountered unrecognized field `" + key
             + "' while parsing package descriptor" );
         }
     }

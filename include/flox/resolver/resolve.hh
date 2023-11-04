@@ -95,6 +95,9 @@ struct Resolved
 
 }; /* End struct `Resolved' */
 
+
+/* -------------------------------------------------------------------------- */
+
 /** @brief Convert a JSON object to a @a flox::resolver::Resolved::Input. */
 void
 from_json( const nlohmann::json & jfrom, Resolved::Input & input );
@@ -102,6 +105,9 @@ from_json( const nlohmann::json & jfrom, Resolved::Input & input );
 /** @brief Convert a @a flox::resolver::Resolved::Input to a JSON object. */
 void
 to_json( nlohmann::json & jto, const Resolved::Input & input );
+
+
+/* -------------------------------------------------------------------------- */
 
 /** @brief Convert a JSON object to a @a flox::resolver::Resolved. */
 void
@@ -111,17 +117,23 @@ from_json( const nlohmann::json & jfrom, Resolved & resolved );
 void
 to_json( nlohmann::json & jto, const Resolved & resolved );
 
+
+/* -------------------------------------------------------------------------- */
+
 /**
  * @class flox::pkgdb::ParseResolvedException
  * @brief An exception thrown when parsing @a flox::resolver::Resolved
  *        from JSON.
+ *
+ * @{
  */
 FLOX_DEFINE_EXCEPTION( ParseResolvedException,
                        EC_PARSE_RESOLVED,
                        "error parsing resolved installable" )
+/** @} */
 
-/* --------------------------------------------------------------------------
- */
+
+/* -------------------------------------------------------------------------- */
 
 using Descriptor = PkgDescriptorRaw;
 

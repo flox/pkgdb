@@ -13,6 +13,7 @@
 #include <functional>  // For `std::hash' and `std::pair'
 #include <list>
 #include <optional>
+#include <sstream>
 #include <string>  // For `std::string' and `std::string_view'
 #include <variant>
 #include <vector>
@@ -23,6 +24,8 @@
 #include <nix/store-api.hh>
 
 #include <nlohmann/json.hpp>
+
+#include "flox/core/exceptions.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -355,10 +358,32 @@ trim_copy( std::string_view str );
 
 /**
  * @brief Extract the user-friendly portion of a @a nlohmann::json::exception.
- *
  */
 std::string
-extract_json_errmsg( nlohmann::json::exception &e );
+extract_json_errmsg( nlohmann::json::exception &err );
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief Assert that a JSON value is an object, or throw an exception.
+ *
+ * The type of exception and an optional _path_ for messages can be provided.
+ */
+template<typename Exception = FloxException>
+static void
+assertIsJSONObject( const nlohmann::json &value,
+                    const std::string    &who = "JSON value" )
+{
+  if ( ! value.is_object() )
+    {
+      std::stringstream oss;
+      oss << "expected " << who << " to be an object, but found "
+          << ( value.is_array() ? "an" : "a" ) << ' ' << value.type_name()
+          << '.';
+      throw Exception( oss.str() );
+    }
+}
+
 
 /* -------------------------------------------------------------------------- */
 

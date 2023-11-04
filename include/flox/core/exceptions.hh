@@ -76,7 +76,11 @@ enum error_category {
   /** Exception converting TOML to JSON. */
   EC_TOML_TO_JSON = 120,
   /** Exception converting YAML to JSON. */
-  EC_YAML_TO_JSON = 121
+  EC_YAML_TO_JSON = 121,
+  /** Exception processing an environment's lockfile. */
+  EC_INVALID_LOCKFILE = 122,
+  /** Invalid hash string. */
+  EC_INVALID_HASH = 123
 
 }; /* End enum `error_category' */
 
@@ -266,6 +270,18 @@ public:
 
 
 }; /* End class `NixEvalException' */
+
+
+/* -------------------------------------------------------------------------- */
+
+// TODO: wrap usage of `nix::flake::Fingerprint' with these.
+/**
+ * @class flox::InvalidHashException
+ * @brief An exception thrown when a hash string is invalid.
+ * @{
+ */
+FLOX_DEFINE_EXCEPTION( InvalidHashException, EC_INVALID_HASH, "invalid hash" )
+/** @} */
 
 
 /* -------------------------------------------------------------------------- */

@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <optional>
 
+#include "flox/core/util.hh"
 #include "flox/resolver/manifest.hh"
 
 
@@ -19,7 +20,8 @@ namespace flox::resolver {
 
 /* -------------------------------------------------------------------------- */
 
-static ManifestRaw
+template<typename ManifestType>
+static ManifestType
 readManifestFromPath( const std::filesystem::path &manifestPath )
 {
   if ( ! std::filesystem::exists( manifestPath ) )
@@ -33,10 +35,39 @@ readManifestFromPath( const std::filesystem::path &manifestPath )
 
 /* -------------------------------------------------------------------------- */
 
-UnlockedManifest::UnlockedManifest( std::filesystem::path manifestPath )
+GlobalManifest::GlobalManifest( std::filesystem::path manifestPath )
   : manifestPath( std::move( manifestPath ) )
-  , manifestRaw( readManifestFromPath( this->manifestPath ) )
+  , manifestRaw( readManifestFromPath<GlobalManifestRaw>( this->manifestPath ) )
 {
+  this->manifestRaw.check();
+  if ( this->manifestRaw.registry.has_value() )
+    {
+      this->registryRaw = *this->manifestRaw.registry;
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+Manifest::Manifest( std::filesystem::path manifestPath, ManifestRaw raw )
+{
+  this->manifestPath = std::move( manifestPath );
+  this->manifestRaw  = std::move( raw );
+  this->manifestRaw.check();
+  if ( this->manifestRaw.registry.has_value() )
+    {
+      this->registryRaw = *this->manifestRaw.registry;
+    }
+  this->initDescriptors();
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+Manifest::Manifest( std::filesystem::path manifestPath )
+{
+  this->manifestPath = std::move( manifestPath );
+  this->manifestRaw  = readManifestFromPath<ManifestRaw>( this->manifestPath );
   this->manifestRaw.check();
   if ( this->manifestRaw.registry.has_value() )
     {
@@ -49,7 +80,7 @@ UnlockedManifest::UnlockedManifest( std::filesystem::path manifestPath )
 /* -------------------------------------------------------------------------- */
 
 void
-UnlockedManifest::initDescriptors()
+Manifest::initDescriptors()
 {
   if ( ! this->manifestRaw.install.has_value() ) { return; }
   for ( const auto &[iid, raw] : *this->manifestRaw.install )
@@ -72,7 +103,7 @@ UnlockedManifest::initDescriptors()
 /* -------------------------------------------------------------------------- */
 
 pkgdb::PkgQueryArgs
-UnlockedManifest::getBaseQueryArgs() const
+GlobalManifest::getBaseQueryArgs() const
 {
   pkgdb::PkgQueryArgs args;
   if ( ! this->manifestRaw.options.has_value() ) { return args; }
@@ -149,12 +180,12 @@ ManifestFileMixin::getManifestPath()
 
 /* -------------------------------------------------------------------------- */
 
-const UnlockedManifest &
-ManifestFileMixin::getUnlockedManifest()
+const Manifest &
+ManifestFileMixin::getManifest()
 {
   if ( ! this->manifest.has_value() )
     {
-      this->manifest = UnlockedManifest( this->getManifestPath() );
+      this->manifest = Manifest( this->getManifestPath() );
     }
   return *this->manifest;
 }
@@ -168,7 +199,7 @@ ManifestFileMixin::getLockedRegistry()
   if ( ! this->lockedRegistry.has_value() )
     {
       this->lockedRegistry
-        = this->getUnlockedManifest().getLockedRegistry( this->getStore() );
+        = this->getManifest().getLockedRegistry( this->getStore() );
     }
   return *this->lockedRegistry;
 }
@@ -181,7 +212,7 @@ ManifestFileMixin::getBaseQueryArgs()
 {
   if ( ! this->baseQueryArgs.has_value() )
     {
-      this->baseQueryArgs = this->getUnlockedManifest().getBaseQueryArgs();
+      this->baseQueryArgs = this->getManifest().getBaseQueryArgs();
     }
   return *this->baseQueryArgs;
 }
@@ -297,9 +328,8 @@ ManifestFileMixin::lockUngroupedDescriptor( const std::string        &iid,
 void
 ManifestFileMixin::checkGroups()
 {
-  std::unordered_map<std::string,                    /* group name */
-                     std::unordered_map<std::string, /* system */
-                                        std::optional<Resolved::Input>>>
+  std::unordered_map<GroupName,
+                     std::unordered_map<System, std::optional<Resolved::Input>>>
     groupInputs;
   for ( const auto &[iid, systemsResolved] : this->lockedDescriptors )
     {
@@ -387,9 +417,7 @@ ManifestFileMixin::getLockedDescriptors()
       /* First check to see if any member of the group already has a
        * `lockedDescriptor' entry ( potentially filled by a lockfile ).
        * If they do, align unlocked group members to the same rev. */
-      std::unordered_map<std::string, /* system */
-                         std::optional<Resolved::Input>>
-           input;
+      std::unordered_map<System, std::optional<Resolved::Input>> input;
       bool hadInput = false;
       for ( const auto &iid : iids )
         {

@@ -24,6 +24,119 @@ namespace flox::resolver {
 /* -------------------------------------------------------------------------- */
 
 /**
+ * @brief A collection of data associated with an environment and its state.
+ *
+ * This structure provides a number of helper routines which require knowledge
+ * of manifests and lockfiles together - most importantly, locking descriptors.
+ *
+ * @see flox::resolver::GlobalManifest
+ * @see flox::resolver::Manifest
+ * @see flox::resolver::Lockfile
+ */
+class Environment : virtual private NixStoreMixin
+{
+
+private:
+
+  /* From `NixStoreMixin':
+   *   std::shared_ptr<nix::Store> store
+   */
+
+  /** Contents of user level manifest with global registry and settings. */
+  std::optional<GlobalManifest> globalManifest;
+
+  /** The environment manifest. */
+  Manifest manifest;
+
+  /** Previous generation of the lockfile ( if any ). */
+  std::optional<Lockfile> oldLockfile;
+
+  /** New/modified lockfile being edited. */
+  Lockfile lockfile;
+
+  std::optional<RegistryRaw> combinedRegistryRaw;
+
+  /** A registry of locked inputs. */
+  std::optional<RegistryRaw> lockedRegistry;
+
+  std::shared_ptr<pkgdb::PkgDbInputFactory> dbFactory;
+
+  std::shared_ptr<Registry<pkgdb::PkgDbInputFactory>> dbs;
+
+
+  // TODO
+  /** @brief Lazily initialize and get the combined registry's DBs. */
+  [[nodiscard]] nix::ref<Registry<pkgdb::PkgDbInputFactory>>
+  getPkgDbRegistry();
+
+  // TODO
+  /** @brief Collect unlocked/modified descriptors that need to be resolved. */
+  [[nodiscard]] std::unordered_map<InstallID, ManifestDescriptor>
+  getUnlockedDescriptors();
+
+  // TODO
+  /** @brief Try to resolve a descriptor in a given package database. */
+  [[nodiscard]] std::optional<pkgdb::row_id>
+  resolveDescriptor( const ManifestDescriptor & descriptor,
+                     const pkgdb::PkgDbInput  & input,
+                     const System             & system );
+
+  // TODO
+  /**
+   *  @brief Fill resolutions from @a oldLockfile into @a lockfile for
+   *         unmodified descriptors.
+   *         Drop any removed descriptors in the process.
+   */
+  void
+  fillLockedFromOldLockfile();
+
+  // TODO
+  /** @brief Lock all descriptors */
+  void
+  lockSystem( const System & system );
+
+
+public:
+
+    [[nodiscard]] std::optional<GlobalManifest> &
+    getGlobalManifest() const
+    {
+      return this->globalManifest;
+    }
+
+    [[nodiscard]] const Manifest &
+    getManifest() const
+    {
+      return this->manifest;
+    }
+
+    // TODO
+    /** @brief Get the old manifest from @a oldLockfile if it exists. */
+    [[nodiscard]] const std::optional<ManifestRaw> &
+    getOldManifestRaw();
+
+    [[nodiscard]] std::optional<Lockfile>
+    getOldLockfile() const
+    {
+      return this->oldLockfile;
+    }
+
+    // TODO
+    [[nodiscard]] RegistryRaw &
+    getCombinedRegistryRaw();
+
+    // TODO
+    /** @brief Create a new lockfile from @a manifest. */
+    [[nodiscard]] const Lockfile &
+    createLockfile();
+
+
+};  /* End class `Environment' */
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
  * @brief A state blob with files associated with an environment.
  *
  * This structure stashes several fields to avoid repeatedly calculating them.
@@ -43,36 +156,48 @@ private:
   /** Path to user level manifest. */
   std::optional<std::filesystem::path> globalManifestPath;
   /** Contents of user level manifest with global registry and settings. */
-  std::optional<UnlockedManifest> globalManifest;
+  std::optional<GlobalManifest> globalManifest;
 
   std::optional<std::filesystem::path> manifestPath;
-  std::optional<UnlockedManifest>      manifest;
+  std::optional<Manifest>              manifest;
 
   std::optional<std::filesystem::path> lockfilePath;
-  std::optional<LockfileRaw>           lockfileRaw;
+  std::optional<Lockfile>              lockfile;
 
-  /** A registry of locked inputs. */
-  std::optional<RegistryRaw> lockedRegistry;
+  std::optional<Environment> environment;
 
 
 public:
 
+  // TODO
   /**
-   * @brief Get a registry which is the combined contents of the
-   *        _global_, _local_, and _lockfile_ registries.
+   * @brief Lazily initialize and return the @a globalManifest
+   *        if @a globalManifestPath is set.
    */
-  RegistryRaw
-  getCombinedRegistryRaw();
+  [[nodiscard]] const std::optional<GlobalManifest> &
+  getGlobalManifest();
 
+  // TODO
+  /** @brief Lazily initialize and return the @a manifest. */
+  [[nodiscard]] const GlobalManifest &
+  getManifest();
+
+  // TODO
   /**
-   * @brief Get a locked registry which is the combined contents of the
-   *        _global_, _local_, and _lockfile_ registries.
+   * @brief Lazily initialize and return the @a globalManifest
+   *        if @a globalManifestPath is set.
    */
-  const RegistryRaw &
-  getLockedRegistry();
+  [[nodiscard]] const std::optional<Lockfile> &
+  getLockfile();
+
+  // TODO
+  /** @brief Laziliy initialize and return the @a environment. */
+  [[nodiscard]] Environment
+  getEnvironment();
 
 
 }; /* End class `EnvironmentMixin' */
+
 
 /* -------------------------------------------------------------------------- */
 

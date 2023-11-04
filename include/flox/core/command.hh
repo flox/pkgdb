@@ -128,8 +128,11 @@ struct AttrPathMixin
 /**
  * @class flox::command::InvalidArgException
  * @brief An exception thrown when a command line argument is invalid.
+ *
+ * @{
  */
 FLOX_DEFINE_EXCEPTION( InvalidArgException, EC_INVALID_ARG, "invalid argument" )
+/** @} */
 
 
 /* -------------------------------------------------------------------------- */

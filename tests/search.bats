@@ -118,6 +118,20 @@ genParamsNixpkgsFlox() {
 
 # ---------------------------------------------------------------------------- #
 
+# bats test_tags=search:semver, search:pname
+
+# Test `semver' by filtering to 18.*
+@test "'pkgdb search' 'pname=nodejs & semver=18.*'" {
+  run sh -c "$PKGDB search '$(
+    genParams '.query.pname|="nodejs"|.query.semver="18.*"';
+  )'|wc -l;";
+  assert_success;
+  assert_output 4;
+}
+
+
+# ---------------------------------------------------------------------------- #
+
 # bats test_tags=search:name
 
 # Exact `name' match.

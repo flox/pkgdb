@@ -20,95 +20,13 @@ namespace flox::resolver {
 
 /* -------------------------------------------------------------------------- */
 
-void
-ManifestRaw::EnvBase::check() const
-{
-  if ( this->floxhub.has_value() && this->dir.has_value() )
-    {
-      throw InvalidManifestFileException(
-        "manifest may only define one of `env-base.floxhub' or `env-base.dir' "
-        "fields." );
-    }
-}
-
-
-/* -------------------------------------------------------------------------- */
-
 static void
-from_json( const nlohmann::json & jfrom, ManifestRaw::EnvBase & env )
+from_json( const nlohmann::json &               jfrom,
+           GlobalManifestRaw::Options::Semver & semver )
 {
-  if ( ! jfrom.is_object() )
-    {
-      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
-      throw InvalidManifestFileException(
-        "manifest field `options.env-base' must be an object, but is" + aOrAn
-        + std::string( jfrom.type_name() ) + '.' );
-    }
-
-  /* Clear fields. */
-  env.dir     = std::nullopt;
-  env.floxhub = std::nullopt;
-
-  for ( const auto & [key, value] : jfrom.items() )
-    {
-      if ( key == "floxhub" )
-        {
-          try
-            {
-              value.get_to( env.floxhub );
-            }
-          catch ( const nlohmann::json::exception & )
-            {
-              throw InvalidManifestFileException(
-                "failed to parse manifest field `env-base.floxhub' with value: "
-                + value.dump() );
-            }
-        }
-      else if ( key == "dir" )
-        {
-          try
-            {
-              value.get_to( env.dir );
-            }
-          catch ( const nlohmann::json::exception & )
-            {
-              throw InvalidManifestFileException(
-                "failed to parse manifest field `env-base.dir' with value: "
-                + value.dump() );
-            }
-        }
-      else
-        {
-          throw InvalidManifestFileException(
-            "unrecognized manifest field `env-base." + key + "'." );
-        }
-    }
-  env.check();
-}
-
-
-static void
-to_json( nlohmann::json & jto, const ManifestRaw::EnvBase & env )
-{
-  env.check();
-  if ( env.dir.has_value() ) { jto = { { "dir", *env.dir } }; }
-  else if ( env.floxhub.has_value() ) { jto = { { "floxhub", *env.floxhub } }; }
-  else { jto = nlohmann::json::object(); }
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-static void
-from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Semver & semver )
-{
-  if ( ! jfrom.is_object() )
-    {
-      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
-      throw InvalidManifestFileException(
-        "manifest field `options.semver' must be an object, but is" + aOrAn
-        + std::string( jfrom.type_name() ) + '.' );
-    }
+  assertIsJSONObject<InvalidManifestFileException>(
+    jfrom,
+    "manifest field `options.semver'" );
 
   /* Clear fields. */
   semver.preferPreReleases = std::nullopt;
@@ -140,7 +58,8 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Semver & semver )
 
 
 static void
-to_json( nlohmann::json & jto, const ManifestRaw::Options::Semver & semver )
+to_json( nlohmann::json &                           jto,
+         const GlobalManifestRaw::Options::Semver & semver )
 {
   if ( semver.preferPreReleases.has_value() )
     {
@@ -153,15 +72,12 @@ to_json( nlohmann::json & jto, const ManifestRaw::Options::Semver & semver )
 /* -------------------------------------------------------------------------- */
 
 static void
-from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Allows & allow )
+from_json( const nlohmann::json &               jfrom,
+           GlobalManifestRaw::Options::Allows & allow )
 {
-  if ( ! jfrom.is_object() )
-    {
-      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
-      throw InvalidManifestFileException(
-        "manifest field `options.allow' must be an object, but is" + aOrAn
-        + std::string( jfrom.type_name() ) + '.' );
-    }
+  assertIsJSONObject<InvalidManifestFileException>(
+    jfrom,
+    "manifest field `options.allow'" );
 
   /* Clear fields. */
   allow.licenses = std::nullopt;
@@ -222,7 +138,8 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options::Allows & allow )
 
 
 static void
-to_json( nlohmann::json & jto, const ManifestRaw::Options::Allows & allow )
+to_json( nlohmann::json &                           jto,
+         const GlobalManifestRaw::Options::Allows & allow )
 {
   if ( allow.unfree.has_value() ) { jto = { { "unfree", *allow.unfree } }; }
   else { jto = nlohmann::json::object(); }
@@ -238,15 +155,11 @@ to_json( nlohmann::json & jto, const ManifestRaw::Options::Allows & allow )
 /* -------------------------------------------------------------------------- */
 
 void
-from_json( const nlohmann::json & jfrom, ManifestRaw::Options & opts )
+from_json( const nlohmann::json & jfrom, GlobalManifestRaw::Options & opts )
 {
-  if ( ! jfrom.is_object() )
-    {
-      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
-      throw InvalidManifestFileException(
-        "manifest field `options' must be an object, but is" + aOrAn
-        + std::string( jfrom.type_name() ) + '.' );
-    }
+  assertIsJSONObject<InvalidManifestFileException>(
+    jfrom,
+    "manifest field `options'" );
 
   for ( const auto & [key, value] : jfrom.items() )
     {
@@ -313,7 +226,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Options & opts )
 
 
 void
-to_json( nlohmann::json & jto, const ManifestRaw::Options & opts )
+to_json( nlohmann::json & jto, const GlobalManifestRaw::Options & opts )
 {
   if ( opts.systems.has_value() ) { jto = { { "systems", *opts.systems } }; }
   else { jto = nlohmann::json::object(); }
@@ -336,16 +249,118 @@ to_json( nlohmann::json & jto, const ManifestRaw::Options & opts )
 
 /* -------------------------------------------------------------------------- */
 
+void
+from_json( const nlohmann::json & jfrom, GlobalManifestRaw & manifest )
+{
+  assertIsJSONObject<InvalidManifestFileException>( jfrom, "global manifest" );
+
+  for ( const auto & [key, value] : jfrom.items() )
+    {
+      if ( key == "registry" ) { value.get_to( manifest.registry ); }
+      else if ( key == "options" ) { value.get_to( manifest.options ); }
+      else
+        {
+          throw InvalidManifestFileException(
+            "unrecognized global manifest field: `" + key + "'." );
+        }
+    }
+  manifest.check();
+}
+
+
+void
+to_json( nlohmann::json & jto, const GlobalManifestRaw & manifest )
+{
+  manifest.check();
+  jto = nlohmann::json::object();
+
+  if ( manifest.options.has_value() ) { jto["options"] = *manifest.options; }
+  if ( manifest.registry.has_value() ) { jto["registry"] = *manifest.registry; }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+ManifestRaw::EnvBase::check() const
+{
+  if ( this->floxhub.has_value() && this->dir.has_value() )
+    {
+      throw InvalidManifestFileException(
+        "manifest may only define one of `env-base.floxhub' or `env-base.dir' "
+        "fields." );
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+static void
+from_json( const nlohmann::json & jfrom, ManifestRaw::EnvBase & env )
+{
+  assertIsJSONObject<InvalidManifestFileException>(
+    jfrom,
+    "manifest field `options.env-base'" );
+
+  /* Clear fields. */
+  env.dir     = std::nullopt;
+  env.floxhub = std::nullopt;
+
+  for ( const auto & [key, value] : jfrom.items() )
+    {
+      if ( key == "floxhub" )
+        {
+          try
+            {
+              value.get_to( env.floxhub );
+            }
+          catch ( const nlohmann::json::exception & )
+            {
+              throw InvalidManifestFileException(
+                "failed to parse manifest field `env-base.floxhub' with value: "
+                + value.dump() );
+            }
+        }
+      else if ( key == "dir" )
+        {
+          try
+            {
+              value.get_to( env.dir );
+            }
+          catch ( const nlohmann::json::exception & )
+            {
+              throw InvalidManifestFileException(
+                "failed to parse manifest field `env-base.dir' with value: "
+                + value.dump() );
+            }
+        }
+      else
+        {
+          throw InvalidManifestFileException(
+            "unrecognized manifest field `env-base." + key + "'." );
+        }
+    }
+  env.check();
+}
+
+
+static void
+to_json( nlohmann::json & jto, const ManifestRaw::EnvBase & env )
+{
+  env.check();
+  if ( env.dir.has_value() ) { jto = { { "dir", *env.dir } }; }
+  else if ( env.floxhub.has_value() ) { jto = { { "floxhub", *env.floxhub } }; }
+  else { jto = nlohmann::json::object(); }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 static void
 from_json( const nlohmann::json & jfrom, ManifestRaw::Hook & hook )
 {
-  if ( ! jfrom.is_object() )
-    {
-      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
-      throw InvalidManifestFileException(
-        "manifest field `options' must be an object, but is" + aOrAn
-        + std::string( jfrom.type_name() ) + '.' );
-    }
+  assertIsJSONObject<InvalidManifestFileException>( jfrom,
+                                                    "manifest field `hook'" );
 
   /* Clear fields. */
   hook.file   = std::nullopt;
@@ -419,13 +434,8 @@ static void
 varsFromJSON( const nlohmann::json &                         jfrom,
               std::unordered_map<std::string, std::string> & vars )
 {
-  if ( ! jfrom.is_object() )
-    {
-      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
-      throw InvalidManifestFileException(
-        "manifest `vars' field must be an object, but is" + aOrAn
-        + std::string( jfrom.type_name() ) + '.' );
-    }
+  assertIsJSONObject<InvalidManifestFileException>( jfrom,
+                                                    "manifest field `vars'" );
   vars.clear();
   for ( const auto & [key, value] : jfrom.items() )
     {
@@ -450,14 +460,7 @@ varsFromJSON( const nlohmann::json &                         jfrom,
 void
 from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
 {
-  manifest.check();
-  if ( ! jfrom.is_object() )
-    {
-      std::string aOrAn = jfrom.is_array() ? " an " : " a ";
-      throw InvalidManifestFileException(
-        "manifest must be an object, but is" + aOrAn
-        + std::string( jfrom.type_name() ) + '.' );
-    }
+  assertIsJSONObject<InvalidManifestFileException>( jfrom, "manifest" );
 
   for ( const auto & [key, value] : jfrom.items() )
     {
@@ -502,6 +505,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
                                               + key + "'." );
         }
     }
+  manifest.check();
 }
 
 
@@ -530,6 +534,7 @@ to_json( nlohmann::json & jto, const ManifestRaw & manifest )
 void
 ManifestRaw::check() const
 {
+  GlobalManifestRaw::check();
   if ( this->envBase.has_value() ) { this->envBase->check(); }
   if ( this->install.has_value() )
     {

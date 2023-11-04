@@ -292,7 +292,7 @@ from_json( const nlohmann::json &jfrom, ManifestDescriptorRaw &descriptor )
             {
               throw ParseManifestDescriptorRawException(
                 "couldn't interpret field `name'",
-                flox::extract_json_errmsg( e ).c_str() );
+                flox::extract_json_errmsg( e ) );
             }
         }
       else if ( key == "version" )
@@ -305,7 +305,7 @@ from_json( const nlohmann::json &jfrom, ManifestDescriptorRaw &descriptor )
             {
               throw ParseManifestDescriptorRawException(
                 "couldn't interpret field `version'",
-                flox::extract_json_errmsg( e ).c_str() );
+                flox::extract_json_errmsg( e ) );
             }
         }
       else if ( key == "path" )
@@ -318,7 +318,7 @@ from_json( const nlohmann::json &jfrom, ManifestDescriptorRaw &descriptor )
             {
               throw ParseManifestDescriptorRawException(
                 "couldn't interpret field `path'",
-                flox::extract_json_errmsg( e ).c_str() );
+                flox::extract_json_errmsg( e ) );
             }
         }
       else if ( key == "abspath" )
@@ -331,7 +331,7 @@ from_json( const nlohmann::json &jfrom, ManifestDescriptorRaw &descriptor )
             {
               throw ParseManifestDescriptorRawException(
                 "couldn't interpret field `abspath'",
-                flox::extract_json_errmsg( e ).c_str() );
+                flox::extract_json_errmsg( e ) );
             }
         }
       else if ( key == "systems" )
@@ -344,7 +344,7 @@ from_json( const nlohmann::json &jfrom, ManifestDescriptorRaw &descriptor )
             {
               throw ParseManifestDescriptorRawException(
                 "couldn't interpret field `systems'",
-                flox::extract_json_errmsg( e ).c_str() );
+                flox::extract_json_errmsg( e ) );
             }
         }
       else if ( key == "optional" )
@@ -357,7 +357,7 @@ from_json( const nlohmann::json &jfrom, ManifestDescriptorRaw &descriptor )
             {
               throw ParseManifestDescriptorRawException(
                 "couldn't interpret field `optional'",
-                flox::extract_json_errmsg( e ).c_str() );
+                flox::extract_json_errmsg( e ) );
             }
         }
       else if ( key == "package-group" )
@@ -370,7 +370,7 @@ from_json( const nlohmann::json &jfrom, ManifestDescriptorRaw &descriptor )
             {
               throw ParseManifestDescriptorRawException(
                 "couldn't interpret field `package-group'",
-                flox::extract_json_errmsg( e ).c_str() );
+                flox::extract_json_errmsg( e ) );
             }
         }
       else if ( key == "package-repository" )
@@ -383,7 +383,7 @@ from_json( const nlohmann::json &jfrom, ManifestDescriptorRaw &descriptor )
             {
               throw ParseManifestDescriptorRawException(
                 "couldn't interpret field `package-repository'",
-                flox::extract_json_errmsg( e ).c_str() );
+                flox::extract_json_errmsg( e ) );
             }
         }
       else if ( key == "priority" )
@@ -396,7 +396,7 @@ from_json( const nlohmann::json &jfrom, ManifestDescriptorRaw &descriptor )
             {
               throw ParseManifestDescriptorRawException(
                 "couldn't interpret field `priority'",
-                flox::extract_json_errmsg( e ).c_str() );
+                flox::extract_json_errmsg( e ) );
             }
         }
       else

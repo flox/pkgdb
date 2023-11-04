@@ -77,10 +77,13 @@ struct SearchQuery : public pkgdb::PkgDescriptorBase
  * @class flox::search::ParseSearchQueryException
  * @brief An exception thrown when parsing @a flox::search::SearchQuery
  *        from JSON.
+ *
+ * @{
  */
 FLOX_DEFINE_EXCEPTION( ParseSearchQueryException,
                        EC_PARSE_SEARCH_QUERY,
                        "error parsing search query" )
+/** @} */
 
 
 /* -------------------------------------------------------------------------- */
