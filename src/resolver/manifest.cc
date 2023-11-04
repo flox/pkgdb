@@ -22,8 +22,8 @@ namespace flox::resolver {
 /* -------------------------------------------------------------------------- */
 
 /**
- * @brief Read a flox::resolver::GlobalManifest or flox::resolver::Manifest
- *        from a file.
+ * @brief Read a flox::resolver::GlobalManifestRaw or
+ *        flox::resolver::ManifestRaw from a file.
  */
 template<typename ManifestType>
 static ManifestType

@@ -62,6 +62,17 @@ struct LockedInputRaw
     : LockedInputRaw( *input.getDbReadOnly() )
   {}
 
+  explicit operator nix::FlakeRef() const
+  {
+    return nix::FlakeRef::fromAttrs(
+      nix::fetchers::jsonToAttrs( this->attrs ) );
+  }
+
+  explicit operator RegistryInput() const
+  {
+    return RegistryInput( static_cast<nix::FlakeRef>( *this ) );
+  }
+
 
 }; /* End struct `LockedInputRaw::Input' */
 
@@ -172,17 +183,26 @@ class Lockfile
 
 private:
 
-  std::filesystem::path lockfilePath;
-  LockfileRaw           lockfileRaw;
-  /** Contains the locked registry if one is present, otherwise empty. */
-  RegistryRaw registryRaw;
-  /** Maps `{ <INSTALL-ID>: <INPUT> }` for all `packages` members. */
+  std::optional<std::filesystem::path> lockfilePath;
+  LockfileRaw                          lockfileRaw;
+  /** Maps `{ <FINGERPRINT>: <INPUT> }` for all `packages` members' inputs. */
   RegistryRaw packagesRegistryRaw;
 
 
   /**
-   * @brief Initialize @a registryRaw and @a packagesRegistryRaw members
-   *        from @a lockfileRaw. */
+   * @brief Check the lockfile's validity, throwing an exception for
+   *        invalid contents.
+   *
+   * This asserts that:
+   * - `lockfileVersion` is supported.
+   * - `packages` members' groups are enforced.
+   * - original _manifest_ is consistent with the lockfile's
+   *   `registry.*` and `packages.**` members.
+   */
+  void
+  check() const;
+
+  /** @brief Initialize @a packagesRegistryRaw from @a lockfileRaw. */
   void
   init();
 
@@ -193,6 +213,11 @@ public:
   Lockfile()                   = default;
   Lockfile( const Lockfile & ) = default;
   Lockfile( Lockfile && )      = default;
+
+  Lockfile( LockfileRaw raw ) : lockfileRaw( std::move( raw ) )
+  {
+    this->init();
+  }
 
   Lockfile( std::filesystem::path lockfilePath, LockfileRaw raw )
     : lockfilePath( std::move( lockfilePath ) ), lockfileRaw( std::move( raw ) )
@@ -209,6 +234,46 @@ public:
   Lockfile &
   operator=( Lockfile && )
     = default;
+
+  /** @brief Get the filesystem path to the lockfile ( if any ). */
+  [[nodiscard]] const std::optional<std::filesystem::path> &
+  getLockfilePath() const
+  {
+    return this->lockfilePath;
+  }
+
+  /** @brief Get the _raw_ representation of the lockfile. */
+  [[nodiscard]] const LockfileRaw &
+  getLockfileRaw() const
+  {
+    return this->lockfileRaw;
+  }
+
+  /** @brief Get the original _manifest_ used to create the lockfile. */
+  [[nodiscard]] const ManifestRaw &
+  getManifestRaw() const
+  {
+    this->getLockfileRaw().manifest;
+  }
+
+  /** @brief Get the locked registry from the _raw_ lockfile. */
+  [[nodiscard]] const RegistryRaw &
+  getRegistryRaw() const
+  {
+    return this->getLockfileRaw().registry;
+  }
+
+  /**
+   * @brief Get the @a packagesRegistryRaw, containing all inputs used by
+   *        `packages.**` members of the lockfile.
+   *
+   * This registry keys inputs by their fingerprints.
+   */
+  [[nodiscard]] const RegistryRaw &
+  getPackagesRegistryRaw() const
+  {
+    return this->packagesRegistryRaw;
+  }
 
 
 }; /* End class `Lockfile' */

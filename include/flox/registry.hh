@@ -91,6 +91,7 @@ from_json( const nlohmann::json & jfrom, InputPreferences & prefs );
 void
 to_json( nlohmann::json & jto, const InputPreferences & prefs );
 
+
 /* -------------------------------------------------------------------------- */
 
 /**
@@ -113,7 +114,7 @@ struct RegistryInput : public InputPreferences
 {
 
   /* From `InputPreferences':
-   *   std::optional<std::vector<Subtree>>     subtrees;
+   *   std::optional<std::vector<Subtree>> subtrees;
    */
 
   std::shared_ptr<nix::FlakeRef> from; /**< A parsed flake reference. */

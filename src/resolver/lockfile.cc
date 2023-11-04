@@ -22,6 +22,62 @@ namespace flox::resolver {
 /* -------------------------------------------------------------------------- */
 
 void
+Lockfile::check() const
+{
+  this->lockfileRaw.check();
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+Lockfile::init()
+{
+  this->lockfileRaw.check();
+
+  /* Collect inputs from all locked packages into a registry keyed
+   * by fingerprints. */
+  for ( const auto &[system, sysPkgs] : this->lockfileRaw.packages )
+    {
+      for ( const auto &[pid, pkg] : sysPkgs )
+        {
+          this->packagesRegistryRaw.inputs.try_emplace(
+            pkg.input.fingerprint.to_string( nix::Base16, false ),
+            static_cast<RegistryInput>( pkg.input ) );
+        }
+    }
+
+  this->check();
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Read a flox::resolver::Lockfile from a file. */
+static LockfileRaw
+readLockfileFromPath( const std::filesystem::path &lockfilePath )
+{
+  if ( ! std::filesystem::exists( lockfilePath ) )
+    {
+      throw InvalidLockfileException( "no such path: "
+                                      + lockfilePath.string() );
+    }
+  return readAndCoerceJSON( lockfilePath );
+}
+
+/* -------------------------------------------------------------------------- */
+
+Lockfile::Lockfile( std::filesystem::path lockfilePath )
+  : lockfilePath( std::move( lockfilePath ) )
+  , lockfileRaw( readLockfileFromPath( this->lockfilePath ) )
+{
+  this->init();
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
 from_json( const nlohmann::json &jfrom, LockedInputRaw &raw )
 {
   assertIsJSONObject<InvalidLockfileException>( jfrom, "locked input" );
