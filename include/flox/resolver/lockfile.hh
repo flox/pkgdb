@@ -275,6 +275,13 @@ public:
     return this->manifest;
   }
 
+  /** @brief Get old descriptors. */
+  [[nodiscard]] const std::unordered_map<InstallID, ManifestDescriptor> &
+  getDescriptors() const
+  {
+    return this->getManifest().getDescriptors();
+  }
+
   /**
    * @brief Get the @a packagesRegistryRaw, containing all inputs used by
    *        `packages.**` members of the lockfile.

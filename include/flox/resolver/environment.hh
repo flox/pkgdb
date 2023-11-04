@@ -57,7 +57,7 @@ private:
   std::optional<Lockfile> oldLockfile;
 
   /** New/modified lockfile being edited. */
-  Lockfile lockfile;
+  LockfileRaw lockfileRaw;
 
   std::optional<RegistryRaw> combinedRegistryRaw;
 
@@ -70,11 +70,23 @@ private:
 
 
   // TODO
+  /**
+   *  @brief Fill resolutions from @a oldLockfile into @a lockfile for
+   *         unmodified descriptors.
+   *         Drop any removed descriptors in the process.
+   */
+  void
+  fillLockedFromOldLockfile();
+
   /** @brief Lazily initialize and get the combined registry's DBs. */
   [[nodiscard]] nix::ref<Registry<pkgdb::PkgDbInputFactory>>
   getPkgDbRegistry();
 
   // TODO
+  /**
+   * @brief Get the set of descriptors which differ from those
+   *        in @a oldLockfile.
+   */
   /** @brief Collect unlocked/modified descriptors that need to be resolved. */
   [[nodiscard]] std::unordered_map<InstallID, ManifestDescriptor>
   getUnlockedDescriptors();
@@ -85,15 +97,6 @@ private:
   resolveDescriptor( const ManifestDescriptor & descriptor,
                      const pkgdb::PkgDbInput &  input,
                      const System &             system );
-
-  // TODO
-  /**
-   *  @brief Fill resolutions from @a oldLockfile into @a lockfile for
-   *         unmodified descriptors.
-   *         Drop any removed descriptors in the process.
-   */
-  void
-  fillLockedFromOldLockfile();
 
   // TODO
   /** @brief Lock all descriptors */

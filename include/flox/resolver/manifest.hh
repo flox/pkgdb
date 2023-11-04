@@ -360,7 +360,7 @@ public:
   getBaseQueryArgs() const;
 
 
-}; /* End class `Manifest' */
+}; /* End class `GlobalManifest' */
 
 
 /* -------------------------------------------------------------------------- */
