@@ -119,6 +119,17 @@ struct LockfileRaw
   unsigned                                   lockfileVersion = 0;
 
 
+  ~LockfileRaw()                     = default;
+  LockfileRaw()                      = default;
+  LockfileRaw( const LockfileRaw & ) = default;
+  LockfileRaw( LockfileRaw && )      = default;
+  LockfileRaw &
+  operator=( const LockfileRaw & )
+    = default;
+  LockfileRaw &
+  operator=( LockfileRaw && )
+    = default;
+
   /**
    * @brief Check the lockfile for validity, throw and exception if it
    *        is invalid.
@@ -150,11 +161,57 @@ to_json( nlohmann::json & jto, const LockfileRaw & raw );
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief A locked representation of an environment. */
+/**
+ * @brief A locked representation of an environment.
+ *
+ * Unlike the _raw_ form, this form is suitable for stashing temporary variables
+ * and other information that is not needed for serializing/de-serializing.
+ */
 class Lockfile
 {
 
-};  /* End class `Lockfile' */
+private:
+
+  std::filesystem::path lockfilePath;
+  LockfileRaw           lockfileRaw;
+  /** Contains the locked registry if one is present, otherwise empty. */
+  RegistryRaw registryRaw;
+  /** Maps `{ <INSTALL-ID>: <INPUT> }` for all `packages` members. */
+  RegistryRaw packagesRegistryRaw;
+
+
+  /**
+   * @brief Initialize @a registryRaw and @a packagesRegistryRaw members
+   *        from @a lockfileRaw. */
+  void
+  init();
+
+
+public:
+
+  ~Lockfile()                  = default;
+  Lockfile()                   = default;
+  Lockfile( const Lockfile & ) = default;
+  Lockfile( Lockfile && )      = default;
+
+  Lockfile( std::filesystem::path lockfilePath, LockfileRaw raw )
+    : lockfilePath( std::move( lockfilePath ) ), lockfileRaw( std::move( raw ) )
+  {
+    this->init();
+  }
+
+  explicit Lockfile( std::filesystem::path lockfilePath );
+
+  Lockfile &
+  operator=( const Lockfile & )
+    = default;
+
+  Lockfile &
+  operator=( Lockfile && )
+    = default;
+
+
+}; /* End class `Lockfile' */
 
 
 /* -------------------------------------------------------------------------- */

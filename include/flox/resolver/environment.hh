@@ -78,8 +78,8 @@ private:
   /** @brief Try to resolve a descriptor in a given package database. */
   [[nodiscard]] std::optional<pkgdb::row_id>
   resolveDescriptor( const ManifestDescriptor & descriptor,
-                     const pkgdb::PkgDbInput  & input,
-                     const System             & system );
+                     const pkgdb::PkgDbInput &  input,
+                     const System &             system );
 
   // TODO
   /**
@@ -98,40 +98,40 @@ private:
 
 public:
 
-    [[nodiscard]] std::optional<GlobalManifest> &
-    getGlobalManifest() const
-    {
-      return this->globalManifest;
-    }
+  [[nodiscard]] std::optional<GlobalManifest> &
+  getGlobalManifest() const
+  {
+    return this->globalManifest;
+  }
 
-    [[nodiscard]] const Manifest &
-    getManifest() const
-    {
-      return this->manifest;
-    }
+  [[nodiscard]] const Manifest &
+  getManifest() const
+  {
+    return this->manifest;
+  }
 
-    // TODO
-    /** @brief Get the old manifest from @a oldLockfile if it exists. */
-    [[nodiscard]] const std::optional<ManifestRaw> &
-    getOldManifestRaw();
+  // TODO
+  /** @brief Get the old manifest from @a oldLockfile if it exists. */
+  [[nodiscard]] const std::optional<ManifestRaw> &
+  getOldManifestRaw();
 
-    [[nodiscard]] std::optional<Lockfile>
-    getOldLockfile() const
-    {
-      return this->oldLockfile;
-    }
+  [[nodiscard]] std::optional<Lockfile>
+  getOldLockfile() const
+  {
+    return this->oldLockfile;
+  }
 
-    // TODO
-    [[nodiscard]] RegistryRaw &
-    getCombinedRegistryRaw();
+  // TODO
+  [[nodiscard]] RegistryRaw &
+  getCombinedRegistryRaw();
 
-    // TODO
-    /** @brief Create a new lockfile from @a manifest. */
-    [[nodiscard]] const Lockfile &
-    createLockfile();
+  // TODO
+  /** @brief Create a new lockfile from @a manifest. */
+  [[nodiscard]] const Lockfile &
+  createLockfile();
 
 
-};  /* End class `Environment' */
+}; /* End class `Environment' */
 
 
 /* -------------------------------------------------------------------------- */

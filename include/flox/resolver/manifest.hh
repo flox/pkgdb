@@ -281,6 +281,12 @@ protected:
   // NOLINTEND(cppcoreguidelines-non-private-member-variables-in-classes)
 
 
+  /**
+   * @brief Initialize @a registryRaw from @a manifestRaw. */
+  virtual void
+  init();
+
+
 public:
 
   ~GlobalManifest()                        = default;
@@ -355,8 +361,11 @@ private:
 
   std::unordered_map<InstallID, ManifestDescriptor> descriptors;
 
+
+  /**
+   * @brief Initialize @a registryRaw and @a descriptors from @a manifestRaw. */
   void
-  initDescriptors();
+  init() override;
 
 
 public:

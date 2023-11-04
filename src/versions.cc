@@ -204,12 +204,12 @@ cleanRange( const std::string & range )
         {
           /* Handle `18.x' by also dropping trailing '.'. */
           if ( rsl.back() == '.' ) { rsl.pop_back(); }
-          while ( ( idx < range.size() ) &&
-                  ( range[idx] != ' ' ) &&
-                  ( range[idx] != ',' ) &&
-                  ( range[idx] != '&' ) &&
-                  ( range[idx] != '|' )
-                ) { ++idx; }
+          while ( ( idx < range.size() ) && ( range[idx] != ' ' )
+                  && ( range[idx] != ',' ) && ( range[idx] != '&' )
+                  && ( range[idx] != '|' ) )
+            {
+              ++idx;
+            }
           if ( idx < range.size() ) { rsl.push_back( range[idx] ); }
         }
     }

@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <optional>
 
+#include "compat/concepts.hh"
 #include "flox/core/util.hh"
 #include "flox/resolver/manifest.hh"
 
@@ -20,9 +21,14 @@ namespace flox::resolver {
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * @brief Read a flox::resolver::GlobalManifest or flox::resolver::Manifest
+ *        from a file.
+ */
 template<typename ManifestType>
 static ManifestType
 readManifestFromPath( const std::filesystem::path &manifestPath )
+  requires std::is_base_of<GlobalManifestRaw, ManifestType>::value
 {
   if ( ! std::filesystem::exists( manifestPath ) )
     {
@@ -35,53 +41,38 @@ readManifestFromPath( const std::filesystem::path &manifestPath )
 
 /* -------------------------------------------------------------------------- */
 
+void
+GlobalManifest::init()
+{
+  this->manifestRaw.check();
+  if ( this->manifestRaw.registry.has_value() )
+    {
+      this->registryRaw = *this->manifestRaw.registry;
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 GlobalManifest::GlobalManifest( std::filesystem::path manifestPath )
   : manifestPath( std::move( manifestPath ) )
   , manifestRaw( readManifestFromPath<GlobalManifestRaw>( this->manifestPath ) )
 {
-  this->manifestRaw.check();
-  if ( this->manifestRaw.registry.has_value() )
-    {
-      this->registryRaw = *this->manifestRaw.registry;
-    }
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-Manifest::Manifest( std::filesystem::path manifestPath, ManifestRaw raw )
-{
-  this->manifestPath = std::move( manifestPath );
-  this->manifestRaw  = std::move( raw );
-  this->manifestRaw.check();
-  if ( this->manifestRaw.registry.has_value() )
-    {
-      this->registryRaw = *this->manifestRaw.registry;
-    }
-  this->initDescriptors();
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-Manifest::Manifest( std::filesystem::path manifestPath )
-{
-  this->manifestPath = std::move( manifestPath );
-  this->manifestRaw  = readManifestFromPath<ManifestRaw>( this->manifestPath );
-  this->manifestRaw.check();
-  if ( this->manifestRaw.registry.has_value() )
-    {
-      this->registryRaw = *this->manifestRaw.registry;
-    }
-  this->initDescriptors();
+  this->init();
 }
 
 
 /* -------------------------------------------------------------------------- */
 
 void
-Manifest::initDescriptors()
+Manifest::init()
 {
+  this->manifestRaw.check();
+  if ( this->manifestRaw.registry.has_value() )
+    {
+      this->registryRaw = *this->manifestRaw.registry;
+    }
+
   if ( ! this->manifestRaw.install.has_value() ) { return; }
   for ( const auto &[iid, raw] : *this->manifestRaw.install )
     {
@@ -97,6 +88,26 @@ Manifest::initDescriptors()
           this->descriptors.emplace( iid, std::move( manDesc ) );
         }
     }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+Manifest::Manifest( std::filesystem::path manifestPath, ManifestRaw raw )
+{
+  this->manifestPath = std::move( manifestPath );
+  this->manifestRaw  = std::move( raw );
+  this->init();
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+Manifest::Manifest( std::filesystem::path manifestPath )
+{
+  this->manifestPath = std::move( manifestPath );
+  this->manifestRaw  = readManifestFromPath<ManifestRaw>( this->manifestPath );
+  this->init();
 }
 
 
