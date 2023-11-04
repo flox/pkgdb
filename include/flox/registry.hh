@@ -657,6 +657,15 @@ lockRegistry( const RegistryRaw &  unlocked,
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief Merge two registries such that members of @a strong override members
+ * of @a weak.
+ */
+RegistryRaw
+mergeRegistries( const RegistryRaw & weak, const RegistryRaw & strong );
+
+
+/* -------------------------------------------------------------------------- */
+
 }  // namespace flox
 
 

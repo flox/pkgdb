@@ -283,6 +283,48 @@ extract_json_errmsg( nlohmann::json::exception &e )
 
 /* -------------------------------------------------------------------------- */
 
+template<typename T>
+std::vector<T>
+prependUnique( const std::vector<T> &vec1, const std::vector<T> &vec2 )
+{
+  std::vector<T> result;
+
+  // Insert elements from vec1, checking for uniqueness
+  for ( const T &elem : vec1 )
+    {
+      bool isUnique = true;
+      for ( const T &existingElem : result )
+        {
+          if ( elem == existingElem )
+            {
+              isUnique = false;
+              break;
+            }
+        }
+      if ( isUnique ) { result.push_back( elem ); }
+    }
+
+  // Insert elements from vec2, checking for uniqueness
+  for ( const T &elem : vec2 )
+    {
+      bool isUnique = true;
+      for ( const T &existingElem : result )
+        {
+          if ( elem == existingElem )
+            {
+              isUnique = false;
+              break;
+            }
+        }
+      if ( isUnique ) { result.push_back( elem ); }
+    }
+
+  return result;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 }  // namespace flox
 
 

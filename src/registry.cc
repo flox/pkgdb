@@ -13,7 +13,6 @@
 #include "flox/pkgdb/input.hh"
 #include "flox/registry.hh"
 
-
 /* -------------------------------------------------------------------------- */
 
 namespace flox {
@@ -375,6 +374,46 @@ lockRegistry( const RegistryRaw &unlocked, nix::ref<nix::Store> store )
 
 
 /* -------------------------------------------------------------------------- */
+
+RegistryRaw
+mergeRegistries( const RegistryRaw &weak, const RegistryRaw &strong )
+{
+  RegistryRaw result( weak );
+
+  // inputs
+  for ( auto const &[key, value] : strong.inputs )
+    {
+      result.inputs[key] = value;
+    }
+
+  // defaults.subtrees
+  // weak = ["nixpkgs", "floco"]
+  // strong = ["acme", "floco"]
+  // result should be = ["acme", "floco", "nixpkgs"]
+  if ( strong.defaults.subtrees.has_value() )
+    {
+      if ( weak.defaults.subtrees.has_value() )
+        {
+          result.defaults.subtrees
+            = flox::prependUnique( strong.defaults.subtrees.value(),
+                                   result.defaults.subtrees.value() );
+        }
+      else { result.defaults.subtrees = strong.defaults.subtrees; }
+    }
+
+  // priority
+  if ( ! strong.priority.empty() )
+    {
+      if ( ! result.priority.empty() )
+        {
+          result.priority
+            = flox::prependUnique( strong.priority, result.priority );
+        }
+      else { result.priority = strong.priority; }
+    }
+
+  return result;
+}
 
 }  // namespace flox
 

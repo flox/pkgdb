@@ -362,6 +362,17 @@ extract_json_errmsg( nlohmann::json::exception &e );
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * @brief prepend vector and make sure items are unique (without sorting)
+ *
+ */
+template<typename T>
+std::vector<T>
+prependUnique( const std::vector<T> &vec1, const std::vector<T> &vec2 );
+
+
+/* -------------------------------------------------------------------------- */
+
 }  // namespace flox
 
 

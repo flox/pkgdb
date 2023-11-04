@@ -151,6 +151,107 @@ test_RegistryNoIndirectRefs()
 
 /* -------------------------------------------------------------------------- */
 
+bool
+test_ManifestMergeRegistries()
+{
+  using namespace flox;
+
+  flox::RegistryRaw registryA = R"( {
+    "inputs": {
+      "item1": {
+        "from": {
+          "type": "github",
+          "owner": "test_A",
+          "repo": "test_A"
+        }
+      },
+      "item3": {
+        "from": {
+          "type": "github",
+          "owner": "test_A",
+          "repo": "test_A"
+        }
+      },
+      "item2": {
+        "from": {
+          "type": "github",
+          "owner": "test_A",
+          "repo": "test_A"
+        }
+      }
+    },
+    "defaults": {
+      "subtrees": ["packages"]
+    },
+    "priority": ["item1", "item3", "item2"] 
+  } )"_json;
+
+  flox::RegistryRaw registryB = R"( {
+    "inputs": {
+      "item2": {
+        "from": {
+          "type": "github",
+          "owner": "test_B",
+          "repo": "test_B"
+        }
+      },
+      "item1": {
+        "from": {
+          "type": "github",
+          "owner": "test_B",
+          "repo": "test_B"
+        }
+      }
+    },
+    "defaults": {
+      "subtrees": ["legacyPackages"]
+    },
+    "priority": ["item1", "item2"] 
+  } )"_json;
+
+  flox::RegistryRaw result = flox::mergeRegistries( registryA, registryB );
+
+  EXPECT_EQ( nlohmann::json( result ).dump(),
+             nlohmann::json( R"( {
+      "inputs": {
+        "item3": {
+          "from": {
+            "type": "github",
+            "owner": "test_A",
+            "repo": "test_A"
+          },
+          "subtrees": null
+        },
+        "item2": {
+          "from": {
+            "type": "github",
+            "owner": "test_B",
+            "repo": "test_B"
+          },
+          "subtrees": null
+        },
+        "item1": {
+          "from": {
+            "type": "github",
+            "owner": "test_B",
+            "repo": "test_B"
+          },
+          "subtrees": null
+        }
+      },
+      "defaults": {
+        "subtrees": ["legacyPackages", "packages"]
+      },
+      "priority": ["item1", "item2", "item3"] 
+    } )"_json )
+               .dump() );
+
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 int
 main( int argc, char *argv[] )
 {
@@ -171,6 +272,7 @@ main( int argc, char *argv[] )
   RUN_TEST( ManifestFileMixinGetRegWithoutFile );
   RUN_TEST( ManifestFileMixinGetRegCached );
   RUN_TEST( ManifestFileMixinEmptyPath );
+  RUN_TEST( ManifestMergeRegistries );
 
 
   return exitCode;
