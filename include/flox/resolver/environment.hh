@@ -61,6 +61,10 @@ private:
 
   std::optional<RegistryRaw> combinedRegistryRaw;
 
+  std::optional<ManifestRaw::Options> combinedOptions;
+
+  std::optional<pkgdb::PkgQueryArgs> combinedBaseQueryArgs;
+
   /** A registry of locked inputs. */
   std::optional<RegistryRaw> lockedRegistry;
 
@@ -92,14 +96,39 @@ private:
   getUnlockedDescriptors();
 
   // TODO
+  /** @brief Get a merged form of @a globalManifest and @a manifest options. */
+  [[nodiscard]] const ManifestRaw::Options &
+  getCombinedOptions();
+
+  // TODO
+  /**
+   * @brief Get a base set of @a flox::pkgdb::PkgQueryArgs from the combined
+   *        registry, and combined options.
+   */
+  [[nodiscard]] const pkgdb::PkgQueryArgs &
+  getCombinedBaseQueryArgs();
+
+  // TODO
   /** @brief Try to resolve a descriptor in a given package database. */
   [[nodiscard]] std::optional<pkgdb::row_id>
-  resolveDescriptor( const ManifestDescriptor & descriptor,
+  tryResolveDescriptorIn( const ManifestDescriptor & descriptor,
+                          const pkgdb::PkgDbInput &  input,
+                          const System &             system );
+
+  // TODO
+  /**
+   * @brief Try to resolve a group of descriptors in a given package database.
+   *
+   * @return `std::nullopt` if resolution fails, otherwise a set of
+   *          resolved packages for.
+   */
+  [[nodiscard]] std::optional<SystemPackages>
+  tryResolveGroupIn( const InstallDescriptors & group,
                      const pkgdb::PkgDbInput &  input,
                      const System &             system );
 
   // TODO
-  /** @brief Lock all descriptors */
+  /** @brief Lock all descriptors for a given system. */
   void
   lockSystem( const System & system );
 

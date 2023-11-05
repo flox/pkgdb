@@ -110,6 +110,73 @@ Environment::fillLockedFromOldLockfile()
 
 /* -------------------------------------------------------------------------- */
 
+//const ManifestRaw::Options &
+//Environment::getCombinedOptions()
+//{
+//  // TODO
+//}
+
+
+/* -------------------------------------------------------------------------- */
+
+const pkgdb::PkgQueryArgs &
+Environment::getCombinedBaseQueryArgs()
+{
+  // TODO: Use `this->getCombinedOptions()'
+  if ( ! this->combinedBaseQueryArgs.has_value() )
+    {
+      this->combinedBaseQueryArgs = this->getManifest().getBaseQueryArgs();
+      if ( this->getGlobalManifest().has_value() )
+        {
+          auto global = this->getGlobalManifest()->getBaseQueryArgs();
+          if ( ( ! this->combinedBaseQueryArgs->licenses.has_value() ) &&
+               global.licenses.has_value()
+             )
+            {
+              this->combinedBaseQueryArgs->licenses = global.licenses;
+            }
+
+          /* NOTE: We intentionally skip `systems'. */
+
+          // FIXME: you need to use `getCombinedOptions()' because we have
+          //        loss of detail on our `bool` fields.
+        }
+    }
+  return *this->combinedBaseQueryArgs;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+std::optional<pkgdb::row_id>
+Environment::tryResolveDescriptorIn( const ManifestDescriptor & descriptor,
+                                     const pkgdb::PkgDbInput &  input,
+                                     const System &             system )
+{
+  /** Skip unrequested systems. */
+  if ( descriptor.systems.has_value()
+       && ( std::find( descriptor.systems->begin(),
+                       descriptor.systems->end(),
+                       system )
+            == descriptor.systems->end() ) )
+    {
+      return std::nullopt;
+    }
+
+  pkgdb::PkgQueryArgs args = this->getCombinedBaseQueryArgs();
+  input.fillPkgQueryArgs( args );
+  descriptor.fillPkgQueryArgs( args );
+  /* Limit results to the target system. */
+  args.systems = std::vector<System> { system };
+  pkgdb::PkgQuery query( args );
+  auto            rows = query.execute( input.getDbReadOnly()->db );
+  if ( rows.empty() ) { return std::nullopt; }
+  return rows.front();
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 }  // namespace flox::resolver
 
 
