@@ -198,7 +198,7 @@ GetCommand::run()
   if ( this->parser.is_subcommand_used( "done" ) ) { return this->runDone(); }
   if ( this->parser.is_subcommand_used( "pkg" ) ) { return this->runPkg(); }
   std::cerr << this->parser << std::endl;
-  throw flox::FloxException( "You must provide a valid 'get' subcommand" );
+  throw flox::FloxException( "You must provide a valid `get' subcommand" );
   return EXIT_FAILURE;
 }
 

@@ -546,6 +546,15 @@ ManifestRaw::check() const
 
 /* -------------------------------------------------------------------------- */
 
+nlohmann::json
+ManifestRaw::diff( const ManifestRaw & old ) const
+{
+  return nlohmann::json::diff( nlohmann::json( *this ), old );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 }  // namespace flox::resolver
 
 

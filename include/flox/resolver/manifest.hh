@@ -240,6 +240,14 @@ struct ManifestRaw : public GlobalManifestRaw
     this->hook    = std::nullopt;
   }
 
+  /**
+   * @brief Generate a JSON _diff_ between @a this manifest an @a old manifest.
+   *
+   * The _diff_ is represented as an [JSON patch](https://jsonpatch.com) object.
+   */
+  nlohmann::json
+  diff( const ManifestRaw & old ) const;
+
 
 }; /* End struct `ManifestRaw' */
 

@@ -43,8 +43,8 @@ run( int argc, char *argv[] )
   flox::resolver::ResolveCommand cmdResolve;
   prog.add_subparser( cmdResolve.getParser() );
 
-  flox::resolver::LockCommand cmdLock;
-  prog.add_subparser( cmdLock.getParser() );
+  flox::resolver::ManifestCommand cmdManifest;
+  prog.add_subparser( cmdManifest.getParser() );
 
 
   /* Parse Args */
@@ -65,7 +65,7 @@ run( int argc, char *argv[] )
   if ( prog.is_subcommand_used( "list" ) ) { return cmdList.run(); }
   if ( prog.is_subcommand_used( "search" ) ) { return cmdSearch.run(); }
   if ( prog.is_subcommand_used( "resolve" ) ) { return cmdResolve.run(); }
-  if ( prog.is_subcommand_used( "lock" ) ) { return cmdLock.run(); }
+  if ( prog.is_subcommand_used( "manifest" ) ) { return cmdManifest.run(); }
 
   // TODO: better error for this,
   // likely only occurs if we add a new command without handling it (?)
