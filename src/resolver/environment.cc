@@ -124,7 +124,7 @@ Environment::getCombinedOptions()
         {
           if ( this->combinedOptions.has_value() )
             {
-              this->combinedOptions.merge(
+              this->combinedOptions->merge(
                 *this->getGlobalManifestRaw()->options );
             }
           else
@@ -149,7 +149,8 @@ Environment::getCombinedBaseQueryArgs()
 {
   if ( ! this->combinedBaseQueryArgs.has_value() )
     {
-      this->combinedBaseQueryArgs = this->getCombinedOptions();
+      this->combinedBaseQueryArgs
+        = static_cast<pkgdb::PkgQueryArgs>( this->getCombinedOptions() );
     }
   return *this->combinedBaseQueryArgs;
 }
@@ -192,8 +193,57 @@ Environment::tryResolveGroupIn( const InstallDescriptors & group,
                                 const pkgdb::PkgDbInput &  input,
                                 const System &             system )
 {
-  // TODO
-  return std::nullopt;
+  std::unordered_map<InstallID, std::optional<pkgdb::row_id>> pkgRows;
+
+  for ( const auto & [iid, descriptor] : group )
+    {
+      /** Skip unrequested systems. */
+      if ( descriptor.systems.has_value()
+           && ( std::find( descriptor.systems->begin(),
+                           descriptor.systems->end(),
+                           system )
+                == descriptor.systems->end() ) )
+        {
+          pkgRows.emplace( iid, std::nullopt );
+          continue;
+        }
+
+      /* Try resolving. */
+      std::optional<pkgdb::row_id> maybeRow
+        = this->tryResolveDescriptorIn( descriptor, input, system );
+      if ( maybeRow.has_value() || descriptor.optional )
+        {
+          pkgRows.emplace( iid, maybeRow );
+        }
+      else { return std::nullopt; }
+    }
+
+  /* Convert to `LockedPackageRaw's */
+  SystemPackages pkgs;
+  LockedInputRaw lockedInput( input );
+  auto           dbRO = input.getDbReadOnly();
+  for ( const auto & [iid, row] : pkgRows )
+    {
+      if ( row.has_value() )
+        {
+          nlohmann::json   info = dbRO->getPackage( *row );
+          LockedPackageRaw pkg;
+          pkg.input = lockedInput;
+          info.at( "absPath" ).get_to( pkg.attrPath );
+          info.erase( "id" );
+          info.erase( "description" );
+          info.erase( "absPath" );
+          info.erase( "subtree" );
+          info.erase( "system" );
+          info.erase( "relPath" );
+          pkg.priority = group.at( iid ).priority;
+          pkg.info     = std::move( info );
+          pkgs.emplace( iid, std::move( pkg ) );
+        }
+      else { pkgs.emplace( iid, std::nullopt ); }
+    }
+
+  return pkgs;
 }
 
 
