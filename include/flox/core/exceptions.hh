@@ -80,7 +80,7 @@ enum error_category {
   /** Invalid hash string. */
   EC_INVALID_HASH,
   /** Resolution failure. */
-  EC_RESOLUTION_FAILURE = 124
+  EC_RESOLUTION_FAILURE
 
 }; /* End enum `error_category' */
 
