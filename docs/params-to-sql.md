@@ -196,7 +196,7 @@ struct PkgQueryArgs : public PkgDescriptorBase
 ### flox::pkgdb::QueryPreferences ( to be deprecated )
 
 NOTE: This structure is expected to be deprecated and replaced by a subset of
-      the `flox::resolver::ManifestRaw::Options` fields.
+      the `flox::resolver::Options` fields.
       The current fields and fallback behavior there are identical, but
       fallback handling was moved to an intermediate struct
       `flox::resolver::Manifest`.

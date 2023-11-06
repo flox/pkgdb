@@ -110,11 +110,36 @@ Environment::fillLockedFromOldLockfile()
 
 /* -------------------------------------------------------------------------- */
 
-// const ManifestRaw::Options &
-// Environment::getCombinedOptions()
-//{
-//   // TODO
-// }
+const Options &
+Environment::getCombinedOptions()
+{
+  if ( ! this->combinedOptions.has_value() )
+    {
+      if ( this->getManifestRaw().options.has_value() )
+        {
+          this->combinedOptions = this->getManifestRaw().options;
+        }
+      if ( this->getGlobalManifest().has_value()
+           && this->getGlobalManifestRaw()->options.has_value() )
+        {
+          if ( this->combinedOptions.has_value() )
+            {
+              this->combinedOptions.merge(
+                *this->getGlobalManifestRaw()->options );
+            }
+          else
+            {
+              this->combinedOptions = this->getGlobalManifestRaw()->options;
+            }
+        }
+      /* Fallback to an empty set of options to avoid recalculation. */
+      if ( ! this->combinedOptions.has_value() )
+        {
+          this->combinedOptions = Options {};
+        }
+    }
+  return *this->combinedOptions;
+}
 
 
 /* -------------------------------------------------------------------------- */
@@ -122,24 +147,9 @@ Environment::fillLockedFromOldLockfile()
 const pkgdb::PkgQueryArgs &
 Environment::getCombinedBaseQueryArgs()
 {
-  // TODO: Use `this->getCombinedOptions()'
   if ( ! this->combinedBaseQueryArgs.has_value() )
     {
-      this->combinedBaseQueryArgs = this->getManifest().getBaseQueryArgs();
-      if ( this->getGlobalManifest().has_value() )
-        {
-          auto global = this->getGlobalManifest()->getBaseQueryArgs();
-          if ( ( ! this->combinedBaseQueryArgs->licenses.has_value() )
-               && global.licenses.has_value() )
-            {
-              this->combinedBaseQueryArgs->licenses = global.licenses;
-            }
-
-          /* NOTE: We intentionally skip `systems'. */
-
-          // FIXME: you need to use `getCombinedOptions()' because we have
-          //        loss of detail on our `bool` fields.
-        }
+      this->combinedBaseQueryArgs = this->getCombinedOptions();
     }
   return *this->combinedBaseQueryArgs;
 }
@@ -171,6 +181,19 @@ Environment::tryResolveDescriptorIn( const ManifestDescriptor & descriptor,
   auto            rows = query.execute( input.getDbReadOnly()->db );
   if ( rows.empty() ) { return std::nullopt; }
   return rows.front();
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+
+std::optional<SystemPackages>
+Environment::tryResolveGroupIn( const InstallDescriptors & group,
+                                const pkgdb::PkgDbInput &  input,
+                                const System &             system )
+{
+  // TODO
+  return std::nullopt;
 }
 
 

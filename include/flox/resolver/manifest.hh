@@ -52,6 +52,57 @@ using InstallID = std::string;
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief A set of options that apply to an entire environment. */
+struct Options
+{
+
+  std::optional<std::vector<System>> systems;
+
+  struct Allows
+  {
+    std::optional<bool>                     unfree;
+    std::optional<bool>                     broken;
+    std::optional<std::vector<std::string>> licenses;
+  }; /* End struct `Allows' */
+  std::optional<Allows> allow;
+
+  struct Semver
+  {
+    std::optional<bool> preferPreReleases;
+  }; /* End struct `Semver' */
+  std::optional<Semver> semver;
+
+  std::optional<std::string> packageGroupingStrategy;
+  std::optional<std::string> activationStrategy;
+  // TODO: Other options
+
+
+  /**
+   * @brief Apply options from @a overrides, but retain other existing options.
+   */
+  void
+  merge( const Options & overrides );
+
+  /** @brief Convert to a _base_ set of @a flox::pkgdb::PkgQueryArgs. */
+  explicit operator pkgdb::PkgQueryArgs() const;
+
+
+}; /* End struct `Options' */
+
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Convert a JSON object to a @a flox::resolver::Options. */
+void
+from_json( const nlohmann::json & jfrom, Options & opts );
+
+/** @brief Convert a @a flox::resolver::Options to a JSON Object. */
+void
+to_json( nlohmann::json & jfrom, const Options & opts );
+
+
+/* -------------------------------------------------------------------------- */
+
 /**
  * @brief A _global_ manifest containing only `registry` and `options` fields
  *        in its _raw_ form.
@@ -64,30 +115,6 @@ using InstallID = std::string;
  */
 struct GlobalManifestRaw
 {
-  struct Options
-  {
-
-    std::optional<std::vector<System>> systems;
-
-    struct Allows
-    {
-      std::optional<bool>                     unfree;
-      std::optional<bool>                     broken;
-      std::optional<std::vector<std::string>> licenses;
-    }; /* End struct `Allows' */
-    std::optional<Allows> allow;
-
-    struct Semver
-    {
-      std::optional<bool> preferPreReleases;
-    }; /* End struct `Semver' */
-    std::optional<Semver> semver;
-
-    std::optional<std::string> packageGroupingStrategy;
-    std::optional<std::string> activationStrategy;
-    // TODO: Other options
-
-  }; /* End struct `Options' */
   std::optional<Options> options;
 
   std::optional<RegistryRaw> registry;

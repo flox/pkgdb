@@ -61,7 +61,7 @@ private:
 
   std::optional<RegistryRaw> combinedRegistryRaw;
 
-  std::optional<ManifestRaw::Options> combinedOptions;
+  std::optional<Options> combinedOptions;
 
   std::optional<pkgdb::PkgQueryArgs> combinedBaseQueryArgs;
 
@@ -95,12 +95,10 @@ private:
   [[nodiscard]] std::unordered_map<InstallID, ManifestDescriptor>
   getUnlockedDescriptors();
 
-  // TODO
   /** @brief Get a merged form of @a globalManifest and @a manifest options. */
-  [[nodiscard]] const ManifestRaw::Options &
+  [[nodiscard]] const Options &
   getCombinedOptions();
 
-  // TODO
   /**
    * @brief Get a base set of @a flox::pkgdb::PkgQueryArgs from the combined
    *        registry, and combined options.
@@ -108,7 +106,6 @@ private:
   [[nodiscard]] const pkgdb::PkgQueryArgs &
   getCombinedBaseQueryArgs();
 
-  // TODO
   /** @brief Try to resolve a descriptor in a given package database. */
   [[nodiscard]] std::optional<pkgdb::row_id>
   tryResolveDescriptorIn( const ManifestDescriptor & descriptor,
@@ -141,10 +138,23 @@ public:
     return this->globalManifest;
   }
 
+  [[nodiscard]] std::optional<GlobalManifestRaw>
+  getGlobalManifestRaw() const
+  {
+    if ( ! this->getGlobalManifest().has_value() ) { return std::nullopt; }
+    return this->getGlobalManifest()->getManifestRaw();
+  }
+
   [[nodiscard]] const Manifest &
   getManifest() const
   {
     return this->manifest;
+  }
+
+  [[nodiscard]] const ManifestRaw &
+  getManifestRaw() const
+  {
+    return this->getManifest().getManifestRaw();
   }
 
   // TODO
