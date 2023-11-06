@@ -123,6 +123,7 @@ to_json( nlohmann::json &jto, const QueryPreferences &prefs );
 
 /* -------------------------------------------------------------------------- */
 
+// TODO: Deprecate in favor of `Environment'/`GlobalManifest' + `QueryType'
 /**
  * @brief A set of query parameters for resolving a single descriptor.
  *
@@ -132,7 +133,6 @@ to_json( nlohmann::json &jto, const QueryPreferences &prefs );
  * This is essentially a reorganized form of @a flox::pkgdb::PkgQueryArgs
  * that is suited for JSON input.
  *
- * @see flox::resolver::ResolveOneParams
  * @see flox::search::SearchParams
  */
 template<pkg_descriptor_typename QueryType>
@@ -194,7 +194,7 @@ struct QueryParams : public QueryPreferences
   }
 
 
-}; /* End struct `ResolveOneParams' */
+}; /* End struct `QueryParams' */
 
 
 /* -------------------------------------------------------------------------- */

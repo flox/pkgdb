@@ -34,53 +34,51 @@ enum error_category {
   /** Generic exception emitted by `flox` routines. */
   EC_FLOX_EXCEPTION = 100,
   /** A command line argument is invalid. */
-  EC_INVALID_ARG = 101,
+  EC_INVALID_ARG,
   /** A package descriptor in a manifest is invalid. */
-  EC_INVALID_MANIFEST_DESCRIPTOR = 102,
-  /** A PkgDescriptorRaw is invalid. */
-  EC_INVALID_PKG_DESCRIPTOR = 103,
+  EC_INVALID_MANIFEST_DESCRIPTOR,
   /** Errors concerning validity of package query parameters. */
-  EC_INVALID_PKG_QUERY_ARG = 104,
+  EC_INVALID_PKG_QUERY_ARG,
   /** A registry has invalid contents. */
-  EC_INVALID_REGISTRY = 105,
+  EC_INVALID_REGISTRY,
   /** The value of `manifestPath' is invalid. */
-  EC_INVALID_MANIFEST_FILE = 106,
+  EC_INVALID_MANIFEST_FILE,
   /**
    * `nix::Error` that doesn't fall under a more specific `EC_NIX_*` category.
    */
-  EC_NIX = 107,
+  EC_NIX,
   /** `nix::EvalError` */
-  EC_NIX_EVAL = 108,
+  EC_NIX_EVAL,
   /** Exception locking a flake. */
-  EC_NIX_LOCK_FLAKE = 109,
+  EC_NIX_LOCK_FLAKE,
   /** Exception initializing a @a flox::FlakePackage. */
-  EC_PACKAGE_INIT = 110,
+  EC_PACKAGE_INIT,
   /** Exception parsing `flox::resolver::ManifestDescriptorRaw` from JSON. */
-  EC_PARSE_MANIFEST_DESCRIPTOR_RAW = 111,
+  EC_PARSE_MANIFEST_DESCRIPTOR_RAW,
   /** Exception parsing `PkgDescriptorBase` from JSON. */
-  EC_PARSE_PKG_DESCRIPTOR_BASE = 112,
+  EC_PARSE_PKG_DESCRIPTOR_BASE,
   /** Exception parsing @a flox::pkgdb::QueryParams from JSON. */
-  EC_PARSE_QUERY_PARAMS = 113,
+  EC_PARSE_QUERY_PARAMS,
   /** Exception parsing @a flox::pkgdb::QueryPreferences from JSON. */
-  EC_PARSE_QUERY_PREFERENCES = 114,
+  EC_PARSE_QUERY_PREFERENCES,
   /** Exception parsing `flox::resolver::Resolved` from JSON. */
-  EC_PARSE_RESOLVED = 115,
+  EC_PARSE_RESOLVED,
   /** Exception parsing @a flox::search::SearchQuery from JSON. */
-  EC_PARSE_SEARCH_QUERY = 116,
+  EC_PARSE_SEARCH_QUERY,
   /** For generic exceptions thrown by `flox::pkgdb::*` classes. */
-  EC_PKG_DB = 117,
+  EC_PKG_DB,
   /** Exceptions thrown by SQLite3. */
-  EC_SQLITE3 = 118,
+  EC_SQLITE3,
   /** Exception parsing/processing JSON. */
-  EC_JSON = 119,
+  EC_JSON,
   /** Exception converting TOML to JSON. */
-  EC_TOML_TO_JSON = 120,
+  EC_TOML_TO_JSON,
   /** Exception converting YAML to JSON. */
-  EC_YAML_TO_JSON = 121,
+  EC_YAML_TO_JSON,
   /** Exception processing an environment's lockfile. */
-  EC_INVALID_LOCKFILE = 122,
+  EC_INVALID_LOCKFILE,
   /** Invalid hash string. */
-  EC_INVALID_HASH = 123,
+  EC_INVALID_HASH,
   /** Resolution failure. */
   EC_RESOLUTION_FAILURE = 124
 

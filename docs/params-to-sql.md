@@ -55,9 +55,7 @@ classes related to this transformation in one place, and describe their
 relationships to one another.
 
 Note that various existing parameter sets such as `flox::pkgdb::QueryParams`
-and `flox::resolver::PkgDescriptorRaw` are likely going to be replaced
-by `flox::resolver::ManifestRaw` and `flox::resolver::ManifestDescriptor` in
-the future.
+are likely going to be replaced by `flox::resolver::ManifestRaw` in the future.
 Nonetheless, they are discussed here to help other developers understand their
 functional and historical relationships with one another.
 
@@ -97,7 +95,6 @@ concept pkg_descriptor_typename = std::derived_from<T, PkgDescriptorBase>;
 
 Child Classes:
 - `flox::pkgdb::PkgQueryArgs`
-- `flox::resolver::PkgDescriptorRaw`
 - `flox::search::SearchQuery`
 
 Contained by:
@@ -143,8 +140,11 @@ struct PkgQueryArgs : public PkgDescriptorBase
    *   std::optional<std::string> semver;  //< Filter results by version range.
    */
 
-  /** Filter results by partial match on pname, attrName, or description */
+  /** Filter results by partial match on pname, attrName, or description. */
   std::optional<std::string> partialMatch;
+
+  /** Filter results by partial match on pname or attrName. */
+  std::optional<std::string> partialNameMatch;
 
   /**
    * Filter results by an exact match on either `pname` or `attrName`.
@@ -326,7 +326,6 @@ struct QueryParams : public QueryPreferences
 ```
 
 Template Instances:
-- `flox::resolver::ResolveOneParams = QueryParams<flox::resolver::PkgDescriptorRaw>`
 - `flox::search::SearchParams = QueryParams<flox::search::SearchQuery>`
 
 
@@ -450,8 +449,6 @@ public:
 };
 ```
 
-This descriptor will replace `flox::pkgdb::PkgDescriptorRaw` in the near future.
-
 Contained by:
 - `flox::resolver::ManifestRaw`
 
@@ -542,86 +539,7 @@ struct ManifestRaw
 ```
 
 
-### flox::resolver::PkgDescriptorRaw ( to be deprecated )
-
-NOTE: This struct is not in use by the `flox` CLI and was created strictly for
-testing resolution with `pkgdb resolve` in our own test suite.
-It is expected to be removed in the near future in favor
-of `flox::resolver::ManifestDescriptorRaw`.
-
-Declared in
-[<pkgdb>/include/flox/resolver/params.hh](../include/flox/resolver/params.hh).
-
-This set of parameters extends `flox::pkgdb::PkgDescriptorBase` with the
-largest available set of filtering parameters.
-
-Often these parameters overlap with _global_ settings available in
-`flox::pkgdb::QueryPreferences` fields and `RegistryRaw` fields.
-This allows _global_ defaults to be either overridden
-( in the case of `QueryPreferences` ), or used to skip certain inputs
-( in the case of `RegistryRaw` and the `input` field ).
-
-
-```c++
-/**
- * @brief A set of query parameters describing _requirements_ for a package.
- *
- * In its _raw_ form, we DO NOT expect that "global" filters have been pushed
- * down into the descriptor, and do not attempt to distinguish from relative or
- * absolute attribute paths in the @a path field.
- */
-struct PkgDescriptorRaw : public pkgdb::PkgDescriptorBase
-{
-
-  /* From `pkgdb::PkgDescriptorBase':
-   *   std::optional<std::string> name;    //< Filter results by exact `name`.
-   *   std::optional<std::string> pname;   //< Filter results by exact `pname`.
-   *   std::optional<std::string> version; //< Filter results by exact version.
-   *   std::optional<std::string> semver;  //< Filter results by version range.
-   */
-
-  /**
-   * Filter results by an exact match on either `pname` or `attrName`.
-   * To match just `pname` see @a flox::pkgdb::PkgDescriptorBase.
-   */
-  std::optional<std::string> pnameOrAttrName;
-
-  /** Restricts resolution to the named registry input. */
-  std::optional<std::string> input;
-
-  /**
-   * An absolute or relative attribut path to a package.
-   *
-   * May contain `std::nullopt` as its second member to indicate that any system
-   * is acceptable.
-   */
-  std::optional<AttrPathGlob> path;
-
-  /**
-   * Restricts resolution to a given subtree.
-   * Restricts resolution to a given subtree.
-   *
-   * This field must not conflict with the @a path field.
-   */
-  std::optional<std::string> subtree;
-
-  /**
-   * Whether pre-releases should be preferred over releases.
-   *
-   * Takes priority over `semver.preferPreReleases` "global" setting.
-   */
-  std::optional<bool> preferPreReleases = false;
-
-  // ...<SNIP>...
-
-};
-```
-
-Contained by:
-- `ResolveOneParams = flox::pkgdb::QueryParams<flox::resolver::PkgDescriptorRaw>`
-
-
-## TODO: Common Routines
+## Common Routines
 
 ### `getBaseQueryArgs`
 

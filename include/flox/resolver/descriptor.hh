@@ -34,8 +34,7 @@ using GroupName = std::string;
 /* -------------------------------------------------------------------------- */
 
 /**
- * @brief Extend and remap fields from @a flox::resolver::PkgDescriptorRaw to
- *        those found in a `flox` _manifest_.
+ * @brief A set of user defined requirements describing a package/dependency.
  *
  * This _raw_ struct is defined to generate parsers.
  * The _real_ form is @a flox::resolver::ManifestDescriptor.
@@ -155,8 +154,7 @@ FLOX_DEFINE_EXCEPTION( ParseManifestDescriptorRawException,
 /* -------------------------------------------------------------------------- */
 
 /**
- * @brief Extend and remap fields from @a flox::resolver::PkgDescriptorRaw to
- *        @a flox::pkgdb::PkgQueryArgs
+ * @brief A set of user defined requirements describing a package/dependency.
  */
 struct ManifestDescriptor
 {

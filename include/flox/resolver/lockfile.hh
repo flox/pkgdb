@@ -208,7 +208,8 @@ private:
    * - `lockfileVersion` is supported.
    * - `packages` members' groups are enforced.
    * - original _manifest_ is consistent with the lockfile's
-   *   `registry.*` and `packages.**` members.
+   *   `registry.*` and `packages.**` members for `optional` and
+   *   `systems` skipping.
    * - `registry` inputs do not use indirect flake references.
    */
   void

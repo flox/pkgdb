@@ -15,7 +15,6 @@
 
 #include "flox/registry.hh"
 #include "flox/resolver/manifest.hh"
-#include "flox/resolver/params.hh"
 #include "test.hh"
 
 

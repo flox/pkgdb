@@ -40,9 +40,6 @@ run( int argc, char *argv[] )
   flox::search::SearchCommand cmdSearch;
   prog.add_subparser( cmdSearch.getParser() );
 
-  flox::resolver::ResolveCommand cmdResolve;
-  prog.add_subparser( cmdResolve.getParser() );
-
   flox::resolver::ManifestCommand cmdManifest;
   prog.add_subparser( cmdManifest.getParser() );
 
@@ -64,7 +61,6 @@ run( int argc, char *argv[] )
   if ( prog.is_subcommand_used( "get" ) ) { return cmdGet.run(); }
   if ( prog.is_subcommand_used( "list" ) ) { return cmdList.run(); }
   if ( prog.is_subcommand_used( "search" ) ) { return cmdSearch.run(); }
-  if ( prog.is_subcommand_used( "resolve" ) ) { return cmdResolve.run(); }
   if ( prog.is_subcommand_used( "manifest" ) ) { return cmdManifest.run(); }
 
   // TODO: better error for this,
