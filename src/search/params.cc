@@ -21,7 +21,23 @@ void
 SearchQuery::clear()
 {
   this->pkgdb::PkgDescriptorBase::clear();
-  this->partialMatch = std::nullopt;
+  this->partialMatch     = std::nullopt;
+  this->partialNameMatch = std::nullopt;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+SearchQuery::check() const
+{
+  /* `partialMatch' and `partialNameMatch' cannot be used together. */
+  if ( this->partialMatch.has_value() && this->partialNameMatch.has_value() )
+    {
+      throw ParseSearchQueryException(
+        "`partialmatch' and `partialNameMatch' filters "
+        "may not be used together." );
+    }
 }
 
 
@@ -57,6 +73,10 @@ from_json( const nlohmann::json &jfrom, SearchQuery &qry )
       else if ( key == "version" ) { getOrFail( key, value, qry.version ); }
       else if ( key == "semver" ) { getOrFail( key, value, qry.semver ); }
       else if ( key == "match" ) { getOrFail( key, value, qry.partialMatch ); }
+      else if ( ( key == "match-name" ) || ( key == "matchName" ) )
+        {
+          getOrFail( key, value, qry.partialNameMatch );
+        }
       else
         {
           throw ParseSearchQueryException( "unrecognized key: 'query." + key
@@ -70,7 +90,8 @@ void
 to_json( nlohmann::json &jto, const SearchQuery &qry )
 {
   pkgdb::to_json( jto, dynamic_cast<const pkgdb::PkgDescriptorBase &>( qry ) );
-  jto["match"] = qry.partialMatch;
+  jto["match"]      = qry.partialMatch;
+  jto["name-match"] = qry.partialNameMatch;
 }
 
 
@@ -80,11 +101,12 @@ pkgdb::PkgQueryArgs &
 SearchQuery::fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const
 {
   /* XXX: DOES NOT CLEAR FIRST! We are called after global preferences. */
-  pqa.name         = this->name;
-  pqa.pname        = this->pname;
-  pqa.version      = this->version;
-  pqa.semver       = this->semver;
-  pqa.partialMatch = this->partialMatch;
+  pqa.name             = this->name;
+  pqa.pname            = this->pname;
+  pqa.version          = this->version;
+  pqa.semver           = this->semver;
+  pqa.partialMatch     = this->partialMatch;
+  pqa.partialNameMatch = this->partialNameMatch;
   return pqa;
 }
 

@@ -141,6 +141,9 @@ struct PkgQueryArgs : public PkgDescriptorBase
   /** Filter results by partial match on pname, attrName, or description. */
   std::optional<std::string> partialMatch;
 
+  /** Filter results by partial match on pname or attrName. */
+  std::optional<std::string> partialNameMatch;
+
   /**
    * Filter results by an exact match on either `pname` or `attrName`.
    * To match just `pname` see @a flox::pkgdb::PkgDescriptorBase.

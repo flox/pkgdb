@@ -110,11 +110,11 @@ Environment::fillLockedFromOldLockfile()
 
 /* -------------------------------------------------------------------------- */
 
-//const ManifestRaw::Options &
-//Environment::getCombinedOptions()
+// const ManifestRaw::Options &
+// Environment::getCombinedOptions()
 //{
-//  // TODO
-//}
+//   // TODO
+// }
 
 
 /* -------------------------------------------------------------------------- */
@@ -129,9 +129,8 @@ Environment::getCombinedBaseQueryArgs()
       if ( this->getGlobalManifest().has_value() )
         {
           auto global = this->getGlobalManifest()->getBaseQueryArgs();
-          if ( ( ! this->combinedBaseQueryArgs->licenses.has_value() ) &&
-               global.licenses.has_value()
-             )
+          if ( ( ! this->combinedBaseQueryArgs->licenses.has_value() )
+               && global.licenses.has_value() )
             {
               this->combinedBaseQueryArgs->licenses = global.licenses;
             }
