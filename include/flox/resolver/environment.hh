@@ -112,7 +112,6 @@ private:
                           const pkgdb::PkgDbInput &  input,
                           const System &             system );
 
-  // TODO
   /**
    * @brief Try to resolve a group of descriptors in a given package database.
    *
