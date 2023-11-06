@@ -72,8 +72,25 @@ private:
 
   std::shared_ptr<Registry<pkgdb::PkgDbInputFactory>> dbs;
 
+  static LockedPackageRaw
+  lockPackage( const LockedInputRaw & input,
+               pkgdb::PkgDbReadOnly & dbRO,
+               pkgdb::row_id          row,
+               unsigned               priority );
 
-  // TODO
+  static inline LockedPackageRaw
+  lockPackage( const pkgdb::PkgDbInput & input,
+               pkgdb::row_id             row,
+               unsigned                  priority )
+  {
+    return lockPackage( LockedInputRaw( input ),
+                        *input.getDbReadOnly(),
+                        row,
+                        priority );
+  }
+
+  // TODO: Implement using JSON patch `diff` against old manifest.
+  //       The current implementation is a hot mess.
   /**
    *  @brief Fill resolutions from @a oldLockfile into @a lockfile for
    *         unmodified descriptors.
@@ -108,8 +125,8 @@ private:
   getCombinedOptions();
 
   /**
-   * @brief Get a base set of @a flox::pkgdb::PkgQueryArgs from the combined
-   *        registry, and combined options.
+   * @brief Get a base set of @a flox::pkgdb::PkgQueryArgs from
+   *        combined options.
    */
   [[nodiscard]] const pkgdb::PkgQueryArgs &
   getCombinedBaseQueryArgs();
@@ -174,11 +191,22 @@ public:
     return this->oldLockfile;
   }
 
-  // TODO
+  // TODO: Implement
+  /**
+   * @brief Get a merged form of @a oldLockfile ( if available ),
+   *        @a globalManifest ( if available ) and @a manifest registries.
+   *
+   * The Global registry has the lowest priority, and will be clobbered by
+   * locked registry inputs/settings.
+   * The registry defined in the current manifest has the highest priority and
+   * will clobber all other inputs/settings.
+   */
   [[nodiscard]] RegistryRaw &
   getCombinedRegistryRaw();
 
-  // TODO
+  // TODO: Implement.
+  // TODO: (Question) Should we lock the combined options and fill registry
+  //                  `default` fields in inputs?
   /** @brief Create a new lockfile from @a manifest. */
   [[nodiscard]] const Lockfile &
   createLockfile();
@@ -222,7 +250,7 @@ private:
 
 public:
 
-  // TODO
+  // TODO: Implement.
   /**
    * @brief Lazily initialize and return the @a globalManifest
    *        if @a globalManifestPath is set.
@@ -230,12 +258,12 @@ public:
   [[nodiscard]] const std::optional<GlobalManifest> &
   getGlobalManifest();
 
-  // TODO
+  // TODO: Implement.
   /** @brief Lazily initialize and return the @a manifest. */
   [[nodiscard]] const GlobalManifest &
   getManifest();
 
-  // TODO
+  // TODO: Implement.
   /**
    * @brief Lazily initialize and return the @a globalManifest
    *        if @a globalManifestPath is set.
@@ -243,7 +271,7 @@ public:
   [[nodiscard]] const std::optional<Lockfile> &
   getLockfile();
 
-  // TODO
+  // TODO: Implement.
   /** @brief Laziliy initialize and return the @a environment. */
   [[nodiscard]] Environment
   getEnvironment();

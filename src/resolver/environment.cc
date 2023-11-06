@@ -198,6 +198,29 @@ Environment::tryResolveDescriptorIn( const ManifestDescriptor & descriptor,
 
 /* -------------------------------------------------------------------------- */
 
+LockedPackageRaw
+Environment::lockPackage( const LockedInputRaw & input,
+                          pkgdb::PkgDbReadOnly & dbRO,
+                          pkgdb::row_id          row,
+                          unsigned               priority )
+{
+  nlohmann::json   info = dbRO.getPackage( row );
+  LockedPackageRaw pkg;
+  pkg.input = input;
+  info.at( "absPath" ).get_to( pkg.attrPath );
+  info.erase( "id" );
+  info.erase( "description" );
+  info.erase( "absPath" );
+  info.erase( "subtree" );
+  info.erase( "system" );
+  info.erase( "relPath" );
+  pkg.priority = priority;
+  pkg.info     = std::move( info );
+  return pkg;
+}
+
+
+/* -------------------------------------------------------------------------- */
 
 std::optional<SystemPackages>
 Environment::tryResolveGroupIn( const InstallDescriptors & group,
@@ -237,19 +260,11 @@ Environment::tryResolveGroupIn( const InstallDescriptors & group,
     {
       if ( row.has_value() )
         {
-          nlohmann::json   info = dbRO->getPackage( *row );
-          LockedPackageRaw pkg;
-          pkg.input = lockedInput;
-          info.at( "absPath" ).get_to( pkg.attrPath );
-          info.erase( "id" );
-          info.erase( "description" );
-          info.erase( "absPath" );
-          info.erase( "subtree" );
-          info.erase( "system" );
-          info.erase( "relPath" );
-          pkg.priority = group.at( iid ).priority;
-          pkg.info     = std::move( info );
-          pkgs.emplace( iid, std::move( pkg ) );
+          pkgs.emplace( iid,
+                        Environment::lockPackage( lockedInput,
+                                                  *dbRO,
+                                                  *row,
+                                                  group.at( iid ).priority ) );
         }
       else { pkgs.emplace( iid, std::nullopt ); }
     }
