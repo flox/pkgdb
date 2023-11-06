@@ -21,7 +21,7 @@
 /* -------------------------------------------------------------------------- */
 
 int
-run( int argc, char *argv[] )
+run( int argc, char * argv[] )
 {
   /* Define arg parsers. */
 
@@ -40,9 +40,6 @@ run( int argc, char *argv[] )
   flox::search::SearchCommand cmdSearch;
   prog.add_subparser( cmdSearch.getParser() );
 
-  flox::resolver::ResolveCommand cmdResolve;
-  prog.add_subparser( cmdResolve.getParser() );
-
   flox::resolver::ManifestCommand cmdManifest;
   prog.add_subparser( cmdManifest.getParser() );
 
@@ -53,7 +50,7 @@ run( int argc, char *argv[] )
     {
       prog.parse_args( argc, argv );
     }
-  catch ( const std::runtime_error &err )
+  catch ( const std::runtime_error & err )
     {
       throw flox::command::InvalidArgException( err.what() );
     }
@@ -64,7 +61,6 @@ run( int argc, char *argv[] )
   if ( prog.is_subcommand_used( "get" ) ) { return cmdGet.run(); }
   if ( prog.is_subcommand_used( "list" ) ) { return cmdList.run(); }
   if ( prog.is_subcommand_used( "search" ) ) { return cmdSearch.run(); }
-  if ( prog.is_subcommand_used( "resolve" ) ) { return cmdResolve.run(); }
   if ( prog.is_subcommand_used( "manifest" ) ) { return cmdManifest.run(); }
 
   // TODO: better error for this,
@@ -76,13 +72,13 @@ run( int argc, char *argv[] )
 /* -------------------------------------------------------------------------- */
 
 int
-main( int argc, char *argv[] )
+main( int argc, char * argv[] )
 {
   try
     {
       return run( argc, argv );
     }
-  catch ( const flox::FloxException &err )
+  catch ( const flox::FloxException & err )
     {
       if ( ! isatty( STDOUT_FILENO ) )
         {
@@ -95,7 +91,7 @@ main( int argc, char *argv[] )
   // TODO: we may want to catch these closer to where they are originally
   // thrown.
   // TODO: handle IFD build errors.
-  catch ( const nix::Error &err )
+  catch ( const nix::Error & err )
     {
       if ( ! isatty( STDOUT_FILENO ) )
         {
@@ -109,7 +105,7 @@ main( int argc, char *argv[] )
 
       return flox::EC_NIX;
     }
-  catch ( const std::exception &err )
+  catch ( const std::exception & err )
     {
       if ( ! isatty( STDOUT_FILENO ) )
         {

@@ -21,7 +21,6 @@
 #include "flox/pkgdb/input.hh"
 #include "flox/registry.hh"
 #include "flox/resolver/descriptor.hh"
-#include "flox/resolver/resolve.hh"
 
 
 /* -------------------------------------------------------------------------- */

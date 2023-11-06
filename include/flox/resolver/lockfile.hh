@@ -52,13 +52,13 @@ struct LockedInputRaw
   LockedInputRaw() : fingerprint( nix::htSHA256 ) {}
   ~LockedInputRaw() = default;
 
-  explicit LockedInputRaw( const pkgdb::PkgDbReadOnly &pdb )
+  explicit LockedInputRaw( const pkgdb::PkgDbReadOnly & pdb )
     : fingerprint( pdb.fingerprint )
     , url( pdb.lockedRef.string )
     , attrs( pdb.lockedRef.attrs )
   {}
 
-  explicit LockedInputRaw( const pkgdb::PkgDbInput &input )
+  explicit LockedInputRaw( const pkgdb::PkgDbInput & input )
     : LockedInputRaw( *input.getDbReadOnly() )
   {}
 
@@ -81,11 +81,11 @@ struct LockedInputRaw
 
 /** @brief Convert a JSON object to a @a flox::resolver::LockedInputRaw. */
 void
-from_json( const nlohmann::json &jfrom, LockedInputRaw &raw );
+from_json( const nlohmann::json & jfrom, LockedInputRaw & raw );
 
 /** @brief Convert a @a flox::resolver::LockedInputRaw to a JSON object. */
 void
-to_json( nlohmann::json &jto, const LockedInputRaw &raw );
+to_json( nlohmann::json & jto, const LockedInputRaw & raw );
 
 
 /* -------------------------------------------------------------------------- */
@@ -104,11 +104,11 @@ struct LockedPackageRaw
 
 /** @brief Convert a JSON object to a @a flox::resolver::LockedPackageRaw. */
 void
-from_json( const nlohmann::json &jfrom, LockedPackageRaw &raw );
+from_json( const nlohmann::json & jfrom, LockedPackageRaw & raw );
 
 /** @brief Convert a @a flox::resolver::LockedPackageRaw to a JSON object. */
 void
-to_json( nlohmann::json &jto, const LockedPackageRaw &raw );
+to_json( nlohmann::json & jto, const LockedPackageRaw & raw );
 
 
 /* -------------------------------------------------------------------------- */
@@ -164,11 +164,11 @@ struct LockfileRaw
 
 /** @brief Convert a JSON object to a @a flox::resolver::LockfileRaw. */
 void
-from_json( const nlohmann::json &jfrom, LockfileRaw &raw );
+from_json( const nlohmann::json & jfrom, LockfileRaw & raw );
 
 /** @brief Convert a @a flox::resolver::LockfileRaw to a JSON object. */
 void
-to_json( nlohmann::json &jto, const LockfileRaw &raw );
+to_json( nlohmann::json & jto, const LockfileRaw & raw );
 
 
 /* -------------------------------------------------------------------------- */
@@ -192,6 +192,15 @@ private:
 
 
   /**
+   * @brief Check the lockfile's `packages.**` locked inputs align with the
+   *        requested groups in `manifest.install.<INSTALL-ID>.packageGroup`,
+   *        Throws an exception if two packages in the same group use
+   *        different inputs.
+   */
+  void
+  checkGroups() const;
+
+  /**
    * @brief Check the lockfile's validity, throwing an exception for
    *        invalid contents.
    *
@@ -199,8 +208,9 @@ private:
    * - `lockfileVersion` is supported.
    * - `packages` members' groups are enforced.
    * - original _manifest_ is consistent with the lockfile's
-   *   `registry.*` and `packages.**` members.
-   *  - `registry` inputs do not use indirect flake references.
+   *   `registry.*` and `packages.**` members for `optional` and
+   *   `systems` skipping.
+   * - `registry` inputs do not use indirect flake references.
    */
   void
   check() const;
@@ -294,39 +304,6 @@ public:
   {
     return this->packagesRegistryRaw;
   }
-
-  /** @brief Lockfile information related to a given _install id_. */
-  struct LockedInstallInfo
-  {
-
-    /** The _install id_ of the package. */
-    InstallID installID;
-    /** The original _manifest descriptor_. */
-    const ManifestDescriptor *descriptor;
-    /** Resolutions for each system. */
-    std::unordered_map<System, std::optional<const LockedPackageRaw *>>
-      systemLocks;
-
-
-    /** @brief Check the validity of the manifest information against the
-     *         locked `packages.**` information.
-     *         Throws an exception if invalid.
-     *
-     * This checks:
-     * - Any descriptor `systems` and `optional` fields align with
-     *   `packages.<SYSTEM>.* = std::nullopt` resolutions.
-     * - Any descriptor `systems`, `subtree`, and/or `path` fields align
-     *   locked `abspath`.
-     * - Any descriptor `input` aligns with locked input.
-     */
-    void
-    check() const;
-
-
-  }; /* End struct `LockedInstallInfo' */
-
-  [[nodiscard]] LockedInstallInfo
-  getLockedInstallInfo( const InstallID &installID ) const;
 
 
 }; /* End class `Lockfile' */

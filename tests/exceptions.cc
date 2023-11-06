@@ -30,7 +30,7 @@ test_what0()
              std::string( "general error: context" ) );
 
   command::InvalidArgException derived( "context" );
-  FloxException*               derivedPtr = &derived;
+  FloxException *              derivedPtr = &derived;
 
   EXPECT_EQ( std::string( derivedPtr->what() ),
              std::string( "invalid argument: context" ) );

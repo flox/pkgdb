@@ -27,7 +27,7 @@ namespace flox::resolver {
  */
 template<typename ManifestType>
 static ManifestType
-readManifestFromPath( const std::filesystem::path &manifestPath )
+readManifestFromPath( const std::filesystem::path & manifestPath )
   requires std::is_base_of<GlobalManifestRaw, ManifestType>::value
 {
   if ( ! std::filesystem::exists( manifestPath ) )
@@ -104,7 +104,7 @@ void
 Manifest::check() const
 {
   this->manifestRaw.check();
-  for ( const auto &[iid, desc] : this->descriptors )
+  for ( const auto & [iid, desc] : this->descriptors )
     {
       if ( desc.systems.has_value() )
         {
@@ -116,7 +116,7 @@ Manifest::check() const
                 + "' specifies `systems' but no `options.systems' are specified"
                   " in the manifest." );
             }
-          for ( const auto &system : *desc.systems )
+          for ( const auto & system : *desc.systems )
             {
               if ( std::find( this->manifestRaw.options->systems->begin(),
                               this->manifestRaw.options->systems->end(),
@@ -146,7 +146,7 @@ Manifest::init()
     }
 
   if ( ! this->manifestRaw.install.has_value() ) { return; }
-  for ( const auto &[iid, raw] : *this->manifestRaw.install )
+  for ( const auto & [iid, raw] : *this->manifestRaw.install )
     {
       /* An empty/null descriptor uses `name' of the attribute. */
       if ( raw.has_value() )
@@ -190,7 +190,7 @@ std::unordered_map<GroupName, InstallDescriptors>
 Manifest::getGroupedDescriptors() const
 {
   std::unordered_map<GroupName, InstallDescriptors> grouped;
-  for ( const auto &[iid, desc] : this->descriptors )
+  for ( const auto & [iid, desc] : this->descriptors )
     {
       if ( ! desc.group.has_value() ) { continue; }
       grouped.try_emplace( *desc.group, InstallDescriptors {} );
@@ -206,72 +206,12 @@ InstallDescriptors
 Manifest::getUngroupedDescriptors() const
 {
   InstallDescriptors ungrouped;
-  for ( const auto &[iid, desc] : this->descriptors )
+  for ( const auto & [iid, desc] : this->descriptors )
     {
       if ( ! desc.group.has_value() ) { ungrouped.emplace( iid, desc ); }
     }
   return ungrouped;
 }
-
-
-/* -------------------------------------------------------------------------- */
-
-// TODO: Migrate to `Lockfile'
-#if 0
-void
-ManifestFileMixin::checkGroups()
-{
-  std::unordered_map<GroupName,
-                     std::unordered_map<System, std::optional<Resolved::Input>>>
-    groupInputs;
-  for ( const auto &[iid, systemsResolved] : this->lockedDescriptors )
-    {
-      auto maybeGroupName = this->getDescriptors().at( iid ).group;
-      /* Skip if the descriptor doesn't name a group. */
-      if ( ! maybeGroupName.has_value() ) { continue; }
-      /* Either define the group or verify alignment. */
-      auto maybeGroup = groupInputs.find( *maybeGroupName );
-      if ( maybeGroup == groupInputs.end() )
-        {
-          std::unordered_map<std::string, std::optional<Resolved::Input>>
-            inputs;
-          for ( const auto &[system, resolved] : systemsResolved )
-            {
-              if ( resolved.has_value() )
-                {
-                  inputs.emplace( system, resolved->input );
-                }
-              else { inputs.emplace( system, std::nullopt ); }
-            }
-          groupInputs.emplace( maybeGroup->first, std::move( inputs ) );
-        }
-      else
-        {
-          for ( const auto &[system, resolved] : systemsResolved )
-            {
-              if ( resolved.has_value() )
-                {
-                  /* If the previous declaration skipped a system, we
-                   * may fill it.
-                   * Otherwise assert equality. */
-                  if ( ! maybeGroup->second.at( system ).has_value() )
-                    {
-                      maybeGroup->second.at( system ) = resolved->input;
-                    }
-                  else if ( ( *maybeGroup->second.at( system ) ).locked
-                            != resolved->input.locked )
-                    {
-                      // TODO: make a new exception
-                      throw FloxException(
-                        "locked descriptor `packages." + iid + "." + system
-                        + "' does not align with other members of its group" );
-                    }
-                }
-            }
-        }
-    }
-}
-#endif
 
 
 /* -------------------------------------------------------------------------- */

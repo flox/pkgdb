@@ -44,7 +44,7 @@ Environment::getPkgDbRegistry()
         this->getCombinedRegistryRaw(),
         factory );
       /* Scrape if needed. */
-      for ( auto &[name, input] : *this->dbs )
+      for ( auto & [name, input] : *this->dbs )
         {
           input->scrapeSystems( this->getSystems() );
         }
@@ -60,10 +60,10 @@ Environment::fillLockedFromOldLockfile()
 {
   if ( ! this->oldLockfile.has_value() ) { return; }
 
-  for ( const auto &system : this->manifest.getSystems() )
+  for ( const auto & system : this->manifest.getSystems() )
     {
       SystemPackages sysPkgs;
-      for ( const auto &[iid, desc] : this->getManifest().getDescriptors() )
+      for ( const auto & [iid, desc] : this->getManifest().getDescriptors() )
         {
           /* Package is skipped for this system, so fill `std::nullopt'. */
           if ( desc.systems.has_value()
@@ -172,9 +172,9 @@ Environment::getCombinedBaseQueryArgs()
 /* -------------------------------------------------------------------------- */
 
 std::optional<pkgdb::row_id>
-Environment::tryResolveDescriptorIn( const ManifestDescriptor &descriptor,
-                                     const pkgdb::PkgDbInput  &input,
-                                     const System             &system )
+Environment::tryResolveDescriptorIn( const ManifestDescriptor & descriptor,
+                                     const pkgdb::PkgDbInput &  input,
+                                     const System &             system )
 {
   /** Skip unrequested systems. */
   if ( descriptor.systems.has_value()
@@ -201,10 +201,10 @@ Environment::tryResolveDescriptorIn( const ManifestDescriptor &descriptor,
 /* -------------------------------------------------------------------------- */
 
 LockedPackageRaw
-Environment::lockPackage( const LockedInputRaw &input,
-                          pkgdb::PkgDbReadOnly &dbRO,
-                          pkgdb::row_id         row,
-                          unsigned              priority )
+Environment::lockPackage( const LockedInputRaw & input,
+                          pkgdb::PkgDbReadOnly & dbRO,
+                          pkgdb::row_id          row,
+                          unsigned               priority )
 {
   nlohmann::json   info = dbRO.getPackage( row );
   LockedPackageRaw pkg;
@@ -225,13 +225,13 @@ Environment::lockPackage( const LockedInputRaw &input,
 /* -------------------------------------------------------------------------- */
 
 std::optional<SystemPackages>
-Environment::tryResolveGroupIn( const InstallDescriptors &group,
-                                const pkgdb::PkgDbInput  &input,
-                                const System             &system )
+Environment::tryResolveGroupIn( const InstallDescriptors & group,
+                                const pkgdb::PkgDbInput &  input,
+                                const System &             system )
 {
   std::unordered_map<InstallID, std::optional<pkgdb::row_id>> pkgRows;
 
-  for ( const auto &[iid, descriptor] : group )
+  for ( const auto & [iid, descriptor] : group )
     {
       /** Skip unrequested systems. */
       if ( descriptor.systems.has_value()
@@ -258,7 +258,7 @@ Environment::tryResolveGroupIn( const InstallDescriptors &group,
   SystemPackages pkgs;
   LockedInputRaw lockedInput( input );
   auto           dbRO = input.getDbReadOnly();
-  for ( const auto &[iid, maybeRow] : pkgRows )
+  for ( const auto & [iid, maybeRow] : pkgRows )
     {
       if ( maybeRow.has_value() )
         {
@@ -278,7 +278,7 @@ Environment::tryResolveGroupIn( const InstallDescriptors &group,
 /* -------------------------------------------------------------------------- */
 
 void
-Environment::lockSystem( const System &system )
+Environment::lockSystem( const System & system )
 {
   /* This should only be called from `Environment::createLock()' after
    * initializing `lockfileRaw'. */
@@ -289,13 +289,13 @@ Environment::lockSystem( const System &system )
   auto groups    = this->getManifest().getGroupedDescriptors();
 
   // TODO: Use `getCombinedRegistryRaw()'
-  for ( const auto &inputPair : *this->getPkgDbRegistry() )
+  for ( const auto & inputPair : *this->getPkgDbRegistry() )
     {
-      const auto &input = inputPair.second;
+      const auto & input = inputPair.second;
       /* Try resolving unresolved groups. */
       for ( auto elem = groups.begin(); elem != groups.end(); )
         {
-          const auto                   &group = elem->second;
+          const auto &                  group = elem->second;
           std::optional<SystemPackages> maybeResolved
             = this->tryResolveGroupIn( group, *input, system );
           if ( maybeResolved.has_value() )
@@ -309,8 +309,8 @@ Environment::lockSystem( const System &system )
       /* Try resolving unresolved ungrouped descriptors. */
       for ( auto elem = ungrouped.begin(); elem != ungrouped.end(); )
         {
-          const auto &iid        = elem->first;
-          const auto &descriptor = elem->second;
+          const auto & iid        = elem->first;
+          const auto & descriptor = elem->second;
           /* Skip if `systems' on descriptor excludes this system. */
           if ( descriptor.systems.has_value()
                && ( std::find( descriptor.systems->begin(),
@@ -339,8 +339,8 @@ Environment::lockSystem( const System &system )
   /* Fill `std::nullopt' for skippable ungrouped descriptors. */
   for ( auto elem = ungrouped.begin(); elem != ungrouped.end(); )
     {
-      const auto &iid        = elem->first;
-      const auto &descriptor = elem->second;
+      const auto & iid        = elem->first;
+      const auto & descriptor = elem->second;
       if ( descriptor.optional )
         {
           pkgs.emplace( iid, std::nullopt );
@@ -355,7 +355,7 @@ Environment::lockSystem( const System &system )
       std::stringstream msg;
       msg << "failed to resolve some descriptor(s): ";
       bool first = true;
-      for ( const auto &[iid, descriptor] : ungrouped )
+      for ( const auto & [iid, descriptor] : ungrouped )
         {
           if ( first ) { first = false; }
           else { msg << ", "; }
@@ -368,11 +368,11 @@ Environment::lockSystem( const System &system )
     {
       std::stringstream msg;
       msg << "failed to resolve some groups(s):";
-      for ( const auto &[groupName, group] : groups )
+      for ( const auto & [groupName, group] : groups )
         {
           bool first = true;
           msg << std::endl << "  " << groupName << ": ";
-          for ( const auto &[iid, descriptor] : group )
+          for ( const auto & [iid, descriptor] : group )
             {
               if ( first ) { first = false; }
               else { msg << ", "; }
@@ -402,7 +402,7 @@ Environment::createLockfile()
       //       remove some unused registry members.
       this->lockfileRaw->registry
         = this->getManifest().getLockedRegistry( this->getStore() );
-      for ( const auto &system : this->getSystems() )
+      for ( const auto & system : this->getSystems() )
         {
           this->lockSystem( system );
         }
@@ -475,12 +475,12 @@ EnvironmentMixin::getEnvironment()
 
 argparse::Argument &
 EnvironmentMixin::addGlobalManifestFileOption(
-  argparse::ArgumentParser &parser )
+  argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "--global-manifest" )
     .help( "The path to the user's global `manifest.{toml,yaml,json}' file." )
     .metavar( "PATH" )
-    .action( [&]( const std::string &strPath )
+    .action( [&]( const std::string & strPath )
              { this->globalManifestPath = nix::absPath( strPath ); } );
 }
 
@@ -488,12 +488,12 @@ EnvironmentMixin::addGlobalManifestFileOption(
 /* -------------------------------------------------------------------------- */
 
 argparse::Argument &
-EnvironmentMixin::addManifestFileOption( argparse::ArgumentParser &parser )
+EnvironmentMixin::addManifestFileOption( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "--manifest" )
     .help( "The path to the `manifest.{toml,yaml,json}' file." )
     .metavar( "PATH" )
-    .action( [&]( const std::string &strPath )
+    .action( [&]( const std::string & strPath )
              { this->manifestPath = nix::absPath( strPath ); } );
 }
 
@@ -501,14 +501,14 @@ EnvironmentMixin::addManifestFileOption( argparse::ArgumentParser &parser )
 /* -------------------------------------------------------------------------- */
 
 argparse::Argument &
-EnvironmentMixin::addManifestFileArg( argparse::ArgumentParser &parser,
-                                      bool                      required )
+EnvironmentMixin::addManifestFileArg( argparse::ArgumentParser & parser,
+                                      bool                       required )
 {
-  argparse::Argument &arg
+  argparse::Argument & arg
     = parser.add_argument( "manifest" )
         .help( "The path to the project's `manifest.{toml,yaml,json}' file." )
         .metavar( "MANIFEST-PATH" )
-        .action( [&]( const std::string &strPath )
+        .action( [&]( const std::string & strPath )
                  { this->manifestPath = nix::absPath( strPath ); } );
   return required ? arg.required() : arg;
 }
@@ -517,12 +517,12 @@ EnvironmentMixin::addManifestFileArg( argparse::ArgumentParser &parser,
 /* -------------------------------------------------------------------------- */
 
 argparse::Argument &
-EnvironmentMixin::addLockfileOption( argparse::ArgumentParser &parser )
+EnvironmentMixin::addLockfileOption( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "--lockfile" )
     .help( "The path to the projects existing `manifest.lock' file." )
     .metavar( "PATH" )
-    .action( [&]( const std::string &strPath )
+    .action( [&]( const std::string & strPath )
              { this->lockfilePath = nix::absPath( strPath ); } );
 }
 

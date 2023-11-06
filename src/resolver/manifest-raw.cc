@@ -621,7 +621,7 @@ ManifestRaw::check() const
   if ( this->hook.has_value() ) { this->hook->check(); }
   if ( this->registry.has_value() )
     {
-      for ( const auto [name, input] : this->registry->inputs )
+      for ( const auto & [name, input] : this->registry->inputs )
         {
           if ( input.getFlakeRef()->input.getType() == "indirect" )
             {

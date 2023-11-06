@@ -38,12 +38,12 @@ namespace flox {
 
 /* -------------------------------------------------------------------------- */
 
-FloxFlake::FloxFlake( const nix::ref<nix::EvalState> &state,
-                      const nix::FlakeRef            &ref )
+FloxFlake::FloxFlake( const nix::ref<nix::EvalState> & state,
+                      const nix::FlakeRef &            ref )
 try : state( state ),
   lockedFlake( nix::flake::lockFlake( *this->state, ref, defaultLockFlags ) )
   {}
-catch ( const std::exception &err )
+catch ( const std::exception & err )
   {
 
     throw LockFlakeException( "failed to lock flake \"" + ref.to_string()
@@ -73,12 +73,12 @@ FloxFlake::openEvalCache()
         *this->state,
         [&]()
         {
-          nix::Value *vFlake = this->state->allocValue();
+          nix::Value * vFlake = this->state->allocValue();
           nix::flake::callFlake( *this->state, this->lockedFlake, *vFlake );
           this->state->forceAttrs( *vFlake,
                                    nix::noPos,
                                    "while parsing cached flake data" );
-          nix::Attr *aOutputs
+          nix::Attr * aOutputs
             = vFlake->attrs->get( this->state->symbols.create( "outputs" ) );
           assert( aOutputs != nullptr );
           return aOutputs->value;
@@ -91,10 +91,10 @@ FloxFlake::openEvalCache()
 /* -------------------------------------------------------------------------- */
 
 MaybeCursor
-FloxFlake::maybeOpenCursor( const AttrPath &path )
+FloxFlake::maybeOpenCursor( const AttrPath & path )
 {
   MaybeCursor cur = this->openEvalCache()->getRoot();
-  for ( const auto &part : path )
+  for ( const auto & part : path )
     {
       cur = cur->maybeGetAttr( part );
       if ( cur == nullptr ) { break; }
@@ -106,10 +106,10 @@ FloxFlake::maybeOpenCursor( const AttrPath &path )
 /* -------------------------------------------------------------------------- */
 
 Cursor
-FloxFlake::openCursor( const AttrPath &path )
+FloxFlake::openCursor( const AttrPath & path )
 {
   Cursor cur = this->openEvalCache()->getRoot();
-  for ( const auto &part : path ) { cur = cur->getAttr( part ); }
+  for ( const auto & part : path ) { cur = cur->getAttr( part ); }
   return cur;
 }
 

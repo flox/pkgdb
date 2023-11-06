@@ -40,7 +40,7 @@ yamlToJSON( std::string_view yaml )
 {
   std::function<void( nlohmann::json &, const YAML::Node & )> visit;
 
-  visit = [&]( nlohmann::json &jto, const YAML::Node &yfrom )
+  visit = [&]( nlohmann::json & jto, const YAML::Node & yfrom )
   {
     switch ( yfrom.Type() )
       {
@@ -74,7 +74,7 @@ yamlToJSON( std::string_view yaml )
 
         case YAML::NodeType::Sequence:
           jto = nlohmann::json::array();
-          for ( const auto &elem : yfrom )
+          for ( const auto & elem : yfrom )
             {
               nlohmann::json jval;
               visit( jval, elem );
@@ -84,7 +84,7 @@ yamlToJSON( std::string_view yaml )
 
         case YAML::NodeType::Map:
           jto = nlohmann::json::object();
-          for ( const auto &elem : yfrom )
+          for ( const auto & elem : yfrom )
             {
               nlohmann::json jval;
               visit( jval, elem.second );
@@ -110,7 +110,7 @@ yamlToJSON( std::string_view yaml )
       visit( rsl, yaml );
       return rsl;
     }
-  catch ( const std::exception &e )
+  catch ( const std::exception & e )
     {
       throw YAMLToJSONException( "while parsing a YAML string", e.what() );
     }

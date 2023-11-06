@@ -44,17 +44,17 @@ public:
   std::optional<bool>        unfree;
   std::optional<std::string> description;
 
-  RawPackage( const AttrPath                 &path             = {},
-              std::string_view                name             = {},
-              std::string_view                pname            = {},
-              std::optional<std::string>      version          = std::nullopt,
-              std::optional<std::string>      semver           = std::nullopt,
-              std::optional<std::string>      license          = std::nullopt,
-              const std::vector<std::string> &outputs          = { "out" },
-              const std::vector<std::string> &outputsToInstall = { "out" },
-              std::optional<bool>             broken           = std::nullopt,
-              std::optional<bool>             unfree           = std::nullopt,
-              std::optional<std::string>      description      = std::nullopt )
+  RawPackage( const AttrPath &                 path             = {},
+              std::string_view                 name             = {},
+              std::string_view                 pname            = {},
+              std::optional<std::string>       version          = std::nullopt,
+              std::optional<std::string>       semver           = std::nullopt,
+              std::optional<std::string>       license          = std::nullopt,
+              const std::vector<std::string> & outputs          = { "out" },
+              const std::vector<std::string> & outputsToInstall = { "out" },
+              std::optional<bool>              broken           = std::nullopt,
+              std::optional<bool>              unfree           = std::nullopt,
+              std::optional<std::string>       description      = std::nullopt )
     : path( path )
     , name( name )
     , pname( pname )
@@ -143,10 +143,10 @@ public:
 
 /** @brief Convert a JSON object to a @a flox::RawPackage. */
 void
-from_json( const nlohmann::json &jfrom, RawPackage &pkg )
+from_json( const nlohmann::json & jfrom, RawPackage & pkg )
 {
   assertIsJSONObject<flox::pkgdb::PkgDbException>( jfrom, "package" );
-  for ( const auto &[key, value] : jfrom.items() )
+  for ( const auto & [key, value] : jfrom.items() )
     {
       if ( key == "path" )
         {
@@ -154,7 +154,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
             {
               value.get_to( pkg.path );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw flox::pkgdb::PkgDbException(
                 "couldn't interpret field `path'",
@@ -167,7 +167,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
             {
               value.get_to( pkg.name );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw flox::pkgdb::PkgDbException(
                 "couldn't interpret field `name'",
@@ -180,7 +180,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
             {
               value.get_to( pkg.pname );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw flox::pkgdb::PkgDbException(
                 "couldn't interpret field `pname'",
@@ -193,7 +193,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
             {
               value.get_to( pkg.version );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw flox::pkgdb::PkgDbException(
                 "couldn't interpret field `version'",
@@ -206,7 +206,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
             {
               value.get_to( pkg.semver );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw flox::pkgdb::PkgDbException(
                 "couldn't interpret field `semver'",
@@ -219,7 +219,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
             {
               value.get_to( pkg.license );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw flox::pkgdb::PkgDbException(
                 "couldn't interpret field `license'",
@@ -232,7 +232,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
             {
               value.get_to( pkg.outputs );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw flox::pkgdb::PkgDbException(
                 "couldn't interpret field `outputs'",
@@ -245,7 +245,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
             {
               value.get_to( pkg.outputsToInstall );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw flox::pkgdb::PkgDbException(
                 "couldn't interpret field `outputsToInstall'",
@@ -258,7 +258,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
             {
               value.get_to( pkg.broken );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw flox::pkgdb::PkgDbException(
                 "couldn't interpret field `broken'",
@@ -271,7 +271,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
             {
               value.get_to( pkg.unfree );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw flox::pkgdb::PkgDbException(
                 "couldn't interpret field `unfree'",
@@ -284,7 +284,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
             {
               value.get_to( pkg.description );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw flox::pkgdb::PkgDbException(
                 "couldn't interpret field `description'",
@@ -301,7 +301,7 @@ from_json( const nlohmann::json &jfrom, RawPackage &pkg )
 
 /** @brief Convert a @a flox::RawPackage to a JSON object. */
 void
-to_json( nlohmann::json &jto, const flox::RawPackage &pkg )
+to_json( nlohmann::json & jto, const flox::RawPackage & pkg )
 {
   jto = { { "path", pkg.path },
           {
