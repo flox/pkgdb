@@ -29,6 +29,25 @@ InputPreferences::clear()
 
 /* -------------------------------------------------------------------------- */
 
+void
+InputPreferences::merge( const InputPreferences & overrides )
+{
+  if ( overrides.subtrees.has_value() )
+    {
+      if ( this->subtrees.has_value() )
+        {
+          std::optional<std::vector<Subtree>> merged = std::make_optional(
+            flox::merge_vectors( this->subtrees.value(),
+                                 overrides.subtrees.value() ) );
+          this->subtrees.swap( merged );
+        }
+      else { this->subtrees = overrides.subtrees; }
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 pkgdb::PkgQueryArgs &
 InputPreferences::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 {
@@ -220,6 +239,19 @@ RegistryRaw::fillPkgQueryArgs( const std::string &   input,
   return pqa;
 }
 
+
+/* -------------------------------------------------------------------------- */
+
+void
+RegistryRaw::merge( const RegistryRaw & overrides )
+{
+  for ( const auto & [key, value] : overrides.inputs )
+    {
+      this->inputs[key] = value;
+    }
+  this->defaults.merge( overrides.defaults );
+  this->priority = merge_vectors( this->priority, overrides.priority );
+}
 
 /* -------------------------------------------------------------------------- */
 
