@@ -95,7 +95,15 @@ private:
   [[nodiscard]] std::unordered_map<InstallID, ManifestDescriptor>
   getUnlockedDescriptors();
 
-  /** @brief Get a merged form of @a globalManifest and @a manifest options. */
+  /**
+   * @brief Get a merged form of @a oldLockfile or @a globalManifest
+   *        ( if available ) and @a manifest options.
+   *
+   * Global options have the lowest priority, and will be clobbered by
+   * locked options.
+   * Options defined in the current manifest have the highest priority and will
+   * clobber all other settings.
+   */
   [[nodiscard]] const Options &
   getCombinedOptions();
 
@@ -156,10 +164,9 @@ public:
     return this->getManifest().getManifestRaw();
   }
 
-  // TODO
   /** @brief Get the old manifest from @a oldLockfile if it exists. */
-  [[nodiscard]] const std::optional<ManifestRaw> &
-  getOldManifestRaw();
+  [[nodiscard]] std::optional<ManifestRaw>
+  getOldManifestRaw() const;
 
   [[nodiscard]] std::optional<Lockfile>
   getOldLockfile() const

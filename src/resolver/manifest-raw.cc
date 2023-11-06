@@ -95,6 +95,8 @@ Options::operator pkgdb::PkgQueryArgs() const
     {
       args.preferPreReleases = *this->semver->preferPreReleases;
     }
+
+  return args;
 }
 
 

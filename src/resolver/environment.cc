@@ -110,32 +110,43 @@ Environment::fillLockedFromOldLockfile()
 
 /* -------------------------------------------------------------------------- */
 
+std::optional<ManifestRaw>
+Environment::getOldManifestRaw() const
+{
+  if ( this->getOldLockfile().has_value() )
+    {
+      return this->getOldLockfile()->getManifestRaw();
+    }
+  return std::nullopt;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 const Options &
 Environment::getCombinedOptions()
 {
   if ( ! this->combinedOptions.has_value() )
     {
-      if ( this->getManifestRaw().options.has_value() )
-        {
-          this->combinedOptions = this->getManifestRaw().options;
-        }
+      /* Start with global options ( if any ). */
       if ( this->getGlobalManifest().has_value()
            && this->getGlobalManifestRaw()->options.has_value() )
         {
-          if ( this->combinedOptions.has_value() )
-            {
-              this->combinedOptions->merge(
-                *this->getGlobalManifestRaw()->options );
-            }
-          else
-            {
-              this->combinedOptions = this->getGlobalManifestRaw()->options;
-            }
+          this->combinedOptions = this->getGlobalManifestRaw()->options;
         }
-      /* Fallback to an empty set of options to avoid recalculation. */
-      if ( ! this->combinedOptions.has_value() )
+      else { this->combinedOptions = Options {}; }
+
+      /* Clobber with lockfile's options ( if any ). */
+      if ( this->getOldManifestRaw().has_value()
+           && this->getOldManifestRaw()->options.has_value() )
         {
-          this->combinedOptions = Options {};
+          this->combinedOptions->merge( *this->getOldManifestRaw()->options );
+        }
+
+      /* Clobber with manifest's options ( if any ). */
+      if ( this->getManifestRaw().options.has_value() )
+        {
+          this->combinedOptions->merge( *this->getManifestRaw().options );
         }
     }
   return *this->combinedOptions;
