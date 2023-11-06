@@ -103,7 +103,7 @@ Environment::fillLockedFromOldLockfile()
             this->oldLockfile->getLockfileRaw().packages.at( system ).at(
               iid ) );
         }
-      this->lockfileRaw.packages.emplace( system, std::move( sysPkgs ) );
+      this->lockfileRaw->packages.emplace( system, std::move( sysPkgs ) );
     }
 }
 
@@ -256,20 +256,148 @@ Environment::tryResolveGroupIn( const InstallDescriptors & group,
   SystemPackages pkgs;
   LockedInputRaw lockedInput( input );
   auto           dbRO = input.getDbReadOnly();
-  for ( const auto & [iid, row] : pkgRows )
+  for ( const auto & [iid, maybeRow] : pkgRows )
     {
-      if ( row.has_value() )
+      if ( maybeRow.has_value() )
         {
           pkgs.emplace( iid,
                         Environment::lockPackage( lockedInput,
                                                   *dbRO,
-                                                  *row,
+                                                  *maybeRow,
                                                   group.at( iid ).priority ) );
         }
       else { pkgs.emplace( iid, std::nullopt ); }
     }
 
   return pkgs;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+Environment::lockSystem( const System & system )
+{
+  /* This should only be called from `Environment::createLock()' after
+   * initializing `lockfileRaw'. */
+  assert( this->lockfileRaw.has_value() );
+  SystemPackages pkgs;
+
+  auto ungrouped = this->getManifest().getDescriptors();
+  auto groups    = this->getManifest().getGroupedDescriptors();
+
+  // TODO: Use `getCombinedRegistryRaw()'
+  for ( const auto & inputPair : *this->getPkgDbRegistry() )
+    {
+      const auto & input = inputPair.second;
+      /* Try resolving unresolved groups. */
+      for ( const auto & [groupName, group] : groups )
+        {
+          std::optional<SystemPackages> maybeResolved
+            = this->tryResolveGroupIn( group, *input, system );
+          if ( maybeResolved.has_value() )
+            {
+              pkgs.merge( *maybeResolved );
+              groups.erase( groupName );
+            }
+        }
+
+      /* Try resolving unresolved ungrouped descriptors. */
+      for ( const auto & [iid, descriptor] : ungrouped )
+        {
+          /* Skip if `systems' on descriptor excludes this system. */
+          if ( descriptor.systems.has_value()
+               && ( std::find( descriptor.systems->begin(),
+                               descriptor.systems->end(),
+                               system )
+                    == descriptor.systems->end() ) )
+            {
+              pkgs.emplace( iid, std::nullopt );
+              ungrouped.erase( iid );
+              continue;
+            }
+          std::optional<pkgdb::row_id> maybeRow
+            = this->tryResolveDescriptorIn( descriptor, *input, system );
+          if ( maybeRow.has_value() )
+            {
+              pkgs.emplace( iid,
+                            Environment::lockPackage( *input,
+                                                      *maybeRow,
+                                                      descriptor.priority ) );
+              ungrouped.erase( iid );
+            }
+        }
+    }
+
+  /* Fill `std::nullopt' for skippable ungrouped descriptors. */
+  for ( const auto & [iid, descriptor] : ungrouped )
+    {
+      if ( descriptor.optional )
+        {
+          pkgs.emplace( iid, std::nullopt );
+          ungrouped.erase( iid );
+        }
+    }
+
+  /* Throw if any ungrouped descriptors remain. */
+  if ( ! ungrouped.empty() )
+    {
+      std::stringstream msg;
+      msg << "failed to resolve some descriptor(s): ";
+      bool first = true;
+      for ( const auto & [iid, descriptor] : ungrouped )
+        {
+          if ( first ) { first = false; }
+          else { msg << ", "; }
+          msg << iid;
+        }
+      throw ResolutionFailure( msg.str() );
+    }
+
+  if ( ! groups.empty() )
+    {
+      std::stringstream msg;
+      msg << "failed to resolve some groups(s):";
+      for ( const auto & [groupName, group] : groups )
+        {
+          bool first = true;
+          msg << std::endl << "  " << groupName << ": ";
+          for ( const auto & [iid, descriptor] : group )
+            {
+              if ( first ) { first = false; }
+              else { msg << ", "; }
+              msg << iid;
+            }
+        }
+      throw ResolutionFailure( msg.str() );
+    }
+
+  this->lockfileRaw->packages.emplace( system, std::move( pkgs ) );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+Lockfile
+Environment::createLockfile()
+{
+  if ( ! this->lockfileRaw.has_value() )
+    {
+      this->lockfileRaw = LockfileRaw {};
+      // TODO: Make a better implementation of `fillLockedFromOldLockfile()',
+      //       and modify `lockSystem()' to only target unlocked descriptors.
+      //this->fillLockedFromOldLockfile();
+      this->lockfileRaw->manifest = this->getManifestRaw();
+      // TODO: Once you figure out `getCombinedRegistryRaw' you might need to
+      //       remove some unused registry members.
+      this->lockfileRaw->registry
+        = this->getManifest().getLockedRegistry( this->getStore() );
+      for ( const auto & system : this->getSystems() )
+        {
+          this->lockSystem( system );
+        }
+    }
+  return Lockfile( *this->lockfileRaw );
 }
 
 

@@ -28,6 +28,13 @@ namespace flox::resolver {
 
 /* -------------------------------------------------------------------------- */
 
+FLOX_DEFINE_EXCEPTION( ResolutionFailure,
+                       EC_RESOLUTION_FAILURE,
+                       "resolution failure" );
+
+
+/* -------------------------------------------------------------------------- */
+
 /**
  * @brief A collection of data associated with an environment and its state.
  *
@@ -57,7 +64,7 @@ private:
   std::optional<Lockfile> oldLockfile;
 
   /** New/modified lockfile being edited. */
-  LockfileRaw lockfileRaw;
+  std::optional<LockfileRaw> lockfileRaw;
 
   std::optional<RegistryRaw> combinedRegistryRaw;
 
@@ -95,6 +102,12 @@ private:
    *  @brief Fill resolutions from @a oldLockfile into @a lockfile for
    *         unmodified descriptors.
    *         Drop any removed descriptors in the process.
+   *         This is a helper function of
+   *         @a flox::resolver::Environment::createLockfile().
+   *
+   * This must be called after @a lockfileRaw is initialized.
+   * This is only intended to be called from
+   * @a flox::resolver::Environment::createLockfile().
    */
   void
   fillLockedFromOldLockfile();
@@ -148,8 +161,16 @@ private:
                      const pkgdb::PkgDbInput &  input,
                      const System &             system );
 
-  // TODO
-  /** @brief Lock all descriptors for a given system. */
+  // TODO: Only update changed descriptors.
+  /**
+   * @brief Lock all descriptors for a given system.
+   *        This is a helper function of
+   *        @a flox::resolver::Environment::createLockfile().
+   *
+   * This must be called after @a lockfileRaw is initialized.
+   * This is only intended to be called from
+   * @a flox::resolver::Environment::createLockfile().
+   */
   void
   lockSystem( const System & system );
 
@@ -204,11 +225,17 @@ public:
   [[nodiscard]] RegistryRaw &
   getCombinedRegistryRaw();
 
-  // TODO: Implement.
+  /** @brief Get the set of supported systems. */
+  [[nodiscard]] std::vector<System>
+  getSystems() const
+  {
+    return this->getManifest().getSystems();
+  }
+
   // TODO: (Question) Should we lock the combined options and fill registry
   //                  `default` fields in inputs?
   /** @brief Create a new lockfile from @a manifest. */
-  [[nodiscard]] const Lockfile &
+  [[nodiscard]] Lockfile
   createLockfile();
 
 

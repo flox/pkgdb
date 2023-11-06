@@ -80,7 +80,9 @@ enum error_category {
   /** Exception processing an environment's lockfile. */
   EC_INVALID_LOCKFILE = 122,
   /** Invalid hash string. */
-  EC_INVALID_HASH = 123
+  EC_INVALID_HASH = 123,
+  /** Resolution failure. */
+  EC_RESOLUTION_FAILURE = 124
 
 }; /* End enum `error_category' */
 
