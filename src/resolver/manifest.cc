@@ -216,66 +216,6 @@ Manifest::getUngroupedDescriptors() const
 
 /* -------------------------------------------------------------------------- */
 
-// TODO: Migrate to `Lockfile'
-#if 0
-void
-ManifestFileMixin::checkGroups()
-{
-  std::unordered_map<GroupName,
-                     std::unordered_map<System, std::optional<Resolved::Input>>>
-    groupInputs;
-  for ( const auto &[iid, systemsResolved] : this->lockedDescriptors )
-    {
-      auto maybeGroupName = this->getDescriptors().at( iid ).group;
-      /* Skip if the descriptor doesn't name a group. */
-      if ( ! maybeGroupName.has_value() ) { continue; }
-      /* Either define the group or verify alignment. */
-      auto maybeGroup = groupInputs.find( *maybeGroupName );
-      if ( maybeGroup == groupInputs.end() )
-        {
-          std::unordered_map<std::string, std::optional<Resolved::Input>>
-            inputs;
-          for ( const auto &[system, resolved] : systemsResolved )
-            {
-              if ( resolved.has_value() )
-                {
-                  inputs.emplace( system, resolved->input );
-                }
-              else { inputs.emplace( system, std::nullopt ); }
-            }
-          groupInputs.emplace( maybeGroup->first, std::move( inputs ) );
-        }
-      else
-        {
-          for ( const auto &[system, resolved] : systemsResolved )
-            {
-              if ( resolved.has_value() )
-                {
-                  /* If the previous declaration skipped a system, we
-                   * may fill it.
-                   * Otherwise assert equality. */
-                  if ( ! maybeGroup->second.at( system ).has_value() )
-                    {
-                      maybeGroup->second.at( system ) = resolved->input;
-                    }
-                  else if ( ( *maybeGroup->second.at( system ) ).locked
-                            != resolved->input.locked )
-                    {
-                      // TODO: make a new exception
-                      throw FloxException(
-                        "locked descriptor `packages." + iid + "." + system
-                        + "' does not align with other members of its group" );
-                    }
-                }
-            }
-        }
-    }
-}
-#endif
-
-
-/* -------------------------------------------------------------------------- */
-
 }  // namespace flox::resolver
 
 

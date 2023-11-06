@@ -36,6 +36,49 @@ LockfileRaw::check() const
 /* -------------------------------------------------------------------------- */
 
 void
+Lockfile::checkGroups() const
+{
+  for ( const auto &[groupName, group] :
+        this->getManifest().getGroupedDescriptors() )
+    {
+      for ( const auto &system : this->manifest.getSystems() )
+        {
+          std::optional<LockedInputRaw> groupInput;
+          for ( const auto &[iid, descriptor] : group )
+            {
+              /* Handle system skips.  */
+              if ( descriptor.systems.has_value()
+                   && ( std::find( this->manifest.getSystems().begin(),
+                                   this->manifest.getSystems().end(),
+                                   system )
+                        == descriptor.systems->end() ) )
+                {
+                  continue;
+                }
+              auto maybeLocked
+                = this->lockfileRaw.packages.at( system ).at( iid );
+              /* Package was unresolved, we don't enforce `optional' here. */
+              if ( ! maybeLocked.has_value() ) { continue; }
+
+              if ( ! groupInput.has_value() )
+                {
+                  groupInput = maybeLocked->input;
+                }
+              else if ( groupInput->fingerprint
+                        != maybeLocked->input.fingerprint )
+                {
+                  throw InvalidLockfileException( "invalid group `" + groupName
+                                                  + "' uses multiple inputs" );
+                }
+            }
+        }
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
 Lockfile::check() const
 {
   this->lockfileRaw.check();
@@ -52,6 +95,8 @@ Lockfile::check() const
             }
         }
     }
+  // TODO: check `optional' and `system' skips.
+  this->checkGroups();
 }
 
 
@@ -357,42 +402,6 @@ to_json( nlohmann::json &jto, const LockfileRaw &raw )
           { "registry", raw.registry },
           { "packages", raw.packages },
           { "lockfile-version", raw.lockfileVersion } };
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-Lockfile::LockedInstallInfo
-Lockfile::getLockedInstallInfo( const InstallID &installID ) const
-{
-  if ( ( ! this->getManifestRaw().install.has_value() )
-       || ( this->getManifestRaw().install->find( installID )
-            == this->getManifestRaw().install->end() ) )
-    {
-      throw InvalidLockfileException(
-        "lockfile does not contain field `manifest.install." + installID
-        + "'." );
-    }
-  Lockfile::LockedInstallInfo info;
-  for ( const auto &[system, pkgs] : this->getLockfileRaw().packages )
-    {
-      if ( pkgs.find( installID ) == pkgs.end() )
-        {
-          throw InvalidLockfileException(
-            "lockfile does not contain field `packages." + system + '.'
-            + installID + "'." );
-        }
-      if ( pkgs.at( installID ).has_value() )
-        {
-          info.systemLocks.emplace( system, &( *pkgs.at( installID ) ) );
-        }
-      else { info.systemLocks.emplace( system, std::nullopt ); }
-    }
-
-  info.installID  = installID;
-  info.descriptor = &this->getManifest().getDescriptors().at( installID );
-
-  return info;
 }
 
 

@@ -192,6 +192,15 @@ private:
 
 
   /**
+   * @brief Check the lockfile's `packages.**` locked inputs align with the
+   *        requested groups in `manifest.install.<INSTALL-ID>.packageGroup`,
+   *        Throws an exception if two packages in the same group use
+   *        different inputs.
+   */
+  void
+  checkGroups() const;
+
+  /**
    * @brief Check the lockfile's validity, throwing an exception for
    *        invalid contents.
    *
@@ -200,7 +209,7 @@ private:
    * - `packages` members' groups are enforced.
    * - original _manifest_ is consistent with the lockfile's
    *   `registry.*` and `packages.**` members.
-   *  - `registry` inputs do not use indirect flake references.
+   * - `registry` inputs do not use indirect flake references.
    */
   void
   check() const;
@@ -294,39 +303,6 @@ public:
   {
     return this->packagesRegistryRaw;
   }
-
-  /** @brief Lockfile information related to a given _install id_. */
-  struct LockedInstallInfo
-  {
-
-    /** The _install id_ of the package. */
-    InstallID installID;
-    /** The original _manifest descriptor_. */
-    const ManifestDescriptor *descriptor;
-    /** Resolutions for each system. */
-    std::unordered_map<System, std::optional<const LockedPackageRaw *>>
-      systemLocks;
-
-
-    /** @brief Check the validity of the manifest information against the
-     *         locked `packages.**` information.
-     *         Throws an exception if invalid.
-     *
-     * This checks:
-     * - Any descriptor `systems` and `optional` fields align with
-     *   `packages.<SYSTEM>.* = std::nullopt` resolutions.
-     * - Any descriptor `systems`, `subtree`, and/or `path` fields align
-     *   locked `abspath`.
-     * - Any descriptor `input` aligns with locked input.
-     */
-    void
-    check() const;
-
-
-  }; /* End struct `LockedInstallInfo' */
-
-  [[nodiscard]] LockedInstallInfo
-  getLockedInstallInfo( const InstallID &installID ) const;
 
 
 }; /* End class `Lockfile' */
