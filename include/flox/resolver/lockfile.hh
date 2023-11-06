@@ -52,13 +52,13 @@ struct LockedInputRaw
   LockedInputRaw() : fingerprint( nix::htSHA256 ) {}
   ~LockedInputRaw() = default;
 
-  explicit LockedInputRaw( const pkgdb::PkgDbReadOnly &pdb )
+  explicit LockedInputRaw( const pkgdb::PkgDbReadOnly & pdb )
     : fingerprint( pdb.fingerprint )
     , url( pdb.lockedRef.string )
     , attrs( pdb.lockedRef.attrs )
   {}
 
-  explicit LockedInputRaw( const pkgdb::PkgDbInput &input )
+  explicit LockedInputRaw( const pkgdb::PkgDbInput & input )
     : LockedInputRaw( *input.getDbReadOnly() )
   {}
 
@@ -81,11 +81,11 @@ struct LockedInputRaw
 
 /** @brief Convert a JSON object to a @a flox::resolver::LockedInputRaw. */
 void
-from_json( const nlohmann::json &jfrom, LockedInputRaw &raw );
+from_json( const nlohmann::json & jfrom, LockedInputRaw & raw );
 
 /** @brief Convert a @a flox::resolver::LockedInputRaw to a JSON object. */
 void
-to_json( nlohmann::json &jto, const LockedInputRaw &raw );
+to_json( nlohmann::json & jto, const LockedInputRaw & raw );
 
 
 /* -------------------------------------------------------------------------- */
@@ -104,11 +104,11 @@ struct LockedPackageRaw
 
 /** @brief Convert a JSON object to a @a flox::resolver::LockedPackageRaw. */
 void
-from_json( const nlohmann::json &jfrom, LockedPackageRaw &raw );
+from_json( const nlohmann::json & jfrom, LockedPackageRaw & raw );
 
 /** @brief Convert a @a flox::resolver::LockedPackageRaw to a JSON object. */
 void
-to_json( nlohmann::json &jto, const LockedPackageRaw &raw );
+to_json( nlohmann::json & jto, const LockedPackageRaw & raw );
 
 
 /* -------------------------------------------------------------------------- */
@@ -164,11 +164,11 @@ struct LockfileRaw
 
 /** @brief Convert a JSON object to a @a flox::resolver::LockfileRaw. */
 void
-from_json( const nlohmann::json &jfrom, LockfileRaw &raw );
+from_json( const nlohmann::json & jfrom, LockfileRaw & raw );
 
 /** @brief Convert a @a flox::resolver::LockfileRaw to a JSON object. */
 void
-to_json( nlohmann::json &jto, const LockfileRaw &raw );
+to_json( nlohmann::json & jto, const LockfileRaw & raw );
 
 
 /* -------------------------------------------------------------------------- */

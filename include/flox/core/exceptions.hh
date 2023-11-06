@@ -192,7 +192,7 @@ public:
 
 /** @brief Convert a @a flox::FloxException to a JSON object. */
 void
-to_json( nlohmann::json &jto, const FloxException &err );
+to_json( nlohmann::json & jto, const FloxException & err );
 
 
 /* -------------------------------------------------------------------------- */
@@ -249,8 +249,8 @@ class NixEvalException : public FloxException
 
 public:
 
-  explicit NixEvalException( std::string_view      contextMsg,
-                             const nix::EvalError &err )
+  explicit NixEvalException( std::string_view       contextMsg,
+                             const nix::EvalError & err )
     : FloxException( "invalid argument",
                      std::string( contextMsg ),
                      nix::filterANSIEscapes( err.what(), true ) )

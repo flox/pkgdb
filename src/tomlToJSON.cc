@@ -43,13 +43,13 @@ tomlToJSON( std::string_view toml )
 
   std::function<void( nlohmann::json &, const toml::value & )> visit;
 
-  visit = [&]( nlohmann::json &jto, const toml::value &tfrom )
+  visit = [&]( nlohmann::json & jto, const toml::value & tfrom )
   {
     switch ( tfrom.type() )
       {
           case toml::value_t::table: {
             jto = nlohmann::json::object();
-            for ( const auto &elem : toml::get<toml::table>( tfrom ) )
+            for ( const auto & elem : toml::get<toml::table>( tfrom ) )
               {
                 nlohmann::json jval;
                 visit( jval, elem.second );
@@ -61,7 +61,7 @@ tomlToJSON( std::string_view toml )
           case toml::value_t::array: {
             auto tlist = toml::get<std::vector<toml::value>>( tfrom );
             jto        = nlohmann::json::array();
-            for ( const auto &elem : tlist )
+            for ( const auto & elem : tlist )
               {
                 nlohmann::json jval;
                 visit( jval, elem );
@@ -100,7 +100,7 @@ tomlToJSON( std::string_view toml )
       visit( rsl, toml );
       return rsl;
     }
-  catch ( const std::exception &e )  // TODO: toml::syntax_error
+  catch ( const std::exception & e )  // TODO: toml::syntax_error
     {
       throw TOMLToJSONException( "while parsing a TOML string", e.what() );
     }

@@ -46,7 +46,7 @@ ConstructorInitializerAllOnOneLineOrOnePerLine: true
 ConstructorInitializerIndentWidth: 2
 ContinuationIndentWidth: 2
 Cpp11BracedListStyle: false
-DerivePointerAlignment: true
+DerivePointerAlignment: false
 IncludeBlocks: Preserve
 IndentCaseLabels: true
 IndentPPDirectives: AfterHash

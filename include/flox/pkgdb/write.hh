@@ -119,7 +119,7 @@ public:
    * @param fingerprint Unique hash associated with locked flake.
    * @param dbPath Absolute path to database file.
    */
-  PkgDb( const Fingerprint &fingerprint, std::string_view dbPath )
+  PkgDb( const Fingerprint & fingerprint, std::string_view dbPath )
   {
     this->dbPath      = dbPath;
     this->fingerprint = fingerprint;
@@ -140,7 +140,7 @@ public:
    * Does NOT attempt to create a database if one does not exist.
    * @param fingerprint Unique hash associated with locked flake.
    */
-  explicit PkgDb( const Fingerprint &fingerprint )
+  explicit PkgDb( const Fingerprint & fingerprint )
     : PkgDb( fingerprint, genPkgDbName( fingerprint ).string() )
   {}
 
@@ -151,7 +151,7 @@ public:
    * @param flake Flake associated with the db. Used to write input metadata.
    * @param dbPath Absolute path to database file.
    */
-  PkgDb( const nix::flake::LockedFlake &flake, std::string_view dbPath )
+  PkgDb( const nix::flake::LockedFlake & flake, std::string_view dbPath )
   {
     this->dbPath      = dbPath;
     this->fingerprint = flake.getFingerprint();
@@ -170,7 +170,7 @@ public:
    * Creates database if one does not exist.
    * @param flake Flake associated with the db. Used to write input metadata.
    */
-  explicit PkgDb( const nix::flake::LockedFlake &flake )
+  explicit PkgDb( const nix::flake::LockedFlake & flake )
     : PkgDb( flake, genPkgDbName( flake.getFingerprint() ).string() )
   {}
 
@@ -188,7 +188,7 @@ public:
    * @return `SQLITE_*` [error code](https://www.sqlite.org/rescode.html).
    */
   inline sql_rc
-  execute( const char *stmt )
+  execute( const char * stmt )
   {
     sqlite3pp::command cmd( this->db, stmt );
     return cmd.execute();
@@ -200,7 +200,7 @@ public:
    * @return `SQLITE_*` [error code](https://www.sqlite.org/rescode.html).
    */
   inline sql_rc
-  execute_all( const char *stmt )
+  execute_all( const char * stmt )
   {
     sqlite3pp::command cmd( this->db, stmt );
     return cmd.execute_all();
@@ -226,7 +226,7 @@ public:
    *         @a attrName under @a parent.
    */
   row_id
-  addOrGetAttrSetId( const std::string &attrName, row_id parent = 0 );
+  addOrGetAttrSetId( const std::string & attrName, row_id parent = 0 );
 
   /**
    * @brief Get the `AttrSet.id` for a given path if it exists, or insert a
@@ -236,7 +236,7 @@ public:
    * @return A unique `row_id` ( unsigned 64bit int ) associated with @a path.
    */
   row_id
-  addOrGetAttrSetId( const flox::AttrPath &path );
+  addOrGetAttrSetId( const flox::AttrPath & path );
 
   /**
    * @brief Get the `Descriptions.id` for a given string if it exists, or
@@ -246,7 +246,7 @@ public:
    *         with @a description.
    */
   row_id
-  addOrGetDescriptionId( const std::string &description );
+  addOrGetDescriptionId( const std::string & description );
 
   /**
    * @brief Adds a package to the database.
@@ -261,11 +261,11 @@ public:
    * @return The `Packages.id` value for the added package.
    */
   row_id
-  addPackage( row_id              parentId,
-              std::string_view    attrName,
-              const flox::Cursor &cursor,
-              bool                replace  = false,
-              bool                checkDrv = true );
+  addPackage( row_id               parentId,
+              std::string_view     attrName,
+              const flox::Cursor & cursor,
+              bool                 replace  = false,
+              bool                 checkDrv = true );
 
 
   /* --------------------------------------------------------------------------
@@ -289,7 +289,7 @@ public:
    * @param done Value to update `done` column to.
    */
   void
-  setPrefixDone( const flox::AttrPath &prefix, bool done );
+  setPrefixDone( const flox::AttrPath & prefix, bool done );
 
 
   /* --------------------------------------------------------------------------
@@ -307,7 +307,7 @@ public:
    *             they may be scraped by later invocations.
    */
   void
-  scrape( nix::SymbolTable &syms, const Target &target, Todos &todo );
+  scrape( nix::SymbolTable & syms, const Target & target, Todos & todo );
 
 
   /* --------------------------------------------------------------------------

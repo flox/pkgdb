@@ -30,7 +30,7 @@ InputPreferences::clear()
 /* -------------------------------------------------------------------------- */
 
 pkgdb::PkgQueryArgs &
-InputPreferences::fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const
+InputPreferences::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 {
   pqa.subtrees = this->subtrees;
   return pqa;
@@ -56,7 +56,7 @@ RegistryRaw::getOrder() const
   std::vector<std::reference_wrapper<const std::string>> order(
     this->priority.cbegin(),
     this->priority.cend() );
-  for ( const auto &[key, _] : this->inputs )
+  for ( const auto & [key, _] : this->inputs )
     {
       if ( std::find( this->priority.begin(), this->priority.end(), key )
            == this->priority.end() )
@@ -71,10 +71,10 @@ RegistryRaw::getOrder() const
 /* -------------------------------------------------------------------------- */
 
 void
-from_json( const nlohmann::json &jfrom, RegistryInput &rip )
+from_json( const nlohmann::json & jfrom, RegistryInput & rip )
 {
   assertIsJSONObject<InvalidRegistryException>( jfrom, "registry input" );
-  for ( const auto &[key, value] : jfrom.items() )
+  for ( const auto & [key, value] : jfrom.items() )
     {
       if ( key == "subtrees" )
         {
@@ -82,7 +82,7 @@ from_json( const nlohmann::json &jfrom, RegistryInput &rip )
             {
               value.get_to( rip.subtrees );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw InvalidRegistryException(
                 "couldn't interpret registry input field `subtrees'",
@@ -96,7 +96,7 @@ from_json( const nlohmann::json &jfrom, RegistryInput &rip )
               nix::FlakeRef fr = value.get<nix::FlakeRef>();
               rip.from         = std::make_shared<nix::FlakeRef>( fr );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw InvalidRegistryException(
                 "couldn't interpret registry input field `from'",
@@ -109,7 +109,7 @@ from_json( const nlohmann::json &jfrom, RegistryInput &rip )
 
 
 void
-to_json( nlohmann::json &jto, const RegistryInput &rip )
+to_json( nlohmann::json & jto, const RegistryInput & rip )
 {
   jto = {
     { "subtrees", rip.subtrees },
@@ -125,24 +125,24 @@ to_json( nlohmann::json &jto, const RegistryInput &rip )
 
 /** @brief Convert a JSON object to a @a flox::RegistryRaw. */
 void
-from_json( const nlohmann::json &jfrom, RegistryRaw &reg )
+from_json( const nlohmann::json & jfrom, RegistryRaw & reg )
 {
   assertIsJSONObject<InvalidRegistryException>( jfrom, "registry" );
   reg.clear();
-  for ( const auto &[key, value] : jfrom.items() )
+  for ( const auto & [key, value] : jfrom.items() )
     {
       if ( value.is_null() ) { continue; }
       if ( key == "inputs" )
         {
           std::map<std::string, RegistryInput> inputs;
-          for ( const auto &[ikey, ivalue] : value.items() )
+          for ( const auto & [ikey, ivalue] : value.items() )
             {
               RegistryInput input;
               try
                 {
                   ivalue.get_to( input );
                 }
-              catch ( nlohmann::json::exception &e )
+              catch ( nlohmann::json::exception & e )
                 {
                   throw InvalidRegistryException(
                     "couldn't extract input `" + ikey + "'",
@@ -159,7 +159,7 @@ from_json( const nlohmann::json &jfrom, RegistryRaw &reg )
             {
               value.get_to( prefs );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw InvalidRegistryException(
                 "couldn't extract input preferences",
@@ -174,7 +174,7 @@ from_json( const nlohmann::json &jfrom, RegistryRaw &reg )
             {
               value.get_to( p );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw InvalidRegistryException( "couldn't extract input priority",
                                               flox::extract_json_errmsg( e ) );
@@ -191,7 +191,7 @@ from_json( const nlohmann::json &jfrom, RegistryRaw &reg )
 
 /** @brief Convert a @a flox::RegistryRaw to a JSON object. */
 void
-to_json( nlohmann::json &jto, const RegistryRaw &reg )
+to_json( nlohmann::json & jto, const RegistryRaw & reg )
 {
   jto = { { "inputs", reg.inputs },
           { "defaults", reg.defaults },
@@ -202,14 +202,14 @@ to_json( nlohmann::json &jto, const RegistryRaw &reg )
 /* -------------------------------------------------------------------------- */
 
 pkgdb::PkgQueryArgs &
-RegistryRaw::fillPkgQueryArgs( const std::string   &input,
-                               pkgdb::PkgQueryArgs &pqa ) const
+RegistryRaw::fillPkgQueryArgs( const std::string &   input,
+                               pkgdb::PkgQueryArgs & pqa ) const
 {
   /* Look for the named input and our fallbacks/default in the inputs list.
    * then fill input specific settings. */
   try
     {
-      const RegistryInput &minput = this->inputs.at( input );
+      const RegistryInput & minput = this->inputs.at( input );
       pqa.subtrees = minput.subtrees.has_value() ? minput.subtrees
                                                  : this->defaults.subtrees;
     }
@@ -262,7 +262,7 @@ FloxFlakeInput::getSubtrees()
                 }
               else { this->enabledSubtrees = std::vector<Subtree> {}; }
             }
-          catch ( const nix::EvalError &err )
+          catch ( const nix::EvalError & err )
             {
               throw NixEvalException( "could not determine flake subtrees",
                                       err );
@@ -288,7 +288,7 @@ std::map<std::string, RegistryInput>
 FlakeRegistry::getLockedInputs()
 {
   std::map<std::string, RegistryInput> locked;
-  for ( auto &[name, input] : *this )
+  for ( auto & [name, input] : *this )
     {
       locked.emplace( name, input->getLockedInput() );
     }
@@ -296,10 +296,10 @@ FlakeRegistry::getLockedInputs()
 }
 
 void
-from_json( const nlohmann::json &jfrom, InputPreferences &prefs )
+from_json( const nlohmann::json & jfrom, InputPreferences & prefs )
 {
   assertIsJSONObject<InvalidRegistryException>( jfrom, "input preferences" );
-  for ( const auto &[key, value] : jfrom.items() )
+  for ( const auto & [key, value] : jfrom.items() )
     {
       if ( key == "subtrees" )
         {
@@ -307,7 +307,7 @@ from_json( const nlohmann::json &jfrom, InputPreferences &prefs )
             {
               value.get_to( prefs.subtrees );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw InvalidRegistryException(
                 "couldn't interpret field `subtrees'",
@@ -320,7 +320,7 @@ from_json( const nlohmann::json &jfrom, InputPreferences &prefs )
 
 
 void
-to_json( nlohmann::json &jto, const InputPreferences &prefs )
+to_json( nlohmann::json & jto, const InputPreferences & prefs )
 {
   jto = { { "subtrees", prefs.subtrees } };
 }
@@ -329,7 +329,7 @@ to_json( nlohmann::json &jto, const InputPreferences &prefs )
 /* -------------------------------------------------------------------------- */
 
 RegistryRaw
-lockRegistry( const RegistryRaw &unlocked, nix::ref<nix::Store> store )
+lockRegistry( const RegistryRaw & unlocked, nix::ref<nix::Store> store )
 {
   auto factory  = FloxFlakeInputFactory( store );
   auto locked   = unlocked;

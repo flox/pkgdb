@@ -38,13 +38,13 @@ LockfileRaw::check() const
 void
 Lockfile::checkGroups() const
 {
-  for ( const auto &[groupName, group] :
+  for ( const auto & [groupName, group] :
         this->getManifest().getGroupedDescriptors() )
     {
-      for ( const auto &system : this->manifest.getSystems() )
+      for ( const auto & system : this->manifest.getSystems() )
         {
           std::optional<LockedInputRaw> groupInput;
-          for ( const auto &[iid, descriptor] : group )
+          for ( const auto & [iid, descriptor] : group )
             {
               /* Handle system skips.  */
               if ( descriptor.systems.has_value()
@@ -84,7 +84,7 @@ Lockfile::check() const
   this->lockfileRaw.check();
   if ( this->getManifestRaw().registry.has_value() )
     {
-      for ( const auto &[name, input] :
+      for ( const auto & [name, input] :
             this->getManifestRaw().registry->inputs )
         {
           if ( input.getFlakeRef()->input.getType() == "indirect" )
@@ -109,9 +109,9 @@ Lockfile::init()
 
   /* Collect inputs from all locked packages into a registry keyed
    * by fingerprints. */
-  for ( const auto &[system, sysPkgs] : this->lockfileRaw.packages )
+  for ( const auto & [system, sysPkgs] : this->lockfileRaw.packages )
     {
-      for ( const auto &[pid, pkg] : sysPkgs )
+      for ( const auto & [pid, pkg] : sysPkgs )
         {
           if ( ! pkg.has_value() ) { continue; }
           this->packagesRegistryRaw.inputs.try_emplace(
@@ -136,7 +136,7 @@ Lockfile::init()
 
 /** @brief Read a flox::resolver::Lockfile from a file. */
 static LockfileRaw
-readLockfileFromPath( const std::filesystem::path &lockfilePath )
+readLockfileFromPath( const std::filesystem::path & lockfilePath )
 {
   if ( ! std::filesystem::exists( lockfilePath ) )
     {
@@ -159,11 +159,11 @@ Lockfile::Lockfile( std::filesystem::path lockfilePath )
 /* -------------------------------------------------------------------------- */
 
 void
-from_json( const nlohmann::json &jfrom, LockedInputRaw &raw )
+from_json( const nlohmann::json & jfrom, LockedInputRaw & raw )
 {
   assertIsJSONObject<InvalidLockfileException>( jfrom, "locked input" );
 
-  for ( const auto &[key, value] : jfrom.items() )
+  for ( const auto & [key, value] : jfrom.items() )
     {
       if ( key == "fingerprint" )
         {
@@ -173,13 +173,13 @@ from_json( const nlohmann::json &jfrom, LockedInputRaw &raw )
                 value.get<std::string>(),
                 nix::htSHA256 );
             }
-          catch ( nlohmann::json::exception &err )
+          catch ( nlohmann::json::exception & err )
             {
               throw InvalidLockfileException(
                 "couldn't parse locked input field `" + key + "'",
                 extract_json_errmsg( err ) );
             }
-          catch ( nix::BadHash &err )
+          catch ( nix::BadHash & err )
             {
               throw InvalidHashException(
                 "failed to parse locked input fingerprint",
@@ -192,7 +192,7 @@ from_json( const nlohmann::json &jfrom, LockedInputRaw &raw )
             {
               value.get_to( raw.url );
             }
-          catch ( nlohmann::json::exception &err )
+          catch ( nlohmann::json::exception & err )
             {
               throw InvalidLockfileException(
                 "couldn't parse locked input field `" + key + "'",
@@ -205,7 +205,7 @@ from_json( const nlohmann::json &jfrom, LockedInputRaw &raw )
             {
               value.get_to( raw.attrs );
             }
-          catch ( nlohmann::json::exception &err )
+          catch ( nlohmann::json::exception & err )
             {
               throw InvalidLockfileException(
                 "couldn't parse locked input field `" + key + "'",
@@ -222,7 +222,7 @@ from_json( const nlohmann::json &jfrom, LockedInputRaw &raw )
 
 
 void
-to_json( nlohmann::json &jto, const LockedInputRaw &raw )
+to_json( nlohmann::json & jto, const LockedInputRaw & raw )
 {
   jto = { { "fingerprint", raw.fingerprint.to_string( nix::Base16, false ) },
           { "url", raw.url },
@@ -233,11 +233,11 @@ to_json( nlohmann::json &jto, const LockedInputRaw &raw )
 /* -------------------------------------------------------------------------- */
 
 void
-from_json( const nlohmann::json &jfrom, LockedPackageRaw &raw )
+from_json( const nlohmann::json & jfrom, LockedPackageRaw & raw )
 {
   assertIsJSONObject<InvalidLockfileException>( jfrom, "locked package" );
 
-  for ( const auto &[key, value] : jfrom.items() )
+  for ( const auto & [key, value] : jfrom.items() )
     {
       if ( key == "input" )
         {
@@ -245,7 +245,7 @@ from_json( const nlohmann::json &jfrom, LockedPackageRaw &raw )
             {
               value.get_to( raw.input );
             }
-          catch ( nlohmann::json::exception &err )
+          catch ( nlohmann::json::exception & err )
             {
               throw InvalidLockfileException(
                 "couldn't parse package input field `" + key + "'",
@@ -258,7 +258,7 @@ from_json( const nlohmann::json &jfrom, LockedPackageRaw &raw )
             {
               value.get_to( raw.attrPath );
             }
-          catch ( nlohmann::json::exception &err )
+          catch ( nlohmann::json::exception & err )
             {
               throw InvalidLockfileException(
                 "couldn't parse package input field `" + key + "'",
@@ -271,7 +271,7 @@ from_json( const nlohmann::json &jfrom, LockedPackageRaw &raw )
             {
               value.get_to( raw.priority );
             }
-          catch ( nlohmann::json::exception &err )
+          catch ( nlohmann::json::exception & err )
             {
               throw InvalidLockfileException(
                 "couldn't parse package input field `" + key + "'",
@@ -289,7 +289,7 @@ from_json( const nlohmann::json &jfrom, LockedPackageRaw &raw )
 
 
 void
-to_json( nlohmann::json &jto, const LockedPackageRaw &raw )
+to_json( nlohmann::json & jto, const LockedPackageRaw & raw )
 {
   jto = { { "input", raw.input },
           { "attr-path", raw.attrPath },
@@ -313,10 +313,10 @@ LockfileRaw::clear()
 /* -------------------------------------------------------------------------- */
 
 void
-from_json( const nlohmann::json &jfrom, LockfileRaw &raw )
+from_json( const nlohmann::json & jfrom, LockfileRaw & raw )
 {
   assertIsJSONObject<InvalidLockfileException>( jfrom, "lockfile" );
-  for ( const auto &[key, value] : jfrom.items() )
+  for ( const auto & [key, value] : jfrom.items() )
     {
       if ( key == "manifest" )
         {
@@ -324,7 +324,7 @@ from_json( const nlohmann::json &jfrom, LockfileRaw &raw )
             {
               value.get_to( raw.manifest );
             }
-          catch ( nlohmann::json::exception &err )
+          catch ( nlohmann::json::exception & err )
             {
               throw InvalidLockfileException( "couldn't parse lockfile field `"
                                                 + key + "'",
@@ -337,7 +337,7 @@ from_json( const nlohmann::json &jfrom, LockfileRaw &raw )
             {
               value.get_to( raw.registry );
             }
-          catch ( nlohmann::json::exception &err )
+          catch ( nlohmann::json::exception & err )
             {
               throw InvalidLockfileException( "couldn't parse lockfile field `"
                                                 + key + "'",
@@ -352,17 +352,17 @@ from_json( const nlohmann::json &jfrom, LockfileRaw &raw )
                 jfrom,
                 "lockfile `packages' field" );
             }
-          for ( const auto &[system, descriptors] : value.items() )
+          for ( const auto & [system, descriptors] : value.items() )
             {
               SystemPackages sysPkgs;
-              for ( const auto &[pid, descriptor] : descriptors.items() )
+              for ( const auto & [pid, descriptor] : descriptors.items() )
                 {
                   try
                     {
                       sysPkgs.emplace( pid,
                                        descriptor.get<LockedPackageRaw>() );
                     }
-                  catch ( nlohmann::json::exception &err )
+                  catch ( nlohmann::json::exception & err )
                     {
                       throw InvalidLockfileException(
                         "couldn't parse lockfile field `packages." + system
@@ -379,7 +379,7 @@ from_json( const nlohmann::json &jfrom, LockfileRaw &raw )
             {
               value.get_to( raw.lockfileVersion );
             }
-          catch ( nlohmann::json::exception &err )
+          catch ( nlohmann::json::exception & err )
             {
               throw InvalidLockfileException( "couldn't parse lockfile field `"
                                                 + key + "'",
@@ -396,7 +396,7 @@ from_json( const nlohmann::json &jfrom, LockfileRaw &raw )
 
 
 void
-to_json( nlohmann::json &jto, const LockfileRaw &raw )
+to_json( nlohmann::json & jto, const LockfileRaw & raw )
 {
   jto = { { "manifest", raw.manifest },
           { "registry", raw.registry },

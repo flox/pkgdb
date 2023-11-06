@@ -58,7 +58,7 @@ static const nlohmann::json pkgDescriptorBaseRaw = R"( {
 /* -------------------------------------------------------------------------- */
 
 static row_id
-getRowCount( flox::pkgdb::PkgDb &db, const std::string table )
+getRowCount( flox::pkgdb::PkgDb & db, const std::string table )
 {
   std::string qryS = "SELECT COUNT( * ) FROM ";
   qryS += table;
@@ -70,7 +70,7 @@ getRowCount( flox::pkgdb::PkgDb &db, const std::string table )
 /* -------------------------------------------------------------------------- */
 
 static inline void
-clearTables( flox::pkgdb::PkgDb &db )
+clearTables( flox::pkgdb::PkgDb & db )
 {
   /* Clear DB */
   db.execute_all(
@@ -85,7 +85,7 @@ clearTables( flox::pkgdb::PkgDb &db )
  * `AttrSets` to be empty.
  */
 bool
-test_addOrGetAttrSetId0( flox::pkgdb::PkgDb &db )
+test_addOrGetAttrSetId0( flox::pkgdb::PkgDb & db )
 {
   clearTables( db );
 
@@ -108,7 +108,7 @@ test_addOrGetAttrSetId0( flox::pkgdb::PkgDb &db )
 
 /** Ensure we throw an error for undefined `AttrSet.id' parents. */
 bool
-test_addOrGetAttrSetId1( flox::pkgdb::PkgDb &db )
+test_addOrGetAttrSetId1( flox::pkgdb::PkgDb & db )
 {
   clearTables( db );
 
@@ -118,10 +118,10 @@ test_addOrGetAttrSetId1( flox::pkgdb::PkgDb &db )
       db.addOrGetAttrSetId( "phony", 1 );
       return false;
     }
-  catch ( const flox::pkgdb::PkgDbException &e )
+  catch ( const flox::pkgdb::PkgDbException & e )
     { /* Expected */
     }
-  catch ( const std::exception &e )
+  catch ( const std::exception & e )
     {
       std::cerr << e.what() << std::endl;
       return false;
@@ -134,7 +134,7 @@ test_addOrGetAttrSetId1( flox::pkgdb::PkgDb &db )
 
 /** Ensure database version matches our header's version */
 bool
-test_getDbVersion0( flox::pkgdb::PkgDb &db )
+test_getDbVersion0( flox::pkgdb::PkgDb & db )
 {
   EXPECT_EQ( db.getDbVersion(), flox::pkgdb::sqlVersions );
   return true;
@@ -148,7 +148,7 @@ test_getDbVersion0( flox::pkgdb::PkgDb &db )
  * an `AttrSet`.
  */
 bool
-test_hasAttrSet0( flox::pkgdb::PkgDb &db )
+test_hasAttrSet0( flox::pkgdb::PkgDb & db )
 {
   clearTables( db );
 
@@ -173,7 +173,7 @@ test_hasAttrSet0( flox::pkgdb::PkgDb &db )
  * such that attribute sets with packages are identified as "Package Sets".
  */
 bool
-test_hasAttrSet1( flox::pkgdb::PkgDb &db )
+test_hasAttrSet1( flox::pkgdb::PkgDb & db )
 {
   clearTables( db );
 
@@ -201,7 +201,7 @@ test_hasAttrSet1( flox::pkgdb::PkgDb &db )
  * returned by @a flox::pkgdb::PkgDb::getAttrSetId.
  */
 bool
-test_getAttrSetId0( flox::pkgdb::PkgDb &db )
+test_getAttrSetId0( flox::pkgdb::PkgDb & db )
 {
   clearTables( db );
 
@@ -221,7 +221,7 @@ test_getAttrSetId0( flox::pkgdb::PkgDb &db )
  * Ensure we properly reconstruct an attribute path from the `AttrSets` table.
  */
 bool
-test_getAttrSetPath0( flox::pkgdb::PkgDb &db )
+test_getAttrSetPath0( flox::pkgdb::PkgDb & db )
 {
   clearTables( db );
 
@@ -237,7 +237,7 @@ test_getAttrSetPath0( flox::pkgdb::PkgDb &db )
 /* -------------------------------------------------------------------------- */
 
 bool
-test_hasPackage0( flox::pkgdb::PkgDb &db )
+test_hasPackage0( flox::pkgdb::PkgDb & db )
 {
   clearTables( db );
 
@@ -264,7 +264,7 @@ test_hasPackage0( flox::pkgdb::PkgDb &db )
  * Tests `addOrGetDesciptionId` and `getDescription`.
  */
 bool
-test_descriptions0( flox::pkgdb::PkgDb &db )
+test_descriptions0( flox::pkgdb::PkgDb & db )
 {
   row_id id = db.addOrGetDescriptionId( "Hello, World!" );
   /* Ensure we get the same `id`. */
@@ -312,7 +312,7 @@ test_serialize_PkgDescriptorBase()
 
 /* Tests `systems', `name', `pname', `version', and `subtree' filtering. */
 bool
-test_PkgQuery0( flox::pkgdb::PkgDb &db )
+test_PkgQuery0( flox::pkgdb::PkgDb & db )
 {
   clearTables( db );
 
@@ -391,7 +391,7 @@ test_PkgQuery0( flox::pkgdb::PkgDb &db )
 
 /* Tests `license', `allowBroken', and `allowUnfree' filtering. */
 bool
-test_PkgQuery1( flox::pkgdb::PkgDb &db )
+test_PkgQuery1( flox::pkgdb::PkgDb & db )
 {
   clearTables( db );
 
@@ -485,7 +485,7 @@ test_PkgQuery1( flox::pkgdb::PkgDb &db )
 
 /* Tests `partialMatch' and `pnameOrAttrName' filtering. */
 bool
-test_PkgQuery2( flox::pkgdb::PkgDb &db )
+test_PkgQuery2( flox::pkgdb::PkgDb & db )
 {
   clearTables( db );
 
@@ -531,7 +531,7 @@ test_PkgQuery2( flox::pkgdb::PkgDb &db )
     qargs.partialMatch = std::nullopt;
     size_t count       = 0;
     auto   bound       = qry.bind( db.db );
-    for ( const auto &row : *bound )
+    for ( const auto & row : *bound )
       {
         ++count;
         if ( count == 1 )
@@ -557,7 +557,7 @@ test_PkgQuery2( flox::pkgdb::PkgDb &db )
     qargs.partialMatch = std::nullopt;
     size_t count       = 0;
     auto   bound       = qry.bind( db.db );
-    for ( const auto &row : *bound )
+    for ( const auto & row : *bound )
       {
         ++count;
         EXPECT( row.get<bool>( 0 ) );
@@ -575,7 +575,7 @@ test_PkgQuery2( flox::pkgdb::PkgDb &db )
     qargs.partialMatch = std::nullopt;
     size_t count       = 0;
     auto   bound       = qry.bind( db.db );
-    for ( const auto &row : *bound )
+    for ( const auto & row : *bound )
       {
         ++count;
         if ( count == 1 )
@@ -601,7 +601,7 @@ test_PkgQuery2( flox::pkgdb::PkgDb &db )
     qargs.pnameOrAttrName = std::nullopt;
     size_t count          = 0;
     auto   bound          = qry.bind( db.db );
-    for ( const auto &row : *bound )
+    for ( const auto & row : *bound )
       {
         ++count;
         // exactPname is true
@@ -629,7 +629,7 @@ test_PkgQuery2( flox::pkgdb::PkgDb &db )
     qargs.pnameOrAttrName = std::nullopt;
     size_t count          = 0;
     auto   bound          = qry.bind( db.db );
-    for ( const auto &row : *bound )
+    for ( const auto & row : *bound )
       {
         ++count;
         // exactPname is false
@@ -648,7 +648,7 @@ test_PkgQuery2( flox::pkgdb::PkgDb &db )
 
 /* Tests `getPackages', particularly `semver' filtering. */
 bool
-test_getPackages0( flox::pkgdb::PkgDb &db )
+test_getPackages0( flox::pkgdb::PkgDb & db )
 {
   clearTables( db );
 
@@ -716,7 +716,7 @@ test_getPackages0( flox::pkgdb::PkgDb &db )
  * Tests `getPackages', particularly subtree`, and
  * `system` ordering. */
 bool
-test_getPackages1( flox::pkgdb::PkgDb &db )
+test_getPackages1( flox::pkgdb::PkgDb & db )
 {
   clearTables( db );
 
@@ -786,7 +786,7 @@ test_getPackages1( flox::pkgdb::PkgDb &db )
 
 /** Tests `getPackages', particularly `version' ordering. */
 bool
-test_getPackages2( flox::pkgdb::PkgDb &db )
+test_getPackages2( flox::pkgdb::PkgDb & db )
 {
   clearTables( db );
 
@@ -841,7 +841,7 @@ test_getPackages2( flox::pkgdb::PkgDb &db )
 /* -------------------------------------------------------------------------- */
 
 bool
-test_DbPackage0( flox::pkgdb::PkgDb &db )
+test_DbPackage0( flox::pkgdb::PkgDb & db )
 {
   clearTables( db );
 
@@ -895,7 +895,7 @@ test_DbPackage0( flox::pkgdb::PkgDb &db )
 /* -------------------------------------------------------------------------- */
 
 bool
-test_getPackages_semver0( flox::pkgdb::PkgDb &db )
+test_getPackages_semver0( flox::pkgdb::PkgDb & db )
 {
   clearTables( db );
 
@@ -942,7 +942,7 @@ test_getPackages_semver0( flox::pkgdb::PkgDb &db )
   qargs.pname    = "hello";
 
   auto getSemvers =
-    [&]( const std::string &semver ) -> std::vector<std::optional<std::string>>
+    [&]( const std::string & semver ) -> std::vector<std::optional<std::string>>
   {
     std::vector<std::optional<std::string>> rsl;
     qargs.semver = { semver };
@@ -961,7 +961,7 @@ test_getPackages_semver0( flox::pkgdb::PkgDb &db )
     auto semvers = getSemvers( "^2" );
     EXPECT_EQ( semvers.size(), std::size_t( 3 ) );
     size_t idx = 0;
-    for ( const std::optional<std::string> &maybeSemver : semvers )
+    for ( const std::optional<std::string> & maybeSemver : semvers )
       {
         EXPECT( maybeSemver.has_value() );
         if ( idx == 0 ) { EXPECT_EQ( *maybeSemver, "2.14.1" ); }
@@ -976,7 +976,7 @@ test_getPackages_semver0( flox::pkgdb::PkgDb &db )
     auto semvers = getSemvers( "^2.13.1" );
     EXPECT_EQ( semvers.size(), std::size_t( 2 ) );
     size_t idx = 0;
-    for ( const std::optional<std::string> &maybeSemver : semvers )
+    for ( const std::optional<std::string> & maybeSemver : semvers )
       {
         EXPECT( maybeSemver.has_value() );
         if ( idx == 0 ) { EXPECT_EQ( *maybeSemver, "2.14.1" ); }
@@ -989,7 +989,7 @@ test_getPackages_semver0( flox::pkgdb::PkgDb &db )
   {
     auto semvers = getSemvers( "*" );
     EXPECT_EQ( semvers.size(), std::size_t( 5 ) );
-    for ( const auto &maybeSemver : semvers )
+    for ( const auto & maybeSemver : semvers )
       {
         EXPECT( maybeSemver.has_value() );
       }
@@ -1002,7 +1002,7 @@ test_getPackages_semver0( flox::pkgdb::PkgDb &db )
 /* -------------------------------------------------------------------------- */
 
 int
-main( int argc, char *argv[] )
+main( int argc, char * argv[] )
 {
   int ec = EXIT_SUCCESS;
 #define RUN_TEST( ... ) _RUN_TEST( ec, __VA_ARGS__ )

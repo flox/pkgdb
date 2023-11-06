@@ -80,7 +80,7 @@ struct QueryPreferences
    * NOTE: This DOES clear @a pqa before filling it.
    */
   pkgdb::PkgQueryArgs &
-  fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const;
+  fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
 
 
 }; /* End struct `QueryPreferences' */
@@ -110,7 +110,7 @@ FLOX_DEFINE_EXCEPTION( ParseQueryPreferencesException,
  * NOTE: Does not `throw` for unknown keys at the top level.
  */
 void
-from_json( const nlohmann::json &jfrom, QueryPreferences &prefs );
+from_json( const nlohmann::json & jfrom, QueryPreferences & prefs );
 
 /**
  * @brief Convert a @a flox::pkgdb::QueryPreferences to a JSON object.
@@ -118,7 +118,7 @@ from_json( const nlohmann::json &jfrom, QueryPreferences &prefs );
  * NOTE: This DOES clear @a jto before filling it.
  */
 void
-to_json( nlohmann::json &jto, const QueryPreferences &prefs );
+to_json( nlohmann::json & jto, const QueryPreferences & prefs );
 
 
 /* -------------------------------------------------------------------------- */
@@ -182,7 +182,7 @@ struct QueryParams : public QueryPreferences
    *         searched, `false` otherwise.
    */
   virtual bool
-  fillPkgQueryArgs( const std::string &input, pkgdb::PkgQueryArgs &pqa ) const
+  fillPkgQueryArgs( const std::string & input, pkgdb::PkgQueryArgs & pqa ) const
   {
     /* Fill from globals */
     this->pkgdb::QueryPreferences::fillPkgQueryArgs( pqa );
@@ -216,10 +216,10 @@ FLOX_DEFINE_EXCEPTION( ParseQueryParamsException,
 
 template<pkg_descriptor_typename QueryType>
 void
-from_json( const nlohmann::json &jfrom, QueryParams<QueryType> &params )
+from_json( const nlohmann::json & jfrom, QueryParams<QueryType> & params )
 {
   pkgdb::from_json( jfrom, dynamic_cast<pkgdb::QueryPreferences &>( params ) );
-  for ( const auto &[key, value] : jfrom.items() )
+  for ( const auto & [key, value] : jfrom.items() )
     {
       if ( key == "registry" )
         {
@@ -250,7 +250,7 @@ from_json( const nlohmann::json &jfrom, QueryParams<QueryType> &params )
 
 template<pkg_descriptor_typename QueryType>
 void
-to_json( nlohmann::json &jto, const QueryParams<QueryType> &params )
+to_json( nlohmann::json & jto, const QueryParams<QueryType> & params )
 {
   pkgdb::to_json( jto,
                   dynamic_cast<const pkgdb::QueryPreferences &>( params ) );

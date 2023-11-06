@@ -40,7 +40,7 @@ QueryPreferences::clear()
 /* -------------------------------------------------------------------------- */
 
 pkgdb::PkgQueryArgs &
-QueryPreferences::fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const
+QueryPreferences::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 {
   pqa.clear();
   pqa.systems           = this->systems;
@@ -55,12 +55,12 @@ QueryPreferences::fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const
 /* -------------------------------------------------------------------------- */
 
 void
-from_json( const nlohmann::json &jfrom, QueryPreferences &prefs )
+from_json( const nlohmann::json & jfrom, QueryPreferences & prefs )
 {
   assertIsJSONObject<ParseQueryPreferencesException>( jfrom,
                                                       "query preferences" );
   prefs.clear();
-  for ( const auto &[key, value] : jfrom.items() )
+  for ( const auto & [key, value] : jfrom.items() )
     {
       if ( key == "systems" )
         {
@@ -69,7 +69,7 @@ from_json( const nlohmann::json &jfrom, QueryPreferences &prefs )
             {
               value.get_to( prefs.systems );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw ParseQueryPreferencesException(
                 "couldn't interpret preferences field `systems'",
@@ -79,7 +79,7 @@ from_json( const nlohmann::json &jfrom, QueryPreferences &prefs )
       else if ( key == "allow" )
         {
           if ( value.is_null() ) { continue; }
-          for ( const auto &[akey, avalue] : value.items() )
+          for ( const auto & [akey, avalue] : value.items() )
             {
               if ( akey == "unfree" )
                 {
@@ -89,7 +89,7 @@ from_json( const nlohmann::json &jfrom, QueryPreferences &prefs )
                     {
                       avalue.get_to( prefs.allow.unfree );
                     }
-                  catch ( nlohmann::json::exception &e )
+                  catch ( nlohmann::json::exception & e )
                     {
                       throw ParseQueryPreferencesException(
                         "couldn't interpret preferences "
@@ -104,7 +104,7 @@ from_json( const nlohmann::json &jfrom, QueryPreferences &prefs )
                     {
                       avalue.get_to( prefs.allow.broken );
                     }
-                  catch ( nlohmann::json::exception &e )
+                  catch ( nlohmann::json::exception & e )
                     {
                       throw ParseQueryPreferencesException(
                         "couldn't interpret preferences "
@@ -119,7 +119,7 @@ from_json( const nlohmann::json &jfrom, QueryPreferences &prefs )
                     {
                       avalue.get_to( prefs.allow.licenses );
                     }
-                  catch ( nlohmann::json::exception &e )
+                  catch ( nlohmann::json::exception & e )
                     {
                       throw ParseQueryPreferencesException(
                         "couldn't interpret preferences "
@@ -137,7 +137,7 @@ from_json( const nlohmann::json &jfrom, QueryPreferences &prefs )
       else if ( key == "semver" )
         {
           if ( value.is_null() ) { continue; }
-          for ( const auto &[skey, svalue] : value.items() )
+          for ( const auto & [skey, svalue] : value.items() )
             {
               if ( skey == "preferPreReleases" )
                 {
@@ -146,7 +146,7 @@ from_json( const nlohmann::json &jfrom, QueryPreferences &prefs )
                     {
                       svalue.get_to( prefs.semver.preferPreReleases );
                     }
-                  catch ( nlohmann::json::exception &e )
+                  catch ( nlohmann::json::exception & e )
                     {
                       throw ParseQueryPreferencesException(
                         "couldn't interpret preferences field "
@@ -166,7 +166,7 @@ from_json( const nlohmann::json &jfrom, QueryPreferences &prefs )
 
 
 void
-to_json( nlohmann::json &jto, const QueryPreferences &prefs )
+to_json( nlohmann::json & jto, const QueryPreferences & prefs )
 {
   jto = { { "systems", prefs.systems },
           { "allow",

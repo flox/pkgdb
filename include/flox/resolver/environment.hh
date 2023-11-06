@@ -78,15 +78,15 @@ private:
   std::shared_ptr<Registry<pkgdb::PkgDbInputFactory>> dbs;
 
   static LockedPackageRaw
-  lockPackage( const LockedInputRaw &input,
-               pkgdb::PkgDbReadOnly &dbRO,
-               pkgdb::row_id         row,
-               unsigned              priority );
+  lockPackage( const LockedInputRaw & input,
+               pkgdb::PkgDbReadOnly & dbRO,
+               pkgdb::row_id          row,
+               unsigned               priority );
 
   static inline LockedPackageRaw
-  lockPackage( const pkgdb::PkgDbInput &input,
-               pkgdb::row_id            row,
-               unsigned                 priority )
+  lockPackage( const pkgdb::PkgDbInput & input,
+               pkgdb::row_id             row,
+               unsigned                  priority )
   {
     return lockPackage( LockedInputRaw( input ),
                         *input.getDbReadOnly(),
@@ -144,9 +144,9 @@ private:
 
   /** @brief Try to resolve a descriptor in a given package database. */
   [[nodiscard]] std::optional<pkgdb::row_id>
-  tryResolveDescriptorIn( const ManifestDescriptor &descriptor,
-                          const pkgdb::PkgDbInput  &input,
-                          const System             &system );
+  tryResolveDescriptorIn( const ManifestDescriptor & descriptor,
+                          const pkgdb::PkgDbInput &  input,
+                          const System &             system );
 
   /**
    * @brief Try to resolve a group of descriptors in a given package database.
@@ -155,9 +155,9 @@ private:
    *          resolved packages for.
    */
   [[nodiscard]] std::optional<SystemPackages>
-  tryResolveGroupIn( const InstallDescriptors &group,
-                     const pkgdb::PkgDbInput  &input,
-                     const System             &system );
+  tryResolveGroupIn( const InstallDescriptors & group,
+                     const pkgdb::PkgDbInput &  input,
+                     const System &             system );
 
   // TODO: Only update changed descriptors.
   /**
@@ -170,7 +170,7 @@ private:
    * @a flox::resolver::Environment::createLockfile().
    */
   void
-  lockSystem( const System &system );
+  lockSystem( const System & system );
 
 
 public:
@@ -312,7 +312,7 @@ public:
    * @return The argument added to the parser.
    */
   argparse::Argument &
-  addGlobalManifestFileOption( argparse::ArgumentParser &parser );
+  addGlobalManifestFileOption( argparse::ArgumentParser & parser );
 
   /**
    * @brief Sets the path to the manifest file to load with `--manifest`.
@@ -321,7 +321,7 @@ public:
    * @return The argument added to the parser.
    */
   argparse::Argument &
-  addManifestFileOption( argparse::ArgumentParser &parser );
+  addManifestFileOption( argparse::ArgumentParser & parser );
 
   /**
    * @brief Sets the path to the manifest file to load with a positional arg.
@@ -330,7 +330,7 @@ public:
    * @return The argument added to the parser.
    */
   argparse::Argument &
-  addManifestFileArg( argparse::ArgumentParser &parser, bool required = true );
+  addManifestFileArg( argparse::ArgumentParser & parser, bool required = true );
 
   /**
    * @brief Sets the path to the old lockfile to load with `--lockfile`.
@@ -338,7 +338,7 @@ public:
    * @return The argument added to the parser.
    */
   argparse::Argument &
-  addLockfileOption( argparse::ArgumentParser &parser );
+  addLockfileOption( argparse::ArgumentParser & parser );
 
 
 }; /* End class `EnvironmentMixin' */

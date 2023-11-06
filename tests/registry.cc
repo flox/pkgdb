@@ -31,7 +31,7 @@ test_FloxFlakeInputRegistry0()
   flox::FloxFlakeInputFactory                 factory;
   flox::Registry<flox::FloxFlakeInputFactory> registry( regRaw, factory );
   size_t                                      count = 0;
-  for ( const auto &[name, flake] : registry )
+  for ( const auto & [name, flake] : registry )
     {
       (void) flake->getFlakeRef();
       ++count;
@@ -104,7 +104,7 @@ test_Manifest_NoIndirectRefs0()
 /* -------------------------------------------------------------------------- */
 
 int
-main( int argc, char *argv[] )
+main( int argc, char * argv[] )
 {
   int exitCode = EXIT_SUCCESS;
 #define RUN_TEST( ... ) _RUN_TEST( exitCode, __VA_ARGS__ )

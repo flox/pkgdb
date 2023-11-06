@@ -35,13 +35,13 @@ PkgDescriptorBase::clear()
 /* -------------------------------------------------------------------------- */
 
 void
-from_json( const nlohmann::json &jfrom, PkgDescriptorBase &pkgDescriptorBase )
+from_json( const nlohmann::json & jfrom, PkgDescriptorBase & pkgDescriptorBase )
 {
   assertIsJSONObject<ParsePkgDescriptorBaseException>( jfrom,
                                                        "package descriptor" );
   /* Clear fields. */
   pkgDescriptorBase.clear();
-  for ( const auto &[key, value] : jfrom.items() )
+  for ( const auto & [key, value] : jfrom.items() )
     {
       if ( key == "name" )
         {
@@ -49,7 +49,7 @@ from_json( const nlohmann::json &jfrom, PkgDescriptorBase &pkgDescriptorBase )
             {
               value.get_to( pkgDescriptorBase.name );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw ParsePkgDescriptorBaseException(
                 "couldn't interpret field `name'",
@@ -62,7 +62,7 @@ from_json( const nlohmann::json &jfrom, PkgDescriptorBase &pkgDescriptorBase )
             {
               value.get_to( pkgDescriptorBase.pname );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw ParsePkgDescriptorBaseException(
                 "couldn't interpret field `pname'",
@@ -75,7 +75,7 @@ from_json( const nlohmann::json &jfrom, PkgDescriptorBase &pkgDescriptorBase )
             {
               value.get_to( pkgDescriptorBase.version );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw ParsePkgDescriptorBaseException(
                 "couldn't interpret field `version'",
@@ -88,7 +88,7 @@ from_json( const nlohmann::json &jfrom, PkgDescriptorBase &pkgDescriptorBase )
             {
               value.get_to( pkgDescriptorBase.semver );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw ParsePkgDescriptorBaseException(
                 "couldn't interpret field `semver'",
@@ -105,7 +105,7 @@ from_json( const nlohmann::json &jfrom, PkgDescriptorBase &pkgDescriptorBase )
 }
 
 void
-to_json( nlohmann::json &jto, const PkgDescriptorBase &pkgDescriptorBase )
+to_json( nlohmann::json & jto, const PkgDescriptorBase & pkgDescriptorBase )
 {
   if ( pkgDescriptorBase.name.has_value() )
     {
@@ -150,7 +150,7 @@ PkgQueryArgs::check() const
   /* Check licenses don't contain the ' character */
   if ( this->licenses.has_value() )
     {
-      for ( const auto &license : *this->licenses )
+      for ( const auto & license : *this->licenses )
         {
           if ( license.find( '\'' ) != std::string::npos )
             {
@@ -161,7 +161,7 @@ PkgQueryArgs::check() const
     }
 
   /* Systems */
-  for ( const auto &system : this->systems )
+  for ( const auto & system : this->systems )
     {
       if ( std::find( flox::getDefaultSystems().begin(),
                       flox::getDefaultSystems().end(),
@@ -247,11 +247,11 @@ PkgQuery::clearBuilt()
 /* -------------------------------------------------------------------------- */
 
 static void
-addIn( std::stringstream &oss, const std::vector<std::string> &elems )
+addIn( std::stringstream & oss, const std::vector<std::string> & elems )
 {
   oss << " IN ( ";
   bool first = true;
-  for ( const auto &elem : elems )
+  for ( const auto & elem : elems )
     {
       if ( first ) { first = false; }
       else { oss << ", "; }
@@ -395,7 +395,7 @@ PkgQuery::initSystems()
     {
       size_t            idx = 0;
       std::stringstream rank;
-      for ( const auto &system : this->systems )
+      for ( const auto & system : this->systems )
         {
           rank << "iif( ( system = '" << system << "' ), " << idx << ", ";
           ++idx;
@@ -551,7 +551,7 @@ PkgQuery::str() const
   std::stringstream qry;
   qry << "SELECT ";
   bool firstExport = true;
-  for ( const auto &column : this->exportedColumns )
+  for ( const auto & column : this->exportedColumns )
     {
       if ( firstExport ) { firstExport = false; }
       else { qry << ", "; }
@@ -571,7 +571,8 @@ PkgQuery::str() const
 /* -------------------------------------------------------------------------- */
 
 std::unordered_set<std::string>
-PkgQuery::filterSemvers( const std::unordered_set<std::string> &versions ) const
+PkgQuery::filterSemvers(
+  const std::unordered_set<std::string> & versions ) const
 {
   static const std::vector<std::string> ignores
     = { "", "*", "any", "^*", "~*", "x", "X" };
@@ -583,7 +584,7 @@ PkgQuery::filterSemvers( const std::unordered_set<std::string> &versions ) const
     }
   std::list<std::string>          args( versions.begin(), versions.end() );
   std::unordered_set<std::string> rsl;
-  for ( auto &version : versions::semverSat( *this->semver, args ) )
+  for ( auto & version : versions::semverSat( *this->semver, args ) )
     {
       rsl.emplace( std::move( version ) );
     }
@@ -594,12 +595,12 @@ PkgQuery::filterSemvers( const std::unordered_set<std::string> &versions ) const
 /* -------------------------------------------------------------------------- */
 
 std::shared_ptr<sqlite3pp::query>
-PkgQuery::bind( sqlite3pp::database &pdb ) const
+PkgQuery::bind( sqlite3pp::database & pdb ) const
 {
   std::string                       stmt = this->str();
   std::shared_ptr<sqlite3pp::query> qry
     = std::make_shared<sqlite3pp::query>( pdb, stmt.c_str() );
-  for ( const auto &[var, val] : this->binds )
+  for ( const auto & [var, val] : this->binds )
     {
       qry->bind( var.c_str(), val, sqlite3pp::copy );
     }
@@ -610,7 +611,7 @@ PkgQuery::bind( sqlite3pp::database &pdb ) const
 /* -------------------------------------------------------------------------- */
 
 std::vector<row_id>
-PkgQuery::execute( sqlite3pp::database &pdb ) const
+PkgQuery::execute( sqlite3pp::database & pdb ) const
 {
   std::shared_ptr<sqlite3pp::query> qry = this->bind( pdb );
   std::vector<row_id>               rsl;
@@ -618,7 +619,7 @@ PkgQuery::execute( sqlite3pp::database &pdb ) const
   /* If we don't need to handle `semver' this is easy. */
   if ( ! this->semver.has_value() )
     {
-      for ( const auto &row : *qry )
+      for ( const auto & row : *qry )
         {
           rsl.push_back( row.get<long long>( 0 ) );
         }
@@ -631,15 +632,15 @@ PkgQuery::execute( sqlite3pp::database &pdb ) const
   std::unordered_set<std::string> versions;
   /* Use a vector to preserve ordering original ordering. */
   std::vector<std::pair<row_id, std::string>> idVersions;
-  for ( const auto &row : *qry )
+  for ( const auto & row : *qry )
     {
-      const auto &[_, version] = idVersions.emplace_back(
+      const auto & [_, version] = idVersions.emplace_back(
         std::make_pair( row.get<long long>( 0 ), row.get<std::string>( 1 ) ) );
       versions.emplace( version );
     }
   versions = this->filterSemvers( versions );
   /* Filter SQL results to be those in the satisfactory list. */
-  for ( const auto &elem : idVersions )
+  for ( const auto & elem : idVersions )
     {
       if ( versions.find( elem.second ) != versions.end() )
         {

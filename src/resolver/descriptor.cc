@@ -23,7 +23,7 @@ namespace flox::resolver {
 /* -------------------------------------------------------------------------- */
 
 static AttrPathGlob
-maybeSplitAttrPathGlob( const ManifestDescriptorRaw::AbsPath &absPath );
+maybeSplitAttrPathGlob( const ManifestDescriptorRaw::AbsPath & absPath );
 
 
 /* -------------------------------------------------------------------------- */
@@ -111,8 +111,8 @@ ManifestDescriptorRaw::check( std::string iid ) const
  * @param version The version description to parse.
  */
 static void
-initManifestDescriptorVersion( ManifestDescriptor &desc,
-                               const std::string  &version )
+initManifestDescriptorVersion( ManifestDescriptor & desc,
+                               const std::string &  version )
 {
   /* Strip leading/trailing whitespace. */
   std::string trimmed = trim_copy( version );
@@ -156,7 +156,7 @@ initManifestDescriptorVersion( ManifestDescriptor &desc,
 
 /** @brief Get a `flox::resolver::AttrPathGlob` from a string if necessary. */
 static AttrPathGlob
-maybeSplitAttrPathGlob( const ManifestDescriptorRaw::AbsPath &absPath )
+maybeSplitAttrPathGlob( const ManifestDescriptorRaw::AbsPath & absPath )
 {
   if ( std::holds_alternative<AttrPathGlob>( absPath ) )
     {
@@ -165,7 +165,7 @@ maybeSplitAttrPathGlob( const ManifestDescriptorRaw::AbsPath &absPath )
   AttrPathGlob   glob;
   flox::AttrPath path = splitAttrPath( std::get<std::string>( absPath ) );
   size_t         idx  = 0;
-  for ( const auto &part : path )
+  for ( const auto & part : path )
     {
       /* Treat `null' or `*' as a glob. */
       /* TODO we verify that only the second option is a glob elsewhere, but we
@@ -190,8 +190,8 @@ maybeSplitAttrPathGlob( const ManifestDescriptorRaw::AbsPath &absPath )
  * @param raw The raw description to parse.
  */
 static void
-initManifestDescriptorAbsPath( ManifestDescriptor          &desc,
-                               const ManifestDescriptorRaw &raw )
+initManifestDescriptorAbsPath( ManifestDescriptor &          desc,
+                               const ManifestDescriptorRaw & raw )
 {
   if ( ! raw.absPath.has_value() )
     {
@@ -209,7 +209,7 @@ initManifestDescriptorAbsPath( ManifestDescriptor          &desc,
         "`abspath' must have at least three parts" );
     }
 
-  const auto &first = glob.front();
+  const auto & first = glob.front();
   if ( ! first.has_value() )
     {
       throw InvalidManifestDescriptorException(
@@ -220,7 +220,7 @@ initManifestDescriptorAbsPath( ManifestDescriptor          &desc,
   desc.path = AttrPath {};
   for ( auto itr = glob.begin() + 2; itr != glob.end(); ++itr )
     {
-      const auto &elem = *itr;
+      const auto & elem = *itr;
       if ( ! elem.has_value() )
         {
           throw InvalidManifestDescriptorException(
@@ -229,7 +229,7 @@ initManifestDescriptorAbsPath( ManifestDescriptor          &desc,
       desc.path = AttrPath {};
       for ( auto itr = glob.begin() + 3; itr != glob.end(); ++itr )
         {
-          const auto &elem = *itr;
+          const auto & elem = *itr;
           if ( ! elem.has_value() )
             {
               throw InvalidManifestDescriptorException(
@@ -242,7 +242,7 @@ initManifestDescriptorAbsPath( ManifestDescriptor          &desc,
   desc.path = AttrPath {};
   for ( auto itr = glob.begin() + 2; itr != glob.end(); ++itr )
     {
-      const auto &elem = *itr;
+      const auto & elem = *itr;
       if ( ! elem.has_value() )
         {
           throw InvalidManifestDescriptorException(
@@ -251,7 +251,7 @@ initManifestDescriptorAbsPath( ManifestDescriptor          &desc,
       desc.path->emplace_back( *elem );
     }
 
-  const auto &second = glob.at( 1 );
+  const auto & second = glob.at( 1 );
   if ( second.has_value() && ( ( *second ) != "null" )
        && ( ( *second ) != "*" ) )
     {
@@ -267,7 +267,7 @@ initManifestDescriptorAbsPath( ManifestDescriptor          &desc,
 /* -------------------------------------------------------------------------- */
 
 void
-from_json( const nlohmann::json &jfrom, ManifestDescriptorRaw &descriptor )
+from_json( const nlohmann::json & jfrom, ManifestDescriptorRaw & descriptor )
 {
   if ( ! jfrom.is_object() )
     {
@@ -280,7 +280,7 @@ from_json( const nlohmann::json &jfrom, ManifestDescriptorRaw &descriptor )
   /* Clear fields. */
   descriptor.clear();
 
-  for ( const auto &[key, value] : jfrom.items() )
+  for ( const auto & [key, value] : jfrom.items() )
     {
       if ( key == "name" )
         {
@@ -288,7 +288,7 @@ from_json( const nlohmann::json &jfrom, ManifestDescriptorRaw &descriptor )
             {
               value.get_to( descriptor.name );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw ParseManifestDescriptorRawException(
                 "couldn't interpret field `name'",
@@ -301,7 +301,7 @@ from_json( const nlohmann::json &jfrom, ManifestDescriptorRaw &descriptor )
             {
               value.get_to( descriptor.version );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw ParseManifestDescriptorRawException(
                 "couldn't interpret field `version'",
@@ -314,7 +314,7 @@ from_json( const nlohmann::json &jfrom, ManifestDescriptorRaw &descriptor )
             {
               value.get_to( descriptor.path );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw ParseManifestDescriptorRawException(
                 "couldn't interpret field `path'",
@@ -327,7 +327,7 @@ from_json( const nlohmann::json &jfrom, ManifestDescriptorRaw &descriptor )
             {
               value.get_to( descriptor.absPath );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw ParseManifestDescriptorRawException(
                 "couldn't interpret field `abspath'",
@@ -340,7 +340,7 @@ from_json( const nlohmann::json &jfrom, ManifestDescriptorRaw &descriptor )
             {
               value.get_to( descriptor.systems );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw ParseManifestDescriptorRawException(
                 "couldn't interpret field `systems'",
@@ -353,7 +353,7 @@ from_json( const nlohmann::json &jfrom, ManifestDescriptorRaw &descriptor )
             {
               value.get_to( descriptor.optional );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw ParseManifestDescriptorRawException(
                 "couldn't interpret field `optional'",
@@ -366,7 +366,7 @@ from_json( const nlohmann::json &jfrom, ManifestDescriptorRaw &descriptor )
             {
               value.get_to( descriptor.packageGroup );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw ParseManifestDescriptorRawException(
                 "couldn't interpret field `package-group'",
@@ -379,7 +379,7 @@ from_json( const nlohmann::json &jfrom, ManifestDescriptorRaw &descriptor )
             {
               value.get_to( descriptor.packageRepository );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw ParseManifestDescriptorRawException(
                 "couldn't interpret field `package-repository'",
@@ -392,7 +392,7 @@ from_json( const nlohmann::json &jfrom, ManifestDescriptorRaw &descriptor )
             {
               value.get_to( descriptor.priority );
             }
-          catch ( nlohmann::json::exception &e )
+          catch ( nlohmann::json::exception & e )
             {
               throw ParseManifestDescriptorRawException(
                 "couldn't interpret field `priority'",
@@ -409,7 +409,7 @@ from_json( const nlohmann::json &jfrom, ManifestDescriptorRaw &descriptor )
 }
 
 void
-to_json( nlohmann::json &jto, const ManifestDescriptorRaw &descriptor )
+to_json( nlohmann::json & jto, const ManifestDescriptorRaw & descriptor )
 {
   if ( descriptor.name.has_value() ) { jto["name"] = *descriptor.name; }
   if ( descriptor.version.has_value() )
@@ -446,7 +446,7 @@ to_json( nlohmann::json &jto, const ManifestDescriptorRaw &descriptor )
 
 /* -------------------------------------------------------------------------- */
 
-ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw &raw )
+ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
   : name( raw.name ), optional( raw.optional ), group( raw.packageGroup )
 {
   /* Determine if `version' was a range or not.
@@ -530,7 +530,7 @@ ManifestDescriptor::clear()
 /* -------------------------------------------------------------------------- */
 
 pkgdb::PkgQueryArgs &
-ManifestDescriptor::fillPkgQueryArgs( pkgdb::PkgQueryArgs &pqa ) const
+ManifestDescriptor::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 {
   /* Must exactly match either `pname' or `attrName'. */
   if ( this->name.has_value() ) { pqa.pnameOrAttrName = *this->name; }

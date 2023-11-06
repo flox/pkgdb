@@ -53,13 +53,14 @@ DiffCommand::DiffCommand() : parser( "diff" )
     .help( "path to old manifest file" )
     .required()
     .metavar( "OLD-MANIFEST" )
-    .action( [&]( const std::string &path ) { this->oldManifestPath = path; } );
+    .action( [&]( const std::string & path )
+             { this->oldManifestPath = path; } );
 
   this->parser.add_argument( "new-manifest" )
     .help( "path to new manifest file" )
     .required()
     .metavar( "NEW-MANIFEST" )
-    .action( [&]( const std::string &path ) { this->manifestPath = path; } );
+    .action( [&]( const std::string & path ) { this->manifestPath = path; } );
 }
 
 
