@@ -75,7 +75,9 @@ ResolveCommand::run()
 LockCommand::LockCommand() : parser( "lock" )
 {
   this->parser.add_description( "Lock a manifest" );
+  this->addGlobalManifestFileOption( this->parser );
   this->addManifestFileArg( this->parser );
+  this->addLockfileOption( this->parser );
 }
 
 
@@ -85,11 +87,8 @@ int
 LockCommand::run()
 {
   // TODO: `RegistryRaw' should drop empty fields.
-  nlohmann::json lockfile = { { "manifest", this->getManifestRaw() },
-                              { "registry", this->getLockedRegistry() },
-                              { "packages", this->getLockedDescriptors() },
-                              { "lockfile-version", 0 } };
-
+  nlohmann::json lockfile
+    = this->getEnvironment().createLockfile().getLockfileRaw();
   /* Print that bad boii */
   std::cout << lockfile.dump() << std::endl;
   return EXIT_SUCCESS;

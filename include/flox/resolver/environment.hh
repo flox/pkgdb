@@ -75,20 +75,18 @@ private:
   /** A registry of locked inputs. */
   std::optional<RegistryRaw> lockedRegistry;
 
-  std::shared_ptr<pkgdb::PkgDbInputFactory> dbFactory;
-
   std::shared_ptr<Registry<pkgdb::PkgDbInputFactory>> dbs;
 
   static LockedPackageRaw
-  lockPackage( const LockedInputRaw & input,
-               pkgdb::PkgDbReadOnly & dbRO,
-               pkgdb::row_id          row,
-               unsigned               priority );
+  lockPackage( const LockedInputRaw &input,
+               pkgdb::PkgDbReadOnly &dbRO,
+               pkgdb::row_id         row,
+               unsigned              priority );
 
   static inline LockedPackageRaw
-  lockPackage( const pkgdb::PkgDbInput & input,
-               pkgdb::row_id             row,
-               unsigned                  priority )
+  lockPackage( const pkgdb::PkgDbInput &input,
+               pkgdb::row_id            row,
+               unsigned                 priority )
   {
     return lockPackage( LockedInputRaw( input ),
                         *input.getDbReadOnly(),
@@ -146,9 +144,9 @@ private:
 
   /** @brief Try to resolve a descriptor in a given package database. */
   [[nodiscard]] std::optional<pkgdb::row_id>
-  tryResolveDescriptorIn( const ManifestDescriptor & descriptor,
-                          const pkgdb::PkgDbInput &  input,
-                          const System &             system );
+  tryResolveDescriptorIn( const ManifestDescriptor &descriptor,
+                          const pkgdb::PkgDbInput  &input,
+                          const System             &system );
 
   /**
    * @brief Try to resolve a group of descriptors in a given package database.
@@ -157,9 +155,9 @@ private:
    *          resolved packages for.
    */
   [[nodiscard]] std::optional<SystemPackages>
-  tryResolveGroupIn( const InstallDescriptors & group,
-                     const pkgdb::PkgDbInput &  input,
-                     const System &             system );
+  tryResolveGroupIn( const InstallDescriptors &group,
+                     const pkgdb::PkgDbInput  &input,
+                     const System             &system );
 
   // TODO: Only update changed descriptors.
   /**
@@ -172,10 +170,25 @@ private:
    * @a flox::resolver::Environment::createLockfile().
    */
   void
-  lockSystem( const System & system );
+  lockSystem( const System &system );
 
 
 public:
+
+  Environment( std::optional<GlobalManifest> globalManifest,
+               Manifest                      manifest,
+               std::optional<Lockfile>       oldLockfile )
+    : globalManifest( std::move( globalManifest ) )
+    , manifest( std::move( manifest ) )
+    , oldLockfile( std::move( oldLockfile ) )
+  {}
+
+  Environment( Manifest                manifest,
+               std::optional<Lockfile> oldLockfile = std::nullopt )
+    : globalManifest( std::nullopt )
+    , manifest( std::move( manifest ) )
+    , oldLockfile( std::move( oldLockfile ) )
+  {}
 
   [[nodiscard]] const std::optional<GlobalManifest> &
   getGlobalManifest() const
@@ -249,17 +262,10 @@ public:
  *
  * This structure stashes several fields to avoid repeatedly calculating them.
  */
-class EnvironmentMixin : public pkgdb::PkgDbRegistryMixin
+class EnvironmentMixin
 {
 
 private:
-
-  /* From `PkgDbRegistryMixin':
-   *   std::shared_ptr<nix::Store>                         store;
-   *   std::shared_ptr<nix::EvalState>                     state;
-   *   bool                                                force    = false;
-   *   std::shared_ptr<Registry<pkgdb::PkgDbInputFactory>> registry;
-   */
 
   /** Path to user level manifest. */
   std::optional<std::filesystem::path> globalManifestPath;
@@ -277,7 +283,6 @@ private:
 
 public:
 
-  // TODO: Implement.
   /**
    * @brief Lazily initialize and return the @a globalManifest
    *        if @a globalManifestPath is set.
@@ -285,12 +290,10 @@ public:
   [[nodiscard]] const std::optional<GlobalManifest> &
   getGlobalManifest();
 
-  // TODO: Implement.
   /** @brief Lazily initialize and return the @a manifest. */
-  [[nodiscard]] const GlobalManifest &
+  [[nodiscard]] const Manifest &
   getManifest();
 
-  // TODO: Implement.
   /**
    * @brief Lazily initialize and return the @a globalManifest
    *        if @a globalManifestPath is set.
@@ -298,10 +301,44 @@ public:
   [[nodiscard]] const std::optional<Lockfile> &
   getLockfile();
 
-  // TODO: Implement.
   /** @brief Laziliy initialize and return the @a environment. */
-  [[nodiscard]] Environment
+  [[nodiscard]] Environment &
   getEnvironment();
+
+  /**
+   * @brief Sets the path to the global manifest file to load
+   *        with `--global-manifest`.
+   * @param parser The parser to add the argument to.
+   * @return The argument added to the parser.
+   */
+  argparse::Argument &
+  addGlobalManifestFileOption( argparse::ArgumentParser &parser );
+
+  /**
+   * @brief Sets the path to the manifest file to load with `--manifest`.
+   * @param parser The parser to add the argument to.
+   * @param required Whether the argument is required.
+   * @return The argument added to the parser.
+   */
+  argparse::Argument &
+  addManifestFileOption( argparse::ArgumentParser &parser );
+
+  /**
+   * @brief Sets the path to the manifest file to load with a positional arg.
+   * @param parser The parser to add the argument to.
+   * @param required Whether the argument is required.
+   * @return The argument added to the parser.
+   */
+  argparse::Argument &
+  addManifestFileArg( argparse::ArgumentParser &parser, bool required = true );
+
+  /**
+   * @brief Sets the path to the old lockfile to load with `--lockfile`.
+   * @param parser The parser to add the argument to.
+   * @return The argument added to the parser.
+   */
+  argparse::Argument &
+  addLockfileOption( argparse::ArgumentParser &parser );
 
 
 }; /* End class `EnvironmentMixin' */

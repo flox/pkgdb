@@ -39,6 +39,19 @@ void
 Lockfile::check() const
 {
   this->lockfileRaw.check();
+  if ( this->getManifestRaw().registry.has_value() )
+    {
+      for ( const auto &[name, input] :
+            this->getManifestRaw().registry->inputs )
+        {
+          if ( input.getFlakeRef()->input.getType() == "indirect" )
+            {
+              throw InvalidManifestFileException(
+                "manifest `registry.inputs." + name
+                + ".from.type' may not be \"indirect\"." );
+            }
+        }
+    }
 }
 
 

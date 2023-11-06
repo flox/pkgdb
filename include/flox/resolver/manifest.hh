@@ -182,6 +182,13 @@ struct ManifestRaw : public GlobalManifestRaw
     std::optional<std::string> floxhub;
     std::optional<std::string> dir;
 
+    /**
+     * @brief Validate the `env-base` field, throwing an exception if invalid
+     *        information is found.
+     *
+     * This asserts:
+     * - Only one of `floxhub` or `dir` is set.
+     */
     void
     check() const;
 
@@ -250,6 +257,12 @@ struct ManifestRaw : public GlobalManifestRaw
   /**
    * @brief Validate manifest fields, throwing an exception if its contents
    *        are invalid.
+   *
+   * This asserts:
+   * - @a envBase is valid.
+   * - @a registry does not contain indirect flake references.
+   * - All members of @a install are valid.
+   * - @a hook is valid.
    */
   void
   check() const override;
@@ -383,10 +396,6 @@ public:
   [[nodiscard]] std::vector<System>
   getSystems() const
   {
-    if ( this->getManifestRaw().options.has_value() )
-      {
-        return std::vector<System> { nix::settings.thisSystem.get() };
-      }
     return this->getManifestRaw().options->systems.value_or(
       std::vector<System> { nix::settings.thisSystem.get() } );
   }
@@ -481,146 +490,6 @@ public:
 
 /* -------------------------------------------------------------------------- */
 
-// TODO: Move routines associated with locking to a separate class/functor.
-/**
- * @brief A state blob with a manifest loaded from path.
- *
- * This structure stashes several fields to avoid repeatedly calculating them.
- */
-class ManifestFileMixin : public pkgdb::PkgDbRegistryMixin
-{
-
-public:
-
-  /* From `PkgDbRegistryMixin':
-   *   std::shared_ptr<nix::Store>                         store;
-   *   std::shared_ptr<nix::EvalState>                     state;
-   *   bool                                                force    = false;
-   *   std::shared_ptr<Registry<pkgdb::PkgDbInputFactory>> registry;
-   */
-
-  std::optional<std::filesystem::path> manifestPath;
-  std::optional<Manifest>              manifest;
-  std::optional<RegistryRaw>           lockedRegistry;
-  std::optional<pkgdb::PkgQueryArgs>   baseQueryArgs;
-
-  // TODO: Move to class/functor associated with locking.
-  std::unordered_map<
-    GroupName,
-    std::unordered_map<
-      std::string, /* input name */
-      std::unordered_map<InstallID, std::optional<pkgdb::row_id>>>>
-    groupedResolutions;
-
-  // TODO: Fix to be `<SYSTEM>.<IID>.*'
-  // TODO: Move to class/functor associated with locking.
-  /**
-   * @brief A map of _locked_ descriptors organized by their _install ID_,
-   *        and then by `system`.
-   *        For optional packages, or those which are explicitly declared for
-   *        a subset of systems, the value may be `std::nullopt`.
-   */
-  std::unordered_map<InstallID,                 /* _install ID_ */
-                     std::unordered_map<System, /* system */
-                                        std::optional<Resolved>>>
-    lockedDescriptors;
-
-
-protected:
-
-  // TODO: Move to class/functor associated with locking.
-  const std::unordered_map<System, std::optional<Resolved>> &
-  lockUngroupedDescriptor( const std::string &        iid,
-                           const ManifestDescriptor & desc );
-
-  // TODO: Move to `Lockfile'
-  /** @brief Assert that all _grouped_ descriptors resolve to a single input. */
-  void
-  checkGroups();
-
-
-public:
-
-  /**
-   * @brief Returns the locked @a RegistryRaw from the manifest.
-   *
-   * This is used to initialize the @a registry field from
-   * @a flox::pkgdb::PkgDbRegistryMixin and should not be confused with the
-   * _unlocked registry_ ( which can be accessed directly from @a manifest ).
-   */
-  [[nodiscard]] RegistryRaw
-  getRegistryRaw() override
-  {
-    return this->getManifest().getRegistryRaw();
-  }
-
-  [[nodiscard]] const std::vector<std::string> &
-  getSystems() override
-  {
-    return this->getBaseQueryArgs().systems;
-  }
-
-  /**
-   * @brief Get the path to the manifest file.
-   *
-   * If @a manifestPath is already set, we use that; otherwise we attempt to
-   * locate a manifest at `[./flox/]manifest.{toml,yaml,json}`.
-   *
-   * @return The path to the manifest file.
-   */
-  [[nodiscard]] std::filesystem::path
-  getManifestPath();
-
-  [[nodiscard]] const ManifestRaw &
-  getManifestRaw()
-  {
-    return this->getManifest().getManifestRaw();
-  }
-
-  /**
-   * @brief Sets the path to the registry file to load with `--manifest`.
-   * @param parser The parser to add the argument to.
-   * @return The argument added to the parser.
-   */
-  argparse::Argument &
-  addManifestFileOption( argparse::ArgumentParser & parser );
-
-  /**
-   * @brief Sets the path to the registry file to load with a positional arg.
-   * @param parser The parser to add the argument to.
-   * @param required Whether the argument is required.
-   * @return The argument added to the parser.
-   */
-  argparse::Argument &
-  addManifestFileArg( argparse::ArgumentParser & parser, bool required = true );
-
-  [[nodiscard]] const Manifest &
-  getManifest();
-
-  [[nodiscard]] const RegistryRaw &
-  getLockedRegistry();
-
-  [[nodiscard]] const pkgdb::PkgQueryArgs &
-  getBaseQueryArgs();
-
-  [[nodiscard]] const std::unordered_map<std::string, ManifestDescriptor> &
-  getDescriptors()
-  {
-    return this->getManifest().getDescriptors();
-  }
-
-  // TODO: Fix to be `<SYSTEM>.<IID>.*'. ( see `./lockfile.hh' )
-  // TODO: Move to `Lockfile' ( or some locking functor )
-  [[nodiscard]] const std::unordered_map<
-    InstallID,
-    std::unordered_map<System, std::optional<Resolved>>> &
-  getLockedDescriptors();
-
-
-}; /* End struct `ManifestFileMixin' */
-
-
-/* -------------------------------------------------------------------------- */
 
 }  // namespace flox::resolver
 

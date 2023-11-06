@@ -200,6 +200,7 @@ private:
    * - `packages` members' groups are enforced.
    * - original _manifest_ is consistent with the lockfile's
    *   `registry.*` and `packages.**` members.
+   *  - `registry` inputs do not use indirect flake references.
    */
   void
   check() const;

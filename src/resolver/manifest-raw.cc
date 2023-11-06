@@ -619,6 +619,18 @@ ManifestRaw::check() const
       for ( const auto & [iid, desc] : *this->install ) { desc->check( iid ); }
     }
   if ( this->hook.has_value() ) { this->hook->check(); }
+  if ( this->registry.has_value() )
+    {
+      for ( const auto [name, input] : this->registry->inputs )
+        {
+          if ( input.getFlakeRef()->input.getType() == "indirect" )
+            {
+              throw InvalidManifestFileException(
+                "manifest `registry.inputs." + name
+                + ".from.type' may not be \"indirect\"." );
+            }
+        }
+    }
 }
 
 

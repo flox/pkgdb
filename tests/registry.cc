@@ -21,24 +21,17 @@
 
 /* -------------------------------------------------------------------------- */
 
-using namespace nlohmann::literals;
-
-
-/* -------------------------------------------------------------------------- */
-
 bool
 test_FloxFlakeInputRegistry0()
 {
-  using namespace flox;
-
   std::ifstream     regFile( TEST_DATA_DIR "/registry/registry0.json" );
   nlohmann::json    json = nlohmann::json::parse( regFile ).at( "registry" );
   flox::RegistryRaw regRaw;
   json.get_to( regRaw );
 
-  FloxFlakeInputFactory           factory;
-  Registry<FloxFlakeInputFactory> registry( regRaw, factory );
-  size_t                          count = 0;
+  flox::FloxFlakeInputFactory                 factory;
+  flox::Registry<flox::FloxFlakeInputFactory> registry( regRaw, factory );
+  size_t                                      count = 0;
   for ( const auto &[name, flake] : registry )
     {
       (void) flake->getFlakeRef();
@@ -54,13 +47,10 @@ test_FloxFlakeInputRegistry0()
 /* -------------------------------------------------------------------------- */
 
 bool
-test_ManifestFileMixinHappyPath()
+test_Manifest_getRegistryRaw0()
 {
-  using namespace flox;
-
-  flox::resolver::ManifestFileMixin rfm;
-  rfm.manifestPath   = TEST_DATA_DIR "/registry/registry0.json";
-  RegistryRaw regRaw = rfm.getRegistryRaw();
+  flox::resolver::Manifest manifest( TEST_DATA_DIR "/registry/registry0.json" );
+  (void) manifest.getRegistryRaw();
 
   return true;
 }
@@ -69,18 +59,16 @@ test_ManifestFileMixinHappyPath()
 /* -------------------------------------------------------------------------- */
 
 bool
-test_ManifestFileMixinGetRegWithoutFile()
+test_Manifest_badPath0()
 {
-  using namespace flox;
-
-  flox::resolver::ManifestFileMixin rfm;
   /* Try loading the registry without setting the path. */
   try
     {
-      RegistryRaw regRaw = rfm.getRegistryRaw();
+      flox::resolver::Manifest manifest( "" );
+      (void) manifest.getRegistryRaw();
       return false;
     }
-  catch ( FloxException & )
+  catch ( flox::FloxException & )
     {
       return true;
     }
@@ -89,60 +77,25 @@ test_ManifestFileMixinGetRegWithoutFile()
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * @brief Ensure we throw an error if a manifest contains indirect flake
+ *        references in its registry.
+ *
+ * This should "fail early" when processing the `getRegistryRaw()` rather than
+ * waiting for `getLockedRegistry()`
+ * ( which invokes the `Registry<T>()` contstructor ) to catch the error.
+ */
 bool
-test_ManifestFileMixinEmptyPath()
+test_Manifest_NoIndirectRefs0()
 {
-  using namespace flox;
-
-  flox::resolver::ManifestFileMixin rfm;
-  /* Try loading the registry without setting the path. */
   try
     {
-      rfm.manifestPath   = std::nullopt;
-      RegistryRaw regRaw = rfm.getRegistryRaw();
+      flox::resolver::Manifest manifest( TEST_DATA_DIR
+                                         "/registry/registry1.json" );
+      (void) manifest.getRegistryRaw();
       return false;
     }
-  catch ( FloxException & )
-    {
-      return true;
-    }
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-bool
-test_ManifestFileMixinGetRegCached()
-{
-  using namespace flox;
-
-  flox::resolver::ManifestFileMixin rfm;
-  rfm.manifestPath   = TEST_DATA_DIR "/registry/registry0.json";
-  RegistryRaw regRaw = rfm.getRegistryRaw();
-  // You don't need the manifest path if the registry is cached. If it's not
-  // cached then you'll get an exception trying to open this file.
-  rfm.manifestPath         = std::nullopt;
-  RegistryRaw regRawCached = rfm.getRegistryRaw();
-
-  return true;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-bool
-test_RegistryNoIndirectRefs()
-{
-  using namespace flox;
-
-  flox::resolver::ManifestFileMixin rfm;
-  rfm.manifestPath = TEST_DATA_DIR "/registry/registry1.json";
-  try
-    {
-      RegistryRaw regRaw = rfm.getRegistryRaw();
-      return false;
-    }
-  catch ( FloxException & )
+  catch ( flox::FloxException & )
     {
       return true;
     }
@@ -167,10 +120,10 @@ main( int argc, char *argv[] )
   flox::NixState nstate;
 
   RUN_TEST( FloxFlakeInputRegistry0 );
-  RUN_TEST( ManifestFileMixinHappyPath );
-  RUN_TEST( ManifestFileMixinGetRegWithoutFile );
-  RUN_TEST( ManifestFileMixinGetRegCached );
-  RUN_TEST( ManifestFileMixinEmptyPath );
+
+  RUN_TEST( Manifest_getRegistryRaw0 );
+  RUN_TEST( Manifest_badPath0 );
+  RUN_TEST( Manifest_NoIndirectRefs0 );
 
 
   return exitCode;

@@ -405,7 +405,7 @@ public:
           [&]( const auto & pair ) { return pair.first == _name.get(); } );
 
         /* Throw an exception if a registry input is an indirect reference. */
-        if ( pair->second.getFlakeRef()->input.getType() == "flake" )
+        if ( pair->second.getFlakeRef()->input.getType() == "indirect" )
           {
             throw InvalidRegistryException(
               "registry contained an indirect reference" );

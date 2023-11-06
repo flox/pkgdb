@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "flox/resolver/environment.hh"
 #include "flox/resolver/manifest.hh"
 #include "flox/resolver/params.hh"
 #include "flox/resolver/state.hh"
@@ -87,7 +88,7 @@ public:
 /* -------------------------------------------------------------------------- */
 
 /** @brief Lock a manifest file. */
-class LockCommand : ManifestFileMixin
+class LockCommand : public EnvironmentMixin
 {
 
 private:
