@@ -22,6 +22,98 @@ namespace flox::resolver {
 /* -------------------------------------------------------------------------- */
 
 void
+LockfileRaw::check() const
+{
+  if ( this->lockfileVersion != 0 )
+    {
+      throw InvalidLockfileException(
+        "unsupported lockfile version "
+        + std::to_string( this->lockfileVersion ) );
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+Lockfile::check() const
+{
+  this->lockfileRaw.check();
+  if ( this->getManifestRaw().registry.has_value() )
+    {
+      for ( const auto &[name, input] :
+            this->getManifestRaw().registry->inputs )
+        {
+          if ( input.getFlakeRef()->input.getType() == "indirect" )
+            {
+              throw InvalidManifestFileException(
+                "manifest `registry.inputs." + name
+                + ".from.type' may not be \"indirect\"." );
+            }
+        }
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+Lockfile::init()
+{
+  this->lockfileRaw.check();
+
+  /* Collect inputs from all locked packages into a registry keyed
+   * by fingerprints. */
+  for ( const auto &[system, sysPkgs] : this->lockfileRaw.packages )
+    {
+      for ( const auto &[pid, pkg] : sysPkgs )
+        {
+          if ( ! pkg.has_value() ) { continue; }
+          this->packagesRegistryRaw.inputs.try_emplace(
+            pkg->input.fingerprint.to_string( nix::Base16, false ),
+            static_cast<RegistryInput>( pkg->input ) );
+        }
+    }
+
+  std::string manifestPath = "manifest.json"; /* Phony */
+  if ( this->lockfilePath.has_value() )
+    {
+      manifestPath = this->lockfilePath->parent_path() / manifestPath;
+    }
+
+  this->manifest = Manifest( manifestPath, this->lockfileRaw.manifest );
+
+  this->check();
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Read a flox::resolver::Lockfile from a file. */
+static LockfileRaw
+readLockfileFromPath( const std::filesystem::path &lockfilePath )
+{
+  if ( ! std::filesystem::exists( lockfilePath ) )
+    {
+      throw InvalidLockfileException( "no such path: "
+                                      + lockfilePath.string() );
+    }
+  return readAndCoerceJSON( lockfilePath );
+}
+
+/* -------------------------------------------------------------------------- */
+
+Lockfile::Lockfile( std::filesystem::path lockfilePath )
+  : lockfilePath( std::move( lockfilePath ) )
+  , lockfileRaw( readLockfileFromPath( this->lockfilePath.value() ) )
+{
+  this->init();
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
 from_json( const nlohmann::json &jfrom, LockedInputRaw &raw )
 {
   assertIsJSONObject<InvalidLockfileException>( jfrom, "locked input" );
@@ -265,6 +357,42 @@ to_json( nlohmann::json &jto, const LockfileRaw &raw )
           { "registry", raw.registry },
           { "packages", raw.packages },
           { "lockfile-version", raw.lockfileVersion } };
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+Lockfile::LockedInstallInfo
+Lockfile::getLockedInstallInfo( const InstallID &installID ) const
+{
+  if ( ( ! this->getManifestRaw().install.has_value() )
+       || ( this->getManifestRaw().install->find( installID )
+            == this->getManifestRaw().install->end() ) )
+    {
+      throw InvalidLockfileException(
+        "lockfile does not contain field `manifest.install." + installID
+        + "'." );
+    }
+  Lockfile::LockedInstallInfo info;
+  for ( const auto &[system, pkgs] : this->getLockfileRaw().packages )
+    {
+      if ( pkgs.find( installID ) == pkgs.end() )
+        {
+          throw InvalidLockfileException(
+            "lockfile does not contain field `packages." + system + '.'
+            + installID + "'." );
+        }
+      if ( pkgs.at( installID ).has_value() )
+        {
+          info.systemLocks.emplace( system, &( *pkgs.at( installID ) ) );
+        }
+      else { info.systemLocks.emplace( system, std::nullopt ); }
+    }
+
+  info.installID  = installID;
+  info.descriptor = &this->getManifest().getDescriptors().at( installID );
+
+  return info;
 }
 
 

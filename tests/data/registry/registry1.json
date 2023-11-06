@@ -27,12 +27,6 @@
                 "from": {
                     "id": "nixpkgs2",
                     "type": "indirect"
-                },
-                "to": {
-                    "type": "github",
-                    "owner": "NixOS",
-                    "repo": "nixpkgs",
-                    "ref": "release-23.05"
                 }
             }
         },

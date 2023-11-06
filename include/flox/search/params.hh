@@ -51,9 +51,16 @@ struct SearchQuery : public pkgdb::PkgDescriptorBase
   /** Filter results by partial match on pname, attrName, or description */
   std::optional<std::string> partialMatch;
 
+  /** Filter results by partial match on pname or attrName */
+  std::optional<std::string> partialNameMatch;
+
   /** @brief Reset to default state. */
-  virtual void
+  void
   clear() override;
+
+  /** @brief Check validity of fields, throwing an exception if invalid. */
+  void
+  check() const;
 
   /**
    * @brief Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to
@@ -132,7 +139,7 @@ to_json( nlohmann::json &jto, const SearchQuery &qry );
  * , "systems": ["x86_64-linux"]
  * , "allow":   { "unfree": true, "broken": false, "licenses": ["MIT"] }
  * , "semver":  { "preferPreReleases": false }
- * , "query":   { "partialMatch": "hello" }
+ * , "query":   { "match": "hello" }
  * }
  * ```
  */

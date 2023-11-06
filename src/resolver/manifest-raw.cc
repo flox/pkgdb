@@ -20,9 +20,90 @@ namespace flox::resolver {
 
 /* -------------------------------------------------------------------------- */
 
+void
+Options::merge( const Options & overrides )
+{
+  if ( overrides.systems.has_value() ) { this->systems = overrides.systems; }
+
+  if ( overrides.allow.has_value() )
+    {
+      if ( ! this->allow.has_value() ) { this->allow = overrides.allow; }
+      else
+        {
+          if ( overrides.allow->unfree.has_value() )
+            {
+              this->allow->unfree = overrides.allow->unfree;
+            }
+          if ( overrides.allow->broken.has_value() )
+            {
+              this->allow->broken = overrides.allow->broken;
+            }
+          if ( overrides.allow->licenses.has_value() )
+            {
+              this->allow->licenses = overrides.allow->licenses;
+            }
+        }
+    }
+
+  if ( overrides.semver.has_value() )
+    {
+      if ( ! this->semver.has_value() ) { this->semver = overrides.semver; }
+      else
+        {
+          if ( overrides.semver->preferPreReleases.has_value() )
+            {
+              this->semver->preferPreReleases
+                = overrides.semver->preferPreReleases;
+            }
+        }
+    }
+
+  if ( overrides.packageGroupingStrategy.has_value() )
+    {
+      this->packageGroupingStrategy = overrides.packageGroupingStrategy;
+    }
+
+  if ( overrides.activationStrategy.has_value() )
+    {
+      this->activationStrategy = overrides.activationStrategy;
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+Options::operator pkgdb::PkgQueryArgs() const
+{
+  pkgdb::PkgQueryArgs args;
+
+  if ( this->systems.has_value() ) { args.systems = *this->systems; }
+
+  if ( this->allow.has_value() )
+    {
+      if ( this->allow->unfree.has_value() )
+        {
+          args.allowUnfree = *this->allow->unfree;
+        }
+      if ( this->allow->broken.has_value() )
+        {
+          args.allowBroken = *this->allow->broken;
+        }
+      args.licenses = this->allow->licenses;
+    }
+
+  if ( this->semver.has_value() && this->semver->preferPreReleases.has_value() )
+    {
+      args.preferPreReleases = *this->semver->preferPreReleases;
+    }
+
+  return args;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 static void
-from_json( const nlohmann::json &               jfrom,
-           GlobalManifestRaw::Options::Semver & semver )
+from_json( const nlohmann::json & jfrom, Options::Semver & semver )
 {
   assertIsJSONObject<InvalidManifestFileException>(
     jfrom,
@@ -58,8 +139,7 @@ from_json( const nlohmann::json &               jfrom,
 
 
 static void
-to_json( nlohmann::json &                           jto,
-         const GlobalManifestRaw::Options::Semver & semver )
+to_json( nlohmann::json & jto, const Options::Semver & semver )
 {
   if ( semver.preferPreReleases.has_value() )
     {
@@ -72,8 +152,7 @@ to_json( nlohmann::json &                           jto,
 /* -------------------------------------------------------------------------- */
 
 static void
-from_json( const nlohmann::json &               jfrom,
-           GlobalManifestRaw::Options::Allows & allow )
+from_json( const nlohmann::json & jfrom, Options::Allows & allow )
 {
   assertIsJSONObject<InvalidManifestFileException>(
     jfrom,
@@ -138,8 +217,7 @@ from_json( const nlohmann::json &               jfrom,
 
 
 static void
-to_json( nlohmann::json &                           jto,
-         const GlobalManifestRaw::Options::Allows & allow )
+to_json( nlohmann::json & jto, const Options::Allows & allow )
 {
   if ( allow.unfree.has_value() ) { jto = { { "unfree", *allow.unfree } }; }
   else { jto = nlohmann::json::object(); }
@@ -155,7 +233,7 @@ to_json( nlohmann::json &                           jto,
 /* -------------------------------------------------------------------------- */
 
 void
-from_json( const nlohmann::json & jfrom, GlobalManifestRaw::Options & opts )
+from_json( const nlohmann::json & jfrom, Options & opts )
 {
   assertIsJSONObject<InvalidManifestFileException>(
     jfrom,
@@ -184,7 +262,7 @@ from_json( const nlohmann::json & jfrom, GlobalManifestRaw::Options & opts )
       else if ( key == "semver" )
         {
           /* Rely on the underlying exception handlers. */
-          ManifestRaw::Options::Semver semver;
+          Options::Semver semver;
           value.get_to( semver );
           opts.semver = semver;
         }
@@ -226,7 +304,7 @@ from_json( const nlohmann::json & jfrom, GlobalManifestRaw::Options & opts )
 
 
 void
-to_json( nlohmann::json & jto, const GlobalManifestRaw::Options & opts )
+to_json( nlohmann::json & jto, const Options & opts )
 {
   if ( opts.systems.has_value() ) { jto = { { "systems", *opts.systems } }; }
   else { jto = nlohmann::json::object(); }
@@ -541,6 +619,27 @@ ManifestRaw::check() const
       for ( const auto & [iid, desc] : *this->install ) { desc->check( iid ); }
     }
   if ( this->hook.has_value() ) { this->hook->check(); }
+  if ( this->registry.has_value() )
+    {
+      for ( const auto [name, input] : this->registry->inputs )
+        {
+          if ( input.getFlakeRef()->input.getType() == "indirect" )
+            {
+              throw InvalidManifestFileException(
+                "manifest `registry.inputs." + name
+                + ".from.type' may not be \"indirect\"." );
+            }
+        }
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+nlohmann::json
+ManifestRaw::diff( const ManifestRaw & old ) const
+{
+  return nlohmann::json::diff( nlohmann::json( *this ), old );
 }
 
 

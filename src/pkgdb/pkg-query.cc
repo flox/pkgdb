@@ -173,6 +173,13 @@ PkgQueryArgs::check() const
                                     + std::string( system ) );
         }
     }
+
+  /* `partialMatch' and `partialNameMatch' cannot be used together. */
+  if ( this->partialMatch.has_value() && this->partialNameMatch.has_value() )
+    {
+      throw InvalidPkgQueryArg( "`partialmatch' and `partialNameMatch' filters "
+                                "may not be used together." );
+    }
 }
 
 
@@ -183,6 +190,7 @@ PkgQueryArgs::clear()
 {
   this->PkgDescriptorBase::clear();
   this->partialMatch      = std::nullopt;
+  this->partialNameMatch  = std::nullopt;
   this->pnameOrAttrName   = std::nullopt;
   this->licenses          = std::nullopt;
   this->allowBroken       = false;
@@ -274,8 +282,13 @@ PkgQuery::initMatch()
       this->addSelection( "NULL AS exactAttrName" );
     }
 
-  /* Filter by partial matches on `pname', `attrName', or `description'. */
-  if ( this->partialMatch.has_value() && ( ! this->partialMatch->empty() ) )
+  /* Filter by partial matches on `pname' or `attrName'. */
+  bool hasPartialNameMatch = this->partialNameMatch.has_value()
+                             && ( ! this->partialNameMatch->empty() );
+  /* `partialMatch' also includes matches on `description'. */
+  if ( hasPartialNameMatch
+       || ( this->partialMatch.has_value()
+            && ( ! this->partialMatch->empty() ) ) )
     {
       /* We have to add '%' around `:match' because they were added for
        * use with `LIKE'. */
@@ -288,14 +301,27 @@ PkgQuery::initMatch()
       this->addSelection( "( pname LIKE :partialMatch ) AS matchPartialPname" );
       this->addSelection(
         "( attrName LIKE :partialMatch ) AS matchPartialAttrName" );
-      this->addSelection(
-        "( description LIKE :partialMatch ) AS matchPartialDescription" );
-      /* Add `%` before binding so `LIKE` works. */
-      binds.emplace( ":partialMatch", "%" + ( *this->partialMatch ) + "%" );
-      this->addWhere( "( matchExactPname OR matchExactAttrName OR"
-                      "  matchPartialPname OR matchPartialAttrName OR"
-                      "  matchPartialDescription "
-                      ")" );
+      if ( hasPartialNameMatch )
+        {
+          this->addSelection( "NULL AS matchPartialDescription" );
+          /* Add `%` before binding so `LIKE` works. */
+          binds.emplace( ":partialMatch",
+                         "%" + ( *this->partialNameMatch ) + "%" );
+          this->addWhere( "( matchExactPname OR matchExactAttrName OR"
+                          "  matchPartialPname OR matchPartialAttrName"
+                          ")" );
+        }
+      else
+        {
+          this->addSelection(
+            "( description LIKE :partialMatch ) AS matchPartialDescription" );
+          /* Add `%` before binding so `LIKE` works. */
+          binds.emplace( ":partialMatch", "%" + ( *this->partialMatch ) + "%" );
+          this->addWhere( "( matchExactPname OR matchExactAttrName OR"
+                          "  matchPartialPname OR matchPartialAttrName OR"
+                          "  matchPartialDescription "
+                          ")" );
+        }
     }
   else
     {

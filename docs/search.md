@@ -28,11 +28,12 @@ Semver ::= {
 }
 
 SearchQuery ::= {
-  name    = null | <STRING>
-  pname   = null | <STRING>
-  version = null | <STRING>
-  semver  = null | <STRING>
-  match   = null | <STRING>
+  name       = null | <STRING>
+  pname      = null | <STRING>
+  version    = null | <STRING>
+  semver     = null | <STRING>
+  match      = null | <STRING>
+  match-name = null | <STRING>
 }
 
 SearchParams ::= {
@@ -44,9 +45,14 @@ SearchParams ::= {
 }
 ```
 
+- `query.match-name` strings are used to test partial matches found in a package's
+  `name` or `pname` fields as well as partial matches on a
+  calculated column `attrName`.
+  May not be used with `query.match`.
 - `query.match` strings are used to test partial matches found in a package's
   `name`, `pname`, or `description` fields as well as partial matches on a
   calculated column `attrName`.
+  May not be used with `query.match-name`.
   + `attrName` is _the last attribute path element_ for `packages` and
      `legacyPackages` subtrees.
   + Exact matches cause search results to appear before ( higher ) than
@@ -169,6 +175,7 @@ applied to `inputs` by showing the _explicit_ form of the same params:
   , "version": null
   , "semver": "2"
   , "match": "hello"
+  , "match-name": null
   }
 }
 ```

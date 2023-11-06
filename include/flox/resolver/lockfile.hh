@@ -52,15 +52,26 @@ struct LockedInputRaw
   LockedInputRaw() : fingerprint( nix::htSHA256 ) {}
   ~LockedInputRaw() = default;
 
-  explicit LockedInputRaw( const pkgdb::PkgDbReadOnly & pdb )
+  explicit LockedInputRaw( const pkgdb::PkgDbReadOnly &pdb )
     : fingerprint( pdb.fingerprint )
     , url( pdb.lockedRef.string )
     , attrs( pdb.lockedRef.attrs )
   {}
 
-  explicit LockedInputRaw( const pkgdb::PkgDbInput & input )
+  explicit LockedInputRaw( const pkgdb::PkgDbInput &input )
     : LockedInputRaw( *input.getDbReadOnly() )
   {}
+
+  explicit operator nix::FlakeRef() const
+  {
+    return nix::FlakeRef::fromAttrs(
+      nix::fetchers::jsonToAttrs( this->attrs ) );
+  }
+
+  explicit operator RegistryInput() const
+  {
+    return RegistryInput( static_cast<nix::FlakeRef>( *this ) );
+  }
 
 
 }; /* End struct `LockedInputRaw::Input' */
@@ -70,11 +81,11 @@ struct LockedInputRaw
 
 /** @brief Convert a JSON object to a @a flox::resolver::LockedInputRaw. */
 void
-from_json( const nlohmann::json & jfrom, LockedInputRaw & raw );
+from_json( const nlohmann::json &jfrom, LockedInputRaw &raw );
 
 /** @brief Convert a @a flox::resolver::LockedInputRaw to a JSON object. */
 void
-to_json( nlohmann::json & jto, const LockedInputRaw & raw );
+to_json( nlohmann::json &jto, const LockedInputRaw &raw );
 
 
 /* -------------------------------------------------------------------------- */
@@ -93,16 +104,17 @@ struct LockedPackageRaw
 
 /** @brief Convert a JSON object to a @a flox::resolver::LockedPackageRaw. */
 void
-from_json( const nlohmann::json & jfrom, LockedPackageRaw & raw );
+from_json( const nlohmann::json &jfrom, LockedPackageRaw &raw );
 
 /** @brief Convert a @a flox::resolver::LockedPackageRaw to a JSON object. */
 void
-to_json( nlohmann::json & jto, const LockedPackageRaw & raw );
+to_json( nlohmann::json &jto, const LockedPackageRaw &raw );
 
 
 /* -------------------------------------------------------------------------- */
 
-using SystemPackages = std::unordered_map<InstallID, LockedPackageRaw>;
+using SystemPackages
+  = std::unordered_map<InstallID, std::optional<LockedPackageRaw>>;
 
 /**
  * @brief An environment lockfile in its _raw_ form.
@@ -119,15 +131,26 @@ struct LockfileRaw
   unsigned                                   lockfileVersion = 0;
 
 
+  ~LockfileRaw()                     = default;
+  LockfileRaw()                      = default;
+  LockfileRaw( const LockfileRaw & ) = default;
+  LockfileRaw( LockfileRaw && )      = default;
+  LockfileRaw &
+  operator=( const LockfileRaw & )
+    = default;
+  LockfileRaw &
+  operator=( LockfileRaw && )
+    = default;
+
   /**
    * @brief Check the lockfile for validity, throw and exception if it
    *        is invalid.
+   *
+   * This checks that:
+   * - The lockfile version is supported.
    */
   void
-  check() const
-  {
-    // TODO: Implement in `lockfile.cc'.
-  }
+  check() const;
 
   /** @brief Reset to default/empty state. */
   void
@@ -141,20 +164,172 @@ struct LockfileRaw
 
 /** @brief Convert a JSON object to a @a flox::resolver::LockfileRaw. */
 void
-from_json( const nlohmann::json & jfrom, LockfileRaw & raw );
+from_json( const nlohmann::json &jfrom, LockfileRaw &raw );
 
 /** @brief Convert a @a flox::resolver::LockfileRaw to a JSON object. */
 void
-to_json( nlohmann::json & jto, const LockfileRaw & raw );
+to_json( nlohmann::json &jto, const LockfileRaw &raw );
 
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief A locked representation of an environment. */
+/**
+ * @brief A locked representation of an environment.
+ *
+ * Unlike the _raw_ form, this form is suitable for stashing temporary variables
+ * and other information that is not needed for serializing/de-serializing.
+ */
 class Lockfile
 {
 
-};  /* End class `Lockfile' */
+private:
+
+  std::optional<std::filesystem::path> lockfilePath;
+  LockfileRaw                          lockfileRaw;
+  Manifest                             manifest;
+  /** Maps `{ <FINGERPRINT>: <INPUT> }` for all `packages` members' inputs. */
+  RegistryRaw packagesRegistryRaw;
+
+
+  /**
+   * @brief Check the lockfile's validity, throwing an exception for
+   *        invalid contents.
+   *
+   * This asserts that:
+   * - `lockfileVersion` is supported.
+   * - `packages` members' groups are enforced.
+   * - original _manifest_ is consistent with the lockfile's
+   *   `registry.*` and `packages.**` members.
+   *  - `registry` inputs do not use indirect flake references.
+   */
+  void
+  check() const;
+
+  /**
+   * @brief Initialize @a manifest and @a packagesRegistryRaw from
+   *        @a lockfileRaw.
+   */
+  void
+  init();
+
+
+public:
+
+  ~Lockfile()                  = default;
+  Lockfile()                   = default;
+  Lockfile( const Lockfile & ) = default;
+  Lockfile( Lockfile && )      = default;
+
+  Lockfile( LockfileRaw raw ) : lockfileRaw( std::move( raw ) )
+  {
+    this->init();
+  }
+
+  Lockfile( std::filesystem::path lockfilePath, LockfileRaw raw )
+    : lockfilePath( std::move( lockfilePath ) ), lockfileRaw( std::move( raw ) )
+  {
+    this->init();
+  }
+
+  explicit Lockfile( std::filesystem::path lockfilePath );
+
+  Lockfile &
+  operator=( const Lockfile & )
+    = default;
+
+  Lockfile &
+  operator=( Lockfile && )
+    = default;
+
+  /** @brief Get the filesystem path to the lockfile ( if any ). */
+  [[nodiscard]] const std::optional<std::filesystem::path> &
+  getLockfilePath() const
+  {
+    return this->lockfilePath;
+  }
+
+  /** @brief Get the _raw_ representation of the lockfile. */
+  [[nodiscard]] const LockfileRaw &
+  getLockfileRaw() const
+  {
+    return this->lockfileRaw;
+  }
+
+  /** @brief Get the original _manifest_ used to create the lockfile. */
+  [[nodiscard]] const ManifestRaw &
+  getManifestRaw() const
+  {
+    return this->getLockfileRaw().manifest;
+  }
+
+  /** @brief Get the locked registry from the _raw_ lockfile. */
+  [[nodiscard]] const RegistryRaw &
+  getRegistryRaw() const
+  {
+    return this->getLockfileRaw().registry;
+  }
+
+  /** @brief Get old manifest. */
+  [[nodiscard]] const Manifest &
+  getManifest() const
+  {
+    return this->manifest;
+  }
+
+  /** @brief Get old descriptors. */
+  [[nodiscard]] const std::unordered_map<InstallID, ManifestDescriptor> &
+  getDescriptors() const
+  {
+    return this->getManifest().getDescriptors();
+  }
+
+  /**
+   * @brief Get the @a packagesRegistryRaw, containing all inputs used by
+   *        `packages.**` members of the lockfile.
+   *
+   * This registry keys inputs by their fingerprints.
+   */
+  [[nodiscard]] const RegistryRaw &
+  getPackagesRegistryRaw() const
+  {
+    return this->packagesRegistryRaw;
+  }
+
+  /** @brief Lockfile information related to a given _install id_. */
+  struct LockedInstallInfo
+  {
+
+    /** The _install id_ of the package. */
+    InstallID installID;
+    /** The original _manifest descriptor_. */
+    const ManifestDescriptor *descriptor;
+    /** Resolutions for each system. */
+    std::unordered_map<System, std::optional<const LockedPackageRaw *>>
+      systemLocks;
+
+
+    /** @brief Check the validity of the manifest information against the
+     *         locked `packages.**` information.
+     *         Throws an exception if invalid.
+     *
+     * This checks:
+     * - Any descriptor `systems` and `optional` fields align with
+     *   `packages.<SYSTEM>.* = std::nullopt` resolutions.
+     * - Any descriptor `systems`, `subtree`, and/or `path` fields align
+     *   locked `abspath`.
+     * - Any descriptor `input` aligns with locked input.
+     */
+    void
+    check() const;
+
+
+  }; /* End struct `LockedInstallInfo' */
+
+  [[nodiscard]] LockedInstallInfo
+  getLockedInstallInfo( const InstallID &installID ) const;
+
+
+}; /* End class `Lockfile' */
 
 
 /* -------------------------------------------------------------------------- */

@@ -52,6 +52,57 @@ using InstallID = std::string;
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief A set of options that apply to an entire environment. */
+struct Options
+{
+
+  std::optional<std::vector<System>> systems;
+
+  struct Allows
+  {
+    std::optional<bool>                     unfree;
+    std::optional<bool>                     broken;
+    std::optional<std::vector<std::string>> licenses;
+  }; /* End struct `Allows' */
+  std::optional<Allows> allow;
+
+  struct Semver
+  {
+    std::optional<bool> preferPreReleases;
+  }; /* End struct `Semver' */
+  std::optional<Semver> semver;
+
+  std::optional<std::string> packageGroupingStrategy;
+  std::optional<std::string> activationStrategy;
+  // TODO: Other options
+
+
+  /**
+   * @brief Apply options from @a overrides, but retain other existing options.
+   */
+  void
+  merge( const Options & overrides );
+
+  /** @brief Convert to a _base_ set of @a flox::pkgdb::PkgQueryArgs. */
+  explicit operator pkgdb::PkgQueryArgs() const;
+
+
+}; /* End struct `Options' */
+
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Convert a JSON object to a @a flox::resolver::Options. */
+void
+from_json( const nlohmann::json & jfrom, Options & opts );
+
+/** @brief Convert a @a flox::resolver::Options to a JSON Object. */
+void
+to_json( nlohmann::json & jfrom, const Options & opts );
+
+
+/* -------------------------------------------------------------------------- */
+
 /**
  * @brief A _global_ manifest containing only `registry` and `options` fields
  *        in its _raw_ form.
@@ -64,30 +115,6 @@ using InstallID = std::string;
  */
 struct GlobalManifestRaw
 {
-  struct Options
-  {
-
-    std::optional<std::vector<System>> systems;
-
-    struct Allows
-    {
-      std::optional<bool>                     unfree;
-      std::optional<bool>                     broken;
-      std::optional<std::vector<std::string>> licenses;
-    }; /* End struct `Allows' */
-    std::optional<Allows> allow;
-
-    struct Semver
-    {
-      std::optional<bool> preferPreReleases;
-    }; /* End struct `Semver' */
-    std::optional<Semver> semver;
-
-    std::optional<std::string> packageGroupingStrategy;
-    std::optional<std::string> activationStrategy;
-    // TODO: Other options
-
-  }; /* End struct `Options' */
   std::optional<Options> options;
 
   std::optional<RegistryRaw> registry;
@@ -155,6 +182,13 @@ struct ManifestRaw : public GlobalManifestRaw
     std::optional<std::string> floxhub;
     std::optional<std::string> dir;
 
+    /**
+     * @brief Validate the `env-base` field, throwing an exception if invalid
+     *        information is found.
+     *
+     * This asserts:
+     * - Only one of `floxhub` or `dir` is set.
+     */
     void
     check() const;
 
@@ -223,6 +257,12 @@ struct ManifestRaw : public GlobalManifestRaw
   /**
    * @brief Validate manifest fields, throwing an exception if its contents
    *        are invalid.
+   *
+   * This asserts:
+   * - @a envBase is valid.
+   * - @a registry does not contain indirect flake references.
+   * - All members of @a install are valid.
+   * - @a hook is valid.
    */
   void
   check() const override;
@@ -239,6 +279,14 @@ struct ManifestRaw : public GlobalManifestRaw
     this->vars    = std::nullopt;
     this->hook    = std::nullopt;
   }
+
+  /**
+   * @brief Generate a JSON _diff_ between @a this manifest an @a old manifest.
+   *
+   * The _diff_ is represented as an [JSON patch](https://jsonpatch.com) object.
+   */
+  nlohmann::json
+  diff( const ManifestRaw & old ) const;
 
 
 }; /* End struct `ManifestRaw' */
@@ -279,6 +327,12 @@ protected:
   ManifestRaw           manifestRaw;
   RegistryRaw           registryRaw;
   // NOLINTEND(cppcoreguidelines-non-private-member-variables-in-classes)
+
+
+  /**
+   * @brief Initialize @a registryRaw from @a manifestRaw. */
+  virtual void
+  init();
 
 
 public:
@@ -338,14 +392,26 @@ public:
   }
   // NOLINTEND(performance-unnecessary-value-param)
 
+  /** @brief Get the list of systems requested by the manifest. */
+  [[nodiscard]] std::vector<System>
+  getSystems() const
+  {
+    return this->getManifestRaw().options->systems.value_or(
+      std::vector<System> { nix::settings.thisSystem.get() } );
+  }
+
   [[nodiscard]] pkgdb::PkgQueryArgs
   getBaseQueryArgs() const;
 
 
-}; /* End class `Manifest' */
+}; /* End class `GlobalManifest' */
 
 
 /* -------------------------------------------------------------------------- */
+
+/** @brief A map of _install IDs_ to _manifest descriptors_. */
+using InstallDescriptors = std::unordered_map<InstallID, ManifestDescriptor>;
+
 
 /** @brief Description of an environment in its _unlocked_ form. */
 class Manifest : public GlobalManifest
@@ -353,10 +419,30 @@ class Manifest : public GlobalManifest
 
 private:
 
-  std::unordered_map<InstallID, ManifestDescriptor> descriptors;
+  /**
+   * A map of _install ID_ to _descriptors_, being descriptions/requirements
+   * of a dependency.
+   */
+  InstallDescriptors descriptors;
 
+
+  /**
+   * @brief Assert the validity of the manifest, throwing an exception if it
+   *        contains invalid fields.
+   *
+   * This checks that:
+   * - The raw manifest is valid.
+   * - If `install.<IID>.systems` is set, then `options.systems` is also set.
+   * - All `install.<IID>.systems` are in `options.systems`.
+   */
   void
-  initDescriptors();
+  check() const;
+
+  /**
+   * @brief Initialize @a registryRaw and @a descriptors from @a manifestRaw.
+   */
+  void
+  init() override;
 
 
 public:
@@ -378,11 +464,20 @@ public:
   operator=( Manifest && )
     = default;
 
-  [[nodiscard]] const std::unordered_map<InstallID, ManifestDescriptor> &
+  /** @brief Get _descriptors_ from the manifest's `install' field. */
+  [[nodiscard]] const InstallDescriptors &
   getDescriptors() const
   {
     return this->descriptors;
   }
+
+  /** @brief Organize a set of descriptors by their _group_ field. */
+  [[nodiscard]] std::unordered_map<GroupName, InstallDescriptors>
+  getGroupedDescriptors() const;
+
+  /** @brief Get descriptors which are not part of a group. */
+  [[nodiscard]] InstallDescriptors
+  getUngroupedDescriptors() const;
 
 
 }; /* End class `Manifest' */
@@ -395,156 +490,6 @@ public:
 
 /* -------------------------------------------------------------------------- */
 
-// TODO: Move routines associated with locking to a separate class/functor.
-/**
- * @brief A state blob with a manifest loaded from path.
- *
- * This structure stashes several fields to avoid repeatedly calculating them.
- */
-class ManifestFileMixin : public pkgdb::PkgDbRegistryMixin
-{
-
-public:
-
-  /* From `PkgDbRegistryMixin':
-   *   std::shared_ptr<nix::Store>                         store;
-   *   std::shared_ptr<nix::EvalState>                     state;
-   *   bool                                                force    = false;
-   *   std::shared_ptr<Registry<pkgdb::PkgDbInputFactory>> registry;
-   */
-
-  std::optional<std::filesystem::path> manifestPath;
-  std::optional<Manifest>              manifest;
-  std::optional<RegistryRaw>           lockedRegistry;
-  std::optional<pkgdb::PkgQueryArgs>   baseQueryArgs;
-
-  // TODO: Move to class/functor associated with locking.
-  std::unordered_map<
-    GroupName,
-    std::unordered_map<
-      std::string, /* input name */
-      std::unordered_map<InstallID, std::optional<pkgdb::row_id>>>>
-    groupedResolutions;
-
-  // TODO: Fix to be `<SYSTEM>.<IID>.*'
-  // TODO: Move to class/functor associated with locking.
-  /**
-   * @brief A map of _locked_ descriptors organized by their _install ID_,
-   *        and then by `system`.
-   *        For optional packages, or those which are explicitly declared for
-   *        a subset of systems, the value may be `std::nullopt`.
-   */
-  std::unordered_map<InstallID,                 /* _install ID_ */
-                     std::unordered_map<System, /* system */
-                                        std::optional<Resolved>>>
-    lockedDescriptors;
-
-
-protected:
-
-  // TODO: Move to class/functor associated with locking.
-  const std::unordered_map<System, std::optional<Resolved>> &
-  lockUngroupedDescriptor( const std::string &        iid,
-                           const ManifestDescriptor & desc );
-
-  // TODO: Move to `Lockfile'
-  /** @brief Assert that all _grouped_ descriptors resolve to a single input. */
-  void
-  checkGroups();
-
-
-public:
-
-  /**
-   * @brief Returns the locked @a RegistryRaw from the manifest.
-   *
-   * This is used to initialize the @a registry field from
-   * @a flox::pkgdb::PkgDbRegistryMixin and should not be confused with the
-   * _unlocked registry_ ( which can be accessed directly from @a manifest ).
-   */
-  [[nodiscard]] RegistryRaw
-  getRegistryRaw() override
-  {
-    return this->getManifest().getRegistryRaw();
-  }
-
-  [[nodiscard]] const std::vector<std::string> &
-  getSystems() override
-  {
-    return this->getBaseQueryArgs().systems;
-  }
-
-  /**
-   * @brief Get the path to the manifest file.
-   *
-   * If @a manifestPath is already set, we use that; otherwise we attempt to
-   * locate a manifest at `[./flox/]manifest.{toml,yaml,json}`.
-   *
-   * @return The path to the manifest file.
-   */
-  [[nodiscard]] std::filesystem::path
-  getManifestPath();
-
-  [[nodiscard]] const ManifestRaw &
-  getManifestRaw()
-  {
-    return this->getManifest().getManifestRaw();
-  }
-
-  /**
-   * @brief Sets the path to the registry file to load with `--manifest`.
-   * @param parser The parser to add the argument to.
-   * @return The argument added to the parser.
-   */
-  argparse::Argument &
-  addManifestFileOption( argparse::ArgumentParser & parser );
-
-  /**
-   * @brief Sets the path to the registry file to load with a positional arg.
-   * @param parser The parser to add the argument to.
-   * @param required Whether the argument is required.
-   * @return The argument added to the parser.
-   */
-  argparse::Argument &
-  addManifestFileArg( argparse::ArgumentParser & parser, bool required = true );
-
-  [[nodiscard]] const Manifest &
-  getManifest();
-
-  [[nodiscard]] const RegistryRaw &
-  getLockedRegistry();
-
-  [[nodiscard]] const pkgdb::PkgQueryArgs &
-  getBaseQueryArgs();
-
-  [[nodiscard]] const std::unordered_map<std::string, ManifestDescriptor> &
-  getDescriptors()
-  {
-    return this->getManifest().getDescriptors();
-  }
-
-  // TODO: Fix to be `<SYSTEM>.<IID>.*'. ( see `./lockfile.hh' )
-  // TODO: Move to `Lockfile' ( or some locking functor )
-  [[nodiscard]] const std::unordered_map<
-    InstallID,
-    std::unordered_map<System, std::optional<Resolved>>> &
-  getLockedDescriptors();
-
-  /* TODO:
-   * std::unordered_map<GroupName,
-   *                    std::unordered_map<InstallID, ManifestDescriptor>
-   *                   >
-   * getGroupedDescriptors() const;
-   *
-   * std::unordered_map<InstallId, ManifestDescriptor>
-   * getUngroupedDescriptors() const;
-   */
-
-
-}; /* End struct `ManifestFileMixin' */
-
-
-/* -------------------------------------------------------------------------- */
 
 }  // namespace flox::resolver
 
