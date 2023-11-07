@@ -23,9 +23,13 @@ Environment::getCombinedRegistryRaw()
 {
   if ( ! this->combinedRegistryRaw.has_value() )
     {
-      // TODO: merge registries
-      // this->combinedRegistryRaw = this->globalManifest->getRegistryRaw();
-      this->combinedRegistryRaw = this->manifest.getLockedRegistry();
+      this->combinedRegistryRaw = this->globalManifest->getRegistryRaw();
+      if ( this->combinedRegistryRaw.has_value() )
+        {
+          this->combinedRegistryRaw.value().merge(
+            this->manifest.getLockedRegistry() );
+        }
+      else { this->combinedRegistryRaw = this->manifest.getLockedRegistry(); }
     }
   return *this->combinedRegistryRaw;
 }
