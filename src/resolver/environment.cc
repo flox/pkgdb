@@ -59,63 +59,6 @@ Environment::getPkgDbRegistry()
 
 /* -------------------------------------------------------------------------- */
 
-void
-Environment::fillLockedFromOldLockfile()
-{
-  if ( ! this->oldLockfile.has_value() ) { return; }
-
-  for ( const auto & system : this->manifest.getSystems() )
-    {
-      SystemPackages sysPkgs;
-      for ( const auto & [iid, desc] : this->getManifest().getDescriptors() )
-        {
-          /* Package is skipped for this system, so fill `std::nullopt'. */
-          if ( desc.systems.has_value()
-               && ( std::find( desc.systems->begin(),
-                               desc.systems->end(),
-                               system )
-                    == desc.systems->end() ) )
-            {
-              sysPkgs.emplace( iid, std::nullopt );
-              continue;
-            }
-
-          /* Check to see if the descriptor was modified in such a way that we
-           * need to re-resolve. */
-          auto oldDesc = this->oldLockfile->getDescriptors().find( iid );
-
-          /* Skip new descriptors. */
-          if ( oldDesc == this->oldLockfile->getDescriptors().end() )
-            {
-              continue;
-            }
-
-          /* Detect changes.
-           * We ignore `group', `priority', `optional', and `systems'. */
-          if ( ( desc.name != oldDesc->second.name )
-               || ( desc.path != oldDesc->second.path )
-               || ( desc.version != oldDesc->second.version )
-               || ( desc.semver != oldDesc->second.semver )
-               || ( desc.subtree != oldDesc->second.subtree )
-               || ( desc.input != oldDesc->second.input ) )
-            {
-              continue;
-            }
-
-          // XXX: Detecting changed groups needs to be handled somewhere.
-
-          sysPkgs.emplace(
-            iid,
-            this->oldLockfile->getLockfileRaw().packages.at( system ).at(
-              iid ) );
-        }
-      this->lockfileRaw->packages.emplace( system, std::move( sysPkgs ) );
-    }
-}
-
-
-/* -------------------------------------------------------------------------- */
-
 std::optional<ManifestRaw>
 Environment::getOldManifestRaw() const
 {
@@ -126,6 +69,122 @@ Environment::getOldManifestRaw() const
   return std::nullopt;
 }
 
+
+/* -------------------------------------------------------------------------- */
+
+// Helper function for groupIsLocked.
+// A system is skipped if systems is specified but that system is not.
+bool
+systemSkipped( const System &                             system,
+               const std::optional<std::vector<System>> & systems )
+{
+  return systems.has_value()
+         && ( std::find( systems->begin(), systems->end(), system )
+              == systems->end() );
+}
+
+/* -------------------------------------------------------------------------- */
+
+bool
+Environment::groupIsLocked( const InstallDescriptors & group,
+                            const Lockfile &           oldLockfile,
+                            const System &             system )
+{
+  InstallDescriptors oldDescriptors = oldLockfile.getDescriptors();
+  SystemPackages     oldSystemPackages
+    = oldLockfile.getLockfileRaw().packages.at( system );
+
+  for ( auto & [iid, descriptor] : group )
+    {
+      // If the descriptor has changed compared to the one in the lockfile
+      // manifest, it needs to be locked again.
+      if ( auto oldDescriptorPair = oldDescriptors.find( iid );
+           oldDescriptorPair != oldDescriptors.end() )
+        {
+          auto & [_, oldDescriptor] = *oldDescriptorPair;
+          /* We ignore `priority' and handle `systems' below. */
+          if ( ( descriptor.name != oldDescriptor.name )
+               || ( descriptor.path != oldDescriptor.path )
+               || ( descriptor.version != oldDescriptor.version )
+               || ( descriptor.semver != oldDescriptor.semver )
+               || ( descriptor.subtree != oldDescriptor.subtree )
+               || ( descriptor.input != oldDescriptor.input )
+               || ( descriptor.group != oldDescriptor.group )
+               || ( descriptor.optional != oldDescriptor.optional ) )
+            {
+              return false;
+            }
+          // Ignore changes to systems other than the one we're locking
+          if ( systemSkipped( system, descriptor.systems )
+               != systemSkipped( system, oldDescriptor.systems ) )
+            {
+              return false;
+            }
+        }
+      /* If the descriptor doesn't even exist in the lockfile manifest, it needs
+       * to be locked again. */
+      else { return false; }
+      // Check if the descriptor exists in the lockfile lock
+      if ( auto oldLockedPackagePair = oldSystemPackages.find( iid );
+           oldLockedPackagePair != oldSystemPackages.end() )
+        {
+          // Note: we could relock if the prior locking attempt was null
+          // auto & [_, oldLockedPackage] = *oldLockedPackagePair;
+          // if ( !oldLockedPackage.has_value()) { return false; }
+        }
+      // If the descriptor doesn't even exist in the lockfile lock, it needs to
+      // be locked again.
+      else { return false; }
+    }
+  // We haven't found something unlocked, so everything must be locked.
+  return true;
+}
+
+/* -------------------------------------------------------------------------- */
+
+std::vector<InstallDescriptors>
+Environment::getUnlockedGroups( const System & system )
+{
+  auto lockfile           = this->getOldLockfile();
+  auto groupedDescriptors = this->getManifest().getGroupedDescriptors();
+  if ( ! lockfile.has_value() ) { return groupedDescriptors; }
+
+  for ( auto group = groupedDescriptors.begin();
+        group != groupedDescriptors.end(); )
+    {
+      if ( groupIsLocked( *group, *lockfile, system ) )
+        {
+          group = groupedDescriptors.erase( group );
+        }
+      else { ++group; }
+    }
+
+  return groupedDescriptors;
+}
+
+/* -------------------------------------------------------------------------- */
+
+std::vector<InstallDescriptors>
+Environment::getLockedGroups( const System & system )
+{
+  auto lockfile = this->getOldLockfile();
+  if ( ! lockfile.has_value() ) { return std::vector<InstallDescriptors> {}; }
+
+  auto groupedDescriptors = this->getManifest().getGroupedDescriptors();
+
+  // remove all groups that are ~not~ already locked
+  for ( auto group = groupedDescriptors.begin();
+        group != groupedDescriptors.end(); )
+    {
+      if ( ! groupIsLocked( *group, *lockfile, system ) )
+        {
+          group = groupedDescriptors.erase( group );
+        }
+      else { ++group; }
+    }
+
+  return groupedDescriptors;
+}
 
 /* -------------------------------------------------------------------------- */
 
@@ -289,93 +348,47 @@ Environment::lockSystem( const System & system )
   assert( this->lockfileRaw.has_value() );
   SystemPackages pkgs;
 
-  auto ungrouped = this->getManifest().getDescriptors();
-  auto groups    = this->getManifest().getGroupedDescriptors();
+  auto groups = this->getUnlockedGroups( system );
 
   // TODO: Use `getCombinedRegistryRaw()'
-  for ( const auto & inputPair : *this->getPkgDbRegistry() )
+  for ( const auto & [_, input] : *this->getPkgDbRegistry() )
     {
-      const auto & input = inputPair.second;
       /* Try resolving unresolved groups. */
-      for ( auto elem = groups.begin(); elem != groups.end(); )
+      for ( auto group = groups.begin(); group != groups.end(); )
         {
-          const auto &                  group = elem->second;
           std::optional<SystemPackages> maybeResolved
-            = this->tryResolveGroupIn( group, *input, system );
+            = this->tryResolveGroupIn( *group, *input, system );
           if ( maybeResolved.has_value() )
             {
               pkgs.merge( *maybeResolved );
-              elem = groups.erase( elem );
+              group = groups.erase( group );
             }
-          else { ++elem; }
+          else { ++group; }
         }
-
-      /* Try resolving unresolved ungrouped descriptors. */
-      for ( auto elem = ungrouped.begin(); elem != ungrouped.end(); )
-        {
-          const auto & iid        = elem->first;
-          const auto & descriptor = elem->second;
-          /* Skip if `systems' on descriptor excludes this system. */
-          if ( descriptor.systems.has_value()
-               && ( std::find( descriptor.systems->begin(),
-                               descriptor.systems->end(),
-                               system )
-                    == descriptor.systems->end() ) )
-            {
-              pkgs.emplace( iid, std::nullopt );
-              elem = ungrouped.erase( elem );
-              continue;
-            }
-          std::optional<pkgdb::row_id> maybeRow
-            = this->tryResolveDescriptorIn( descriptor, *input, system );
-          if ( maybeRow.has_value() )
-            {
-              pkgs.emplace( iid,
-                            Environment::lockPackage( *input,
-                                                      *maybeRow,
-                                                      descriptor.priority ) );
-              elem = ungrouped.erase( elem );
-            }
-          else { ++elem; }
-        }
-    }
-
-  /* Fill `std::nullopt' for skippable ungrouped descriptors. */
-  for ( auto elem = ungrouped.begin(); elem != ungrouped.end(); )
-    {
-      const auto & iid        = elem->first;
-      const auto & descriptor = elem->second;
-      if ( descriptor.optional )
-        {
-          pkgs.emplace( iid, std::nullopt );
-          elem = ungrouped.erase( elem );
-        }
-      else { ++elem; }
-    }
-
-  /* Throw if any ungrouped descriptors remain. */
-  if ( ! ungrouped.empty() )
-    {
-      std::stringstream msg;
-      msg << "failed to resolve some descriptor(s): ";
-      bool first = true;
-      for ( const auto & [iid, descriptor] : ungrouped )
-        {
-          if ( first ) { first = false; }
-          else { msg << ", "; }
-          msg << iid;
-        }
-      throw ResolutionFailure( msg.str() );
     }
 
   if ( ! groups.empty() )
     {
       std::stringstream msg;
-      msg << "failed to resolve some groups(s):";
-      for ( const auto & [groupName, group] : groups )
+      msg << "failed to resolve some packages(s):";
+      for ( const auto & group : groups )
         {
+          // TODO tryResolveGroupIn should report which packages failed to
+          // resolve
+          if ( auto descriptor = group.begin();
+               descriptor != group.end()
+               && descriptor->second.group.has_value() )
+            {
+
+              msg << std::endl
+                  << "  some package in group " << *descriptor->second.group
+                  << "failed to resolve: ";
+            }
+          else
+            {
+              msg << std::endl << "  one of the following failed to resolve: ";
+            }
           bool first = true;
-          msg << std::endl << "  " << groupName << ": ";
           for ( const auto & [iid, descriptor] : group )
             {
               if ( first ) { first = false; }
@@ -384,6 +397,26 @@ Environment::lockSystem( const System & system )
             }
         }
       throw ResolutionFailure( msg.str() );
+    }
+
+
+  // Copy over old lockfile entries we want to keep
+  if ( auto oldLockfile = this->getOldLockfile() )
+    {
+      SystemPackages systemPackages
+        = oldLockfile->getLockfileRaw().packages.at( system );
+      auto oldDescriptors = oldLockfile->getDescriptors();
+      for ( const auto & group : this->getLockedGroups( system ) )
+        {
+          for ( const auto & [iid, descriptor] : group )
+            {
+              if ( auto oldLockedPackagePair = systemPackages.find( iid );
+                   oldLockedPackagePair != systemPackages.end() )
+                {
+                  pkgs.emplace( *oldLockedPackagePair );
+                }
+            }
+        }
     }
 
   this->lockfileRaw->packages.emplace( system, std::move( pkgs ) );
@@ -397,10 +430,7 @@ Environment::createLockfile()
 {
   if ( ! this->lockfileRaw.has_value() )
     {
-      this->lockfileRaw = LockfileRaw {};
-      // TODO: Make a better implementation of `fillLockedFromOldLockfile()',
-      //       and modify `lockSystem()' to only target unlocked descriptors.
-      // this->fillLockedFromOldLockfile();
+      this->lockfileRaw           = LockfileRaw {};
       this->lockfileRaw->manifest = this->getManifestRaw();
       // TODO: Once you figure out `getCombinedRegistryRaw' you might need to
       //       remove some unused registry members.

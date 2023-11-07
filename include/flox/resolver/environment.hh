@@ -93,30 +93,32 @@ private:
                         priority );
   }
 
-  // TODO: Implement using JSON patch `diff` against old manifest.
-  //       The current implementation is a hot mess.
   /**
-   *  @brief Fill resolutions from @a oldLockfile into @a lockfile for
-   *         unmodified descriptors.
-   *         Drop any removed descriptors in the process.
-   *         This is a helper function of
-   *         @a flox::resolver::Environment::createLockfile().
+   * @brief Check if lock from @ oldLockfile can be reused for a group.
    *
-   * This must be called after @a lockfileRaw is initialized.
-   * This is only intended to be called from
-   * @a flox::resolver::Environment::createLockfile().
+   * Checks if:
+   * - All descriptors are present in the old manifest.
+   * - No descriptors have changed in the old manifest such that the lock is
+   *   invalidated.
+   * - All descriptors are present in the old lock
    */
-  void
-  fillLockedFromOldLockfile();
+  [[nodiscard]] bool
+  groupIsLocked( const InstallDescriptors & group,
+                 const Lockfile &           oldLockfile,
+                 const System &             system );
 
-  // TODO
   /**
-   * @brief Get the set of descriptors which differ from those
-   *        in @a oldLockfile.
+   * @brief Get groups that need to be locked as opposed to reusing locks from
+   * @a oldLockfile.
    */
-  /** @brief Collect unlocked/modified descriptors that need to be resolved. */
-  [[nodiscard]] std::unordered_map<InstallID, ManifestDescriptor>
-  getUnlockedDescriptors();
+  [[nodiscard]] std::vector<InstallDescriptors>
+  getUnlockedGroups( const System & system );
+
+  /**
+   * @brief Get groups with locks that can be reused from @a oldLockfile.
+   */
+  [[nodiscard]] std::vector<InstallDescriptors>
+  getLockedGroups( const System & system );
 
   /**
    * @brief Get a merged form of @a oldLockfile or @a globalManifest
