@@ -65,6 +65,11 @@ SearchCommand::addSearchParamArgs( argparse::ArgumentParser & parser )
     .action(
       [&]( const std::string & params )
       {
+        //         [&]( const std::string & inlineJsonOrPath )
+        // {
+        //   nlohmann::json params = parseOrReadJSONObject( inlineJsonOrPath );
+        //   params.get_to( this->rawParams );
+        // } );
         nlohmann::json paramsJSON = parseOrReadJSONObject( params );
         paramsJSON.get_to( this->params );
       } );

@@ -19,7 +19,8 @@
 #include "flox/pkgdb/input.hh"
 #include "flox/registry.hh"
 #include "flox/resolver/lockfile.hh"
-#include "flox/resolver/manifest.hh"
+#include "flox/search/params.hh"
+#include "flox/search/query.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -262,7 +263,7 @@ public:
  *
  * This structure stashes several fields to avoid repeatedly calculating them.
  */
-class EnvironmentMixin
+class EnvironmentMixin : flox::search::PkgQueryMixin
 {
 
 private:
@@ -341,6 +342,11 @@ public:
   addLockfileOption( argparse::ArgumentParser & parser );
 
 
+  /**
+   * @brief searches for the specified package, printing results to stdout.
+   */
+  void
+  search( const search::SearchQuery & query );
 }; /* End class `EnvironmentMixin' */
 
 

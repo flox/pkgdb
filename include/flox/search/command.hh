@@ -17,6 +17,9 @@
 #include "flox/pkgdb/input.hh"
 #include "flox/pkgdb/write.hh"
 #include "flox/registry.hh"
+#include "flox/resolver/environment.hh"
+#include "flox/resolver/lockfile.hh"
+#include "flox/resolver/manifest.hh"
 #include "flox/search/params.hh"
 
 
@@ -27,30 +30,56 @@ namespace flox::search {
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief Package query parser. */
-struct PkgQueryMixin
+struct SearchParamsRaw
 {
 
-  pkgdb::PkgQuery query;
+  /**
+   * @brief The absolute @a std::filesystem::path to a manifest file or an
+   * inline @a flox::resolver::GlobalManifestRaw.
+   */
+  std::optional<
+    std::variant<std::filesystem::path, resolver::GlobalManifestRaw>>
+    globalManifestRaw;
 
   /**
-   * @brief Add `query` argument to any parser to construct a
-   *        @a flox::pkgdb::PkgQuery.
+   * @brief The absolute @a std::filesystem::path to a lockfile or an inline
+   * @a flox::resolver::LockfileRaw.
    */
-  argparse::Argument &
-  addQueryArgs( argparse::ArgumentParser & parser );
+  std::optional<std::variant<std::filesystem::path, resolver::LockfileRaw>>
+    lockfileRaw;
 
   /**
-   * @brief Run query on a @a pkgdb::PkgDbReadOnly database.
-   *
-   * Any scraping should be performed before invoking this function.
+   * @brief The @a flox::search::SearchQuery specifying the package to search
+   * for.
    */
-  std::vector<pkgdb::row_id>
-  queryDb( pkgdb::PkgDbReadOnly & pdb ) const;
+  SearchQuery query;
+
+public:
+
+  /**
+   * @brief Returns the existing @a flox::resolver::LockfileRaw or lazily
+   * loads it from disk.
+   */
+  [[nodiscard]] flox::resolver::LockfileRaw
+  getLockfileRaw();
+
+  /**
+   * @brief Returns the existing @a flox::resolver::GlobalManifestRaw or lazily
+   * loads it from disk.
+   */
+  [[nodiscard]] flox::resolver::GlobalManifestRaw
+  getGlobalManifestRaw();
 
 
-}; /* End struct `PkgQueryMixin' */
+}; /* End struct `SearchParamsRaw' */
 
+// /** @brief Convert a JSON object to a @a flox::resolver::GlobalManifest. */
+// void
+// from_json( const nlohmann::json & jfrom, GlobalManifestRaw & raw );
+
+// /** @brief Convert a @a flox::resolver::GlobalManifest to a JSON object. */
+// void
+// to_json( nlohmann::json & jto, const GlobalManifestRaw & raw );
 
 /* -------------------------------------------------------------------------- */
 
@@ -58,12 +87,14 @@ struct PkgQueryMixin
 class SearchCommand
   : pkgdb::PkgDbRegistryMixin
   , PkgQueryMixin
+// , flox::resolver::EnvironmentMixin
 {
 
 private:
 
   SearchParams           params; /**< Query arguments and inputs */
   command::VerboseParser parser; /**< Query arguments and inputs parser */
+  SearchParamsRaw        rawParams;
 
   /**
    * @brief Add argument to any parser to construct
