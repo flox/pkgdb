@@ -54,11 +54,6 @@ harder for readers to trace; the aim of this section is to aggregate all of
 classes related to this transformation in one place, and describe their
 relationships to one another.
 
-Note that various existing parameter sets such as `flox::pkgdb::QueryParams`
-are likely going to be replaced by `flox::resolver::ManifestRaw` in the future.
-Nonetheless, they are discussed here to help other developers understand their
-functional and historical relationships with one another.
-
 
 ### flox::pkgdb::PkgDescriptorBase
 
@@ -96,11 +91,6 @@ concept pkg_descriptor_typename = std::derived_from<T, PkgDescriptorBase>;
 Child Classes:
 - `flox::pkgdb::PkgQueryArgs`
 - `flox::search::SearchQuery`
-
-Contained by:
-- `flox::pkgdb::QueryParams<pkg_descriptor_typename QueryType>`
-  + Uses `pkg_descriptor_typename` concept to accept any child of
-    `PkgDescriptorBase` as a template parameter.
     
     
 ### flox::RegistryRaw
@@ -193,142 +183,6 @@ struct PkgQueryArgs : public PkgDescriptorBase
 ```
 
 
-### flox::pkgdb::QueryPreferences ( to be deprecated )
-
-NOTE: This structure is expected to be deprecated and replaced by a subset of
-      the `flox::resolver::Options` fields.
-      The current fields and fallback behavior there are identical, but
-      fallback handling was moved to an intermediate struct
-      `flox::resolver::Manifest`.
-
-Declared in
-[<pkgdb>/include/flox/pkgdb/params.hh](../include/flox/pkgdb/params.hh).
-
-These are _global_ settings that are often used for performing queries with
-multiple descriptors.
-
-Here is its declaration:
-
-```c++
-// NOTE: This document may be out of sync with `params.hh'.
-//       The header itself is the _source of truth_.
-
-/**
- * @brief Global preferences used for resolution/search with multiple queries.
- */
-struct QueryPreferences
-{
-
-  /**
-   * Ordered list of systems to be searched.
-   * Results will be grouped by system in the order they appear here.
-   *
-   * Defaults to the current system.
-   */
-  std::vector<std::string> systems = { nix::settings.thisSystem.get() };
-
-
-  /** @brief Allow/disallow packages with certain metadata. */
-  struct Allows
-  {
-
-    /** Whether to include packages which are explicitly marked `unfree`. */
-    bool unfree = true;
-
-    /** Whether to include packages which are explicitly marked `broken`. */
-    bool broken = false;
-
-    /** Filter results to those explicitly marked with the given licenses. */
-    std::optional<std::vector<std::string>> licenses;
-
-  }; /* End struct `QueryPreferences::Allows' */
-
-  Allows allow; /**< Allow/disallow packages with certain metadata. */
-
-
-  /**
-   * @brief Settings associated with semantic version processing.
-   *
-   * These act as the _global_ default, but may be overridden by
-   * individual descriptors.
-   */
-  struct Semver
-  {
-    /** Whether pre-release versions should be ordered before releases. */
-    bool preferPreReleases = false;
-  }; /* End struct `QueryPreferences::Semver' */
-
-  Semver semver; /**< Settings associated with semantic version processing. */
-
-  // ...<SNIP>...
-  
-};
-```
-
-Child classes:
-- `flox::pkgdb::QueryParams`
-
-
-### flox::pkgdb::QueryParams ( to be deprecated )
-
-NOTE: This structure is expected to be deprecated in favor of a subset
-      of `flox::resolver::ManifestRaw` ( specifically its `options` and
-      `registry` fields ).
-
-Declared in
-[<pkgdb>/include/flox/pkgdb/params.hh](../include/flox/pkgdb/params.hh).
-
-This template is a _generic_ set of fields used to perform queries, which
-accepts a descriptor as a template argument.
-This allows this structure to be used for multiple use cases while avoiding
-repeated definitions of various fallback fields and conversion
-to `PkgQueryArgs`; however the _real_ purpose is to ensure consistency in
-these behaviors across different sets of parameters.
-
-At a high level `QueryParams` holds _preferences_
-( by extending `flox::pkgdb::QueryPreferences` ), a `flox::RegistryRaw`, and
-a _descriptor_ ( being any child class of `flox::pkgdb::PkgDescriptorBase` ).
-Here is its declaration:
-
-```c++
-template<pkg_descriptor_typename QueryType>
-struct QueryParams : public QueryPreferences
-{
-
-  using query_type = QueryType;
-
-  /* From `QueryPreferences':
-   *   std::vector<std::string> systems = { nix::settings.thisSystem.get() };
-   *   struct Allows {
-   *     bool unfree = true;
-   *     bool broken = false;
-   *     std::optional<std::vector<std::string>> licenses;
-   *   } allow;
-   *   struct Semver {
-   *     preferPreReleases = false;
-   *   } semver;
-   */
-
-  /** Settings and fetcher information associated with inputs. */
-  RegistryRaw registry;
-
-  /**
-   * @brief A single package descriptor in _raw_ form.
-   *
-   * This requires additional post-processing, such as "pushing down" global
-   * settings, before it can be used to perform resolution.
-   */
-  QueryType query;
-
-  // ...<SNIP>...
-  
-};
-```
-
-Template Instances:
-- `flox::search::SearchParams = QueryParams<flox::search::SearchQuery>`
-
-
 ### flox::search::SearchQuery
 
 Declared in
@@ -371,7 +225,7 @@ struct SearchQuery : public pkgdb::PkgDescriptorBase
 ```
 
 Contained by:
-- `flox::search::SearchParams = flox::pkgdb::QueryParams<flox::search::SearchQuery>`
+- `flox::search::SearchParams`
 
 For a detailed look at `SearchParams` see 
 [pkgdb search](./search.md) documentation.
@@ -463,8 +317,6 @@ Declared in
 
 This is our internal representation of a parsed `manifest.{toml,yaml,json}` file
 which describes an environment.
-Parts of this file are used to essentially construct something similar to
-the `flox::pkgdb::QueryParams<QueryType>` structure.
 
 The `flox::resolver::ManifestRaw` struct intends to exactly match the format
 of the file so that it can be used to validate its syntax, and be converted
@@ -496,7 +348,6 @@ struct ManifestRaw
   };
   std::optional<EnvBase> envBase;
 
-  // Similar to `flox::pkgdb::QueryPreferences`
   struct Options
   {
     std::optional<std::vector<std::string>> systems;

@@ -21,7 +21,6 @@
 #include "flox/core/exceptions.hh"
 #include "flox/core/types.hh"
 #include "flox/core/util.hh"
-#include "flox/pkgdb/params.hh"
 #include "flox/pkgdb/pkg-query.hh"
 #include "flox/registry.hh"
 #include "flox/resolver/environment.hh"
