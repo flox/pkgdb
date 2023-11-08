@@ -33,7 +33,7 @@ genParams() {
 
 genParamsNixpkgsFlox() {
   jq -r '.query.match|=null
-        |.registry.inputs|=( del( .nixpkgs )|del( .floco ) )'  \
+        |.manifest.registry.inputs|=( del( .nixpkgs )|del( .floco ) )'  \
      "$TDATA/params1.json"|jq "${1?}";
 }
 
@@ -151,7 +151,8 @@ genParamsNixpkgsFlox() {
 # Licenses filter
 @test "'pkgdb search' 'pname=blobs.gg & licenses=[Apache-2.0]'" {
   run sh -c "$PKGDB search '$(
-    genParams '.query.pname|="blobs.gg"|.allow.licenses|=["Apache-2.0"]';
+    genParams '.query.pname|="blobs.gg"
+               |.manifest.options.allow.licenses|=["Apache-2.0"]';
   )'|wc -l;";
   assert_success;
   assert_output 1;
@@ -165,7 +166,8 @@ genParamsNixpkgsFlox() {
 # Check output fields.
 @test "'pkgdb search' emits expected fields" {
   run sh -c "$PKGDB search '$(
-    genParams '.systems=["x86_64-linux","x86_64-darwin"]|.query.pname="hello"';
+    genParams '.manifest.options.systems=["x86_64-linux","x86_64-darwin"]
+               |.query.pname="hello"';
   )'|head -n1|jq -r 'to_entries|map( .key + \" \" + ( .value|type ) )[]';";
   assert_success;
   assert_output --partial 'absPath array';
@@ -189,7 +191,9 @@ genParamsNixpkgsFlox() {
 
 # Unfree filter
 @test "'pkgdb search' 'allow.unfree=false'" {
-  run sh -c "$PKGDB search '$( genParams '.allow.unfree=false'; )'|wc -l;";
+  run sh -c "$PKGDB search '$(
+    genParams '.manifest.options.allow.unfree=false';
+  )'|wc -l;";
   assert_success;
   assert_output 61338;
 }
@@ -201,7 +205,9 @@ genParamsNixpkgsFlox() {
 
 # Unfree filter
 @test "'pkgdb search' 'allow.broken=true'" {
-  run sh -c "$PKGDB search '$( genParams '.allow.broken=true'; )'|wc -l;";
+  run sh -c "$PKGDB search '$(
+    genParams '.manifest.options.allow.broken=true';
+  )'|wc -l;";
   assert_success;
   assert_output 64037;
 }
@@ -212,9 +218,10 @@ genParamsNixpkgsFlox() {
 # bats test_tags=search:prerelease, search:pname
 
 # preferPreReleases ordering
-@test "'pkgdb search' 'semver.preferPreReleases=true'" {
+@test "'pkgdb search' 'manifest.options.semver.prefer-pre-releases=true'" {
   run sh -c "$PKGDB search '$(
-    genParams '.semver.preferPreReleases=true|.query.pname="zfs-kernel"';
+    genParams '.manifest.options.semver["prefer-pre-releases"]=true
+               |.query.pname="zfs-kernel"';
   )'|head -n1|jq -r .version;";
   assert_success;
   assert_output '2.1.12-staging-2023-04-18-6.1.31';
@@ -228,7 +235,8 @@ genParamsNixpkgsFlox() {
 # `systems' ordering
 @test "'pkgdb search' systems order" {
   run sh -c "$PKGDB search '$(
-    genParams '.systems=["x86_64-linux","x86_64-darwin"]|.query.pname="hello"';
+    genParams '.manifest.options.systems=["x86_64-linux","x86_64-darwin"]
+               |.query.pname="hello"';
   )'|jq -rs 'to_entries|map(
                ( .key|tostring ) + \" \" + .value.absPath[1]
              )[]'";
@@ -244,7 +252,8 @@ genParamsNixpkgsFlox() {
 # `systems' ordering, reverse order of previous
 @test "'pkgdb search' systems order ( reversed )" {
   run sh -c "$PKGDB search '$(
-    genParams '.systems=["x86_64-darwin","x86_64-linux"]|.query.pname="hello"';
+    genParams '.manifest.options.systems=["x86_64-darwin","x86_64-linux"]
+               |.query.pname="hello"';
   )'|jq -rs 'to_entries|map(
                ( .key|tostring ) + \" \" + .value.absPath[1]
              )[]'";
@@ -259,61 +268,30 @@ genParamsNixpkgsFlox() {
 
 # bats test_tags=search:params, search:params:fallbacks
 
+# Check fallback behavior.
 @test "search-params with empty object" {
   run $SEARCH_PARAMS '{}';
   assert_success;
-
-  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.allow.broken';";
-  assert_success;
-  assert_output 'false';
-
-  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.allow.unfree';";
-  assert_success;
-  assert_output 'true';
-
-  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.allow.licenses';";
-  assert_success;
-  assert_output 'null';
 
   run sh -c "$SEARCH_PARAMS '{}'|jq -r '.query.match';";
   assert_success;
   assert_output 'null';
 
-  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.query.name';";
+  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.query[\"name-match\"]';";
   assert_success;
   assert_output 'null';
 
-  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.query.pname';";
+  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.manifest';";
+  assert_success;
+  refute_output --regexp '.';
+
+  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.[\"global-manifest\"]';";
   assert_success;
   assert_output 'null';
 
-  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.query.semver';";
+  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.lockfile';";
   assert_success;
   assert_output 'null';
-
-  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.query.version';";
-  assert_success;
-  assert_output 'null';
-
-  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.registry.inputs';";
-  assert_success;
-  assert_output '{}';
-
-  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.registry.defaults.subtrees';";
-  assert_success;
-  assert_output 'null';
-
-  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.registry.priority';";
-  assert_success;
-  assert_output '[]';
-
-  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.semver.preferPreReleases';";
-  assert_success;
-  assert_output 'false';
-
-  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.systems|length';";
-  assert_success;
-  assert_output '1';
 
 }
 
