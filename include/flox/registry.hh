@@ -337,13 +337,14 @@ struct RegistryRaw
                     pkgdb::PkgQueryArgs & pqa ) const;
 
   /**
-   * @brief Merge this @a flox::RegistryRaw struct with another @a
-   * flox::RegistryRaw, overriding any existing values with those from the
-   * other RegistryRaw
+   * @brief Merge this @a flox::RegistryRaw struct with another
+   *        @a flox::RegistryRaw, overriding any existing values with those from
+   *        the other RegistryRaw
    *
    */
   void
   merge( const RegistryRaw & overrides );
+
 
 }; /* End struct `RegistryRaw' */
 

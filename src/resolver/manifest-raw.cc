@@ -131,8 +131,7 @@ from_json( const nlohmann::json & jfrom, Options::Semver & semver )
       else
         {
           throw InvalidManifestFileException(
-            "unrecognized manifest field `options.semver." + key
-            + "'." );
+            "unrecognized manifest field `options.semver." + key + "'." );
         }
     }
 }
