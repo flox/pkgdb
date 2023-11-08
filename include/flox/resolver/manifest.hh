@@ -395,8 +395,12 @@ public:
   [[nodiscard]] std::vector<System>
   getSystems() const
   {
-    return this->getManifestRaw().options->systems.value_or(
-      std::vector<System> { nix::settings.thisSystem.get() } );
+    auto manifest = this->getManifestRaw();
+    if ( manifest.options.has_value() && manifest.options->systems.has_value() )
+      {
+        return *manifest.options->systems;
+      }
+    else { return std::vector<System> { nix::settings.thisSystem.get() }; }
   }
 
   [[nodiscard]] pkgdb::PkgQueryArgs
