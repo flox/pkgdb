@@ -94,9 +94,7 @@ to_json( nlohmann::json & jto, const SearchParamsRaw & raw );
 /* -------------------------------------------------------------------------- */
 
 /** @brief Search flakes for packages satisfying a set of filters. */
-class SearchCommand
-  : pkgdb::PkgDbRegistryMixin
-  , flox::resolver::EnvironmentMixin
+class SearchCommand : flox::resolver::EnvironmentMixin
 {
 
 private:
@@ -128,13 +126,6 @@ private:
 public:
 
   SearchCommand();
-
-  /** @brief Display a single row from the given @a input. */
-  static void
-  showRow( pkgdb::PkgDbInput & input, pkgdb::row_id row )
-  {
-    std::cout << input.getRowJSON( row ).dump() << std::endl;
-  }
 
   [[nodiscard]] command::VerboseParser &
   getParser()

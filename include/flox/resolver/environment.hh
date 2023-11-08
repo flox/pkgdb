@@ -263,7 +263,9 @@ public:
  *
  * This structure stashes several fields to avoid repeatedly calculating them.
  */
-class EnvironmentMixin : flox::search::PkgQueryMixin
+class EnvironmentMixin
+  : search::PkgQueryMixin
+  , public pkgdb::PkgDbRegistryMixin
 {
 
 private:
@@ -347,6 +349,13 @@ public:
    */
   void
   search( const search::SearchQuery & query );
+
+  /** @brief Display a single row from the given @a input. */
+  static void
+  showRow( pkgdb::PkgDbInput & input, pkgdb::row_id row )
+  {
+    std::cout << input.getRowJSON( row ).dump() << std::endl;
+  }
 }; /* End class `EnvironmentMixin' */
 
 

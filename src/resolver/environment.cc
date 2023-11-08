@@ -480,22 +480,16 @@ EnvironmentMixin::getEnvironment()
 void
 EnvironmentMixin::search( const search::SearchQuery & query )
 {
-  // for ( const auto & [name, input] : *this->getPkgDbRegistry() )
-  // {
-  //   this->params.fillPkgQueryArgs( name, args );
-  //   this->query = pkgdb::PkgQuery( args );
-  //   for ( const auto & row : this->queryDb( *input->getDbReadOnly() ) )
-  //     {
-  //       this->showRow( *input, row );
-  //     }
-  // }
-  pkgdb::PkgQueryArgs args;
-  query.fillPkgQueryArgs( args );
-  this->query = pkgdb::PkgQuery( args );
-  // for ( const auto & row : this->queryDb( *input->getDbReadOnly() ) )
-  //   {
-  //     this->showRow( *input, row );
-  //   }
+  for ( const auto & [name, input] : *this->getPkgDbRegistry() )
+    {
+      pkgdb::PkgQueryArgs args;
+      query.fillPkgQueryArgs( args );
+      this->query = pkgdb::PkgQuery( args );
+      for ( const auto & row : this->queryDb( *input->getDbReadOnly() ) )
+        {
+          this->showRow( *input, row );
+        }
+    }
 }
 
 
