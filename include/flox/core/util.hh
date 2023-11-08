@@ -397,10 +397,10 @@ assertIsJSONObject( const nlohmann::json & value,
  */
 template<typename T>
 std::vector<T>
-merge_vectors( const std::vector<T> &lower, const std::vector<T> &higher )
+merge_vectors( const std::vector<T> & lower, const std::vector<T> & higher )
 {
   std::vector<T> merged = higher;
-  for ( const auto &value : lower )
+  for ( const auto & value : lower )
     {
       if ( std::find( merged.begin(), merged.end(), value ) != merged.end() )
         {

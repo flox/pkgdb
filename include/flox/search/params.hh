@@ -24,6 +24,9 @@
 #include "flox/pkgdb/params.hh"
 #include "flox/pkgdb/pkg-query.hh"
 #include "flox/registry.hh"
+#include "flox/resolver/environment.hh"
+#include "flox/resolver/lockfile.hh"
+#include "flox/resolver/manifest.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -106,44 +109,90 @@ to_json( nlohmann::json & jto, const SearchQuery & qry );
 
 /* -------------------------------------------------------------------------- */
 
-/**
- * @brief SearchParams used to search for packages in a collection of inputs.
- *
- * Example Parameters:
- * ```
- * {
- *   "registry": {
- *     "inputs": {
- *       "nixpkgs": {
- *         "from": {
- *           "type": "github"
- *         , "owner": "NixOS"
- *         , "repo": "nixpkgs"
- *         }
- *       , "subtrees": ["legacyPackages"]
- *       }
- *     , "floco": {
- *         "from": {
- *           "type": "github"
- *         , "owner": "aakropotkin"
- *         , "repo": "floco"
- *         }
- *       , "subtrees": ["packages"]
- *       }
- *     }
- *   , "defaults": {
- *       "subtrees": null
- *     }
- *   , "priority": ["nixpkgs", "floco"]
- *   }
- * , "systems": ["x86_64-linux"]
- * , "allow":   { "unfree": true, "broken": false, "licenses": ["MIT"] }
- * , "semver":  { "preferPreReleases": false }
- * , "query":   { "match": "hello" }
- * }
- * ```
- */
-using SearchParams = pkgdb::QueryParams<SearchQuery>;
+struct SearchParamsRaw
+{
+
+  /**
+   * @brief The absolute @a std::filesystem::path to a manifest file or an
+   * inline @a flox::resolver::GlobalManifestRaw.
+   */
+  std::optional<
+    std::variant<std::filesystem::path, resolver::GlobalManifestRaw>>
+    globalManifest;
+
+  /**
+   * @brief The absolute @a std::filesystem::path to a manifest file or an
+   * inline @a flox::resolver::ManifestRaw.
+   */
+  std::variant<std::filesystem::path, resolver::ManifestRaw> manifest;
+
+  /**
+   * @brief The absolute @a std::filesystem::path to a lockfile or an inline
+   * @a flox::resolver::LockfileRaw.
+   */
+  std::optional<std::variant<std::filesystem::path, resolver::LockfileRaw>>
+    lockfile;
+
+  /**
+   * @brief The @a flox::search::SearchQuery specifying the package to
+   *        search for.
+   */
+  SearchQuery query;
+
+
+  /**
+   * @brief If `lockfile` is unset, returns `std::nullopt`.
+   *        Otherwise returns the path to the lockfile or a phony path if the
+   *        lockfile was inlined.
+   */
+  [[nodiscard]] std::optional<std::filesystem::path>
+  getLockfilePath();
+
+  /**
+   * @brief Returns a @a flox::resolver::LockfileRaw or lazily
+   *        loads it from disk ( if provided ).
+   */
+  [[nodiscard]] std::optional<flox::resolver::LockfileRaw>
+  getLockfileRaw();
+
+  /**
+   * @brief Returns the path to the manifest or a phony path if the
+   *        manifest was inlined.
+   */
+  [[nodiscard]] std::filesystem::path
+  getManifestPath();
+
+  /**
+   * @brief Returns a @a flox::resolver::ManifestRaw or lazily
+   *        loads it from disk.
+   */
+  [[nodiscard]] flox::resolver::ManifestRaw
+  getManifestRaw();
+
+  /**
+   * @brief If `global-manifest` is unset, returns `std::nullopt`.
+   *        Otherwise returns the path to the global manifest or a phony path if
+   *        the manifest was inlined.
+   */
+  [[nodiscard]] std::optional<std::filesystem::path>
+  getGlobalManifestPath();
+
+  /**
+   * @brief Returns a @a flox::resolver::GlobalManifestRaw or lazily
+   *        loads it from disk ( if provided ).
+   */
+  [[nodiscard]] std::optional<flox::resolver::GlobalManifestRaw>
+  getGlobalManifestRaw();
+
+
+}; /* End struct `SearchParamsRaw' */
+
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Convert a JSON object to a @a flox::search::SearchParamsRaw. */
+void
+from_json( const nlohmann::json & jfrom, SearchParamsRaw & raw );
 
 
 /* -------------------------------------------------------------------------- */

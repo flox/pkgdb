@@ -28,34 +28,6 @@ namespace flox::search {
 /* -------------------------------------------------------------------------- */
 
 argparse::Argument &
-PkgQueryMixin::addQueryArgs( argparse::ArgumentParser & parser )
-{
-  return parser.add_argument( "query" )
-    .help( "query parameters" )
-    .required()
-    .metavar( "QUERY" )
-    .action(
-      [&]( const std::string & query )
-      {
-        pkgdb::PkgQueryArgs args;
-        nlohmann::json::parse( query ).get_to( args );
-        this->query = pkgdb::PkgQuery( args );
-      } );
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-std::vector<pkgdb::row_id>
-PkgQueryMixin::queryDb( pkgdb::PkgDbReadOnly & pdb ) const
-{
-  return this->query.execute( pdb.db );
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-argparse::Argument &
 SearchCommand::addSearchParamArgs( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "parameters" )
@@ -67,9 +39,6 @@ SearchCommand::addSearchParamArgs( argparse::ArgumentParser & parser )
       {
         nlohmann::json searchParamsRaw = parseOrReadJSONObject( params );
         searchParamsRaw.get_to( this->rawParams );
-        // TODO: delete everything after this
-        nlohmann::json paramsJSON = parseOrReadJSONObject( params );
-        paramsJSON.get_to( this->params );
       } );
 }
 
@@ -86,103 +55,61 @@ SearchCommand::SearchCommand() : parser( "search" )
 
 /* -------------------------------------------------------------------------- */
 
+void
+SearchCommand::initEnvironment()
+{
+  /* Init global manifest. */
+  auto maybePath = this->rawParams.getGlobalManifestPath();
+  this->setGlobalManifestPath( maybePath );
+  if ( auto raw = this->rawParams.getGlobalManifestRaw(); raw.has_value() )
+    {
+      this->setGlobalManifest(
+        std::make_optional<resolver::GlobalManifest>( *maybePath, *raw ) );
+    }
+
+  /* Init manifest. */
+  auto path = this->rawParams.getManifestPath();
+  this->setManifestPath( path );
+  this->setManifest( std::make_optional<resolver::Manifest>(
+    path,
+    this->rawParams.getManifestRaw() ) );
+
+  /* Init lockfile . */
+  maybePath = this->rawParams.getLockfilePath();
+  this->setLockfilePath( maybePath );
+  if ( auto raw = this->rawParams.getLockfileRaw(); raw.has_value() )
+    {
+      this->setLockfile(
+        std::make_optional<resolver::Lockfile>( *maybePath, *raw ) );
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 int
 SearchCommand::run()
 {
-  // TODO:
-  // - In EnvironmentMixin::search:
-  //     - Construct PkgQueryArgs from SearchParamsRaw
-  //     - Loop over registry entries via PkgDbRegistryMixin
-  //     - Construct a PkgQuery from the PkgQueryArgs
-  //     - Query the database via PkgQueryMixin::queryDb
+  /* Initialize environment. */
+  this->initEnvironment();
 
-  // this->search( this->query );
-  // pkgdb::PkgQueryArgs args;
-  // for ( const auto & [name, input] : *this->getPkgDbRegistry() )
-  //   {
-  //     this->params.fillPkgQueryArgs( name, args );
-  //     this->query = pkgdb::PkgQuery( args );
-  //     for ( const auto & row : this->queryDb( *input->getDbReadOnly() ) )
-  //       {
-  //         this->showRow( *input, row );
-  //       }
-  //   }
+  pkgdb::PkgQueryArgs args = this->getEnvironment().getCombinedBaseQueryArgs();
+  for ( const auto & [name, input] :
+        *this->getEnvironment().getPkgDbRegistry() )
+    {
+      this->rawParams.query.fillPkgQueryArgs( args );
+      auto query = pkgdb::PkgQuery( args );
+      auto dbRO  = input->getDbReadOnly();
+      for ( const auto & row : query.execute( dbRO->db ) )
+        {
+          std::cout << input->getRowJSON( row ).dump() << std::endl;
+        }
+    }
   return EXIT_SUCCESS;
 }
 
 
 /* -------------------------------------------------------------------------- */
-
-void
-from_json( const nlohmann::json & jfrom, SearchParamsRaw & raw )
-{
-  assertIsJSONObject<ParseSearchQueryException>( jfrom, "search query" );
-  for ( const auto & [key, value] : jfrom.items() )
-    {
-      if ( key == "globalManifestRaw" )
-        {
-          try
-            {
-              value.get_to( raw.globalManifestRaw );
-            }
-          catch ( nlohmann::json::exception & e )
-            {
-              throw ParseSearchQueryException(
-                "couldn't interpret search query field 'globalManifestRaw'",
-                extract_json_errmsg( e ) );
-            }
-        }
-      else if ( key == "lockfileRaw" )
-        {
-          try
-            {
-              value.get_to( raw.lockfileRaw );
-            }
-          catch ( nlohmann::json::exception & e )
-            {
-              throw ParseSearchQueryException(
-                "couldn't interpret search query field 'lockfileRaw' ",
-                extract_json_errmsg( e ) );
-            }
-        }
-      else if ( key == "query" )
-        {
-
-          try
-            {
-              value.get_to( raw.query );
-            }
-          catch ( nlohmann::json::exception & e )
-            {
-              throw ParseSearchQueryException(
-                "couldn't interpret search query field 'query'",
-                extract_json_errmsg( e ) );
-            }
-        }
-      else
-        {
-          throw ParseSearchQueryException( "unrecognized field '" + key
-                                           + "' in search query" );
-        }
-    }
-}
-
-void
-to_json( nlohmann::json & jto, const SearchParamsRaw & raw )
-{
-  jto = { { "globalManifestRaw", raw.globalManifestRaw },
-          { "lockfileRaw", raw.lockfileRaw },
-          { "query", raw.query } };
-}
-
-/* -------------------------------------------------------------------------- */
-
-pkgdb::PkgQueryArgs &
-SearchParamsRaw::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
-{
-  this->query.fillPkgQueryArgs( pqa );
-  return pqa;
-}
 
 }  // namespace flox::search
 

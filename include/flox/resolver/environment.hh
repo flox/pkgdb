@@ -19,8 +19,6 @@
 #include "flox/pkgdb/input.hh"
 #include "flox/registry.hh"
 #include "flox/resolver/lockfile.hh"
-#include "flox/search/params.hh"
-#include "flox/search/query.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -111,10 +109,6 @@ private:
   void
   fillLockedFromOldLockfile();
 
-  /** @brief Lazily initialize and get the combined registry's DBs. */
-  [[nodiscard]] nix::ref<Registry<pkgdb::PkgDbInputFactory>>
-  getPkgDbRegistry();
-
   // TODO
   /**
    * @brief Get the set of descriptors which differ from those
@@ -135,13 +129,6 @@ private:
    */
   [[nodiscard]] const Options &
   getCombinedOptions();
-
-  /**
-   * @brief Get a base set of @a flox::pkgdb::PkgQueryArgs from
-   *        combined options.
-   */
-  [[nodiscard]] const pkgdb::PkgQueryArgs &
-  getCombinedBaseQueryArgs();
 
   /** @brief Try to resolve a descriptor in a given package database. */
   [[nodiscard]] std::optional<pkgdb::row_id>
@@ -239,12 +226,23 @@ public:
   [[nodiscard]] RegistryRaw &
   getCombinedRegistryRaw();
 
+  /**
+   * @brief Get a base set of @a flox::pkgdb::PkgQueryArgs from
+   *        combined options.
+   */
+  [[nodiscard]] const pkgdb::PkgQueryArgs &
+  getCombinedBaseQueryArgs();
+
   /** @brief Get the set of supported systems. */
   [[nodiscard]] std::vector<System>
   getSystems() const
   {
     return this->getManifest().getSystems();
   }
+
+  /** @brief Lazily initialize and get the combined registry's DBs. */
+  [[nodiscard]] nix::ref<Registry<pkgdb::PkgDbInputFactory>>
+  getPkgDbRegistry();
 
   // TODO: (Question) Should we lock the combined options and fill registry
   //                  `default` fields in inputs?
@@ -264,8 +262,6 @@ public:
  * This structure stashes several fields to avoid repeatedly calculating them.
  */
 class EnvironmentMixin
-  : search::PkgQueryMixin
-  , public pkgdb::PkgDbRegistryMixin
 {
 
 private:
@@ -285,6 +281,48 @@ private:
 
 
 public:
+
+  void
+  setGlobalManifest( std::optional<GlobalManifest> manifest )
+  {
+    this->globalManifest = manifest;
+    this->environment    = std::nullopt;
+  }
+
+  void
+  setGlobalManifestPath( std::optional<std::filesystem::path> path )
+  {
+    this->globalManifestPath = path;
+    this->setGlobalManifest( std::nullopt );
+  }
+
+  void
+  setManifest( std::optional<Manifest> manifest )
+  {
+    this->manifest    = manifest;
+    this->environment = std::nullopt;
+  }
+
+  void
+  setManifestPath( std::optional<std::filesystem::path> path )
+  {
+    this->manifestPath = path;
+    this->setManifest( std::nullopt );
+  }
+
+  void
+  setLockfile( std::optional<Lockfile> lockfile )
+  {
+    this->lockfile    = lockfile;
+    this->environment = std::nullopt;
+  }
+
+  void
+  setLockfilePath( std::optional<std::filesystem::path> path )
+  {
+    this->lockfilePath = path;
+    this->setLockfile( std::nullopt );
+  }
 
   /**
    * @brief Lazily initialize and return the @a globalManifest
@@ -344,18 +382,6 @@ public:
   addLockfileOption( argparse::ArgumentParser & parser );
 
 
-  /**
-   * @brief searches for the specified package, printing results to stdout.
-   */
-  void
-  search( const search::SearchQuery & query );
-
-  /** @brief Display a single row from the given @a input. */
-  static void
-  showRow( pkgdb::PkgDbInput & input, pkgdb::row_id row )
-  {
-    std::cout << input.getRowJSON( row ).dump() << std::endl;
-  }
 }; /* End class `EnvironmentMixin' */
 
 

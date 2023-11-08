@@ -23,9 +23,9 @@ Environment::getCombinedRegistryRaw()
 {
   if ( ! this->combinedRegistryRaw.has_value() )
     {
-      this->combinedRegistryRaw = this->globalManifest->getRegistryRaw();
-      if ( this->combinedRegistryRaw.has_value() )
+      if ( this->globalManifest.has_value() )
         {
+          this->combinedRegistryRaw = this->globalManifest->getRegistryRaw();
           this->combinedRegistryRaw.value().merge(
             this->manifest.getLockedRegistry() );
         }
@@ -477,24 +477,6 @@ EnvironmentMixin::getEnvironment()
 
 /* -------------------------------------------------------------------------- */
 
-void
-EnvironmentMixin::search( const search::SearchQuery & query )
-{
-  for ( const auto & [name, input] : *this->getPkgDbRegistry() )
-    {
-      pkgdb::PkgQueryArgs args;
-      query.fillPkgQueryArgs( args );
-      this->query = pkgdb::PkgQuery( args );
-      for ( const auto & row : this->queryDb( *input->getDbReadOnly() ) )
-        {
-          this->showRow( *input, row );
-        }
-    }
-}
-
-
-/* -------------------------------------------------------------------------- */
-
 argparse::Argument &
 EnvironmentMixin::addGlobalManifestFileOption(
   argparse::ArgumentParser & parser )
@@ -503,7 +485,7 @@ EnvironmentMixin::addGlobalManifestFileOption(
     .help( "The path to the user's global `manifest.{toml,yaml,json}' file." )
     .metavar( "PATH" )
     .action( [&]( const std::string & strPath )
-             { this->globalManifestPath = nix::absPath( strPath ); } );
+             { this->setGlobalManifestPath( nix::absPath( strPath ) ); } );
 }
 
 
@@ -516,7 +498,7 @@ EnvironmentMixin::addManifestFileOption( argparse::ArgumentParser & parser )
     .help( "The path to the `manifest.{toml,yaml,json}' file." )
     .metavar( "PATH" )
     .action( [&]( const std::string & strPath )
-             { this->manifestPath = nix::absPath( strPath ); } );
+             { this->setManifestPath( nix::absPath( strPath ) ); } );
 }
 
 
@@ -531,7 +513,7 @@ EnvironmentMixin::addManifestFileArg( argparse::ArgumentParser & parser,
         .help( "The path to the project's `manifest.{toml,yaml,json}' file." )
         .metavar( "MANIFEST-PATH" )
         .action( [&]( const std::string & strPath )
-                 { this->manifestPath = nix::absPath( strPath ); } );
+                 { this->setManifestPath( nix::absPath( strPath ) ); } );
   return required ? arg.required() : arg;
 }
 
@@ -545,7 +527,7 @@ EnvironmentMixin::addLockfileOption( argparse::ArgumentParser & parser )
     .help( "The path to the projects existing `manifest.lock' file." )
     .metavar( "PATH" )
     .action( [&]( const std::string & strPath )
-             { this->lockfilePath = nix::absPath( strPath ); } );
+             { this->setLockfilePath( nix::absPath( strPath ) ); } );
 }
 
 
