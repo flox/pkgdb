@@ -105,7 +105,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_Packages
 
 /* -------------------------------------------------------------------------- */
 
-/* XXX: Keep in sync with `<pkgdb>/src/pkgdb/write.cc:PkgDb::initTables()' */
 static const char * sql_views = R"SQL(
 
 -- A JSON list form of the _attribute path_ to an `AttrSets` row.
