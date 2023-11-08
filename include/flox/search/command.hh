@@ -70,24 +70,33 @@ public:
   [[nodiscard]] flox::resolver::GlobalManifestRaw
   getGlobalManifestRaw();
 
+  /**
+   * @brief Fill a @a flox::pkgdb::PkgQueryArgs struct with preferences to
+   *        lookup packages.
+   *
+   * NOTE: This DOES NOT clear @a pqa before filling it.
+   * @param pqa A set of query args to _fill_ with preferences.
+   * @return A reference to the modified query args.
+   */
+  pkgdb::PkgQueryArgs &
+  fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
 
 }; /* End struct `SearchParamsRaw' */
 
-// /** @brief Convert a JSON object to a @a flox::resolver::GlobalManifest. */
-// void
-// from_json( const nlohmann::json & jfrom, GlobalManifestRaw & raw );
+/** @brief Convert a JSON object to a @a flox::search::SearchParamsRaw. */
+void
+from_json( const nlohmann::json & jfrom, SearchParamsRaw & raw );
 
-// /** @brief Convert a @a flox::resolver::GlobalManifest to a JSON object. */
-// void
-// to_json( nlohmann::json & jto, const GlobalManifestRaw & raw );
+/** @brief Convert a @a flox::search::SearchParamsRaw to a JSON object. */
+void
+to_json( nlohmann::json & jto, const SearchParamsRaw & raw );
 
 /* -------------------------------------------------------------------------- */
 
 /** @brief Search flakes for packages satisfying a set of filters. */
 class SearchCommand
   : pkgdb::PkgDbRegistryMixin
-  , PkgQueryMixin
-// , flox::resolver::EnvironmentMixin
+  , flox::resolver::EnvironmentMixin
 {
 
 private:
