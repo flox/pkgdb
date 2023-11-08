@@ -46,7 +46,7 @@ PkgDb::updateViews()
                           " ( type = 'view' )" );
     for ( auto row : qry )
       {
-        std::string        name = row.get<std::string>( 0 );
+        auto               name = row.get<std::string>( 0 );
         std::string        cmd  = "DROP VIEW IF EXISTS '" + name + '\'';
         sqlite3pp::command dropView( this->db, cmd.c_str() );
         if ( sql_rc rcode = dropView.execute(); isSQLError( rcode ) )
