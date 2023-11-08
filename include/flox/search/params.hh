@@ -109,7 +109,7 @@ to_json( nlohmann::json & jto, const SearchQuery & qry );
 
 /* -------------------------------------------------------------------------- */
 
-struct SearchParamsRaw
+struct SearchParams
 {
 
   /**
@@ -185,14 +185,18 @@ struct SearchParamsRaw
   getGlobalManifestRaw();
 
 
-}; /* End struct `SearchParamsRaw' */
+}; /* End struct `SearchParams' */
 
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief Convert a JSON object to a @a flox::search::SearchParamsRaw. */
+/** @brief Convert a JSON object to a @a flox::search::SearchParams. */
 void
-from_json( const nlohmann::json & jfrom, SearchParamsRaw & raw );
+from_json( const nlohmann::json & jfrom, SearchParams & params );
+
+/** @brief Convert a @a flox::search::SearchParams to a JSON object. */
+void
+to_json( nlohmann::json & jto, const SearchParams & params );
 
 
 /* -------------------------------------------------------------------------- */

@@ -114,7 +114,7 @@ SearchQuery::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 /* -------------------------------------------------------------------------- */
 
 std::optional<std::filesystem::path>
-SearchParamsRaw::getLockfilePath()
+SearchParams::getLockfilePath()
 {
   if ( this->lockfile.has_value() )
     {
@@ -131,7 +131,7 @@ SearchParamsRaw::getLockfilePath()
 /* -------------------------------------------------------------------------- */
 
 std::optional<resolver::LockfileRaw>
-SearchParamsRaw::getLockfileRaw()
+SearchParams::getLockfileRaw()
 {
   if ( ! this->lockfile.has_value() ) { return std::nullopt; }
   if ( std::holds_alternative<resolver::LockfileRaw>( *this->lockfile ) )
@@ -146,7 +146,7 @@ SearchParamsRaw::getLockfileRaw()
 /* -------------------------------------------------------------------------- */
 
 std::optional<std::filesystem::path>
-SearchParamsRaw::getGlobalManifestPath()
+SearchParams::getGlobalManifestPath()
 {
   if ( this->globalManifest.has_value() )
     {
@@ -164,7 +164,7 @@ SearchParamsRaw::getGlobalManifestPath()
 /* -------------------------------------------------------------------------- */
 
 std::optional<resolver::GlobalManifestRaw>
-SearchParamsRaw::getGlobalManifestRaw()
+SearchParams::getGlobalManifestRaw()
 {
   if ( ! this->globalManifest.has_value() ) { return std::nullopt; }
   if ( std::holds_alternative<resolver::GlobalManifestRaw>(
@@ -180,7 +180,7 @@ SearchParamsRaw::getGlobalManifestRaw()
 /* -------------------------------------------------------------------------- */
 
 std::filesystem::path
-SearchParamsRaw::getManifestPath()
+SearchParams::getManifestPath()
 {
   if ( std::holds_alternative<std::filesystem::path>( this->manifest ) )
     {
@@ -193,7 +193,7 @@ SearchParamsRaw::getManifestPath()
 /* -------------------------------------------------------------------------- */
 
 resolver::ManifestRaw
-SearchParamsRaw::getManifestRaw()
+SearchParams::getManifestRaw()
 {
   if ( std::holds_alternative<resolver::ManifestRaw>( this->manifest ) )
     {
@@ -206,7 +206,7 @@ SearchParamsRaw::getManifestRaw()
 /* -------------------------------------------------------------------------- */
 
 void
-from_json( const nlohmann::json & jfrom, SearchParamsRaw & raw )
+from_json( const nlohmann::json & jfrom, SearchParams & params )
 {
   assertIsJSONObject<ParseSearchQueryException>( jfrom, "search query" );
   for ( const auto & [key, value] : jfrom.items() )
@@ -215,7 +215,7 @@ from_json( const nlohmann::json & jfrom, SearchParamsRaw & raw )
         {
           try
             {
-              value.get_to( raw.globalManifest );
+              value.get_to( params.globalManifest );
             }
           catch ( nlohmann::json::exception & e )
             {
@@ -228,7 +228,7 @@ from_json( const nlohmann::json & jfrom, SearchParamsRaw & raw )
         {
           try
             {
-              value.get_to( raw.lockfile );
+              value.get_to( params.lockfile );
             }
           catch ( nlohmann::json::exception & e )
             {
@@ -241,7 +241,7 @@ from_json( const nlohmann::json & jfrom, SearchParamsRaw & raw )
         {
           try
             {
-              value.get_to( raw.manifest );
+              value.get_to( params.manifest );
             }
           catch ( nlohmann::json::exception & e )
             {
@@ -255,7 +255,7 @@ from_json( const nlohmann::json & jfrom, SearchParamsRaw & raw )
 
           try
             {
-              value.get_to( raw.query );
+              value.get_to( params.query );
             }
           catch ( nlohmann::json::exception & e )
             {
@@ -270,6 +270,20 @@ from_json( const nlohmann::json & jfrom, SearchParamsRaw & raw )
                                            + "' in search query" );
         }
     }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+to_json( nlohmann::json & jto, const SearchParams & params )
+{
+  jto = {
+    { "global-manifest", params.globalManifest },
+    { "manifest", params.manifest },
+    { "lockfile", params.lockfile },
+    { "query", params.query }
+  };
 }
 
 
