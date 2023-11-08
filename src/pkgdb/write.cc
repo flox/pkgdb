@@ -27,7 +27,7 @@ PkgDb::initViews()
 {
   if ( sql_rc rcode = this->execute_all( sql_views ); isSQLError( rcode ) )
     {
-      throw PkgDbException( nix::fmt( "Failed to initialize views:(%d) %s",
+      throw PkgDbException( nix::fmt( "failed to initialize views:(%d) %s",
                                       rcode,
                                       this->db.error_msg() ) );
     }
@@ -39,23 +39,40 @@ PkgDb::initViews()
 void
 PkgDb::updateViews()
 {
-  /* XXX: Keep in sync with `<pkgdb>/src/pkgdb/schemas.hh' */
-  sqlite3pp::command updateViews(
-    this->db,
-    "DROP VIEW IF EXISTS v_AttrPaths;"
-    "DROP VIEW IF EXISTS v_Semvers;"
-    "DROP VIEW IF EXISTS v_PackagesSearch;"
-    "UPDATE DbVersions SET version = ? WHERE name = 'pkgdb_views_schema'" );
-  updateViews.bind( 1, static_cast<int>( sqlVersions.views ) );
+  /* Drop all existing views. */
+  {
+    sqlite3pp::query qry( this->db,
+                          "SELECT name FROM sqlite_master WHERE"
+                          " ( type = 'view' )" );
+    for ( auto row : qry )
+      {
+        auto               name = row.get<std::string>( 0 );
+        std::string        cmd  = "DROP VIEW IF EXISTS '" + name + '\'';
+        sqlite3pp::command dropView( this->db, cmd.c_str() );
+        if ( sql_rc rcode = dropView.execute(); isSQLError( rcode ) )
+          {
+            throw PkgDbException( nix::fmt( "failed to drop view '%s':(%d) %s",
+                                            name,
+                                            rcode,
+                                            this->db.error_msg() ) );
+          }
+      }
+  }
 
-  if ( sql_rc rcode = updateViews.execute_all(); isSQLError( rcode ) )
+  /* Update the `pkgdb_views_schema' version. */
+  sqlite3pp::command updateVersion(
+    this->db,
+    "UPDATE DbVersions SET version = ? WHERE name = 'pkgdb_views_schema'" );
+  updateVersion.bind( 1, static_cast<int>( sqlVersions.views ) );
+
+  if ( sql_rc rcode = updateVersion.execute_all(); isSQLError( rcode ) )
     {
-      throw PkgDbException( nix::fmt( "Failed to update PkgDb Views:(%d) %s",
+      throw PkgDbException( nix::fmt( "failed to update PkgDb Views:(%d) %s",
                                       rcode,
                                       this->db.error_msg() ) );
     }
 
-  /* Redefine the `VIEW`s */
+  /* Redefine the `VIEW's */
   this->initViews();
 }
 
@@ -68,7 +85,7 @@ PkgDb::initTables()
   if ( sql_rc rcode = this->execute( sql_versions ); isSQLError( rcode ) )
     {
       throw PkgDbException(
-        nix::fmt( "Failed to initialize DbVersions table:(%d) %s",
+        nix::fmt( "failed to initialize DbVersions table:(%d) %s",
                   rcode,
                   this->db.error_msg() ) );
     }
@@ -76,7 +93,7 @@ PkgDb::initTables()
   if ( sql_rc rcode = this->execute_all( sql_input ); isSQLError( rcode ) )
     {
       throw PkgDbException(
-        nix::fmt( "Failed to initialize LockedFlake table:(%d) %s",
+        nix::fmt( "failed to initialize LockedFlake table:(%d) %s",
                   rcode,
                   this->db.error_msg() ) );
     }
@@ -84,7 +101,7 @@ PkgDb::initTables()
   if ( sql_rc rcode = this->execute_all( sql_attrSets ); isSQLError( rcode ) )
     {
       throw PkgDbException(
-        nix::fmt( "Failed to initialize AttrSets table:(%d) %s",
+        nix::fmt( "failed to initialize AttrSets table:(%d) %s",
                   rcode,
                   this->db.error_msg() ) );
     }
@@ -92,7 +109,7 @@ PkgDb::initTables()
   if ( sql_rc rcode = this->execute_all( sql_packages ); isSQLError( rcode ) )
     {
       throw PkgDbException(
-        nix::fmt( "Failed to initialize Packages table:(%d) %s",
+        nix::fmt( "failed to initialize Packages table:(%d) %s",
                   rcode,
                   this->db.error_msg() ) );
     }
@@ -114,7 +131,7 @@ PkgDb::initVersions()
   defineVersions.bind( 2, static_cast<int>( sqlVersions.views ) );
   if ( sql_rc rcode = defineVersions.execute(); isSQLError( rcode ) )
     {
-      throw PkgDbException( nix::fmt( "Failed to write DbVersions info:(%d) %s",
+      throw PkgDbException( nix::fmt( "failed to write DbVersions info:(%d) %s",
                                       rcode,
                                       this->db.error_msg() ) );
     }
@@ -152,7 +169,7 @@ PkgDb::writeInput()
   if ( sql_rc rcode = cmd.execute(); isSQLError( rcode ) )
     {
       throw PkgDbException(
-        nix::fmt( "Failed to write LockedFlaked info:(%d) %s",
+        nix::fmt( "failed to write LockedFlaked info:(%d) %s",
                   rcode,
                   this->db.error_msg() ) );
     }
@@ -180,7 +197,7 @@ PkgDb::addOrGetAttrSetId( const std::string & attrName, row_id parent )
       if ( row == qryId.end() )
         {
           throw PkgDbException(
-            nix::fmt( "Failed to add AttrSet.id 'AttrSets[%ull].%s':(%d) %s",
+            nix::fmt( "failed to add AttrSet.id `AttrSets[%ull].%s':(%d) %s",
                       parent,
                       attrName,
                       rcode,
@@ -235,7 +252,7 @@ PkgDb::addOrGetDescriptionId( const std::string & description )
     nix::fmt( "Adding new description to database: %s.", description ) );
   if ( sql_rc rcode = cmd.execute(); isSQLError( rcode ) )
     {
-      throw PkgDbException( nix::fmt( "Failed to add Description '%s':(%d) %s",
+      throw PkgDbException( nix::fmt( "failed to add Description '%s':(%d) %s",
                                       description,
                                       rcode,
                                       this->db.error_msg() ) );
@@ -333,7 +350,7 @@ PkgDb::addPackage( row_id               parentId,
     }
   if ( sql_rc rcode = cmd.execute(); isSQLError( rcode ) )
     {
-      throw PkgDbException( nix::fmt( "Failed to write Package '%s':(%d) %s",
+      throw PkgDbException( nix::fmt( "failed to write Package '%s':(%d) %s",
                                       pkg._fullName,
                                       rcode,
                                       this->db.error_msg() ) );
@@ -364,7 +381,7 @@ PkgDb::setPrefixDone( row_id prefixId, bool done )
   if ( sql_rc rcode = cmd.execute(); isSQLError( rcode ) )
     {
       throw PkgDbException( nix::fmt(
-        "Failed to set AttrSets.done for subtree '%s':(%d) %s",
+        "failed to set AttrSets.done for subtree '%s':(%d) %s",
         nix::concatStringsSep( ".", this->getAttrSetPath( prefixId ) ),
         rcode,
         this->db.error_msg() ) );
