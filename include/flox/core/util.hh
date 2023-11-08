@@ -389,8 +389,8 @@ assertIsJSONObject( const nlohmann::json & value,
 
 /**
  * @brief Merge two @a std::vectors by putting all elements of the higher
- * prioirty vector first, then appending the deduplicated keys of the lower
- * priortity vector.
+ *        prioirty vector first, then appending the deduplicated keys of the
+ *        lower priortity vector.
  * @param lower The lower priority @a std::vector.
  * @param higher The higher priority @a std::vector.
  * @return The merged @a std::vector
