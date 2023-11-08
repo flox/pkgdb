@@ -395,7 +395,7 @@ public:
   [[nodiscard]] std::vector<System>
   getSystems() const
   {
-    auto manifest = this->getManifestRaw();
+    const auto & manifest = this->getManifestRaw();
     if ( manifest.options.has_value() && manifest.options->systems.has_value() )
       {
         return *manifest.options->systems;
