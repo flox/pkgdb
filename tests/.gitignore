@@ -4,6 +4,6 @@ lockfile
 manifest
 pkgdb
 registry
+search-params
 util
 versions
-search-params
