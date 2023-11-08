@@ -60,7 +60,6 @@ struct InputPreferences
   operator=( InputPreferences && )
     = default;
 
-
   /** @brief Reset to default state. */
   virtual void
   clear();
@@ -85,6 +84,7 @@ struct InputPreferences
    */
   void
   merge( const InputPreferences & overrides );
+
 
 }; /* End struct `InputPreferences' */
 
