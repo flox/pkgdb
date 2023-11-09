@@ -310,7 +310,7 @@ private:
   std::optional<Environment> environment;
 
 
-public:
+protected:
 
   /**
    * @brief Initialize the @a globalManifestPath member variable.
@@ -389,6 +389,9 @@ public:
    */
   void
   initLockfile( Lockfile lockfile );
+
+
+public:
 
   /**
    * @brief Lazily initialize and return the @a globalManifest.

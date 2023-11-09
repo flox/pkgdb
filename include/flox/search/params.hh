@@ -113,7 +113,7 @@ struct SearchParams
 
   /**
    * @brief The absolute @a std::filesystem::path to a manifest file or an
-   * inline @a flox::resolver::GlobalManifestRaw.
+   *        inline @a flox::resolver::GlobalManifestRaw.
    */
   std::optional<
     std::variant<std::filesystem::path, resolver::GlobalManifestRaw>>
@@ -121,13 +121,13 @@ struct SearchParams
 
   /**
    * @brief The absolute @a std::filesystem::path to a manifest file or an
-   * inline @a flox::resolver::ManifestRaw.
+   *        inline @a flox::resolver::ManifestRaw.
    */
   std::variant<std::filesystem::path, resolver::ManifestRaw> manifest;
 
   /**
    * @brief The absolute @a std::filesystem::path to a lockfile or an inline
-   * @a flox::resolver::LockfileRaw.
+   *        @a flox::resolver::LockfileRaw.
    */
   std::optional<std::variant<std::filesystem::path, resolver::LockfileRaw>>
     lockfile;

@@ -38,7 +38,7 @@ SearchCommand::addSearchParamArgs( argparse::ArgumentParser & parser )
       [&]( const std::string & params )
       {
         nlohmann::json searchParamsRaw = parseOrReadJSONObject( params );
-        searchParamsRaw.get_to( this->rawParams );
+        searchParamsRaw.get_to( this->params );
       } );
 }
 
@@ -59,23 +59,23 @@ void
 SearchCommand::initEnvironment()
 {
   /* Init global manifest. */
-  auto maybePath = this->rawParams.getGlobalManifestPath();
+  auto maybePath = this->params.getGlobalManifestPath();
   if ( maybePath.has_value() ) { this->initGlobalManifestPath( *maybePath ); }
-  if ( auto raw = this->rawParams.getGlobalManifestRaw(); raw.has_value() )
+  if ( auto raw = this->params.getGlobalManifestRaw(); raw.has_value() )
     {
       this->initGlobalManifest( resolver::GlobalManifest( *maybePath, *raw ) );
     }
 
   /* Init manifest. */
-  auto path = this->rawParams.getManifestPath();
+  auto path = this->params.getManifestPath();
   this->initManifestPath( path );
   this->initManifest(
-    resolver::Manifest( path, this->rawParams.getManifestRaw() ) );
+    resolver::Manifest( path, this->params.getManifestRaw() ) );
 
   /* Init lockfile . */
-  maybePath = this->rawParams.getLockfilePath();
+  maybePath = this->params.getLockfilePath();
   if ( maybePath.has_value() ) { this->initLockfilePath( *maybePath ); }
-  if ( auto raw = this->rawParams.getLockfileRaw(); raw.has_value() )
+  if ( auto raw = this->params.getLockfileRaw(); raw.has_value() )
     {
       this->initLockfile( resolver::Lockfile( *maybePath, *raw ) );
     }
@@ -94,7 +94,7 @@ SearchCommand::run()
   for ( const auto & [name, input] :
         *this->getEnvironment().getPkgDbRegistry() )
     {
-      this->rawParams.query.fillPkgQueryArgs( args );
+      this->params.query.fillPkgQueryArgs( args );
       auto query = pkgdb::PkgQuery( args );
       auto dbRO  = input->getDbReadOnly();
       for ( const auto & row : query.execute( dbRO->db ) )

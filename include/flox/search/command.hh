@@ -34,7 +34,7 @@ class SearchCommand : flox::resolver::EnvironmentMixin
 private:
 
   command::VerboseParser parser; /**< Query arguments and inputs parser */
-  SearchParams           rawParams;
+  SearchParams           params; /**< Query arguments processor. */
 
   /**
    * @brief Add argument to any parser to construct
@@ -43,7 +43,7 @@ private:
   argparse::Argument &
   addSearchParamArgs( argparse::ArgumentParser & parser );
 
-  /** @brief Convert `SearchParams' to initialize @a environment. */
+  /** @brief Convert @a params to initialize @a environment. */
   void
   initEnvironment();
 
