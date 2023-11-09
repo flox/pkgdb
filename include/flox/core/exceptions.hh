@@ -76,7 +76,9 @@ enum error_category {
   /** Invalid hash string. */
   EC_INVALID_HASH,
   /** Resolution failure. */
-  EC_RESOLUTION_FAILURE
+  EC_RESOLUTION_FAILURE,
+  /** EnvirontMixin exception/misuse. */
+  EC_ENVIRONMENT_MIXIN
 
 }; /* End enum `error_category' */
 

@@ -278,12 +278,10 @@ from_json( const nlohmann::json & jfrom, SearchParams & params )
 void
 to_json( nlohmann::json & jto, const SearchParams & params )
 {
-  jto = {
-    { "global-manifest", params.globalManifest },
-    { "manifest", params.manifest },
-    { "lockfile", params.lockfile },
-    { "query", params.query }
-  };
+  jto = { { "global-manifest", params.globalManifest },
+          { "manifest", params.manifest },
+          { "lockfile", params.lockfile },
+          { "query", params.query } };
 }
 
 

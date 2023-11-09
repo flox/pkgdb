@@ -60,27 +60,24 @@ SearchCommand::initEnvironment()
 {
   /* Init global manifest. */
   auto maybePath = this->rawParams.getGlobalManifestPath();
-  this->setGlobalManifestPath( maybePath );
+  if ( maybePath.has_value() ) { this->initGlobalManifestPath( *maybePath ); }
   if ( auto raw = this->rawParams.getGlobalManifestRaw(); raw.has_value() )
     {
-      this->setGlobalManifest(
-        std::make_optional<resolver::GlobalManifest>( *maybePath, *raw ) );
+      this->initGlobalManifest( resolver::GlobalManifest( *maybePath, *raw ) );
     }
 
   /* Init manifest. */
   auto path = this->rawParams.getManifestPath();
-  this->setManifestPath( path );
-  this->setManifest( std::make_optional<resolver::Manifest>(
-    path,
-    this->rawParams.getManifestRaw() ) );
+  this->initManifestPath( path );
+  this->initManifest(
+    resolver::Manifest( path, this->rawParams.getManifestRaw() ) );
 
   /* Init lockfile . */
   maybePath = this->rawParams.getLockfilePath();
-  this->setLockfilePath( maybePath );
+  if ( maybePath.has_value() ) { this->initLockfilePath( *maybePath ); }
   if ( auto raw = this->rawParams.getLockfileRaw(); raw.has_value() )
     {
-      this->setLockfile(
-        std::make_optional<resolver::Lockfile>( *maybePath, *raw ) );
+      this->initLockfile( resolver::Lockfile( *maybePath, *raw ) );
     }
 }
 

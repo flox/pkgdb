@@ -34,7 +34,7 @@ class SearchCommand : flox::resolver::EnvironmentMixin
 private:
 
   command::VerboseParser parser; /**< Query arguments and inputs parser */
-  SearchParams        rawParams;
+  SearchParams           rawParams;
 
   /**
    * @brief Add argument to any parser to construct
