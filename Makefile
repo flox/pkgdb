@@ -146,10 +146,12 @@ endif # ifneq ($(COV),)
 
 # ---------------------------------------------------------------------------- #
 
-nljson_CFLAGS ?= $(shell $(PKG_CONFIG) --cflags nlohmann_json)
+nljson_CFLAGS ?=                                                            \
+	$(patsubst -I%,-isystem %,$(shell $(PKG_CONFIG) --cflags nlohmann_json))
 nljson_CFLAGS := $(nljson_CFLAGS)
 
-argparse_CFLAGS ?= $(shell $(PKG_CONFIG) --cflags argparse)
+argparse_CFLAGS ?=                                                     \
+	$(patsubst -I%,-isystem %,$(shell $(PKG_CONFIG) --cflags argparse))
 argparse_CFLAGS := $(argparse_CFLAGS)
 
 boost_CFLAGS ?=                                                              \
@@ -162,12 +164,14 @@ toml_CFLAGS ?=                                                                \
   $(shell $(NIX) build --no-link --print-out-paths 'nixpkgs#toml11')/include
 toml_CFLAGS := $(toml_CFLAGS)
 
-sqlite3_CFLAGS  ?= $(shell $(PKG_CONFIG) --cflags sqlite3)
+sqlite3_CFLAGS ?=                                                     \
+	$(patsubst -I%,-isystem %,$(shell $(PKG_CONFIG) --cflags sqlite3))
 sqlite3_CFLAGS  := $(sqlite3_CFLAGS)
 sqlite3_LDFLAGS ?= $(shell $(PKG_CONFIG) --libs sqlite3)
 sqlite3_LDLAGS  := $(sqlite3_LDLAGS)
 
-sqlite3pp_CFLAGS ?= $(shell $(PKG_CONFIG) --cflags sqlite3pp)
+sqlite3pp_CFLAGS ?=                                                     \
+	$(patsubst -I%,-isystem %,$(shell $(PKG_CONFIG) --cflags sqlite3pp))
 sqlite3pp_CFLAGS := $(sqlite3pp_CFLAGS)
 
 yaml_PREFIX ?=                                                          \
@@ -180,9 +184,8 @@ nix_INCDIR ?= $(shell $(PKG_CONFIG) --variable=includedir nix-cmd)
 nix_INCDIR := $(nix_INCDIR)
 ifndef nix_CFLAGS
 _nix_PC_CFLAGS =  $(shell $(PKG_CONFIG) --cflags nix-main nix-cmd nix-expr)
-_nix_PC_CFLAGS := $(patsubst -isystem /%/include/nix,,$(_nix_PC_CFLAGS))
 nix_CFLAGS     =  $(boost_CFLAGS) $(patsubst -I%,-isystem %,$(_nix_PC_CFLAGS))
-nix_CFLAGS     += -isystem $(nix_INCDIR) -include $(nix_INCDIR)/nix/config.h
+nix_CFLAGS     += -include $(nix_INCDIR)/nix/config.h
 endif # ifndef nix_CFLAGS
 nix_CFLAGS := $(nix_CFLAGS)
 undefine _nix_PC_CFLAGS
@@ -208,7 +211,7 @@ endif # ifndef flox_pkgdb_LDFLAGS
 
 # ---------------------------------------------------------------------------- #
 
-lib_CXXFLAGS += $(sqlite3_CFLAGS) $(sqlite3pp_CFLAGS)
+lib_CXXFLAGS += $(sqlite3pp_CFLAGS)
 bin_CXXFLAGS += $(argparse_CFLAGS)
 CXXFLAGS     += $(nix_CFLAGS) $(nljson_CFLAGS) $(toml_CFLAGS) $(yaml_CFLAGS)
 
@@ -344,8 +347,8 @@ cdb: compile_commands.json ccls
 	    $(CAT) "$(NIX_CC)/nix-support/libc-cflags";                       \
 	    $(CAT) "$(NIX_CC)/nix-support/libcxx-cxxflags";                   \
 	  fi;                                                                 \
-	  echo $(CXXFLAGS) $(sqlite3_CFLAGS) $(nljson_CFLAGS) $(nix_CFLAGS);  \
-	  echo $(nljson_CFLAGS) $(argparse_CFLAGS) $(sqlite3pp_CFLAGS);       \
+	  echo $(CXXFLAGS) $(nljson_CFLAGS) $(nix_CFLAGS);                    \
+	  echo $(argparse_CFLAGS) $(sqlite3pp_CFLAGS);                        \
 	  echo '-DTEST_DATA_DIR="$(TEST_DATA_DIR)"';                          \
 	}|$(TR) ' ' '\n'|$(SED) 's/-std=\(.*\)/%cpp -std=\1|%h -std=\1/'      \
 	 |$(TR) '|' '\n' >> "$@";
@@ -452,11 +455,13 @@ CLEANDIRS  += docs/search
 # the inclusion of the `nix' `config.h' header, and some additional CPP vars.
 
 PC_CFLAGS =  $(filter -std=%,$(CXXFLAGS))
-PC_CFLAGS += -I$(nix_INCDIR) -include $(nix_INCDIR)/nix/config.h
 PC_CFLAGS += $(boost_CFLAGS)
+PC_CFLAGS += $(sqlite3pp_CFLAGS)
+PC_CFLAGS += -isystem $(nix_INCDIR) -include $(nix_INCDIR)/nix/config.h
 PC_CFLAGS += '-DFLOX_PKGDB_VERSION=\\\\\"$(VERSION)\\\\\"'
 PC_CFLAGS += '-DSEMVER_PATH=\\\\\"$(SEMVER_PATH)\\\\\"'
 PC_LIBS   =  $(shell $(PKG_CONFIG) --libs-only-L nix-main) -lnixfetchers
+lib/pkgconfig/flox-pkgdb.pc: Makefile
 lib/pkgconfig/flox-pkgdb.pc: lib/pkgconfig/flox-pkgdb.pc.in version
 	$(SED) -e 's,@PREFIX@,$(PREFIX),g'     \
 	       -e 's,@VERSION@,$(VERSION),g'   \
