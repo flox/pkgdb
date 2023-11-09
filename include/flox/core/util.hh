@@ -189,7 +189,7 @@ struct adl_serializer<nix::FlakeRef>
         return { nix::FlakeRef::fromAttrs(
           nix::fetchers::jsonToAttrs( jfrom ) ) };
       }
-    else { return { nix::parseFlakeRef( jfrom.get<std::string>() ) }; }
+    return { nix::parseFlakeRef( jfrom.get<std::string>() ) };
   }
 
 }; /* End struct `adl_serializer<nix::FlakeRef>' */
