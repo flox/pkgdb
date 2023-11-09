@@ -8,12 +8,21 @@
  * -------------------------------------------------------------------------- */
 
 #include <cstdlib>
+#include <exception>
 #include <iostream>
+#include <map>
+#include <stdexcept>
+#include <string>
+#include <string_view>
+#include <unistd.h>
+
+#include <nix/error.hh>
+#include <nix/util.hh>
+#include <nlohmann/json.hpp>
 
 #include "flox/core/command.hh"
 #include "flox/core/exceptions.hh"
 #include "flox/pkgdb/command.hh"
-#include "flox/pkgdb/write.hh"
 #include "flox/resolver/command.hh"
 #include "flox/search/command.hh"
 

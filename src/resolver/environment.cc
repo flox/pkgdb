@@ -7,9 +7,33 @@
  *
  * -------------------------------------------------------------------------- */
 
+
+#include <algorithm>
+#include <assert.h>
+#include <map>
+#include <ostream>
+#include <string>
+#include <variant>
+
+#include <argparse/argparse.hpp>
+#include <nix/flake/flakeref.hh>
+#include <nix/ref.hh>
+#include <nix/util.hh>
+#include <nlohmann/json.hpp>
+
+#include "flox/pkgdb/read.hh"
+#include "flox/resolver/descriptor.hh"
 #include "flox/resolver/environment.hh"
-#include "flox/core/util.hh"
 #include "flox/resolver/lockfile.hh"
+
+
+/* -------------------------------------------------------------------------- */
+
+/* Forward Declarations */
+
+namespace nix {
+class Store;
+}
 
 
 /* -------------------------------------------------------------------------- */

@@ -10,13 +10,12 @@
 
 #pragma once
 
-#include <functional>
-#include <map>
-#include <vector>
-
-#include <nix/fetchers.hh>
-#include <nix/flake/flakeref.hh>
-#include <nlohmann/json.hpp>
+#include <filesystem>
+#include <nlohmann/json_fwd.hpp>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <variant>
 
 #include "flox/core/exceptions.hh"
 #include "flox/core/types.hh"

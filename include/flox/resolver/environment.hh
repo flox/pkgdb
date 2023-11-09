@@ -9,16 +9,42 @@
 
 #pragma once
 
+#include <filesystem>
 #include <memory>
 #include <optional>
+#include <string_view>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include <nix/ref.hh>
 
+#include "flox/core/exceptions.hh"
+#include "flox/core/nix-state.hh"
 #include "flox/core/types.hh"
-#include "flox/core/util.hh"
 #include "flox/pkgdb/input.hh"
+#include "flox/pkgdb/pkg-query.hh"
 #include "flox/registry.hh"
 #include "flox/resolver/lockfile.hh"
+
+
+/* -------------------------------------------------------------------------- */
+
+/* Forward Declarations */
+
+namespace argparse {
+class Argument;
+class ArgumentParser;
+}  // namespace argparse
+
+namespace flox {
+namespace pkgdb {
+class PkgDbReadOnly;
+}
+namespace resolver {
+struct ManifestDescriptor;
+}
+}  // namespace flox
 
 
 /* -------------------------------------------------------------------------- */

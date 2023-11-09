@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include <concepts>
+#include <concepts>  // IWYU pragma: export
 
 
 /* -------------------------------------------------------------------------- */

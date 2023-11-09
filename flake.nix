@@ -35,35 +35,54 @@
 
 # ---------------------------------------------------------------------------- #
 
-    /* Use nix@2.17 */
-    overlays.nix = final: prev: { nix = prev.nixVersions.nix_2_17.overrideAttrs (old: {
-      patches = old.patches or [] ++ [
-        (builtins.path {path = ./nix-patches/nix-9147.patch;})
-        (builtins.path {path = ./nix-patches/multiple-github-tokens.2.13.2.patch;})
-      ];
-    }); };
-    /* Aggregate dependency overlays. */
+    # Add IWYU pragmas
+    overlays.nlohmann = final: prev: {
+      nlohmann_json = final.callPackage ./pkgs/nlohmann_json.nix {
+        inherit (prev) nlohmann_json;
+      };
+    };
+
+    # Use nix@2.17
+    overlays.nix = final: prev: {
+      nix = final.callPackage ./pkgs/nix/pkg-fun.nix {};
+    };
+
+    # Aggregate dependency overlays.
     overlays.deps = nixpkgs.lib.composeManyExtensions [
-      overlays.nix
+      overlays.nlohmann
       floco.overlays.default
+      overlays.nix
       sqlite3pp.overlays.default
       argparse.overlays.default
     ];
+
     overlays.flox-pkgdb = final: prev: {
       flox-pkgdb = final.callPackage ./pkg-fun.nix {};
     };
+
     overlays.default = nixpkgs.lib.composeExtensions overlays.deps
                                                      overlays.flox-pkgdb;
 
 
 # ---------------------------------------------------------------------------- #
 
+    # Apply overlays to the `nixpkgs` _base_ set.
+    # This is exposed as an output later; but we don't use the name
+    # `legacyPackages' to avoid checking the full closure with
+    # `nix flake check' and `nix search'.
+    pkgsFor = eachDefaultSystemMap ( system: let
+      base = builtins.getAttr system nixpkgs.legacyPackages;
+    in base.extend overlays.default );
+
+
+# ---------------------------------------------------------------------------- #
+
     packages = eachDefaultSystemMap ( system: let
-      pkgsFor = ( builtins.getAttr system nixpkgs.legacyPackages ).extend
-                  overlays.default;
+      pkgs = builtins.getAttr system pkgsFor;
     in {
-      inherit (pkgsFor) flox-pkgdb semver;
-      default = pkgsFor.flox-pkgdb;
+      inherit (pkgs) flox-pkgdb semver nix;
+      default = pkgs.flox-pkgdb;
+      pkgdb   = pkgs.flox-pkgdb;
     } );
 
 
@@ -71,41 +90,41 @@
 
   in {
 
-    inherit overlays packages;
+    inherit overlays packages pkgsFor;
 
     devShells = eachDefaultSystemMap ( system: let
-      pkgsFor = ( builtins.getAttr system nixpkgs.legacyPackages ).extend
-                  overlays.default;
+      pkgs = builtins.getAttr system pkgsFor;
       flox-pkgdb-shell = let
-        batsWith = pkgsFor.bats.withLibraries ( libs: [
+        batsWith = pkgs.bats.withLibraries ( libs: [
           libs.bats-assert
           libs.bats-file
           libs.bats-support
         ] );
-      in pkgsFor.mkShell {
+      in pkgs.mkShell {
         name       = "flox-pkgdb-shell";
-        inputsFrom = [pkgsFor.flox-pkgdb];
+        inputsFrom = [pkgs.flox-pkgdb];
         packages   = [
           # For tests
           batsWith
-          pkgsFor.jq
+          pkgs.jq
           # For profiling
-          pkgsFor.lcov
-          ( if pkgsFor.stdenv.cc.isGNU or false then pkgsFor.gdb else
-            pkgsFor.lldb
+          pkgs.lcov
+          ( if pkgs.stdenv.cc.isGNU or false then pkgs.gdb else
+            pkgs.lldb
           )
           # For doc
-          pkgsFor.doxygen
+          pkgs.doxygen
           # For IDEs
-          pkgsFor.ccls
-          pkgsFor.bear
+          pkgs.ccls
+          pkgs.bear
           # For lints/fmt
-          pkgsFor.clang-tools_16
+          pkgs.clang-tools_16
+          pkgs.include-what-you-use
           # For debugging
         ] ++ (
-          if pkgsFor.stdenv.isLinux or false then [pkgsFor.valgrind] else []
+          if pkgs.stdenv.isLinux or false then [pkgs.valgrind] else []
         );
-        inherit (pkgsFor.flox-pkgdb)
+        inherit (pkgs.flox-pkgdb)
           nix_INCDIR boost_CFLAGS toml_CFLAGS yaml_PREFIX libExt SEMVER_PATH
         ;
         shellHook = ''

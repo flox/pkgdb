@@ -8,10 +8,24 @@
  *
  * -------------------------------------------------------------------------- */
 
+#include <algorithm>
+#include <map>
+#include <nlohmann/json.hpp>
+#include <optional>
 #include <regex>
+#include <stddef.h>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <variant>
+#include <vector>
 
-#include "flox/core/exceptions.hh"
-#include "flox/pkgdb/read.hh"
+#include <nix/attrs.hh>
+#include <nix/flake/flakeref.hh>
+
+#include "flox/core/types.hh"
+#include "flox/core/util.hh"
+#include "flox/pkgdb/pkg-query.hh"
 #include "flox/resolver/descriptor.hh"
 #include "versions.hh"
 
