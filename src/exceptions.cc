@@ -8,9 +8,11 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include <cstdio>
-#include <filesystem>
-#include <fstream>
+#include <map>
+#include <optional>
+#include <string>
+
+#include <nlohmann/json.hpp>
 
 #include "flox/core/exceptions.hh"
 
@@ -33,6 +35,9 @@ to_json( nlohmann::json & jto, const FloxException & err )
   if ( contextMsg.has_value() ) { jto["context_message"] = *contextMsg; };
   if ( caughtMsg.has_value() ) { jto["caught_message"] = *caughtMsg; };
 }
+
+
+/* -------------------------------------------------------------------------- */
 
 }  // namespace flox
 

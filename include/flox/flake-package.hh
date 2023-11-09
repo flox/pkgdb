@@ -11,11 +11,15 @@
 #pragma once
 
 #include <memory>
-#include <nix/eval-cache.hh>
-#include <nix/names.hh>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
+
+#include <nix/eval-cache.hh>
+#include <nix/names.hh>
+#include <nix/ref.hh>
+#include <nix/symbol-table.hh>
 
 #include "flox/core/exceptions.hh"
 #include "flox/core/types.hh"
@@ -72,6 +76,8 @@ private:
    */
 
 public:
+
+  virtual ~FlakePackage() = default;
 
   FlakePackage( Cursor cursor, const AttrPath & path, bool checkDrv = true )
     : _cursor( cursor )
