@@ -119,6 +119,7 @@
           pkgs.bear
           # For lints/fmt
           pkgs.clang-tools_16
+          pkgs.include-what-you-use
           # For debugging
         ] ++ (
           if pkgs.stdenv.isLinux or false then [pkgs.valgrind] else []
