@@ -1,0 +1,34 @@
+[
+    {
+        "include": [
+            "@<nlohmann/detail/.*>",
+            "private",
+            "<nlohmann/json.hpp>",
+            "public"
+        ]
+    },
+    {
+        "include": [
+            "<boost/optional/optional.hpp>",
+            "private",
+            "<optional>",
+            "public"
+        ]
+    },
+    {
+        "include": [
+            "@<toml/.*>",
+            "private",
+            "<toml.hpp>",
+            "public"
+        ]
+    },
+    {
+        "include": [
+            "@<yaml-cpp/node/.*>",
+            "private",
+            "<yaml-cpp/yaml.h>",
+            "public"
+        ]
+    }
+]

@@ -31,6 +31,7 @@ DOXYGEN    ?= doxygen
 BEAR       ?= bear
 TIDY       ?= clang-tidy
 FMT        ?= clang-format
+TEE        ?= tee
 
 
 # ---------------------------------------------------------------------------- #
@@ -151,12 +152,14 @@ nljson_CFLAGS := $(nljson_CFLAGS)
 argparse_CFLAGS ?= $(shell $(PKG_CONFIG) --cflags argparse)
 argparse_CFLAGS := $(argparse_CFLAGS)
 
-boost_CFLAGS ?=                                                             \
-  -I$(shell $(NIX) build --no-link --print-out-paths 'nixpkgs#boost')/include
+boost_CFLAGS ?=                                                              \
+  -isystem                                                                   \
+  $(shell $(NIX) build --no-link --print-out-paths 'nixpkgs#boost')/include
 boost_CFLAGS := $(boost_CFLAGS)
 
-toml_CFLAGS ?=                                                                 \
-  -I$(shell $(NIX) build --no-link --print-out-paths 'nixpkgs#toml11')/include
+toml_CFLAGS ?=                                                                \
+  -isystem                                                                    \
+  $(shell $(NIX) build --no-link --print-out-paths 'nixpkgs#toml11')/include
 toml_CFLAGS := $(toml_CFLAGS)
 
 sqlite3_CFLAGS  ?= $(shell $(PKG_CONFIG) --cflags sqlite3)
@@ -176,11 +179,13 @@ yaml_LDFLAGS = -L$(yaml_PREFIX)/lib -lyaml-cpp
 nix_INCDIR ?= $(shell $(PKG_CONFIG) --variable=includedir nix-cmd)
 nix_INCDIR := $(nix_INCDIR)
 ifndef nix_CFLAGS
-nix_CFLAGS =  $(boost_CFLAGS)
-nix_CFLAGS += $(shell $(PKG_CONFIG) --cflags nix-main nix-cmd nix-expr)
-nix_CFLAGS += -isystem $(nix_INCDIR) -include $(nix_INCDIR)/nix/config.h
+_nix_PC_CFLAGS =  $(shell $(PKG_CONFIG) --cflags nix-main nix-cmd nix-expr)
+_nix_PC_CFLAGS := $(patsubst -isystem /%/include/nix,,$(_nix_PC_CFLAGS))
+nix_CFLAGS     =  $(boost_CFLAGS) $(patsubst -I%,-isystem %,$(_nix_PC_CFLAGS))
+nix_CFLAGS     += -isystem $(nix_INCDIR) -include $(nix_INCDIR)/nix/config.h
 endif # ifndef nix_CFLAGS
 nix_CFLAGS := $(nix_CFLAGS)
+undefine _nix_PC_CFLAGS
 
 ifndef nix_LDFLAGS
 nix_LDFLAGS =                                                        \
@@ -330,7 +335,7 @@ install-include:                                                    \
 
 .PHONY: ccls cdb
 ccls: .ccls
-cdb: compile_commands.json
+cdb: compile_commands.json ccls
 
 .ccls: FORCE
 	echo '%compile_commands.json' > "$@";
@@ -368,6 +373,18 @@ compile_commands.json: $(COMMON_HEADERS) $(ALL_SRCS)
 	EXTRA_CXXFLAGS='$(patsubst %,-isystem %,$(CXX_SYSTEM_INCDIRS))'  \
 	  PATH="$(MAKEFILE_DIR)/bear.d/:$(PATH)"                         \
 	  $(BEAR) -- $(MAKE) -C $(MAKEFILE_DIR) -j bin tests;
+
+
+# ---------------------------------------------------------------------------- #
+
+# Run `include-what-you-use' ( wrapped )
+.PHONY: iwyu
+iwyu: iwyu.log
+
+iwyu.log: compile_commands.json $(COMMON_HEADERS) $(ALL_SRCS) flake.nix
+iwyu.log: flake.lock pkg-fun.nix pkgs/nlohmann_json.nix pkgs/nix/pkg-fun.nix
+iwyu.log: build-aux/iwyu build-aux/iwyu-mappings.json
+	build-aux/iwyu|$(TEE) "$@"
 
 
 # ---------------------------------------------------------------------------- #

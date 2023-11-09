@@ -80,20 +80,34 @@
       };
 
     };
+
+    # Aggregate dependency overlays.
     overlays.default = nixpkgs.lib.composeExtensions overlays.deps
                                                      overlays.proj0;
 
 
 # ---------------------------------------------------------------------------- #
 
+    # Apply overlays to the `nixpkgs` _base_ set.
+    # This is exposed as an output later; but we don't use the name
+    # `legacyPackages' to avoid checking the full closure with
+    # `nix flake check' and `nix search'.
+    pkgsFor = eachDefaultSystemMap ( system: let
+      base = builtins.getAttr system nixpkgs.legacyPackages;
+    in base.extend overlays.default );
+
+
+# ---------------------------------------------------------------------------- #
+
   in {
 
+    inherit pkgsFor overlays;
+
     packages = eachDefaultSystemMap ( system: let
-      pkgsFor = ( builtins.getAttr system nixpkgs.legacyPackages ).extend
-                  overlays.default;
+      pkgs = builtins.getAttr system pkgsFor;
     in {
-      inherit (pkgsFor) pkg0 pkg1 pkg2 pkg3 pkg4;
-      default = pkgsFor.pkg0;
+      inherit (pkgs) pkg0 pkg1 pkg2 pkg3 pkg4;
+      default = pkgs.pkg0;
     } );
 
   };

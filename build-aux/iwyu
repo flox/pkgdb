@@ -29,6 +29,8 @@ convenience.
 Headers have already been explicitly included with \`--check_also' and can
 be omitted.
 
+A mapping file \`build-aux/iwyu-mappings.json' is automatically applied.
+
 Setting any \`EXTRA-IWYU-ARGS' will override the defaults.
 The default \`EXTRA-IWYU-ARGS' are:
   -Xiwyu --no_comments
@@ -67,7 +69,6 @@ usage() {
 # ---------------------------------------------------------------------------- #
 
 _PROJECT_ROOT='';
-declare -a _extra_iwyu_args;
 
 while [[ "$#" -gt 0 ]]; do
   case "$1" in
@@ -126,6 +127,7 @@ done
 # ---------------------------------------------------------------------------- #
 
 # Any remaining args go into `_extra_iwyu_args'.
+declare -a _extra_iwyu_args;
 if [[ "$#" -gt 0 ]]; then
   _extra_iwyu_args+=( "$@" );
 else
@@ -159,7 +161,11 @@ _header_dirs=( $( $FIND "$_PROJECT_ROOT/include" -type d -print; ) );
 # Generate arguments for \`iwyu_tool.py':
 
 declare -a _iwyu_args;
-_iwyu_args=( -p "$_PROJECT_ROOT" -- );
+_iwyu_args=(
+  -p "$_PROJECT_ROOT"
+  --
+  -Xiwyu --mapping_file="$_PROJECT_ROOT/build-aux/iwyu-mappings.json"
+);
 
 # Add \`-Xiwyu' to all \`_extra_iwyu_args'.
 for _arg in "${_extra_iwyu_args[@]}"; do
