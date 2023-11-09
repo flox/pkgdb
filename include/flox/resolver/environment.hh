@@ -171,8 +171,8 @@ public:
     , oldLockfile( std::move( oldLockfile ) )
   {}
 
-  Environment( Manifest                manifest,
-               std::optional<Lockfile> oldLockfile = std::nullopt )
+  explicit Environment( Manifest                manifest,
+                        std::optional<Lockfile> oldLockfile = std::nullopt )
     : globalManifest( std::nullopt )
     , manifest( std::move( manifest ) )
     , oldLockfile( std::move( oldLockfile ) )
@@ -187,8 +187,10 @@ public:
   [[nodiscard]] std::optional<GlobalManifestRaw>
   getGlobalManifestRaw() const
   {
-    if ( ! this->getGlobalManifest().has_value() ) { return std::nullopt; }
-    return this->getGlobalManifest()->getManifestRaw();
+    const auto & global = this->getGlobalManifest();
+    if ( ! global.has_value() ) { return std::nullopt; }
+    const ManifestRaw & raw = global->getManifestRaw();
+    return GlobalManifestRaw( raw.registry, raw.options );
   }
 
   [[nodiscard]] const Manifest &
