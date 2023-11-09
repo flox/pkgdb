@@ -60,7 +60,6 @@ struct InputPreferences
   operator=( InputPreferences && )
     = default;
 
-
   /** @brief Reset to default state. */
   virtual void
   clear();
@@ -76,6 +75,15 @@ struct InputPreferences
    */
   pkgdb::PkgQueryArgs &
   fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const;
+
+  /**
+   * @brief Merges this @a flox::InputPreferences with another InputPreferences,
+   *        overriding values in this InputPreferences with those from the other
+   *        InputPreferences.
+   * @param overrides A @a flox::InputPreferences to merge and override with.
+   */
+  void
+  merge( const InputPreferences & overrides );
 
 
 }; /* End struct `InputPreferences' */
@@ -327,6 +335,16 @@ struct RegistryRaw
   pkgdb::PkgQueryArgs &
   fillPkgQueryArgs( const std::string &   input,
                     pkgdb::PkgQueryArgs & pqa ) const;
+
+  /**
+   * @brief Merge this @a flox::RegistryRaw struct with another
+   *        @a flox::RegistryRaw, overriding any existing values with those from
+   *        the other RegistryRaw
+   *
+   */
+  void
+  merge( const RegistryRaw & overrides );
+
 
 }; /* End struct `RegistryRaw' */
 

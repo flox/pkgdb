@@ -189,7 +189,7 @@ struct adl_serializer<nix::FlakeRef>
         return { nix::FlakeRef::fromAttrs(
           nix::fetchers::jsonToAttrs( jfrom ) ) };
       }
-    else { return { nix::parseFlakeRef( jfrom.get<std::string>() ) }; }
+    return { nix::parseFlakeRef( jfrom.get<std::string>() ) };
   }
 
 }; /* End struct `adl_serializer<nix::FlakeRef>' */
@@ -384,6 +384,31 @@ assertIsJSONObject( const nlohmann::json & value,
     }
 }
 
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief Merge two @a std::vectors by putting all elements of the higher
+ *        prioirty vector first, then appending the deduplicated keys of the
+ *        lower priortity vector.
+ * @param lower The lower priority @a std::vector.
+ * @param higher The higher priority @a std::vector.
+ * @return The merged @a std::vector
+ */
+template<typename T>
+std::vector<T>
+merge_vectors( const std::vector<T> & lower, const std::vector<T> & higher )
+{
+  std::vector<T> merged = higher;
+  for ( const auto & value : lower )
+    {
+      if ( std::find( merged.begin(), merged.end(), value ) != merged.end() )
+        {
+          merged.emplace_back( value );
+        }
+    }
+  return merged;
+}
 
 /* -------------------------------------------------------------------------- */
 

@@ -114,15 +114,22 @@ to_json( nlohmann::json & jfrom, const Options & opts );
  */
 struct GlobalManifestRaw
 {
-  std::optional<Options> options;
-
   std::optional<RegistryRaw> registry;
-
+  std::optional<Options>     options;
 
   virtual ~GlobalManifestRaw()                   = default;
   GlobalManifestRaw()                            = default;
   GlobalManifestRaw( const GlobalManifestRaw & ) = default;
   GlobalManifestRaw( GlobalManifestRaw && )      = default;
+
+  explicit GlobalManifestRaw( std::optional<RegistryRaw> registry,
+                              std::optional<Options> options = std::nullopt )
+    : registry( std::move( registry ) ), options( std::move( options ) )
+  {}
+
+  explicit GlobalManifestRaw( std::optional<Options> options )
+    : options( std::move( options ) )
+  {}
 
   GlobalManifestRaw &
   operator=( const GlobalManifestRaw & )
@@ -143,8 +150,8 @@ struct GlobalManifestRaw
   virtual void
   clear()
   {
-    this->options  = std::nullopt;
     this->registry = std::nullopt;
+    this->options  = std::nullopt;
   }
 
 
@@ -336,7 +343,7 @@ protected:
 
 public:
 
-  ~GlobalManifest()                        = default;
+  virtual ~GlobalManifest()                = default;
   GlobalManifest()                         = default;
   GlobalManifest( const GlobalManifest & ) = default;
   GlobalManifest( GlobalManifest && )      = default;
@@ -400,7 +407,7 @@ public:
       {
         return *manifest.options->systems;
       }
-    else { return std::vector<System> { nix::settings.thisSystem.get() }; }
+    return std::vector<System> { nix::settings.thisSystem.get() };
   }
 
   [[nodiscard]] pkgdb::PkgQueryArgs
@@ -450,7 +457,7 @@ private:
 
 public:
 
-  ~Manifest()                  = default;
+  ~Manifest() override         = default;
   Manifest()                   = default;
   Manifest( const Manifest & ) = default;
   Manifest( Manifest && )      = default;

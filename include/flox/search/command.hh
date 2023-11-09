@@ -27,43 +27,14 @@ namespace flox::search {
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief Package query parser. */
-struct PkgQueryMixin
-{
-
-  pkgdb::PkgQuery query;
-
-  /**
-   * @brief Add `query` argument to any parser to construct a
-   *        @a flox::pkgdb::PkgQuery.
-   */
-  argparse::Argument &
-  addQueryArgs( argparse::ArgumentParser & parser );
-
-  /**
-   * @brief Run query on a @a pkgdb::PkgDbReadOnly database.
-   *
-   * Any scraping should be performed before invoking this function.
-   */
-  std::vector<pkgdb::row_id>
-  queryDb( pkgdb::PkgDbReadOnly & pdb ) const;
-
-
-}; /* End struct `PkgQueryMixin' */
-
-
-/* -------------------------------------------------------------------------- */
-
 /** @brief Search flakes for packages satisfying a set of filters. */
-class SearchCommand
-  : pkgdb::PkgDbRegistryMixin
-  , PkgQueryMixin
+class SearchCommand : flox::resolver::EnvironmentMixin
 {
 
 private:
 
-  SearchParams           params; /**< Query arguments and inputs */
   command::VerboseParser parser; /**< Query arguments and inputs parser */
+  SearchParams           params; /**< Query arguments processor. */
 
   /**
    * @brief Add argument to any parser to construct
@@ -72,29 +43,14 @@ private:
   argparse::Argument &
   addSearchParamArgs( argparse::ArgumentParser & parser );
 
-  [[nodiscard]] RegistryRaw
-  getRegistryRaw() override
-  {
-    return this->params.registry;
-  }
-
-  [[nodiscard]] const std::vector<std::string> &
-  getSystems() override
-  {
-    return this->params.systems;
-  }
+  /** @brief Convert @a params to initialize @a environment. */
+  void
+  initEnvironment();
 
 
 public:
 
   SearchCommand();
-
-  /** @brief Display a single row from the given @a input. */
-  static void
-  showRow( pkgdb::PkgDbInput & input, pkgdb::row_id row )
-  {
-    std::cout << input.getRowJSON( row ).dump() << std::endl;
-  }
 
   [[nodiscard]] command::VerboseParser &
   getParser()

@@ -23,9 +23,13 @@ Environment::getCombinedRegistryRaw()
 {
   if ( ! this->combinedRegistryRaw.has_value() )
     {
-      // TODO: merge registries
-      // this->combinedRegistryRaw = this->globalManifest->getRegistryRaw();
-      this->combinedRegistryRaw = this->manifest.getLockedRegistry();
+      if ( this->globalManifest.has_value() )
+        {
+          this->combinedRegistryRaw = this->globalManifest->getRegistryRaw();
+          this->combinedRegistryRaw.value().merge(
+            this->manifest.getLockedRegistry() );
+        }
+      else { this->combinedRegistryRaw = this->manifest.getLockedRegistry(); }
     }
   return *this->combinedRegistryRaw;
 }
@@ -481,7 +485,7 @@ EnvironmentMixin::addGlobalManifestFileOption(
     .help( "The path to the user's global `manifest.{toml,yaml,json}' file." )
     .metavar( "PATH" )
     .action( [&]( const std::string & strPath )
-             { this->globalManifestPath = nix::absPath( strPath ); } );
+             { this->initGlobalManifestPath( nix::absPath( strPath ) ); } );
 }
 
 
@@ -494,7 +498,7 @@ EnvironmentMixin::addManifestFileOption( argparse::ArgumentParser & parser )
     .help( "The path to the `manifest.{toml,yaml,json}' file." )
     .metavar( "PATH" )
     .action( [&]( const std::string & strPath )
-             { this->manifestPath = nix::absPath( strPath ); } );
+             { this->initManifestPath( nix::absPath( strPath ) ); } );
 }
 
 
@@ -509,7 +513,7 @@ EnvironmentMixin::addManifestFileArg( argparse::ArgumentParser & parser,
         .help( "The path to the project's `manifest.{toml,yaml,json}' file." )
         .metavar( "MANIFEST-PATH" )
         .action( [&]( const std::string & strPath )
-                 { this->manifestPath = nix::absPath( strPath ); } );
+                 { this->initManifestPath( nix::absPath( strPath ) ); } );
   return required ? arg.required() : arg;
 }
 
@@ -523,7 +527,77 @@ EnvironmentMixin::addLockfileOption( argparse::ArgumentParser & parser )
     .help( "The path to the projects existing `manifest.lock' file." )
     .metavar( "PATH" )
     .action( [&]( const std::string & strPath )
-             { this->lockfilePath = nix::absPath( strPath ); } );
+             { this->initLockfilePath( nix::absPath( strPath ) ); } );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief Generate exception handling boilerplate for
+ *        `EnvironmentMixin::init<MEMBER>' functions.
+ */
+#define ENV_MIXIN_THROW_IF_SET( member )                               \
+  if ( this->member.has_value() )                                      \
+    {                                                                  \
+      throw EnvironmentMixinException( "`" #member                     \
+                                       "' was already initializaed" ); \
+    }                                                                  \
+  if ( this->environment.has_value() )                                 \
+    {                                                                  \
+      throw EnvironmentMixinException(                                 \
+        "`" #member "' cannot be initializaed after `environment'" );  \
+    }
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+EnvironmentMixin::initGlobalManifestPath( std::filesystem::path path )
+{
+  ENV_MIXIN_THROW_IF_SET( globalManifestPath )
+  this->globalManifestPath = std::move( path );
+}
+
+void
+EnvironmentMixin::initGlobalManifest( GlobalManifest manifest )
+{
+  ENV_MIXIN_THROW_IF_SET( globalManifest )
+  this->globalManifest = std::move( manifest );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+EnvironmentMixin::initManifestPath( std::filesystem::path path )
+{
+  ENV_MIXIN_THROW_IF_SET( manifestPath )
+  this->manifestPath = std::move( path );
+}
+
+void
+EnvironmentMixin::initManifest( Manifest manifest )
+{
+  ENV_MIXIN_THROW_IF_SET( manifest )
+  this->manifest = std::move( manifest );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+EnvironmentMixin::initLockfilePath( std::filesystem::path path )
+{
+  ENV_MIXIN_THROW_IF_SET( lockfilePath )
+  this->lockfilePath = std::move( path );
+}
+
+void
+EnvironmentMixin::initLockfile( Lockfile lockfile )
+{
+  ENV_MIXIN_THROW_IF_SET( lockfile )
+  this->lockfile = std::move( lockfile );
 }
 
 

@@ -15,6 +15,7 @@ Checks: >
   ,-*-avoid-c-arrays
   ,-cppcoreguidelines-owning-memory
   ,-cppcoreguidelines-macro-usage
+  ,-bugprone-easily-swappable-parameters
 
 WarningsAsErrors: ''
 HeaderFilterRegex: ''

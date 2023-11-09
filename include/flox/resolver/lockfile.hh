@@ -49,8 +49,17 @@ struct LockedInputRaw
   /** Exploded form of URI as an attr-set. */
   nlohmann::json attrs;
 
-  LockedInputRaw() : fingerprint( nix::htSHA256 ) {}
   ~LockedInputRaw() = default;
+  LockedInputRaw() : fingerprint( nix::htSHA256 ) {}
+  LockedInputRaw( const LockedInputRaw & ) = default;
+  LockedInputRaw( LockedInputRaw && )      = default;
+
+  LockedInputRaw &
+  operator=( const LockedInputRaw & )
+    = default;
+  LockedInputRaw &
+  operator=( LockedInputRaw && )
+    = default;
 
   explicit LockedInputRaw( const pkgdb::PkgDbReadOnly & pdb )
     : fingerprint( pdb.fingerprint )
@@ -230,7 +239,7 @@ public:
   Lockfile( const Lockfile & ) = default;
   Lockfile( Lockfile && )      = default;
 
-  Lockfile( LockfileRaw raw ) : lockfileRaw( std::move( raw ) )
+  explicit Lockfile( LockfileRaw raw ) : lockfileRaw( std::move( raw ) )
   {
     this->init();
   }

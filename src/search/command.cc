@@ -28,34 +28,6 @@ namespace flox::search {
 /* -------------------------------------------------------------------------- */
 
 argparse::Argument &
-PkgQueryMixin::addQueryArgs( argparse::ArgumentParser & parser )
-{
-  return parser.add_argument( "query" )
-    .help( "query parameters" )
-    .required()
-    .metavar( "QUERY" )
-    .action(
-      [&]( const std::string & query )
-      {
-        pkgdb::PkgQueryArgs args;
-        nlohmann::json::parse( query ).get_to( args );
-        this->query = pkgdb::PkgQuery( args );
-      } );
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-std::vector<pkgdb::row_id>
-PkgQueryMixin::queryDb( pkgdb::PkgDbReadOnly & pdb ) const
-{
-  return this->query.execute( pdb.db );
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-argparse::Argument &
 SearchCommand::addSearchParamArgs( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "parameters" )
@@ -65,8 +37,8 @@ SearchCommand::addSearchParamArgs( argparse::ArgumentParser & parser )
     .action(
       [&]( const std::string & params )
       {
-        nlohmann::json paramsJSON = parseOrReadJSONObject( params );
-        paramsJSON.get_to( this->params );
+        nlohmann::json searchParamsRaw = parseOrReadJSONObject( params );
+        searchParamsRaw.get_to( this->params );
       } );
 }
 
@@ -83,17 +55,51 @@ SearchCommand::SearchCommand() : parser( "search" )
 
 /* -------------------------------------------------------------------------- */
 
+void
+SearchCommand::initEnvironment()
+{
+  /* Init global manifest. */
+  auto maybePath = this->params.getGlobalManifestPath();
+  if ( maybePath.has_value() ) { this->initGlobalManifestPath( *maybePath ); }
+  if ( auto raw = this->params.getGlobalManifestRaw(); raw.has_value() )
+    {
+      this->initGlobalManifest( resolver::GlobalManifest( *maybePath, *raw ) );
+    }
+
+  /* Init manifest. */
+  auto path = this->params.getManifestPath();
+  this->initManifestPath( path );
+  this->initManifest(
+    resolver::Manifest( path, this->params.getManifestRaw() ) );
+
+  /* Init lockfile . */
+  maybePath = this->params.getLockfilePath();
+  if ( maybePath.has_value() ) { this->initLockfilePath( *maybePath ); }
+  if ( auto raw = this->params.getLockfileRaw(); raw.has_value() )
+    {
+      this->initLockfile( resolver::Lockfile( *maybePath, *raw ) );
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 int
 SearchCommand::run()
 {
-  pkgdb::PkgQueryArgs args;
-  for ( const auto & [name, input] : *this->getPkgDbRegistry() )
+  /* Initialize environment. */
+  this->initEnvironment();
+
+  pkgdb::PkgQueryArgs args = this->getEnvironment().getCombinedBaseQueryArgs();
+  for ( const auto & [name, input] :
+        *this->getEnvironment().getPkgDbRegistry() )
     {
-      this->params.fillPkgQueryArgs( name, args );
-      this->query = pkgdb::PkgQuery( args );
-      for ( const auto & row : this->queryDb( *input->getDbReadOnly() ) )
+      this->params.query.fillPkgQueryArgs( args );
+      auto query = pkgdb::PkgQuery( args );
+      auto dbRO  = input->getDbReadOnly();
+      for ( const auto & row : query.execute( dbRO->db ) )
         {
-          this->showRow( *input, row );
+          std::cout << input->getRowJSON( row ).dump() << std::endl;
         }
     }
   return EXIT_SUCCESS;

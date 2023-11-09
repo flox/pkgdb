@@ -19,7 +19,6 @@
 #include "flox/pkgdb/input.hh"
 #include "flox/registry.hh"
 #include "flox/resolver/lockfile.hh"
-#include "flox/resolver/manifest.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -110,10 +109,6 @@ private:
   void
   fillLockedFromOldLockfile();
 
-  /** @brief Lazily initialize and get the combined registry's DBs. */
-  [[nodiscard]] nix::ref<Registry<pkgdb::PkgDbInputFactory>>
-  getPkgDbRegistry();
-
   // TODO
   /**
    * @brief Get the set of descriptors which differ from those
@@ -134,13 +129,6 @@ private:
    */
   [[nodiscard]] const Options &
   getCombinedOptions();
-
-  /**
-   * @brief Get a base set of @a flox::pkgdb::PkgQueryArgs from
-   *        combined options.
-   */
-  [[nodiscard]] const pkgdb::PkgQueryArgs &
-  getCombinedBaseQueryArgs();
 
   /** @brief Try to resolve a descriptor in a given package database. */
   [[nodiscard]] std::optional<pkgdb::row_id>
@@ -183,8 +171,8 @@ public:
     , oldLockfile( std::move( oldLockfile ) )
   {}
 
-  Environment( Manifest                manifest,
-               std::optional<Lockfile> oldLockfile = std::nullopt )
+  explicit Environment( Manifest                manifest,
+                        std::optional<Lockfile> oldLockfile = std::nullopt )
     : globalManifest( std::nullopt )
     , manifest( std::move( manifest ) )
     , oldLockfile( std::move( oldLockfile ) )
@@ -199,8 +187,10 @@ public:
   [[nodiscard]] std::optional<GlobalManifestRaw>
   getGlobalManifestRaw() const
   {
-    if ( ! this->getGlobalManifest().has_value() ) { return std::nullopt; }
-    return this->getGlobalManifest()->getManifestRaw();
+    const auto & global = this->getGlobalManifest();
+    if ( ! global.has_value() ) { return std::nullopt; }
+    const ManifestRaw & raw = global->getManifestRaw();
+    return GlobalManifestRaw( raw.registry, raw.options );
   }
 
   [[nodiscard]] const Manifest &
@@ -238,12 +228,23 @@ public:
   [[nodiscard]] RegistryRaw &
   getCombinedRegistryRaw();
 
+  /**
+   * @brief Get a base set of @a flox::pkgdb::PkgQueryArgs from
+   *        combined options.
+   */
+  [[nodiscard]] const pkgdb::PkgQueryArgs &
+  getCombinedBaseQueryArgs();
+
   /** @brief Get the set of supported systems. */
   [[nodiscard]] std::vector<System>
   getSystems() const
   {
     return this->getManifest().getSystems();
   }
+
+  /** @brief Lazily initialize and get the combined registry's DBs. */
+  [[nodiscard]] nix::ref<Registry<pkgdb::PkgDbInputFactory>>
+  getPkgDbRegistry();
 
   // TODO: (Question) Should we lock the combined options and fill registry
   //                  `default` fields in inputs?
@@ -258,6 +259,20 @@ public:
 /* -------------------------------------------------------------------------- */
 
 /**
+ * @a class flox::resolver::EnvironmentMixinException
+ * @brief An exception thrown by @a flox::resolver::EnvironmentMixin during
+ *        its initialization.
+ * @{
+ */
+FLOX_DEFINE_EXCEPTION( EnvironmentMixinException,
+                       EC_ENVIRONMENT_MIXIN,
+                       "EnvironmentMixin" )
+/** @} */
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
  * @brief A state blob with files associated with an environment.
  *
  * This structure stashes several fields to avoid repeatedly calculating them.
@@ -267,41 +282,160 @@ class EnvironmentMixin
 
 private:
 
-  /** Path to user level manifest. */
+  /* All member variables are calculated lazily using `std::optional' and
+   * `get<MEMBER>' accessors.
+   * Even for internal access you should use the `get<MEMBER>' accessors to
+   * lazily initialize. */
+
+  /** Path to user level manifest ( if any ). */
   std::optional<std::filesystem::path> globalManifestPath;
-  /** Contents of user level manifest with global registry and settings. */
+  /**
+   * Contents of user level manifest with global registry and settings
+   * ( if any ).
+   */
   std::optional<GlobalManifest> globalManifest;
 
+  /** Path to project level manifest. ( required ) */
   std::optional<std::filesystem::path> manifestPath;
-  std::optional<Manifest>              manifest;
+  /**
+   * Contents of project level manifest with registry, settings,
+   * activation hook, and list of packages. ( required )
+   */
+  std::optional<Manifest> manifest;
 
+  /** Path to project's lockfile ( if any ). */
   std::optional<std::filesystem::path> lockfilePath;
-  std::optional<Lockfile>              lockfile;
+  /** Contents of project's lockfile ( if any ). */
+  std::optional<Lockfile> lockfile;
 
+  /** Lazily initialized environment wrapper. */
   std::optional<Environment> environment;
+
+
+protected:
+
+  /**
+   * @brief Initialize the @a globalManifestPath member variable.
+   *
+   * This may only be called once and must be called before
+   * `getEnvironment()` is ever used - otherwise an exception will be thrown.
+   *
+   * This function exists so that child classes can initialize their
+   * @a flox::resolver::EnvirontMixin base at runtime without accessing
+   * private member variables.
+   */
+  void
+  initGlobalManifestPath( std::filesystem::path path );
+
+  /**
+   * @brief Initialize the @a globalManifest member variable.
+   *
+   * This may only be called once and must be called before
+   * `getEnvironment()` is ever used - otherwise an exception will be thrown.
+   *
+   * This function exists so that child classes can initialize their
+   * @a flox::resolver::EnvirontMixin base at runtime without accessing
+   * private member variables.
+   */
+  void
+  initGlobalManifest( GlobalManifest manifest );
+
+  /**
+   * @brief Initialize the @a manifestPath member variable.
+   *
+   * This may only be called once and must be called before
+   * `getEnvironment()` is ever used - otherwise an exception will be thrown.
+   *
+   * This function exists so that child classes can initialize their
+   * @a flox::resolver::EnvirontMixin base at runtime without accessing
+   * private member variables.
+   */
+  void
+  initManifestPath( std::filesystem::path path );
+
+  /**
+   * @brief Initialize the @a manifest member variable.
+   *
+   * This may only be called once and must be called before
+   * `getEnvironment()` is ever used - otherwise an exception will be thrown.
+   *
+   * This function exists so that child classes can initialize their
+   * @a flox::resolver::EnvirontMixin base at runtime without accessing
+   * private member variables.
+   */
+  void
+  initManifest( Manifest manifest );
+
+  /**
+   * @brief Initialize the @a lockfilePath member variable.
+   *
+   * This may only be called once and must be called before
+   * `getEnvironment()` is ever used - otherwise an exception will be thrown.
+   *
+   * This function exists so that child classes can initialize their
+   * @a flox::resolver::EnvirontMixin base at runtime without accessing
+   * private member variables.
+   */
+  void
+  initLockfilePath( std::filesystem::path path );
+
+  /**
+   * @brief Initialize the @a lockfile member variable.
+   *
+   * This may only be called once and must be called before
+   * `getEnvironment()` is ever used - otherwise an exception will be thrown.
+   *
+   * This function exists so that child classes can initialize their
+   * @a flox::resolver::EnvirontMixin base at runtime without accessing
+   * private member variables.
+   */
+  void
+  initLockfile( Lockfile lockfile );
 
 
 public:
 
   /**
-   * @brief Lazily initialize and return the @a globalManifest
-   *        if @a globalManifestPath is set.
+   * @brief Lazily initialize and return the @a globalManifest.
+   *
+   * If @a globalManifest is set simply return it.
+   * If @a globalManifest is unset, but @a globalManifestPath is set then
+   * load from the file.
    */
   [[nodiscard]] const std::optional<GlobalManifest> &
   getGlobalManifest();
 
-  /** @brief Lazily initialize and return the @a manifest. */
+  /**
+   * @brief Lazily initialize and return the @a manifest.
+   *
+   * If @a manifest is set simply return it.
+   * If @a manifest is unset, but @a manifestPath is set then
+   * load from the file.
+   */
   [[nodiscard]] const Manifest &
   getManifest();
 
   /**
-   * @brief Lazily initialize and return the @a globalManifest
-   *        if @a globalManifestPath is set.
+   * @brief Lazily initialize and return the @a lockfile.
+   *
+   * If @a lockfile is set simply return it.
+   * If @a lockfile is unset, but @a lockfilePath is set then
+   * load from the file.
    */
   [[nodiscard]] const std::optional<Lockfile> &
   getLockfile();
 
-  /** @brief Laziliy initialize and return the @a environment. */
+  /**
+   * @brief Laziliy initialize and return the @a environment.
+   *
+   * The member variable @a manifest or @a manifestPath must be set for
+   * initialization to succeed.
+   * Member variables associated with the _global manifest_ and _lockfile_
+   * are optional.
+   *
+   * After @a getEnvironment() has been called once, it is no longer possible
+   * to use any `init*( MEMBER )` functions.
+   */
   [[nodiscard]] Environment &
   getEnvironment();
 

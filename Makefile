@@ -193,7 +193,9 @@ ifndef flox_pkgdb_LDFLAGS
 ifeq (Linux,$(OS))
 flox_pkgdb_LDFLAGS = -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
 else  # Darwin
+ifneq "$(findstring clean,$(MAKECMDGOALS))" ""
 flox_pkgdb_LDFLAGS = '-L$(LIBDIR)'
+endif # ifneq $(,$(findstring install,$(MAKECMDGOALS)))
 endif # ifeq (Linux,$(OS))
 flox_pkgdb_LDFLAGS += '-L$(MAKEFILE_DIR)/lib' -lflox-pkgdb
 endif # ifndef flox_pkgdb_LDFLAGS
@@ -331,7 +333,7 @@ ccls: .ccls
 cdb: compile_commands.json
 
 .ccls: FORCE
-	echo 'clang' > "$@";
+	echo '%compile_commands.json' > "$@";
 	{                                                                     \
 	  if [[ -n "$(NIX_CC)" ]]; then                                       \
 	    $(CAT) "$(NIX_CC)/nix-support/libc-cflags";                       \
@@ -360,11 +362,12 @@ compile_commands.json: $(COMMON_HEADERS) $(ALL_SRCS)
 	$(info $$CXX_SYSTEM_INCDIRS is [${CXX_SYSTEM_INCDIRS}])
 
 	$(MKDIR_P) $(MAKEFILE_DIR)/bear.d
-	ln -sf $(shell dirname $(shell command -v $(BEAR)))/../lib/bear/wrapper bear.d/c++
+	ln -sf $(shell dirname $(shell command -v $(BEAR)))/../lib/bear/wrapper  \
+	       bear.d/c++;
 
 	EXTRA_CXXFLAGS='$(patsubst %,-isystem %,$(CXX_SYSTEM_INCDIRS))'  \
 	  PATH="$(MAKEFILE_DIR)/bear.d/:$(PATH)"                         \
-	  $(BEAR) -- $(MAKE) -C $(MAKEFILE_DIR) -j bin;
+	  $(BEAR) -- $(MAKE) -C $(MAKEFILE_DIR) -j bin tests;
 
 
 # ---------------------------------------------------------------------------- #

@@ -88,8 +88,8 @@ main( int argc, char * argv[] )
 
       return err.getErrorCode();
     }
-  // TODO: we may want to catch these closer to where they are originally
-  // thrown.
+  // TODO: we may want to catch these closer to where they are
+  //       originally thrown.
   // TODO: handle IFD build errors.
   catch ( const nix::Error & err )
     {

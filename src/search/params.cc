@@ -113,23 +113,181 @@ SearchQuery::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 
 /* -------------------------------------------------------------------------- */
 
-}  // namespace flox::search
+std::optional<std::filesystem::path>
+SearchParams::getLockfilePath()
+{
+  if ( this->lockfile.has_value() )
+    {
+      if ( std::holds_alternative<std::filesystem::path>( *this->lockfile ) )
+        {
+          return std::get<std::filesystem::path>( *this->lockfile );
+        }
+      return "<INLINE-LOCKFILE>.json";
+    }
+  return std::nullopt;
+}
 
 
 /* -------------------------------------------------------------------------- */
 
-/* Instantiate templates. */
-namespace flox::pkgdb {
+std::optional<resolver::LockfileRaw>
+SearchParams::getLockfileRaw()
+{
+  if ( ! this->lockfile.has_value() ) { return std::nullopt; }
+  if ( std::holds_alternative<resolver::LockfileRaw>( *this->lockfile ) )
+    {
+      return std::get<resolver::LockfileRaw>( *this->lockfile );
+    }
+  return readAndCoerceJSON(
+    std::get<std::filesystem::path>( *this->lockfile ) );
+}
 
-template struct QueryParams<search::SearchQuery>;
 
-template void
-from_json( const nlohmann::json &, QueryParams<search::SearchQuery> & );
+/* -------------------------------------------------------------------------- */
 
-template void
-to_json( nlohmann::json &, const QueryParams<search::SearchQuery> & );
+std::optional<std::filesystem::path>
+SearchParams::getGlobalManifestPath()
+{
+  if ( this->globalManifest.has_value() )
+    {
+      if ( std::holds_alternative<std::filesystem::path>(
+             *this->globalManifest ) )
+        {
+          return std::get<std::filesystem::path>( *this->globalManifest );
+        }
+      return "<INLINE-GLOBAL-MANIFEST>.json";
+    }
+  return std::nullopt;
+}
 
-}  // namespace flox::pkgdb
+
+/* -------------------------------------------------------------------------- */
+
+std::optional<resolver::GlobalManifestRaw>
+SearchParams::getGlobalManifestRaw()
+{
+  if ( ! this->globalManifest.has_value() ) { return std::nullopt; }
+  if ( std::holds_alternative<resolver::GlobalManifestRaw>(
+         *this->globalManifest ) )
+    {
+      return std::get<resolver::GlobalManifestRaw>( *this->globalManifest );
+    }
+  return readAndCoerceJSON(
+    std::get<std::filesystem::path>( *this->globalManifest ) );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+std::filesystem::path
+SearchParams::getManifestPath()
+{
+  if ( std::holds_alternative<std::filesystem::path>( this->manifest ) )
+    {
+      return std::get<std::filesystem::path>( this->manifest );
+    }
+  return "<INLINE-MANIFEST>.json";
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+resolver::ManifestRaw
+SearchParams::getManifestRaw()
+{
+  if ( std::holds_alternative<resolver::ManifestRaw>( this->manifest ) )
+    {
+      return std::get<resolver::ManifestRaw>( this->manifest );
+    }
+  return readAndCoerceJSON( std::get<std::filesystem::path>( this->manifest ) );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+from_json( const nlohmann::json & jfrom, SearchParams & params )
+{
+  assertIsJSONObject<ParseSearchQueryException>( jfrom, "search query" );
+  for ( const auto & [key, value] : jfrom.items() )
+    {
+      if ( key == "global-manifest" )
+        {
+          try
+            {
+              value.get_to( params.globalManifest );
+            }
+          catch ( nlohmann::json::exception & e )
+            {
+              throw ParseSearchQueryException(
+                "couldn't interpret search query field `global-manifest'",
+                extract_json_errmsg( e ) );
+            }
+        }
+      else if ( key == "lockfile" )
+        {
+          try
+            {
+              value.get_to( params.lockfile );
+            }
+          catch ( nlohmann::json::exception & e )
+            {
+              throw ParseSearchQueryException(
+                "couldn't interpret search query field `lockfile'",
+                extract_json_errmsg( e ) );
+            }
+        }
+      else if ( key == "manifest" )
+        {
+          try
+            {
+              value.get_to( params.manifest );
+            }
+          catch ( nlohmann::json::exception & e )
+            {
+              throw ParseSearchQueryException(
+                "couldn't interpret search query field `lockfile'",
+                extract_json_errmsg( e ) );
+            }
+        }
+      else if ( key == "query" )
+        {
+
+          try
+            {
+              value.get_to( params.query );
+            }
+          catch ( nlohmann::json::exception & e )
+            {
+              throw ParseSearchQueryException(
+                "couldn't interpret search query field `query'",
+                extract_json_errmsg( e ) );
+            }
+        }
+      else
+        {
+          throw ParseSearchQueryException( "unrecognized field `" + key
+                                           + "' in search query" );
+        }
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+to_json( nlohmann::json & jto, const SearchParams & params )
+{
+  jto = { { "global-manifest", params.globalManifest },
+          { "manifest", params.manifest },
+          { "lockfile", params.lockfile },
+          { "query", params.query } };
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+}  // namespace flox::search
 
 
 /* -------------------------------------------------------------------------- *
