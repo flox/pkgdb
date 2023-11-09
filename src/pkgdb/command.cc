@@ -7,17 +7,37 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include <iostream>
+#include <filesystem>
+#include <memory>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <variant>
 
-#include <nix/eval-cache.hh>
-#include <nix/eval.hh>
+#include <argparse/argparse.hpp>
 #include <nix/flake/flake.hh>
-#include <nix/shared.hh>
-#include <nix/store-api.hh>
+#include <nix/ref.hh>
+#include <nix/types.hh>
+#include <nix/util.hh>
 
+#include "flox/core/command.hh"
+#include "flox/core/exceptions.hh"
 #include "flox/core/util.hh"
+#include "flox/flox-flake.hh"
 #include "flox/pkgdb/command.hh"
+#include "flox/pkgdb/read.hh"
 #include "flox/pkgdb/write.hh"
+#include "flox/registry.hh"
+
+
+/* -------------------------------------------------------------------------- */
+
+/* Forward Declarations. */
+
+namespace nix {
+class Store;
+}
+
 
 /* -------------------------------------------------------------------------- */
 

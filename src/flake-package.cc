@@ -1,8 +1,16 @@
 /* ========================================================================== *
  *
+ * @file flake-package.cc
+ *
+ * @brief Provides a @a flox::Package implementation which are pulled from
+ *        evaluation of a `nix` flake.
  *
  *
  * -------------------------------------------------------------------------- */
+
+#include <stdexcept>
+
+#include <nix/eval-cache.hh>
 
 #include "flox/flake-package.hh"
 #include "versions.hh"

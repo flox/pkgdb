@@ -10,10 +10,12 @@
 #pragma once
 
 #include <filesystem>
+#include <string>
 
-#include <nlohmann/json.hpp>
+#include <nix/flake/flakeref.hh>
 
-#include "flox/package.hh"
+#include "flox/core/types.hh"
+#include "flox/pkgdb/pkg-query.hh"
 #include "flox/pkgdb/read.hh"
 #include "flox/raw-package.hh"
 

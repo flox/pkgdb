@@ -7,13 +7,29 @@
  *
  * -------------------------------------------------------------------------- */
 
+#include <algorithm>
+#include <cstddef>
 #include <list>
-#include <set>
+#include <map>
+#include <memory>
+#include <optional>
 #include <sstream>
+#include <string>
+#include <string_view>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
 
+#include <nix/config.hh>
+#include <nix/globals.hh>
+#include <nlohmann/json.hpp>
+#include <sqlite3pp.hh>
+
+#include "flox/core/types.hh"
 #include "flox/core/util.hh"
 #include "flox/pkgdb/pkg-query.hh"
-#include "flox/pkgdb/write.hh"
+#include "versions.hh"
 
 
 /* -------------------------------------------------------------------------- */

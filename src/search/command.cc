@@ -7,18 +7,30 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include <fstream>
-#include <functional>
+#include <cstdlib>
+#include <filesystem>
+#include <iostream>
+#include <memory>
+#include <optional>
+#include <string>
+#include <variant>
 #include <vector>
 
+#include <argparse/argparse.hpp>
+#include <nix/ref.hh>
 #include <nlohmann/json.hpp>
 
-#include "flox/core/exceptions.hh"
+#include "flox/core/command.hh"
 #include "flox/core/util.hh"
-#include "flox/flox-flake.hh"
-#include "flox/pkgdb/command.hh"
-#include "flox/pkgdb/write.hh"
+#include "flox/pkgdb/input.hh"
+#include "flox/pkgdb/pkg-query.hh"
+#include "flox/pkgdb/read.hh"
+#include "flox/registry.hh"
+#include "flox/resolver/environment.hh"
+#include "flox/resolver/lockfile.hh"
+#include "flox/resolver/manifest.hh"
 #include "flox/search/command.hh"
+#include "flox/search/params.hh"
 
 
 /* -------------------------------------------------------------------------- */

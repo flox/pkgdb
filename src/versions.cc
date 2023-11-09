@@ -8,10 +8,19 @@
  *
  * -------------------------------------------------------------------------- */
 
+#include <istream>
+#include <list>
+#include <map>
 #include <optional>
 #include <regex>
-#include <stdexcept>
 #include <string>
+#include <string_view>
+#include <sys/types.h>
+#include <utility>
+#include <vector>
+
+#include <nix/types.hh>
+#include <nix/util.hh>
 
 #include "versions.hh"
 

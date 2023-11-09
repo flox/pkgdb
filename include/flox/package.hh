@@ -15,7 +15,7 @@
 #include <variant>
 #include <vector>
 
-#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 
 #include <nix/eval-cache.hh>
 #include <nix/fetchers.hh>
@@ -45,13 +45,25 @@ class Package
 
 public:
 
+  virtual ~Package()         = default;
+  Package()                  = default;
+  Package( const Package & ) = default;
+  Package( Package && )      = default;
+
+  Package &
+  operator=( const Package & )
+    = default;
+  Package &
+  operator=( Package && )
+    = default;
+
   /** @return attribute path where package is defined */
-  virtual AttrPath
+  [[nodiscard]] virtual AttrPath
   getPathStrs() const
     = 0;
 
   /** @return the derivation `name` field. */
-  virtual std::string
+  [[nodiscard]] virtual std::string
   getFullName() const
     = 0;
 
@@ -60,7 +72,7 @@ public:
    *         `name` field stripped of is _version_ part as recognized by
    *         `nix::DrvName` parsing rules.
    */
-  virtual std::string
+  [[nodiscard]] virtual std::string
   getPname() const
     = 0;
 
@@ -71,16 +83,16 @@ public:
    *         If `version` is undefined and `name` contains no version suffix,
    *         then `std::nullopt`.
    */
-  virtual std::optional<std::string>
+  [[nodiscard]] virtual std::optional<std::string>
   getVersion() const = 0;
 
   /** @return The `meta.license.spdxId` field if defined,
    *          otherwise `std::nullopt` */
-  virtual std::optional<std::string>
+  [[nodiscard]] virtual std::optional<std::string>
   getLicense() const = 0;
 
   /** @return The derivation `outputs` list. */
-  virtual std::vector<std::string>
+  [[nodiscard]] virtual std::vector<std::string>
   getOutputs() const = 0;
 
   /**
@@ -88,29 +100,29 @@ public:
    *         derivation `outputs` members to the left of and
    *         including `out`.
    */
-  virtual std::vector<std::string>
+  [[nodiscard]] virtual std::vector<std::string>
   getOutputsToInstall() const = 0;
 
   /** @return The `meta.broken` field if defined, otherwise `std::nullopt`. */
-  virtual std::optional<bool>
+  [[nodiscard]] virtual std::optional<bool>
   isBroken() const = 0;
 
   /** @return The `meta.unfree` field if defined, otherwise `std::nullopt`. */
-  virtual std::optional<bool>
+  [[nodiscard]] virtual std::optional<bool>
   isUnfree() const = 0;
 
   /**
    * @return The `meta.description` field if defined,
    * otherwise `std::nullopt`.
    */
-  virtual std::optional<std::string>
+  [[nodiscard]] virtual std::optional<std::string>
   getDescription() const = 0;
 
   /**
    * @return The flake `outputs` subtree the package resides in, being one of
    *         `legacyPackages` or `packages`.
    */
-  virtual Subtree
+  [[nodiscard]] virtual Subtree
   getSubtreeType() const
   {
     return Subtree( this->getPathStrs().front() );
@@ -120,10 +132,10 @@ public:
    * @return The parsed "package name" prefix of @a this package's
    *         `name` field.
    */
-  virtual nix::DrvName
+  [[nodiscard]] virtual nix::DrvName
   getParsedDrvName() const
   {
-    return nix::DrvName( this->getFullName() );
+    return { this->getFullName() };
   }
 
   /**
@@ -131,7 +143,7 @@ public:
    *         versioning, otherwise a normalized semantic version number
    *         coerces from @a this package's `version` information.
    */
-  virtual std::optional<std::string>
+  [[nodiscard]] virtual std::optional<std::string>
   getSemver() const
   {
     std::optional<std::string> version = this->getVersion();
@@ -146,19 +158,8 @@ public:
    *            This is used to construct the URI on the left side of `#`.
    * @return An installable URI string associated with this package using.
    */
-  virtual std::string
-  toURIString( const nix::FlakeRef & ref ) const
-  {
-    std::stringstream uri;
-    uri << ref.to_string() << "#";
-    AttrPath pathS = this->getPathStrs();
-    for ( size_t i = 0; i < pathS.size(); ++i )
-      {
-        uri << '"' << pathS.at( i );
-        if ( ( i + 1 ) < pathS.size() ) { uri << "."; }
-      }
-    return uri.str();
-  }
+  [[nodiscard]] virtual std::string
+  toURIString( const nix::FlakeRef & ref ) const;
 
   /**
    * @brief Serialize notable package metadata as a JSON object.
@@ -167,55 +168,9 @@ public:
    * @param withDescription Whether to include `description` strings.
    * @return A JSON object with notable package metadata.
    */
-  virtual nlohmann::json
-  getInfo( bool withDescription = false ) const
-  {
-    System system = this->getPathStrs().at( 1 );
+  [[nodiscard]] virtual nlohmann::json
+  getInfo( bool withDescription = false ) const;
 
-    nlohmann::json jto = { { system,
-                             { { "name", this->getFullName() },
-                               { "pname", this->getPname() } } } };
-
-    std::optional<std::string> oos = this->getVersion();
-
-    if ( oos.has_value() ) { jto[system].emplace( "version", *oos ); }
-    else { jto[system].emplace( "version", nlohmann::json() ); }
-
-    oos = this->getSemver();
-    if ( oos.has_value() ) { jto[system].emplace( "semver", *oos ); }
-    else { jto[system].emplace( "semver", nlohmann::json() ); }
-
-    jto[system].emplace( "outputs", this->getOutputs() );
-    jto[system].emplace( "outputsToInstall", this->getOutputsToInstall() );
-
-    oos = this->getLicense();
-    if ( oos.has_value() ) { jto[system].emplace( "license", *oos ); }
-    else { jto[system].emplace( "license", nlohmann::json() ); }
-
-    std::optional<bool> obool = this->isBroken();
-    if ( obool.has_value() ) { jto[system].emplace( "broken", *obool ); }
-    else { jto[system].emplace( "broken", nlohmann::json() ); }
-
-    obool = this->isUnfree();
-    if ( obool.has_value() ) { jto[system].emplace( "unfree", *obool ); }
-    else { jto[system].emplace( "unfree", nlohmann::json() ); }
-
-    if ( withDescription )
-      {
-        std::optional<std::string> odesc = this->getDescription();
-        if ( odesc.has_value() )
-          {
-            jto[system].emplace( "description", *odesc );
-          }
-        else { jto[system].emplace( "description", nlohmann::json() ); }
-      }
-
-    return jto;
-  }
-
-
-  /* --------------------------------------------------------------------------
-   */
 
 }; /* End class `Package' */
 
