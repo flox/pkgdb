@@ -188,3 +188,26 @@ Next you might cruise over to github.com to the repository page and make a new
 release ( under the "Releases" section in the right hand panel ).
 When making a release just be sure to select the `v<MAJOR>.<MINOR>.<PATCH>` tag
 as the "release tag", and you're ready to roll!
+
+## Documenting Code
+
+### Doxygen Quirks
+
+For docstrings `@brief` continuations have to be indented, and for whatever reason if your block is multiple lines `/**` has to be _on its own_:
+```c++
+// Renders improperly:
+
+/** @brief It doesn't
+  * like this.
+  * I treats any unindented lines after `@brief` as _detailed documentation_.
+  * So it thinks the _brief_ is "It doesn't". */
+
+
+// Renders properly:
+
+/**
+ * @brief It does
+ *        like this.
+ * And this part is _correctly_ identified as _detailed documentation_.
+ */
+```
