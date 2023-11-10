@@ -193,7 +193,8 @@ as the "release tag", and you're ready to roll!
 
 ### Doxygen Quirks
 
-For docstrings `@brief` continuations have to be indented, and for whatever reason if your block is multiple lines `/**` has to be _on its own_:
+For docstrings `@brief` continuations have to be indented, and for whatever
+reason if your block is multiple lines `/**` has to be _on its own_:
 ```c++
 // Renders improperly:
 
