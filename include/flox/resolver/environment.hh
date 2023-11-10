@@ -102,6 +102,7 @@ private:
 
   std::shared_ptr<Registry<pkgdb::PkgDbInputFactory>> dbs;
 
+
   static LockedPackageRaw
   lockPackage( const LockedInputRaw & input,
                pkgdb::PkgDbReadOnly & dbRO,

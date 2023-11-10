@@ -9,11 +9,13 @@
 
 #pragma once
 
+#include <nix/flake/flake.hh>
+#include <nlohmann/json.hpp>
+
 #include "flox/core/types.hh"
 #include "flox/core/util.hh"
 #include "flox/package.hh"
-#include <nix/flake/flake.hh>
-#include <nlohmann/json.hpp>
+#include "flox/pkgdb/read.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -138,8 +140,11 @@ public:
     return this->description;
   }
 
+
 }; /* End class `RawPackage' */
 
+
+/* -------------------------------------------------------------------------- */
 
 /** @brief Convert a JSON object to a @a flox::RawPackage. */
 void
@@ -318,6 +323,7 @@ to_json( nlohmann::json & jto, const flox::RawPackage & pkg )
           { "unfree", pkg.unfree },
           { "description", pkg.description } };
 }
+
 
 /* -------------------------------------------------------------------------- */
 
