@@ -38,5 +38,13 @@
             "<yaml-cpp/yaml.h>",
             "public"
         ]
+    },
+    {
+        "symbol": [
+            "std::pair",
+            "private",
+            "<utility>",
+            "public"
+        ]
     }
 ]

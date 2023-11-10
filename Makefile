@@ -390,7 +390,8 @@ CXX_SYSTEM_INCDIRS := $(shell                                 \
   $(CXX) -E -Wp,-v -xc++ /dev/null 2>&1 1>/dev/null           \
   |$(GREP) -v 'framework directory'|$(GREP) '^ /nix/store')
 
-BEAR_WRAPPER := $(dir $(shell command -v $(BEAR)))/../lib/bear/wrapper
+BEAR_WRAPPER := $(dir $(shell command -v $(BEAR)))
+BEAR_WRAPPER := $(dir $(patsubst %/,%,$(BEAR_WRAPPER)))lib/bear/wrapper
 
 bear.d/c++:
 	$(MKDIR_P) $(@D);
