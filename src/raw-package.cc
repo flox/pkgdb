@@ -187,7 +187,10 @@ void
 to_json( nlohmann::json & jto, const flox::RawPackage & pkg )
 {
   jto = { { "path", pkg.path },
-          { "name", pkg.name, },
+          {
+            "name",
+            pkg.name,
+          },
           { "pname", pkg.pname },
           { "version", pkg.version },
           { "semver", pkg.semver },

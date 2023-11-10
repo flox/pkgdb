@@ -10,19 +10,15 @@
 #pragma once
 
 #include <filesystem>
-#include <functional>  // For `std::hash' and `std::pair'
-#include <list>
-#include <optional>
+#include <initializer_list>
 #include <sstream>
 #include <string>  // For `std::string' and `std::string_view'
+#include <string_view>
 #include <variant>
 #include <vector>
 
-#include <nix/eval-cache.hh>
+#include <nix/attrs.hh>
 #include <nix/flake/flakeref.hh>
-#include <nix/logging.hh>
-#include <nix/store-api.hh>
-
 #include <nlohmann/json.hpp>
 
 #include "flox/core/exceptions.hh"

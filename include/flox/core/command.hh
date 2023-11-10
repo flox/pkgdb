@@ -9,16 +9,17 @@
 
 #pragma once
 
-#include <filesystem>
 #include <memory>
-#include <optional>
+#include <string>
+#include <string_view>
 
 #include <argparse/argparse.hpp>
+#include <nix/flake/flakeref.hh>
 
+#include "flox/core/exceptions.hh"
 #include "flox/core/nix-state.hh"
 #include "flox/core/types.hh"
 #include "flox/core/util.hh"
-#include "flox/flox-flake.hh"
 #include "flox/registry.hh"
 
 

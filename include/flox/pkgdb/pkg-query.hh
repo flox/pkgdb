@@ -9,23 +9,34 @@
 
 #pragma once
 
-#include <functional>
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
-#include <nix/shared.hh>
+#include <nix/config.hh>
+#include <nix/globals.hh>
 #include <nlohmann/json.hpp>
-#include <sqlite3pp.hh>
 
 #include "compat/concepts.hh"
 #include "flox/core/exceptions.hh"
 #include "flox/core/types.hh"
-#include "flox/core/util.hh"
+
+
+/* -------------------------------------------------------------------------- */
+
+/* Forward Declarations. */
+
+namespace sqlite3pp {
+class database;
+class query;
+}  // namespace sqlite3pp
 
 
 /* -------------------------------------------------------------------------- */

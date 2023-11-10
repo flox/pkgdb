@@ -7,9 +7,16 @@
  *
  * -------------------------------------------------------------------------- */
 
+#include <algorithm>
+#include <cctype>
 #include <cstdio>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <initializer_list>
+#include <string>
+#include <string_view>
+#include <vector>
 
 #include <nlohmann/json.hpp>
 
