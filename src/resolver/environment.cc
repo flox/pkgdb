@@ -96,8 +96,11 @@ Environment::getOldManifestRaw() const
 
 /* -------------------------------------------------------------------------- */
 
-// Helper function for groupIsLocked.
-// A system is skipped if systems is specified but that system is not.
+/**
+ * @brief Helper function for @a flox::resolver::Environment::groupIsLocked.
+ *
+ * A system is skipped if systems is specified but that system is not.
+ */
 bool
 systemSkipped( const System &                             system,
                const std::optional<std::vector<System>> & systems )
@@ -120,8 +123,8 @@ Environment::groupIsLocked( const InstallDescriptors & group,
 
   for ( auto & [iid, descriptor] : group )
     {
-      // If the descriptor has changed compared to the one in the lockfile
-      // manifest, it needs to be locked again.
+      /* If the descriptor has changed compared to the one in the lockfile
+       * manifest, it needs to be locked again. */
       if ( auto oldDescriptorPair = oldDescriptors.find( iid );
            oldDescriptorPair != oldDescriptors.end() )
         {
@@ -138,7 +141,7 @@ Environment::groupIsLocked( const InstallDescriptors & group,
             {
               return false;
             }
-          // Ignore changes to systems other than the one we're locking
+          /* Ignore changes to systems other than the one we're locking. */
           if ( systemSkipped( system, descriptor.systems )
                != systemSkipped( system, oldDescriptor.systems ) )
             {
@@ -152,15 +155,15 @@ Environment::groupIsLocked( const InstallDescriptors & group,
       if ( auto oldLockedPackagePair = oldSystemPackages.find( iid );
            oldLockedPackagePair != oldSystemPackages.end() )
         {
-          // Note: we could relock if the prior locking attempt was null
+          /* NOTE: we could relock if the prior locking attempt was null */
           // auto & [_, oldLockedPackage] = *oldLockedPackagePair;
           // if ( !oldLockedPackage.has_value()) { return false; }
         }
-      // If the descriptor doesn't even exist in the lockfile lock, it needs to
-      // be locked again.
+      /* If the descriptor doesn't even exist in the lockfile lock, it needs to
+       * be locked again. */
       else { return false; }
     }
-  // We haven't found something unlocked, so everything must be locked.
+  /* We haven't found something unlocked, so everything must be locked. */
   return true;
 }
 
@@ -196,7 +199,7 @@ Environment::getLockedGroups( const System & system )
 
   auto groupedDescriptors = this->getManifest().getGroupedDescriptors();
 
-  // remove all groups that are ~not~ already locked
+  /* Remove all groups that are ~not~ already locked. */
   for ( auto group = groupedDescriptors.begin();
         group != groupedDescriptors.end(); )
     {
@@ -397,8 +400,8 @@ Environment::lockSystem( const System & system )
       msg << "failed to resolve some packages(s):";
       for ( const auto & group : groups )
         {
-          // TODO tryResolveGroupIn should report which packages failed to
-          // resolve
+          // TODO tryResolveGroupIn should report which packages failed
+          //      to resolve.
           if ( auto descriptor = group.begin();
                descriptor != group.end()
                && descriptor->second.group.has_value() )
@@ -424,7 +427,7 @@ Environment::lockSystem( const System & system )
     }
 
 
-  // Copy over old lockfile entries we want to keep
+  /* Copy over old lockfile entries we want to keep. */
   if ( auto oldLockfile = this->getOldLockfile() )
     {
       SystemPackages systemPackages

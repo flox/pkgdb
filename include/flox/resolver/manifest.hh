@@ -481,8 +481,11 @@ public:
     return this->descriptors;
   }
 
-  /** @brief Returns all descriptors, grouping those with a _group_ field, and
-   * returning those without a group field as a map with a single element */
+  /**
+   * @brief Returns all descriptors, grouping those with a _group_ field, and
+   *        returning those without a group field as a map with a
+   *        single element.
+   */
   [[nodiscard]] std::vector<InstallDescriptors>
   getGroupedDescriptors() const;
 
