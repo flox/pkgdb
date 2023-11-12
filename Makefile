@@ -98,6 +98,13 @@ TEST_DATA_DIR = $(MAKEFILE_DIR)/tests/data
 
 # ---------------------------------------------------------------------------- #
 
+# Files which effect dependencies, external inputs, and `*FLAGS' values.
+DEPFILES =  flake.nix flake.lock pkg-fun.nix pkgs/nlohmann_json.nix
+DEPFILES += pkgs/nix/pkg-fun.nix
+
+
+# ---------------------------------------------------------------------------- #
+
 # You can disable these optional gripes with `make EXTRA_CXXFLAGS='' ...;'
 ifndef EXTRA_CXXFLAGS
 EXTRA_CXXFLAGS = -Wall -Wextra -Wpedantic
@@ -345,12 +352,12 @@ install-include:                                                     \
 PRE_COMPILED_HEADERS = $(patsubst %,%.gch,$(COMMON_HEADERS))
 CLEANFILES += $(PRE_COMPILED_HEADERS)
 
-$(PRE_COMPILED_HEADERS): CXXFLAGS += -Wno-pragma-once-outside-header
 $(PRE_COMPILED_HEADERS): CXXFLAGS += $(lib_CXXFLAGS) $(bin_CXXFLAGS)
-$(PRE_COMPILED_HEADERS): $(COMMON_HEADERS)
+$(PRE_COMPILED_HEADERS): $(COMMON_HEADERS) $(DEPFILES)
+$(PRE_COMPILED_HEADERS): $(lastword $(MAKEFILE_LIST))
 $(PRE_COMPILED_HEADERS): %.gch: %
-	-echo "Generating pre-compiled header \`$@' ( warnings are suppressed )" >&2;
-	$(CXX) $(CXXFLAGS) -x c++ -c $< -o $@ 2>/dev/null;
+	@echo "Generating pre-compiled header \`$@' ( warnings are suppressed )" >&2;
+	$(CXX) $(CXXFLAGS) -x c++-header -c $< -o $@ 2>/dev/null;
 
 pre-compiled-headers: $(PRE_COMPILED_HEADERS)
 
@@ -367,7 +374,7 @@ clean-pch: FORCE
 ccls: .ccls
 cdb: compile_commands.json ccls
 
-.ccls: FORCE
+.ccls: $(lastword $(MAKEFILE_LIST)) $(DEPFILES)
 	echo '%compile_commands.json' > "$@";
 	{                                                                     \
 	  if [[ -n "$(NIX_CC)" ]]; then                                       \
@@ -386,9 +393,10 @@ cdb: compile_commands.json ccls
 # /nix/store/q2d0ya7rc5kmwbwvsqc2djvv88izn1q6-apple-framework-CoreFoundation-11.0.0/Library/Frameworks (framework directory)
 # We might be able to strip '(framework directory)' instead and append
 # CoreFoundation.framework/Headers but I don't think we need to.
-CXX_SYSTEM_INCDIRS := $(shell                                 \
+_CXX_SYSTEM_INCDIRS := $(shell                                \
   $(CXX) -E -Wp,-v -xc++ /dev/null 2>&1 1>/dev/null           \
   |$(GREP) -v 'framework directory'|$(GREP) '^ /nix/store')
+_CXX_SYSTEM_INCDIRS := $(patsubst %,-isystem %,$(_CXX_SYSTEM_INCDIRS))
 
 BEAR_WRAPPER := $(dir $(shell command -v $(BEAR)))
 BEAR_WRAPPER := $(dir $(patsubst %/,%,$(BEAR_WRAPPER)))lib/bear/wrapper
@@ -399,16 +407,15 @@ bear.d/c++:
 
 CLEANDIRS += bear.d
 
-compile_commands.json: bear.d/c++ flake.nix flake.lock pkg-fun.nix
+compile_commands.json: EXTRA_CXXFLAGS += $(_CXX_SYSTEM_INCDIRS)
+compile_commands.json: bear.d/c++ $(DEPFILES)
 compile_commands.json: $(lastword $(MAKEFILE_LIST))
 compile_commands.json: $(COMMON_HEADERS) $(ALL_SRCS)
 	-$(MAKE) -C $(MAKEFILE_DIR) clean;
-	$(info $$CXX_SYSTEM_INCDIRS is [${CXX_SYSTEM_INCDIRS}])
-
-	EXTRA_CXXFLAGS='$(patsubst %,-isystem %,$(CXX_SYSTEM_INCDIRS))'  \
-	  PATH="$(MAKEFILE_DIR)/bear.d/:$(PATH)"                         \
+	EXTRA_CXXFLAGS='$(EXTRA_CXXFLAGS)'                     \
+	  PATH="$(MAKEFILE_DIR)/bear.d/:$(PATH)"               \
 	  $(BEAR) -- $(MAKE) -C $(MAKEFILE_DIR) -j bin tests;
-	EXTRA_CXXFLAGS='$(patsubst %,-isystem %,$(CXX_SYSTEM_INCDIRS))'            \
+	EXTRA_CXXFLAGS='$(EXTRA_CXXFLAGS)'                                         \
 	  PATH="$(MAKEFILE_DIR)/bear.d/:$(PATH)"                                   \
 	  $(BEAR) --append -- $(MAKE) -C $(MAKEFILE_DIR) -j pre-compiled-headers;
 		$(MAKE) -C $(MAKEFILE_DIR) clean-pch;
@@ -497,7 +504,7 @@ PC_CFLAGS += -isystem $(nix_INCDIR) -include $(nix_INCDIR)/nix/config.h
 PC_CFLAGS += '-DFLOX_PKGDB_VERSION=\\\\\"$(VERSION)\\\\\"'
 PC_CFLAGS += '-DSEMVER_PATH=\\\\\"$(SEMVER_PATH)\\\\\"'
 PC_LIBS   =  $(shell $(PKG_CONFIG) --libs-only-L nix-main) -lnixfetchers
-lib/pkgconfig/flox-pkgdb.pc: Makefile
+lib/pkgconfig/flox-pkgdb.pc: $(lastword $(MAKEFILE_LIST)) $(DEPFILES)
 lib/pkgconfig/flox-pkgdb.pc: lib/pkgconfig/flox-pkgdb.pc.in version
 	$(SED) -e 's,@PREFIX@,$(PREFIX),g'     \
 	       -e 's,@VERSION@,$(VERSION),g'   \
@@ -516,6 +523,7 @@ ignores: tests/.gitignore
 tests/.gitignore: FORCE
 	$(MKDIR_P) $(@D);
 	printf '%s\n' $(patsubst tests/%,%,$(test_SRCS:.cc=)) > $@;
+
 
 # ---------------------------------------------------------------------------- #
 

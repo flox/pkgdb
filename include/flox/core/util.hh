@@ -240,14 +240,8 @@ isSQLiteDb( const std::string & dbPath );
  * @param flakeRef JSON or URI string representing a `nix` flake reference.
  * @return Parsed flake reference object.
  */
-static inline nix::FlakeRef
-parseFlakeRef( const std::string & flakeRef )
-{
-  return ( flakeRef.find( '{' ) == std::string::npos )
-           ? nix::parseFlakeRef( flakeRef )
-           : nix::FlakeRef::fromAttrs(
-             nix::fetchers::jsonToAttrs( nlohmann::json::parse( flakeRef ) ) );
-}
+nix::FlakeRef
+parseFlakeRef( const std::string & flakeRef );
 
 
 /* -------------------------------------------------------------------------- */
@@ -384,12 +378,12 @@ assertIsJSONObject( const nlohmann::json & value,
 /* -------------------------------------------------------------------------- */
 
 /**
- * @brief Merge two @a std::vectors by putting all elements of the higher
- *        prioirty vector first, then appending the deduplicated keys of the
- *        lower priortity vector.
+ * @brief Merge two @a std::vector containers by putting all elements of the
+ *        higher prioirty vector first, then appending the deduplicated keys of
+ *        the lower priortity vector.
  * @param lower The lower priority @a std::vector.
  * @param higher The higher priority @a std::vector.
- * @return The merged @a std::vector
+ * @return The merged @a std::vector.
  */
 template<typename T>
 std::vector<T>
@@ -405,6 +399,7 @@ merge_vectors( const std::vector<T> & lower, const std::vector<T> & higher )
     }
   return merged;
 }
+
 
 /* -------------------------------------------------------------------------- */
 

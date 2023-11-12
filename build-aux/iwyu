@@ -196,7 +196,7 @@ _iwyu_args+=( -p "$_PROJECT_ROOT" );
 if [[ "${#_SOURCES[@]}" -gt 0 ]]; then _iwyu_args+=( "${_SOURCES[@]}" ); fi
 
 # Add `--' separator to begin args for underlying `include-what-you-use' util.
-_iwyu_args+=(  
+_iwyu_args+=(
   --
   -Xiwyu --mapping_file="$_PROJECT_ROOT/build-aux/iwyu-mappings.json"
 );
