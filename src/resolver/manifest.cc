@@ -186,33 +186,36 @@ Manifest::Manifest( std::filesystem::path manifestPath )
 
 /* -------------------------------------------------------------------------- */
 
-std::unordered_map<GroupName, InstallDescriptors>
+std::vector<InstallDescriptors>
 Manifest::getGroupedDescriptors() const
 {
+  /* Group all packages into a map with group name as key. */
   std::unordered_map<GroupName, InstallDescriptors> grouped;
+  InstallDescriptors                                defaultGroup;
   for ( const auto & [iid, desc] : this->descriptors )
     {
-      if ( ! desc.group.has_value() ) { continue; }
-      grouped.try_emplace( *desc.group, InstallDescriptors {} );
-      grouped.at( *desc.group ).emplace( iid, desc );
+      // TODO: Use manifest options to decide how ungrouped descriptors
+      //       are grouped.
+      /* For now add all descriptors without a group to `defaultGroup`. */
+      if ( ! desc.group.has_value() ) { defaultGroup.emplace( iid, desc ); }
+      else
+        {
+          grouped.try_emplace( *desc.group, InstallDescriptors {} );
+          grouped.at( *desc.group ).emplace( iid, desc );
+        }
     }
-  return grouped;
-}
 
-
-/* -------------------------------------------------------------------------- */
-
-InstallDescriptors
-Manifest::getUngroupedDescriptors() const
-{
-  InstallDescriptors ungrouped;
-  for ( const auto & [iid, desc] : this->descriptors )
+  /* Add all groups to a vector.
+   * Don't use a map with group name because the defaultGroup doesn't have
+   * a name. */
+  std::vector<InstallDescriptors> allDescriptors;
+  allDescriptors.emplace_back( defaultGroup );
+  for ( const auto & [_, group] : grouped )
     {
-      if ( ! desc.group.has_value() ) { ungrouped.emplace( iid, desc ); }
+      allDescriptors.emplace_back( group );
     }
-  return ungrouped;
+  return allDescriptors;
 }
-
 
 /* -------------------------------------------------------------------------- */
 

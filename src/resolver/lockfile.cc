@@ -38,7 +38,7 @@ LockfileRaw::check() const
 void
 Lockfile::checkGroups() const
 {
-  for ( const auto & [groupName, group] :
+  for ( const InstallDescriptors & group :
         this->getManifest().getGroupedDescriptors() )
     {
       for ( const auto & system : this->manifest.getSystems() )
@@ -67,8 +67,19 @@ Lockfile::checkGroups() const
               else if ( groupInput->fingerprint
                         != maybeLocked->input.fingerprint )
                 {
-                  throw InvalidLockfileException( "invalid group `" + groupName
-                                                  + "' uses multiple inputs" );
+                  if ( auto descriptor = group.begin();
+                       descriptor != group.end()
+                       && descriptor->second.group.has_value() )
+                    {
+                      throw InvalidLockfileException(
+                        "invalid group `" + *descriptor->second.group
+                        + "' uses multiple inputs" );
+                    }
+                  else
+                    {
+                      throw InvalidLockfileException(
+                        "invalid toplevel group uses multiple inputs" );
+                    }
                 }
             }
         }

@@ -481,14 +481,13 @@ public:
     return this->descriptors;
   }
 
-  /** @brief Organize a set of descriptors by their _group_ field. */
-  [[nodiscard]] std::unordered_map<GroupName, InstallDescriptors>
+  /**
+   * @brief Returns all descriptors, grouping those with a _group_ field, and
+   *        returning those without a group field as a map with a
+   *        single element.
+   */
+  [[nodiscard]] std::vector<InstallDescriptors>
   getGroupedDescriptors() const;
-
-  /** @brief Get descriptors which are not part of a group. */
-  [[nodiscard]] InstallDescriptors
-  getUngroupedDescriptors() const;
-
 
 }; /* End class `Manifest' */
 
