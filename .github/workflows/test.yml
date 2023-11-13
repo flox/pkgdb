@@ -56,7 +56,7 @@ jobs:
           echo '${{ secrets.FLOX_STORE_PUBLIC_NIX_SECRET_KEY }}'  \
                > /tmp/secret-key
           {
-            printf 'extra-substituters = s3://flox-store';
+            printf 'extra-trusted-substituters = s3://flox-store';
             printf '?secret-key=/tmp/secret-key&write-nar-listing=1';
             echo '&ls-compression=br';
 
