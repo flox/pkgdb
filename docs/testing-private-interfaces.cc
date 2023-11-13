@@ -1,7 +1,7 @@
 /* ========================================================================== *
  *
  * This file provides two approaches which allow us to unit test non-public
- * methods of a class.
+ * class methods.
  *
  * We prefer Approach 1 because it does not pollute public headers, but
  * Approach 2 is also provided for reference.
