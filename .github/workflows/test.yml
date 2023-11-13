@@ -1,3 +1,17 @@
+# ============================================================================ #
+#
+# Build `pkgdb' and run its test suite.
+#
+# TODO:
+# - Avoid `make bin' by using `nix build' outputs with test suite.
+# - Avoid pushing the full `nix' store by pushing a list of store paths at the
+#   start of the job and comparing it with the list of store paths at the end
+#   of the job.
+#   See `github:flox/install-flox-action' for an example.
+#
+#
+# ---------------------------------------------------------------------------- #
+
 name: Test
 on:
   # No need to run on `main` since we have `merge_group' and `pull_request'.
@@ -152,3 +166,10 @@ jobs:
               contains( needs.*.result, 'cancelled' )
            }}
         run: exit 1
+
+
+# ---------------------------------------------------------------------------- #
+#
+#
+#
+# ============================================================================ #

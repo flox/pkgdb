@@ -47,11 +47,13 @@
       nix = final.callPackage ./pkgs/nix/pkg-fun.nix {};
     };
 
-    # Cherry pick `semver' recipe from floco.
+    # Cherry pick `semver' recipe from `floco'.
     overlays.semver = final: prev: {
       semver = let
         base = final.callPackage "${floco}/fpkgs/semver" {
-          inherit nixpkgs;
+          nixpkgs = throw ( "`nixpkgs' should not be references when `pkgsFor' "
+                            + "is provided"
+                          );
           inherit (final) lib;
           pkgsFor = final;
           nodePackage = final.nodejs;
@@ -127,7 +129,6 @@
       interactivePkgs = [
         # For profiling
         pkgs.lcov
-        ( if pkgs.stdenv.cc.isGNU or false then pkgs.gdb else pkgs.lldb )
         # For IDEs
         pkgs.ccls
         pkgs.bear
@@ -135,6 +136,7 @@
         pkgs.clang-tools_16
         pkgs.include-what-you-use
         # For debugging
+        ( if pkgs.stdenv.cc.isGNU or false then pkgs.gdb else pkgs.lldb )
       ] ++ ( if pkgs.stdenv.isLinux or false then [pkgs.valgrind] else [] );
 
       mkPkgdbShell = name: packages: pkgs.mkShell {
