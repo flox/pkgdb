@@ -93,37 +93,41 @@
     inherit overlays packages pkgsFor;
 
     devShells = eachDefaultSystemMap ( system: let
+
       pkgs = builtins.getAttr system pkgsFor;
-      flox-pkgdb-shell = let
+
+      # For use in GitHub Actions and local development.
+      ciPkgs = let
         batsWith = pkgs.bats.withLibraries ( libs: [
           libs.bats-assert
           libs.bats-file
           libs.bats-support
         ] );
-      in pkgs.mkShell {
-        name       = "flox-pkgdb-shell";
+      in [
+        # For tests
+        batsWith
+        pkgs.jq
+        # For doc
+        pkgs.doxygen
+      ];
+
+      # For use in local development.
+      interactivePkgs = [
+        # For profiling
+        pkgs.lcov
+        ( if pkgs.stdenv.cc.isGNU or false then pkgs.gdb else pkgs.lldb )
+        # For IDEs
+        pkgs.ccls
+        pkgs.bear
+        # For lints/fmt
+        pkgs.clang-tools_16
+        pkgs.include-what-you-use
+        # For debugging
+      ] ++ ( if pkgs.stdenv.isLinux or false then [pkgs.valgrind] else [] );
+
+      mkPkgdbShell = name: packages: pkgs.mkShell {
+        inherit name packages;
         inputsFrom = [pkgs.flox-pkgdb];
-        packages   = [
-          # For tests
-          batsWith
-          pkgs.jq
-          # For profiling
-          pkgs.lcov
-          ( if pkgs.stdenv.cc.isGNU or false then pkgs.gdb else
-            pkgs.lldb
-          )
-          # For doc
-          pkgs.doxygen
-          # For IDEs
-          pkgs.ccls
-          pkgs.bear
-          # For lints/fmt
-          pkgs.clang-tools_16
-          pkgs.include-what-you-use
-          # For debugging
-        ] ++ (
-          if pkgs.stdenv.isLinux or false then [pkgs.valgrind] else []
-        );
         inherit (pkgs.flox-pkgdb)
           nix_INCDIR boost_CFLAGS toml_CFLAGS yaml_PREFIX libExt SEMVER_PATH
         ;
@@ -139,7 +143,7 @@
           if [ -z "''${NO_WELCOME:-}" ]; then
             {
               echo "";
-              echo "Build with \`make' ( or \`make -j8' to go fast )";
+              echo "Build with \`make' ( or \`make -j' to go fast )";
               echo "";
               echo "Run with \`./bin/pkgdb --help'";
               echo "";
@@ -152,9 +156,13 @@
           fi
         '';
       };
+
+      ci    = mkPkgdbShell "ci" ciPkgs;
+      pkgdb = mkPkgdbShell "pkgdb" ( ciPkgs ++ interactivePkgs );
+
     in {
-      inherit flox-pkgdb-shell;
-      default = flox-pkgdb-shell;
+      inherit ci pkgdb;
+      default = pkgdb;
     } );
 
   };
