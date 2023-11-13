@@ -212,7 +212,7 @@ ifndef flox_pkgdb_LDFLAGS
 ifeq (Linux,$(OS))
 flox_pkgdb_LDFLAGS = -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
 else  # Darwin
-ifneq "$(findstring clean,$(MAKECMDGOALS))" ""
+ifneq "$(findstring install,$(MAKECMDGOALS))" ""
 flox_pkgdb_LDFLAGS = '-L$(LIBDIR)'
 endif # ifneq $(,$(findstring install,$(MAKECMDGOALS)))
 endif # ifeq (Linux,$(OS))
