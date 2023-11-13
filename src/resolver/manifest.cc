@@ -209,7 +209,7 @@ Manifest::getGroupedDescriptors() const
    * Don't use a map with group name because the defaultGroup doesn't have
    * a name. */
   std::vector<InstallDescriptors> allDescriptors;
-  allDescriptors.emplace_back( defaultGroup );
+  if ( ! defaultGroup.empty() ) { allDescriptors.emplace_back( defaultGroup ); }
   for ( const auto & [_, group] : grouped )
     {
       allDescriptors.emplace_back( group );

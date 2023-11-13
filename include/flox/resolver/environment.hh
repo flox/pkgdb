@@ -121,20 +121,6 @@ private:
   }
 
   /**
-   * @brief Check if lock from @ oldLockfile can be reused for a group.
-   *
-   * Checks if:
-   * - All descriptors are present in the old manifest.
-   * - No descriptors have changed in the old manifest such that the lock is
-   *   invalidated.
-   * - All descriptors are present in the old lock
-   */
-  [[nodiscard]] bool
-  groupIsLocked( const InstallDescriptors & group,
-                 const Lockfile &           oldLockfile,
-                 const System &             system );
-
-  /**
    * @brief Get groups that need to be locked as opposed to reusing locks from
    * @a oldLockfile.
    */
@@ -188,6 +174,22 @@ private:
    */
   void
   lockSystem( const System & system );
+
+protected:
+
+  /**
+   * @brief Check if lock from @ oldLockfile can be reused for a group.
+   *
+   * Checks if:
+   * - All descriptors are present in the old manifest.
+   * - No descriptors have changed in the old manifest such that the lock is
+   *   invalidated.
+   * - All descriptors are present in the old lock
+   */
+  [[nodiscard]] bool
+  groupIsLocked( const InstallDescriptors & group,
+                 const Lockfile &           oldLockfile,
+                 const System &             system );
 
 
 public:

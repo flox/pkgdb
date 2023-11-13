@@ -160,7 +160,9 @@ Environment::groupIsLocked( const InstallDescriptors & group,
           // if ( !oldLockedPackage.has_value()) { return false; }
         }
       /* If the descriptor doesn't even exist in the lockfile lock, it needs to
-       * be locked again. */
+       * be locked again. This should be unreachable since the descriptor
+       * shouldn't exist in the lockfile manifest if it doesn't exist in the
+       * lockfile lock. */
       else { return false; }
     }
   /* We haven't found something unlocked, so everything must be locked. */
@@ -409,7 +411,7 @@ Environment::lockSystem( const System & system )
 
               msg << std::endl
                   << "  some package in group " << *descriptor->second.group
-                  << "failed to resolve: ";
+                  << " failed to resolve: ";
             }
           else
             {
