@@ -1,3 +1,17 @@
+# ============================================================================ #
+#
+# Build `pkgdb' and run its test suite.
+#
+# TODO:
+# - Avoid `make bin' by using `nix build' outputs with test suite.
+# - Avoid pushing the full `nix' store by pushing a list of store paths at the
+#   start of the job and comparing it with the list of store paths at the end
+#   of the job.
+#   See `github:flox/install-flox-action' for an example.
+#
+#
+# ---------------------------------------------------------------------------- #
+
 name: Test
 on:
   # No need to run on `main` since we have `merge_group' and `pull_request'.
@@ -26,7 +40,8 @@ jobs:
             experimental-features = nix-command flakes
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
             substituters = https://cache.nixos.org
-            trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
+            trusted-substituters = https://cache.floxdev.com
+            trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= flox-store-public-0:8c/B+kjIaQ+BloCmNkRUKwaVPFWkriSAd0JJvuDu4F0=
             max-jobs = auto
             cores = 0
             substitute = true
@@ -41,7 +56,7 @@ jobs:
           echo '${{ secrets.FLOX_STORE_PUBLIC_NIX_SECRET_KEY }}'  \
                > /tmp/secret-key
           {
-            printf 'extra-substituters = s3://flox-store';
+            printf 'extra-trusted-substituters = s3://flox-store';
             printf '?secret-key=/tmp/secret-key&write-nar-listing=1';
             echo '&ls-compression=br';
 
@@ -104,7 +119,8 @@ jobs:
           echo 'Runner Version' >&2;
           { printf '    bash   version: '; bash   --version|head -n1; } >&2;
           { printf '    nix    version: '; nix    --version; } >&2;
-          NO_WELCOME=: nix develop --no-update-lock-file --command sh -c '
+          NO_WELCOME=: nix develop '.#ci' --no-update-lock-file  \
+                                          --command sh -c '
             echo "";
             echo "Development Environment Versions";
             printf "    nix    version: "; nix    --version;
@@ -112,13 +128,13 @@ jobs:
           ' >&2;
 
       - name: Run Build
-        run: nix develop --no-update-lock-file --command make -j4
+        run: nix develop '.#ci' --no-update-lock-file --command make -j4
 
       - name: Build Tests
-        run: nix develop --no-update-lock-file --command make tests -j4
+        run: nix develop '.#ci' --no-update-lock-file --command make tests -j4
 
       - name: Run Tests
-        run: nix develop --no-update-lock-file --command make check -j4
+        run: nix develop '.#ci' --no-update-lock-file --command make check -j4
 
       - name: Run Installed
         run: nix run . --no-update-lock-file -- --help
@@ -151,3 +167,10 @@ jobs:
               contains( needs.*.result, 'cancelled' )
            }}
         run: exit 1
+
+
+# ---------------------------------------------------------------------------- #
+#
+#
+#
+# ============================================================================ #
