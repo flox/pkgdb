@@ -47,10 +47,22 @@
       nix = final.callPackage ./pkgs/nix/pkg-fun.nix {};
     };
 
+    # Cherry pick `semver' recipe from floco.
+    overlays.semver = final: prev: {
+      semver = let
+        base = final.callPackage "${floco}/fpkgs/semver" {
+          inherit nixpkgs;
+          inherit (final) lib;
+          pkgsFor = final;
+          nodePackage = final.nodejs;
+        };
+      in base.overrideAttrs ( prevAttrs: { preferLocalBuild = false; } );
+    };
+
     # Aggregate dependency overlays.
     overlays.deps = nixpkgs.lib.composeManyExtensions [
       overlays.nlohmann
-      floco.overlays.default
+      overlays.semver
       overlays.nix
       sqlite3pp.overlays.default
       argparse.overlays.default
