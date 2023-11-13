@@ -9,8 +9,13 @@
 
 #include <cstddef>
 
+#include <nix/config.hh>
+#include <nix/error.hh>
 #include <nix/eval.hh>
+#include <nix/globals.hh>
+#include <nix/logging.hh>
 #include <nix/shared.hh>
+#include <nix/util.hh>
 
 #include "flox/core/nix-state.hh"
 

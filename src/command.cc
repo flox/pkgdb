@@ -8,11 +8,16 @@
  * -------------------------------------------------------------------------- */
 
 #include <algorithm>
-#include <argparse/argparse.hpp>
 #include <optional>
 #include <string>
 #include <variant>
 #include <vector>
+
+#include <argparse/argparse.hpp>
+#include <nix/config.hh>
+#include <nix/error.hh>
+#include <nix/globals.hh>
+#include <nix/logging.hh>
 
 #include "flox/core/command.hh"
 #include "flox/core/types.hh"
