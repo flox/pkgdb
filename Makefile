@@ -14,25 +14,26 @@ MAKEFILE_DIR ?= $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 
 # ---------------------------------------------------------------------------- #
 
-CXX        ?= c++
-RM         ?= rm -f
-LN         ?= ln -f
+BEAR       ?= bear
 CAT        ?= cat
+CP         ?= cp
+CXX        ?= c++
+DOXYGEN    ?= doxygen
+FMT        ?= clang-format
 GREP       ?= grep
-PKG_CONFIG ?= pkg-config
-NIX        ?= nix
-UNAME      ?= uname
+LN         ?= ln -f
 MKDIR      ?= mkdir
 MKDIR_P    ?= $(MKDIR) -p
-CP         ?= cp
-TR         ?= tr
+NIX        ?= nix
+PKG_CONFIG ?= pkg-config
+RM         ?= rm -f
 SED        ?= sed
-TEST       ?= test
-DOXYGEN    ?= doxygen
-BEAR       ?= bear
-TIDY       ?= clang-tidy
-FMT        ?= clang-format
 TEE        ?= tee
+TEST       ?= test
+TIDY       ?= clang-tidy
+TOUCH      ?= touch
+TR         ?= tr
+UNAME      ?= uname
 
 
 # ---------------------------------------------------------------------------- #
@@ -340,6 +341,15 @@ install-bin: $(addprefix $(BINDIR)/,$(BINS))
 install-lib: $(addprefix $(LIBDIR)/,$(LIBS))
 install-include:                                                     \
 	$(addprefix $(INCLUDEDIR)/,$(subst include/,,$(COMMON_HEADERS)));
+
+
+# ---------------------------------------------------------------------------- #
+
+# The nix builder deletes many of these files and they aren't used inside of
+# the nix build environment.
+# We need to ensure that these files exist nonetheless to satisfy prerequisites.
+$(DEPFILES): %:
+	if ! $(TEST) -e $<; then $(TOUCH) $@; fi
 
 
 # ---------------------------------------------------------------------------- #
