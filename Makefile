@@ -8,7 +8,7 @@ MAKEFILE_DIR ?= $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 
 # ---------------------------------------------------------------------------- #
 
-.PHONY: all clean FORCE ignores most
+.PHONY: all clean fullclean FORCE ignores most
 .DEFAULT_GOAL = most
 
 
@@ -93,6 +93,8 @@ CLEANDIRS      =
 CLEANFILES     =  $(ALL_SRCS:.cc=.o)
 CLEANFILES     += $(addprefix bin/,$(BINS)) $(addprefix lib/,$(LIBS))
 CLEANFILES     += $(TESTS) $(TEST_UTILS)
+FULLCLEANDIRS  =
+FULLCLEANFILES =
 
 TEST_DATA_DIR = $(MAKEFILE_DIR)/tests/data
 
@@ -266,6 +268,11 @@ clean: FORCE
 	-$(RM) **/*.gcno *.gcno **/*.gcda *.gcda **/*.gcov *.gcov;
 
 
+fullclean: clean
+	-$(RM) $(FULLCLEANFILES);
+	-$(RM) -r $(FULLCLEANDIRS);
+
+
 # ---------------------------------------------------------------------------- #
 
 %.o: %.cc $(COMMON_HEADERS)
@@ -380,14 +387,17 @@ clean-pch: FORCE
 
 # ---------------------------------------------------------------------------- #
 
-.PHONY: ccls cdb
+# Create `.ccls' file used by CCLS LSP as a fallback when a file is undefined
+# in `compile_commands.json'.
+# This will be ignored by other LSPs such as `clangd'.
+
+.PHONY: ccls
 ccls: .ccls
-cdb: compile_commands.json ccls
 
 .ccls: $(lastword $(MAKEFILE_LIST)) $(DEPFILES)
 	echo '%compile_commands.json' > "$@";
 	{                                                                     \
-	  if [[ -n "$(NIX_CC)" ]]; then                                       \
+	  if $(TEST) -n "$(NIX_CC)"; then                                     \
 	    $(CAT) "$(NIX_CC)/nix-support/libc-cflags";                       \
 	    $(CAT) "$(NIX_CC)/nix-support/libcxx-cxxflags";                   \
 	  fi;                                                                 \
@@ -397,6 +407,12 @@ cdb: compile_commands.json ccls
 	}|$(TR) ' ' '\n'|$(SED) 's/-std=\(.*\)/%cpp -std=\1|%h -std=\1/'      \
 	 |$(TR) '|' '\n' >> "$@";
 
+FULLCLEANFILES += .ccls
+
+
+# ---------------------------------------------------------------------------- #
+
+# Create `compile_commands.json' file used by LSPs.
 
 # Get system include paths from `nix' C++ compiler.
 # Filter out framework directory, e.g.
@@ -415,7 +431,7 @@ bear.d/c++:
 	$(MKDIR_P) $(@D);
 	$(LN) -s $(BEAR_WRAPPER) bear.d/c++;
 
-CLEANDIRS += bear.d
+FULLCLEANDIRS += bear.d
 
 compile_commands.json: EXTRA_CXXFLAGS += $(_CXX_SYSTEM_INCDIRS)
 compile_commands.json: bear.d/c++ $(DEPFILES)
@@ -430,6 +446,16 @@ compile_commands.json: $(COMMON_HEADERS) $(ALL_SRCS)
 	  $(BEAR) --append -- $(MAKE) -C $(MAKEFILE_DIR) -j pre-compiled-headers;
 		$(MAKE) -C $(MAKEFILE_DIR) clean-pch;
 
+FULLCLEANFILES += compile_commands.json
+
+
+# ---------------------------------------------------------------------------- #
+
+# Create `compile_commands.json' and `ccls' file used for LSPs.
+.PHONY: compilation-databases cdb
+compilation-databases: compile_commands.json ccls
+cdb: compilation-databases
+
 
 # ---------------------------------------------------------------------------- #
 
@@ -441,6 +467,8 @@ iwyu.log: compile_commands.json $(COMMON_HEADERS) $(ALL_SRCS) flake.nix
 iwyu.log: flake.lock pkg-fun.nix pkgs/nlohmann_json.nix pkgs/nix/pkg-fun.nix
 iwyu.log: build-aux/iwyu build-aux/iwyu-mappings.json
 	build-aux/iwyu|$(TEE) "$@";
+
+FULLCLEANFILES += iwyu.log
 
 
 # ---------------------------------------------------------------------------- #
