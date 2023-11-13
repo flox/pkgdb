@@ -25,9 +25,25 @@
     },
     {
         "include": [
+            "<sqlite3pp.ipp>",
+            "private",
+            "<sqlite3pp.hh>",
+            "public"
+        ]
+    },
+    {
+        "include": [
             "@<yaml-cpp/node/.*>",
             "private",
             "<yaml-cpp/yaml.h>",
+            "public"
+        ]
+    },
+    {
+        "symbol": [
+            "std::pair",
+            "private",
+            "<utility>",
             "public"
         ]
     }

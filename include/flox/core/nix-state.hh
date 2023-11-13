@@ -9,12 +9,22 @@
 
 #pragma once
 
-#include <nix/eval-cache.hh>
-#include <nix/logging.hh>
+#include <memory>
+
+#include <nix/eval.hh>
+#include <nix/ref.hh>
+#include <nix/repair-flag.hh>
 #include <nix/search-path.hh>
 #include <nix/store-api.hh>
 
-#include <nlohmann/json.hpp>
+
+/* -------------------------------------------------------------------------- */
+
+/* Forward Declarations. */
+
+namespace nix {
+class Logger;
+}
 
 
 /* -------------------------------------------------------------------------- */

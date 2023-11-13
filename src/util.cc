@@ -7,9 +7,16 @@
  *
  * -------------------------------------------------------------------------- */
 
+#include <algorithm>
+#include <cctype>
 #include <cstdio>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <initializer_list>
+#include <string>
+#include <string_view>
+#include <vector>
 
 #include <nlohmann/json.hpp>
 
@@ -59,6 +66,18 @@ isSQLiteDb( const std::string & dbPath )
   std::fclose( filep );  // NOLINT
   return std::string_view( &buffer[0] )
          == std::string_view( &expectedMagic[0] );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+nix::FlakeRef
+parseFlakeRef( const std::string & flakeRef )
+{
+  return ( flakeRef.find( '{' ) == std::string::npos )
+           ? nix::parseFlakeRef( flakeRef )
+           : nix::FlakeRef::fromAttrs(
+             nix::fetchers::jsonToAttrs( nlohmann::json::parse( flakeRef ) ) );
 }
 
 
