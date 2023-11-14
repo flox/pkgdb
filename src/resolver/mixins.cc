@@ -224,38 +224,6 @@ EnvironmentMixin::addGlobalManifestFileOption(
 /* -------------------------------------------------------------------------- */
 
 argparse::Argument &
-EnvironmentMixin::addGAManifestOption( argparse::ArgumentParser & parser )
-{
-  return parser.add_argument( "--ga-manifest" )
-    .help( "use a hard coded global manifest ( for `flox' GA )." )
-    .nargs( 0 )
-    .action(
-      [&]( const auto & )
-      {
-        auto nixpkgsRefJSON = nlohmann::json { { "type", "github" },
-                                               { "owner", "NixOS" },
-                                               { "repo", "nixpkgs" },
-                                               { "ref", "release-23.05" } };
-
-        auto nixpkgsRef = nix::FlakeRef::fromAttrs(
-          nix::fetchers::jsonToAttrs( nixpkgsRefJSON ) );
-
-        auto nixpkgs
-          = RegistryInput( std::vector<Subtree> { ST_LEGACY }, nixpkgsRef );
-
-        RegistryRaw registryRaw;
-        registryRaw.inputs.emplace( "nixpkgs", std::move( nixpkgs ) );
-        registryRaw.priority = std::vector<std::string> { "nixpkgs" };
-
-        this->initGlobalManifest(
-          GlobalManifestRaw( std::move( registryRaw ) ) );
-      } );
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-argparse::Argument &
 EnvironmentMixin::addManifestFileOption( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "--manifest" )
@@ -338,6 +306,72 @@ EnvironmentMixin::addFloxDirectoryOption( argparse::ArgumentParser & parser )
               + strPath );
           }
       } );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+static RegistryRaw
+getGARegistry()
+{
+  nix::FlakeRef nixpkgsRef = nlohmann::json { { "type", "github" },
+                                              { "owner", "NixOS" },
+                                              { "repo", "nixpkgs" },
+                                              { "ref", "release-23.05" } };
+
+  RegistryInput nixpkgs( std::vector<Subtree> { ST_LEGACY }, nixpkgsRef );
+  RegistryRaw   registry;
+  registry.inputs.emplace( "nixpkgs", std::move( nixpkgs ) );
+  registry.priority = std::vector<std::string> { "nixpkgs" };
+  return registry;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+GAEnvironmentMixin::initGlobalManifest( GlobalManifestRaw manifestRaw )
+{
+  if ( this->gaRegistry )
+    {
+      if ( manifestRaw.registry.has_value() )
+        {
+          throw InvalidManifestFileException(
+            "user defined `registries` are not yet supported" );
+        }
+      manifestRaw.registry = getGARegistry();
+    }
+  this->EnvironmentMixin::initGlobalManifest( std::move( manifestRaw ) );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+GAEnvironmentMixin::initManifest( ManifestRaw manifestRaw )
+{
+  if ( this->gaRegistry )
+    {
+      if ( manifestRaw.registry.has_value() )
+        {
+          throw InvalidManifestFileException(
+            "user defined `registries` are not yet supported" );
+        }
+      manifestRaw.registry = getGARegistry();
+    }
+  this->EnvironmentMixin::initManifest( std::move( manifestRaw ) );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+argparse::Argument &
+GAEnvironmentMixin::addGARegistryOption( argparse::ArgumentParser & parser )
+{
+  return parser.add_argument( "--ga-registry" )
+    .help( "use a hard coded manifest ( for `flox' GA )." )
+    .nargs( 0 )
+    .action( [&]( const auto & ) { this->gaRegistry = true; } );
 }
 
 

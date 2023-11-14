@@ -111,7 +111,7 @@ SearchCommand::SearchCommand() : parser( "search" )
 {
   this->parser.add_description(
     "Search a set of flakes and emit a list satisfactory packages." );
-  this->addGAManifestOption( this->parser );
+  this->addGARegistryOption( this->parser );
   this->addSearchParamArgs( this->parser );
   this->addFloxDirectoryOption( this->parser );
   this->addSearchQueryOptions( this->parser );

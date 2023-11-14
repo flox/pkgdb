@@ -29,7 +29,7 @@ namespace flox::search {
 /* -------------------------------------------------------------------------- */
 
 /** @brief Search flakes for packages satisfying a set of filters. */
-class SearchCommand : flox::resolver::EnvironmentMixin
+class SearchCommand : flox::resolver::GAEnvironmentMixin
 {
 
 private:
