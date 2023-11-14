@@ -44,7 +44,7 @@ SearchCommand::addSearchParamArgs( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "parameters" )
     .help( "search paramaters as inline JSON or a path to a file" )
-    .metavar( "PARAMS" )
+    .metavar( "[PARAMS]" )
     .nargs( argparse::nargs_pattern::optional )
     .action(
       [&]( const std::string & params )
