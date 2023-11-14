@@ -58,7 +58,23 @@
           pkgsFor = final;
           nodePackage = final.nodejs;
         };
-      in base.overrideAttrs ( prevAttrs: { preferLocalBuild = false; } );
+      in base.overrideAttrs ( prevAttrs: {
+        copyTree         = true;
+        preferLocalBuild = false;
+        allowSubstitutes = true;
+        # Remove symlinks.
+        postInstall = ''
+          NMDIR="$out/lib/node_modules/semver/node_modules";
+          chmod -R u+w "$NMDIR";
+          todo="$( readlink -f "$NMDIR/lru-cache"; )";
+          rm "$NMDIR/lru-cache";
+          cp -rp "$todo" "$NMDIR/lru-cache";
+          chmod -R u+w "$NMDIR/lru-cache";
+          todo="$( readlink -f "$NMDIR/lru-cache/node_modules/yallist"; )";
+          rm "$NMDIR/lru-cache/node_modules/yallist";
+          cp -rp "$todo" "$NMDIR/lru-cache/node_modules/yallist";
+        '';
+      } );
     };
 
     # Aggregate dependency overlays.
