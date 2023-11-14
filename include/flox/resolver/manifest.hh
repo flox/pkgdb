@@ -63,6 +63,7 @@ protected:
 
   /* We need these `protected' so they can be set by `Manifest'. */
   // NOLINTBEGIN(cppcoreguidelines-non-private-member-variables-in-classes)
+  // TODO: remove `manifestPath'
   std::filesystem::path manifestPath;
   ManifestRaw           manifestRaw;
   RegistryRaw           registryRaw;
@@ -82,6 +83,7 @@ public:
   GlobalManifest( const GlobalManifest & ) = default;
   GlobalManifest( GlobalManifest && )      = default;
 
+  // TODO: remove `manifestPath'
   GlobalManifest( std::filesystem::path manifestPath, GlobalManifestRaw raw )
     : manifestPath( std::move( manifestPath ) ), manifestRaw( std::move( raw ) )
   {
@@ -91,6 +93,11 @@ public:
         this->registryRaw = *this->manifestRaw.registry;
       }
   }
+
+  // TODO: remove `manifestPath'
+  explicit GlobalManifest( GlobalManifestRaw raw )
+    : GlobalManifest( "manifest.json", std::move( raw ) )
+  {}
 
   explicit GlobalManifest( std::filesystem::path manifestPath );
 
@@ -102,7 +109,7 @@ public:
   operator=( GlobalManifest && )
     = default;
 
-
+  // TODO: remove `manifestPath'
   [[nodiscard]] std::filesystem::path
   getManifestPath() const
   {
@@ -196,7 +203,14 @@ public:
   Manifest( const Manifest & ) = default;
   Manifest( Manifest && )      = default;
 
+  // TODO: remove `manifestPath'
   Manifest( std::filesystem::path manifestPath, ManifestRaw raw );
+
+  // TODO: remove `manifestPath'
+  explicit Manifest( ManifestRaw raw )
+    : Manifest( "manifest.json", std::move( raw ) )
+  {}
+
   explicit Manifest( std::filesystem::path manifestPath );
 
 

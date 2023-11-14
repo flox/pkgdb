@@ -117,6 +117,19 @@ protected:
    * private member variables.
    */
   void
+  initGlobalManifest( GlobalManifestRaw manifestRaw );
+
+  /**
+   * @brief Initialize the @a globalManifest member variable.
+   *
+   * This may only be called once and must be called before
+   * `getEnvironment()` is ever used - otherwise an exception will be thrown.
+   *
+   * This function exists so that child classes can initialize their
+   * @a flox::resolver::EnvirontMixin base at runtime without accessing
+   * private member variables.
+   */
+  void
   initGlobalManifest( GlobalManifest manifest );
 
   /**
@@ -143,6 +156,19 @@ protected:
    * private member variables.
    */
   void
+  initManifest( ManifestRaw manifestRaw );
+
+  /**
+   * @brief Initialize the @a manifest member variable.
+   *
+   * This may only be called once and must be called before
+   * `getEnvironment()` is ever used - otherwise an exception will be thrown.
+   *
+   * This function exists so that child classes can initialize their
+   * @a flox::resolver::EnvirontMixin base at runtime without accessing
+   * private member variables.
+   */
+  void
   initManifest( Manifest manifest );
 
   /**
@@ -157,6 +183,19 @@ protected:
    */
   void
   initLockfilePath( std::filesystem::path path );
+
+  /**
+   * @brief Initialize the @a lockfile member variable.
+   *
+   * This may only be called once and must be called before
+   * `getEnvironment()` is ever used - otherwise an exception will be thrown.
+   *
+   * This function exists so that child classes can initialize their
+   * @a flox::resolver::EnvirontMixin base at runtime without accessing
+   * private member variables.
+   */
+  void
+  initLockfile( LockfileRaw lockfileRaw );
 
   /**
    * @brief Initialize the @a lockfile member variable.

@@ -201,6 +201,13 @@ EnvironmentMixin::initGlobalManifestPath( std::filesystem::path path )
 }
 
 void
+EnvironmentMixin::initGlobalManifest( GlobalManifestRaw manifestRaw )
+{
+  ENV_MIXIN_THROW_IF_SET( globalManifest )
+  this->globalManifest = GlobalManifest( std::move( manifestRaw ) );
+}
+
+void
 EnvironmentMixin::initGlobalManifest( GlobalManifest manifest )
 {
   ENV_MIXIN_THROW_IF_SET( globalManifest )
@@ -218,6 +225,13 @@ EnvironmentMixin::initManifestPath( std::filesystem::path path )
 }
 
 void
+EnvironmentMixin::initManifest( ManifestRaw manifestRaw )
+{
+  ENV_MIXIN_THROW_IF_SET( manifest )
+  this->manifest = Manifest( std::move( manifestRaw ) );
+}
+
+void
 EnvironmentMixin::initManifest( Manifest manifest )
 {
   ENV_MIXIN_THROW_IF_SET( manifest )
@@ -232,6 +246,13 @@ EnvironmentMixin::initLockfilePath( std::filesystem::path path )
 {
   ENV_MIXIN_THROW_IF_SET( lockfilePath )
   this->lockfilePath = std::move( path );
+}
+
+void
+EnvironmentMixin::initLockfile( LockfileRaw lockfileRaw )
+{
+  ENV_MIXIN_THROW_IF_SET( lockfile );
+  this->lockfile = Lockfile( std::move( lockfileRaw ) );
 }
 
 void
