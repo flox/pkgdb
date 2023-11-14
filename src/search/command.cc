@@ -83,7 +83,7 @@ SearchCommand::addSearchQueryOptions( argparse::ArgumentParser & parser )
 
   parser.add_argument( "--semver" )
     .help( "search for packages by semantic version range matching." )
-    .metavar( "VERSION" )
+    .metavar( "RANGE" )
     .nargs( 1 )
     .action( [&]( const std::string & arg )
              { this->params.query.semver = arg; } );
