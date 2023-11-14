@@ -461,7 +461,9 @@ to_json( nlohmann::json & jto, const ManifestDescriptorRaw & descriptor )
 /* -------------------------------------------------------------------------- */
 
 ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
-  : name( raw.name ), optional( raw.optional ), group( raw.packageGroup )
+  : name( raw.name )
+  , optional( raw.optional.value_or( false ) )
+  , group( raw.packageGroup )
 {
   /* Determine if `version' was a range or not.
    * NOTE: The string "4.2.0" is not a range, but "4.2" is!
