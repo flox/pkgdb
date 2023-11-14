@@ -148,14 +148,10 @@ SearchParams::getLockfileRaw()
 std::optional<std::filesystem::path>
 SearchParams::getGlobalManifestPath()
 {
-  if ( this->globalManifest.has_value() )
+  if ( this->globalManifest.has_value() &&
+       std::holds_alternative<std::filesystem::path>( *this->globalManifest ) )
     {
-      if ( std::holds_alternative<std::filesystem::path>(
-             *this->globalManifest ) )
-        {
-          return std::get<std::filesystem::path>( *this->globalManifest );
-        }
-      return "<INLINE-GLOBAL-MANIFEST>.json";
+      return std::get<std::filesystem::path>( *this->globalManifest );
     }
   return std::nullopt;
 }
@@ -179,14 +175,15 @@ SearchParams::getGlobalManifestRaw()
 
 /* -------------------------------------------------------------------------- */
 
-std::filesystem::path
+std::optional<std::filesystem::path>
 SearchParams::getManifestPath()
 {
-  if ( std::holds_alternative<std::filesystem::path>( this->manifest ) )
+  if ( this->manifest.has_value() &&
+       std::holds_alternative<std::filesystem::path>( *this->manifest ) )
     {
-      return std::get<std::filesystem::path>( this->manifest );
+      return std::get<std::filesystem::path>( *this->manifest );
     }
-  return "<INLINE-MANIFEST>.json";
+  return std::nullopt;
 }
 
 
@@ -195,11 +192,12 @@ SearchParams::getManifestPath()
 resolver::ManifestRaw
 SearchParams::getManifestRaw()
 {
-  if ( std::holds_alternative<resolver::ManifestRaw>( this->manifest ) )
+  if ( ! this->manifest.has_value() ) { return {}; }
+  if ( std::holds_alternative<resolver::ManifestRaw>( *this->manifest ) )
     {
-      return std::get<resolver::ManifestRaw>( this->manifest );
+      return std::get<resolver::ManifestRaw>( *this->manifest );
     }
-  return readAndCoerceJSON( std::get<std::filesystem::path>( this->manifest ) );
+  return readAndCoerceJSON( std::get<std::filesystem::path>( *this->manifest ) );
 }
 
 

@@ -122,7 +122,8 @@ struct SearchParams
    * @brief The absolute @a std::filesystem::path to a manifest file or an
    *        inline @a flox::resolver::ManifestRaw.
    */
-  std::variant<std::filesystem::path, resolver::ManifestRaw> manifest;
+  std::optional<std::variant<std::filesystem::path, resolver::ManifestRaw>>
+  manifest;
 
   /**
    * @brief The absolute @a std::filesystem::path to a lockfile or an inline
@@ -139,38 +140,8 @@ struct SearchParams
 
 
   /**
-   * @brief If `lockfile` is unset, returns `std::nullopt`.
-   *        Otherwise returns the path to the lockfile or a phony path if the
-   *        lockfile was inlined.
-   */
-  [[nodiscard]] std::optional<std::filesystem::path>
-  getLockfilePath();
-
-  /**
-   * @brief Returns a @a flox::resolver::LockfileRaw or lazily
-   *        loads it from disk ( if provided ).
-   */
-  [[nodiscard]] std::optional<flox::resolver::LockfileRaw>
-  getLockfileRaw();
-
-  /**
-   * @brief Returns the path to the manifest or a phony path if the
-   *        manifest was inlined.
-   */
-  [[nodiscard]] std::filesystem::path
-  getManifestPath();
-
-  /**
-   * @brief Returns a @a flox::resolver::ManifestRaw or lazily
-   *        loads it from disk.
-   */
-  [[nodiscard]] flox::resolver::ManifestRaw
-  getManifestRaw();
-
-  /**
-   * @brief If `global-manifest` is unset, returns `std::nullopt`.
-   *        Otherwise returns the path to the global manifest or a phony path if
-   *        the manifest was inlined.
+   * @brief If `global-manifest` is inlined or unset, returns `std::nullopt`.
+   *        Otherwise returns the path to the global manifest.
    */
   [[nodiscard]] std::optional<std::filesystem::path>
   getGlobalManifestPath();
@@ -181,6 +152,35 @@ struct SearchParams
    */
   [[nodiscard]] std::optional<flox::resolver::GlobalManifestRaw>
   getGlobalManifestRaw();
+
+  /**
+   * @brief If `manifest` is inlined or unset, returns `std::nullopt`.
+   *        Otherwise returns the path to the manifest.
+   */
+  [[nodiscard]] std::optional<std::filesystem::path>
+  getManifestPath();
+
+  /**
+   * @brief Returns a @a flox::resolver::ManifestRaw or lazily
+   *        loads it from disk.
+   *        If @a manifestPath is unset, this returns an empty manifest.
+   */
+  [[nodiscard]] flox::resolver::ManifestRaw
+  getManifestRaw();
+
+  /**
+   * @brief If `lockfile` is inlined or unset, returns `std::nullopt`.
+   *        Otherwise returns the path to the lockfile.
+   */
+  [[nodiscard]] std::optional<std::filesystem::path>
+  getLockfilePath();
+
+  /**
+   * @brief Returns a @a flox::resolver::LockfileRaw or lazily
+   *        loads it from disk ( if provided ).
+   */
+  [[nodiscard]] std::optional<flox::resolver::LockfileRaw>
+  getLockfileRaw();
 
 
 }; /* End struct `SearchParams' */

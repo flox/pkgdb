@@ -133,6 +133,38 @@ EnvironmentMixin::addGlobalManifestFileOption(
 /* -------------------------------------------------------------------------- */
 
 argparse::Argument &
+EnvironmentMixin::addGAManifestOption( argparse::ArgumentParser & parser )
+{
+  return parser.add_argument( "--ga-manifest" )
+    .help( "Use a hard coded global manifest ( for `flox' GA )." )
+    .nargs( 0 )
+    .action(
+      [&]( const auto & )
+      {
+        auto nixpkgsRefJSON = nlohmann::json { { "type", "github" },
+                                               { "owner", "NixOS" },
+                                               { "repo", "nixpkgs" },
+                                               { "ref", "release-23.05" } };
+
+        auto nixpkgsRef = nix::FlakeRef::fromAttrs(
+          nix::fetchers::jsonToAttrs( nixpkgsRefJSON ) );
+
+        auto nixpkgs
+          = RegistryInput( std::vector<Subtree> { ST_LEGACY }, nixpkgsRef );
+
+        RegistryRaw registryRaw;
+        registryRaw.inputs.emplace( "nixpkgs", std::move( nixpkgs ) );
+        registryRaw.priority = std::vector<std::string> { "nixpkgs" };
+
+        this->initGlobalManifest(
+          GlobalManifestRaw( std::move( registryRaw ) ) );
+      } );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+argparse::Argument &
 EnvironmentMixin::addManifestFileOption( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "--manifest" )

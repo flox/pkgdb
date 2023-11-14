@@ -279,6 +279,15 @@ public:
   addGlobalManifestFileOption( argparse::ArgumentParser & parser );
 
   /**
+   * @brief Hard codes a manifest with only `github:NixOS/nixpkgs/release-23.05`
+   * with `--ga-manifest`.
+   * @param parser The parser to add the argument to.
+   * @return The argument added to the parser.
+   */
+  argparse::Argument &
+  addGAManifestOption( argparse::ArgumentParser & parser );
+
+  /**
    * @brief Sets the path to the manifest file to load with `--manifest`.
    * @param parser The parser to add the argument to.
    * @param required Whether the argument is required.

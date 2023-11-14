@@ -61,6 +61,7 @@ SearchCommand::SearchCommand() : parser( "search" )
 {
   this->parser.add_description(
     "Search a set of flakes and emit a list satisfactory packages" );
+  this->addGAManifestOption( this->parser );
   this->addSearchParamArgs( this->parser );
 }
 
@@ -75,21 +76,20 @@ SearchCommand::initEnvironment()
   if ( maybePath.has_value() ) { this->initGlobalManifestPath( *maybePath ); }
   if ( auto raw = this->params.getGlobalManifestRaw(); raw.has_value() )
     {
-      this->initGlobalManifest( resolver::GlobalManifest( *maybePath, *raw ) );
+      this->initGlobalManifest( *raw );
     }
 
   /* Init manifest. */
-  auto path = this->params.getManifestPath();
-  this->initManifestPath( path );
-  this->initManifest(
-    resolver::Manifest( path, this->params.getManifestRaw() ) );
+  maybePath = this->params.getManifestPath();
+  if ( maybePath.has_value() ) { this->initGlobalManifestPath( *maybePath ); }
+  this->initManifest( this->params.getManifestRaw() );
 
   /* Init lockfile . */
   maybePath = this->params.getLockfilePath();
   if ( maybePath.has_value() ) { this->initLockfilePath( *maybePath ); }
   if ( auto raw = this->params.getLockfileRaw(); raw.has_value() )
     {
-      this->initLockfile( resolver::Lockfile( *maybePath, *raw ) );
+      this->initLockfile( *raw );
     }
 }
 
