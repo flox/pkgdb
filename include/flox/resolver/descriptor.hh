@@ -164,7 +164,7 @@ public:
   /** Match `name`, `pname`, or `attrName` */
   std::optional<std::string> name;
 
-  /** Whether resoution is allowed to fail without producing errors. */
+  /** Whether resolution is allowed to fail without producing errors. */
   bool optional = false;
 
   /** Named _group_ that the package is a member of. */
