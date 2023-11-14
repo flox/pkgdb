@@ -20,6 +20,7 @@
 #include "flox/pkgdb/read.hh"
 #include "flox/registry.hh"
 #include "flox/resolver/manifest.hh"
+#include "flox/pkgdb/input.hh"
 
 
 /* -------------------------------------------------------------------------- */

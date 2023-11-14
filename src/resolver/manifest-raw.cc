@@ -9,9 +9,26 @@
  *
  * -------------------------------------------------------------------------- */
 
-#include <fstream>
+#include <algorithm>
+#include <map>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
-#include "flox/resolver/manifest.hh"
+#include <nix/fetchers.hh>
+#include <nix/flake/flakeref.hh>
+#include <nix/ref.hh>
+#include <nlohmann/json.hpp>
+
+#include "flox/core/types.hh"
+#include "flox/core/util.hh"
+#include "flox/pkgdb/pkg-query.hh"
+#include "flox/registry.hh"
+#include "flox/resolver/descriptor.hh"
+#include "flox/resolver/manifest-raw.hh"
 
 
 /* -------------------------------------------------------------------------- */
