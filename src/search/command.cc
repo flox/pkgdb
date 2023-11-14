@@ -58,7 +58,7 @@ SearchCommand::addSearchParamArgs( argparse::ArgumentParser & parser )
 /* -------------------------------------------------------------------------- */
 
 void
-SearchCommand::addSearchQueryFlags( argparse::ArgumentParser & parser )
+SearchCommand::addSearchQueryOptions( argparse::ArgumentParser & parser )
 {
   parser.add_argument( "--name" )
     .help( "search for packages by exact `name` match" )
@@ -113,7 +113,8 @@ SearchCommand::SearchCommand() : parser( "search" )
     "Search a set of flakes and emit a list satisfactory packages" );
   this->addGAManifestOption( this->parser );
   this->addSearchParamArgs( this->parser );
-  this->addSearchQueryFlags( this->parser );
+  this->addFloxDirectoryOption( this->parser );
+  this->addSearchQueryOptions( this->parser );
 }
 
 

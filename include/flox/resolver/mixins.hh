@@ -313,6 +313,15 @@ public:
   argparse::Argument &
   addLockfileOption( argparse::ArgumentParser & parser );
 
+  /**
+   * @brief Uses a `--dir PATH` to locate `manifest.{toml,yaml,json}' file and
+   *        `manifest.lock` if it is present.`.
+   * @param parser The parser to add the argument to.
+   * @return The argument added to the parser.
+   */
+  argparse::Argument &
+  addFloxDirectoryOption( argparse::ArgumentParser & parser );
+
 
 }; /* End class `EnvironmentMixin' */
 

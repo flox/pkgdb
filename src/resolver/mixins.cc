@@ -30,6 +30,97 @@ namespace flox::resolver {
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * @brief Generate exception handling boilerplate for
+ *        `EnvironmentMixin::init<MEMBER>' functions.
+ */
+#define ENV_MIXIN_THROW_IF_SET( member )                               \
+  if ( this->member.has_value() )                                      \
+    {                                                                  \
+      throw EnvironmentMixinException( "`" #member                     \
+                                       "' was already initializaed" ); \
+    }                                                                  \
+  if ( this->environment.has_value() )                                 \
+    {                                                                  \
+      throw EnvironmentMixinException(                                 \
+        "`" #member "' cannot be initializaed after `environment'" );  \
+    }
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+EnvironmentMixin::initGlobalManifestPath( std::filesystem::path path )
+{
+  ENV_MIXIN_THROW_IF_SET( globalManifestPath )
+  this->globalManifestPath = std::move( path );
+}
+
+void
+EnvironmentMixin::initGlobalManifest( GlobalManifestRaw manifestRaw )
+{
+  ENV_MIXIN_THROW_IF_SET( globalManifest )
+  this->globalManifest = GlobalManifest( std::move( manifestRaw ) );
+}
+
+void
+EnvironmentMixin::initGlobalManifest( GlobalManifest manifest )
+{
+  ENV_MIXIN_THROW_IF_SET( globalManifest )
+  this->globalManifest = std::move( manifest );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+EnvironmentMixin::initManifestPath( std::filesystem::path path )
+{
+  ENV_MIXIN_THROW_IF_SET( manifestPath )
+  this->manifestPath = std::move( path );
+}
+
+void
+EnvironmentMixin::initManifest( ManifestRaw manifestRaw )
+{
+  ENV_MIXIN_THROW_IF_SET( manifest )
+  this->manifest = Manifest( std::move( manifestRaw ) );
+}
+
+void
+EnvironmentMixin::initManifest( Manifest manifest )
+{
+  ENV_MIXIN_THROW_IF_SET( manifest )
+  this->manifest = std::move( manifest );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+EnvironmentMixin::initLockfilePath( std::filesystem::path path )
+{
+  ENV_MIXIN_THROW_IF_SET( lockfilePath )
+  this->lockfilePath = std::move( path );
+}
+
+void
+EnvironmentMixin::initLockfile( LockfileRaw lockfileRaw )
+{
+  ENV_MIXIN_THROW_IF_SET( lockfile );
+  this->lockfile = Lockfile( std::move( lockfileRaw ) );
+}
+
+void
+EnvironmentMixin::initLockfile( Lockfile lockfile )
+{
+  ENV_MIXIN_THROW_IF_SET( lockfile )
+  this->lockfile = std::move( lockfile );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 const std::optional<std::filesystem::path> &
 EnvironmentMixin::getGlobalManifestPath() const
 {
@@ -206,92 +297,47 @@ EnvironmentMixin::addLockfileOption( argparse::ArgumentParser & parser )
 
 /* -------------------------------------------------------------------------- */
 
-/**
- * @brief Generate exception handling boilerplate for
- *        `EnvironmentMixin::init<MEMBER>' functions.
- */
-#define ENV_MIXIN_THROW_IF_SET( member )                               \
-  if ( this->member.has_value() )                                      \
-    {                                                                  \
-      throw EnvironmentMixinException( "`" #member                     \
-                                       "' was already initializaed" ); \
-    }                                                                  \
-  if ( this->environment.has_value() )                                 \
-    {                                                                  \
-      throw EnvironmentMixinException(                                 \
-        "`" #member "' cannot be initializaed after `environment'" );  \
-    }
-
-
-/* -------------------------------------------------------------------------- */
-
-void
-EnvironmentMixin::initGlobalManifestPath( std::filesystem::path path )
+argparse::Argument &
+EnvironmentMixin::addFloxDirectoryOption( argparse::ArgumentParser & parser )
 {
-  ENV_MIXIN_THROW_IF_SET( globalManifestPath )
-  this->globalManifestPath = std::move( path );
-}
-
-void
-EnvironmentMixin::initGlobalManifest( GlobalManifestRaw manifestRaw )
-{
-  ENV_MIXIN_THROW_IF_SET( globalManifest )
-  this->globalManifest = GlobalManifest( std::move( manifestRaw ) );
-}
-
-void
-EnvironmentMixin::initGlobalManifest( GlobalManifest manifest )
-{
-  ENV_MIXIN_THROW_IF_SET( globalManifest )
-  this->globalManifest = std::move( manifest );
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-void
-EnvironmentMixin::initManifestPath( std::filesystem::path path )
-{
-  ENV_MIXIN_THROW_IF_SET( manifestPath )
-  this->manifestPath = std::move( path );
-}
-
-void
-EnvironmentMixin::initManifest( ManifestRaw manifestRaw )
-{
-  ENV_MIXIN_THROW_IF_SET( manifest )
-  this->manifest = Manifest( std::move( manifestRaw ) );
-}
-
-void
-EnvironmentMixin::initManifest( Manifest manifest )
-{
-  ENV_MIXIN_THROW_IF_SET( manifest )
-  this->manifest = std::move( manifest );
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-void
-EnvironmentMixin::initLockfilePath( std::filesystem::path path )
-{
-  ENV_MIXIN_THROW_IF_SET( lockfilePath )
-  this->lockfilePath = std::move( path );
-}
-
-void
-EnvironmentMixin::initLockfile( LockfileRaw lockfileRaw )
-{
-  ENV_MIXIN_THROW_IF_SET( lockfile );
-  this->lockfile = Lockfile( std::move( lockfileRaw ) );
-}
-
-void
-EnvironmentMixin::initLockfile( Lockfile lockfile )
-{
-  ENV_MIXIN_THROW_IF_SET( lockfile )
-  this->lockfile = std::move( lockfile );
+  return parser.add_argument( "--dir", "-d" )
+    .help( "The directory to search for `manifest.{json,yaml,toml}' and "
+           "`manifest.lock`." )
+    .metavar( "PATH" )
+    .nargs( 1 )
+    .action(
+      [&]( const std::string & strPath )
+      {
+        std::filesystem::path dir( nix::absPath( strPath ) );
+        /* Try to locate lockfile. */
+        auto path = dir / "manifest.lock";
+        if ( std::filesystem::exists( path ) )
+          {
+            this->initLockfilePath( path );
+          }
+        /* Locate manifest. */
+        if ( path = dir / "manifest.json"; std::filesystem::exists( path ) )
+          {
+            this->initManifestPath( path );
+          }
+        else if ( path = dir / "manifest.toml";
+                  std::filesystem::exists( path ) )
+          {
+            this->initManifestPath( path );
+          }
+        else if ( path = dir / "manifest.yaml";
+                  std::filesystem::exists( path ) )
+          {
+            this->initManifestPath( path );
+          }
+        else
+          {
+            throw EnvironmentMixinException(
+              "unable to locate a `manifest.{json,yaml,toml}' file "
+              "in directory: "
+              + strPath );
+          }
+      } );
 }
 
 

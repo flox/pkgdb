@@ -42,7 +42,7 @@ private:
    *        `--version VERSION` to be used in setting search parameters.
    */
   void
-  addSearchQueryFlags( argparse::ArgumentParser & parser );
+  addSearchQueryOptions( argparse::ArgumentParser & parser );
 
   /**
    * @brief Add argument to any parser to construct
