@@ -24,7 +24,7 @@ ScrapeCommand::ScrapeCommand() : parser( "scrape" )
 {
   this->parser.add_description( "Scrape a flake and emit a SQLite3 DB" );
   this->parser.add_argument( "-f", "--force" )
-    .help( "Force re-evaluation of flake" )
+    .help( "force re-evaluation of flake" )
     .nargs( 0 )
     .action( [&]( const auto & ) { this->force = true; } );
   this->addDatabasePathOption( this->parser );

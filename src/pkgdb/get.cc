@@ -33,7 +33,7 @@ GetCommand::GetCommand()
 
   this->pId.add_description( "Lookup an attribute set or package row `id`" );
   this->pId.add_argument( "-p", "--pkg" )
-    .help( "Lookup package path" )
+    .help( "lookup package path" )
     .nargs( 0 )
     .action( [&]( const auto & ) { this->isPkg = true; } );
   this->addTargetArg( this->pId );
@@ -49,12 +49,12 @@ GetCommand::GetCommand()
   this->pPath.add_description(
     "Lookup an (AttrSets|Packages).id attribute path" );
   this->pPath.add_argument( "-p", "--pkg" )
-    .help( "Lookup `Packages.id'" )
+    .help( "lookup `Packages.id'" )
     .nargs( 0 )
     .action( [&]( const auto & ) { this->isPkg = true; } );
   this->addTargetArg( this->pPath );
   this->pPath.add_argument( "id" )
-    .help( "Row `id' to lookup" )
+    .help( "row `id' to lookup" )
     .nargs( 1 )
     .action( [&]( const std::string & rowId )
              { this->id = std::stoull( rowId ); } );
@@ -73,7 +73,7 @@ GetCommand::GetCommand()
   /* In `runPkg' we check for a singleton and if it's an integer it
    * is interpreted as a row id. */
   this->pPkg.add_argument( "id-or-path" )
-    .help( "Attribute path to package, or `Packages.id`" )
+    .help( "attribute path to package, or `Packages.id`" )
     .metavar( "<ID|ATTRS...>" )
     .remaining()
     .action( [&]( const std::string & idOrPath )
