@@ -97,7 +97,7 @@ from_json( const nlohmann::json & jfrom, Options & opts );
 
 /** @brief Convert a @a flox::resolver::Options to a JSON Object. */
 void
-to_json( nlohmann::json & jfrom, const Options & opts );
+to_json( nlohmann::json & jto, const Options & opts );
 
 
 /* -------------------------------------------------------------------------- */
@@ -162,11 +162,11 @@ struct GlobalManifestRaw
 
 /** @brief Convert a JSON object to a @a flox::resolver::GlobalManifest. */
 void
-from_json( const nlohmann::json & jfrom, GlobalManifestRaw & raw );
+from_json( const nlohmann::json & jfrom, GlobalManifestRaw & manifest );
 
 /** @brief Convert a @a flox::resolver::GlobalManifest to a JSON object. */
 void
-to_json( nlohmann::json & jto, const GlobalManifestRaw & raw );
+to_json( nlohmann::json & jto, const GlobalManifestRaw & manifest );
 
 
 /* -------------------------------------------------------------------------- */
@@ -204,6 +204,7 @@ struct ManifestRaw : public GlobalManifestRaw
       this->floxhub = std::nullopt;
       this->dir     = std::nullopt;
     }
+
   }; /* End struct `EnvBase' */
   std::optional<EnvBase> envBase;
 
@@ -224,6 +225,7 @@ struct ManifestRaw : public GlobalManifestRaw
      */
     void
     check() const;
+
   }; /* End struct `ManifestRaw::Hook' */
   std::optional<Hook> hook;
 
@@ -243,6 +245,7 @@ struct ManifestRaw : public GlobalManifestRaw
   ManifestRaw &
   operator=( const ManifestRaw & )
     = default;
+
   ManifestRaw &
   operator=( ManifestRaw && )
     = default;
@@ -253,6 +256,7 @@ struct ManifestRaw : public GlobalManifestRaw
     GlobalManifestRaw::operator=( globalManifestRaw );
     return *this;
   }
+
   ManifestRaw &
   operator=( GlobalManifestRaw && globalManifestRaw )
   {

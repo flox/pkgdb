@@ -615,7 +615,10 @@ ManifestRaw::check() const
   if ( this->envBase.has_value() ) { this->envBase->check(); }
   if ( this->install.has_value() )
     {
-      for ( const auto & [iid, desc] : *this->install ) { desc->check( iid ); }
+      for ( const auto & [iid, desc] : *this->install )
+        {
+          if ( desc.has_value() ) { desc->check( iid ); }
+        }
     }
   if ( this->hook.has_value() ) { this->hook->check(); }
   if ( this->registry.has_value() )
