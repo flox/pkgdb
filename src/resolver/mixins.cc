@@ -214,7 +214,7 @@ EnvironmentMixin::addGlobalManifestFileOption(
   argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "--global-manifest" )
-    .help( "The path to the user's global `manifest.{toml,yaml,json}' file." )
+    .help( "the path to the user's global `manifest.{toml,yaml,json}' file." )
     .metavar( "PATH" )
     .action( [&]( const std::string & strPath )
              { this->initGlobalManifestPath( nix::absPath( strPath ) ); } );
@@ -227,7 +227,7 @@ argparse::Argument &
 EnvironmentMixin::addGAManifestOption( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "--ga-manifest" )
-    .help( "Use a hard coded global manifest ( for `flox' GA )." )
+    .help( "use a hard coded global manifest ( for `flox' GA )." )
     .nargs( 0 )
     .action(
       [&]( const auto & )
@@ -259,7 +259,7 @@ argparse::Argument &
 EnvironmentMixin::addManifestFileOption( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "--manifest" )
-    .help( "The path to the `manifest.{toml,yaml,json}' file." )
+    .help( "the path to the `manifest.{toml,yaml,json}' file." )
     .metavar( "PATH" )
     .action( [&]( const std::string & strPath )
              { this->initManifestPath( nix::absPath( strPath ) ); } );
@@ -274,7 +274,7 @@ EnvironmentMixin::addManifestFileArg( argparse::ArgumentParser & parser,
 {
   argparse::Argument & arg
     = parser.add_argument( "manifest" )
-        .help( "The path to the project's `manifest.{toml,yaml,json}' file." )
+        .help( "the path to the project's `manifest.{toml,yaml,json}' file." )
         .metavar( "MANIFEST-PATH" )
         .action( [&]( const std::string & strPath )
                  { this->initManifestPath( nix::absPath( strPath ) ); } );
@@ -288,7 +288,7 @@ argparse::Argument &
 EnvironmentMixin::addLockfileOption( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "--lockfile" )
-    .help( "The path to the projects existing `manifest.lock' file." )
+    .help( "the path to the projects existing `manifest.lock' file." )
     .metavar( "PATH" )
     .action( [&]( const std::string & strPath )
              { this->initLockfilePath( nix::absPath( strPath ) ); } );
@@ -301,7 +301,7 @@ argparse::Argument &
 EnvironmentMixin::addFloxDirectoryOption( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "--dir", "-d" )
-    .help( "The directory to search for `manifest.{json,yaml,toml}' and "
+    .help( "the directory to search for `manifest.{json,yaml,toml}' and "
            "`manifest.lock`." )
     .metavar( "PATH" )
     .nargs( 1 )
