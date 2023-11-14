@@ -273,17 +273,33 @@ genParamsNixpkgsFlox() {
   run $SEARCH_PARAMS '{}';
   assert_success;
 
+  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.manifest';";
+  assert_success;
+  assert_output 'null';
+
+  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.query.name';";
+  assert_success;
+  assert_output 'null';
+
+  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.query.pname';";
+  assert_success;
+  assert_output 'null';
+
+  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.query.version';";
+  assert_success;
+  assert_output 'null';
+
+  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.query.semver';";
+  assert_success;
+  assert_output 'null';
+
   run sh -c "$SEARCH_PARAMS '{}'|jq -r '.query.match';";
   assert_success;
   assert_output 'null';
 
-  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.query[\"name-match\"]';";
+  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.query[\"match-name\"]';";
   assert_success;
   assert_output 'null';
-
-  run sh -c "$SEARCH_PARAMS '{}'|jq -r '.manifest';";
-  assert_success;
-  refute_output --regexp '.';
 
   run sh -c "$SEARCH_PARAMS '{}'|jq -r '.[\"global-manifest\"]';";
   assert_success;
