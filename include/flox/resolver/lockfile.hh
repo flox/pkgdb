@@ -17,6 +17,7 @@
 
 #include "flox/core/exceptions.hh"
 #include "flox/core/types.hh"
+#include "flox/pkgdb/input.hh"
 #include "flox/pkgdb/read.hh"
 #include "flox/registry.hh"
 #include "flox/resolver/manifest.hh"

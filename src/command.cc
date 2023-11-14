@@ -35,7 +35,7 @@ VerboseParser::VerboseParser( const std::string & name,
   : argparse::ArgumentParser( name, version, argparse::default_arguments::help )
 {
   this->add_argument( "-q", "--quiet" )
-    .help( "Decrease the logging verbosity level. May be used up to 3 times." )
+    .help( "decrease the logging verbosity level. May be used up to 3 times." )
     .action(
       [&]( const auto & )
       {
@@ -48,7 +48,7 @@ VerboseParser::VerboseParser( const std::string & name,
     .append();
 
   this->add_argument( "-v", "--verbose" )
-    .help( "Increase the logging verbosity level. May be used up to 4 times." )
+    .help( "increase the logging verbosity level. May be used up to 4 times." )
     .action(
       [&]( const auto & )
       {
@@ -80,7 +80,7 @@ argparse::Argument &
 InlineInputMixin::addSubtreeArg( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "--subtree" )
-    .help( "A subtree name, being one of `packages` or `legacyPackages`, "
+    .help( "a subtree name, being one of `packages` or `legacyPackages`, "
            "that should be processed. May be used multiple times." )
     .required()
     .metavar( "SUBTREE" )
@@ -115,7 +115,7 @@ argparse::Argument &
 AttrPathMixin::addAttrPathArgs( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "attr-path" )
-    .help( "Attribute path to scrape" )
+    .help( "attribute path to scrape" )
     .metavar( "ATTRS..." )
     .remaining()
     .action( [&]( const std::string & path )

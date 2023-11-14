@@ -7,11 +7,21 @@
  *
  * -------------------------------------------------------------------------- */
 
+#include <algorithm>
 #include <filesystem>
 #include <optional>
+#include <string>
+#include <type_traits>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
-#include "compat/concepts.hh"
+#include "flox/core/types.hh"
 #include "flox/core/util.hh"
+#include "flox/pkgdb/pkg-query.hh"
+#include "flox/registry.hh"
+#include "flox/resolver/descriptor.hh"
+#include "flox/resolver/manifest-raw.hh"
 #include "flox/resolver/manifest.hh"
 
 
