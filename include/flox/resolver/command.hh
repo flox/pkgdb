@@ -9,8 +9,11 @@
 
 #pragma once
 
-#include "flox/resolver/environment.hh"
-#include "flox/resolver/manifest.hh"
+#include <filesystem>
+#include <optional>
+
+#include "flox/resolver/manifest-raw.hh"
+#include "flox/resolver/mixins.hh"
 #include "flox/search/command.hh"
 
 
