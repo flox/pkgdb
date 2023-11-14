@@ -17,8 +17,8 @@
 #include "flox/pkgdb/input.hh"
 #include "flox/pkgdb/write.hh"
 #include "flox/registry.hh"
-#include "flox/search/params.hh"
 #include "flox/resolver/mixins.hh"
+#include "flox/search/params.hh"
 
 
 /* -------------------------------------------------------------------------- */

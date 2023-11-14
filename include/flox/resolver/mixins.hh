@@ -174,6 +174,10 @@ protected:
 
 public:
 
+  /** @brief Get the filesystem path to the global manifest ( if any ). */
+  [[nodiscard]] const std::optional<std::filesystem::path> &
+  getGlobalManifestPath() const;
+
   /**
    * @brief Lazily initialize and return the @a globalManifest.
    *
@@ -184,6 +188,10 @@ public:
   [[nodiscard]] const std::optional<GlobalManifest> &
   getGlobalManifest();
 
+  /** @brief Get the filesystem path to the manifest ( if any ). */
+  [[nodiscard]] const std::optional<std::filesystem::path> &
+  getManifestPath() const;
+
   /**
    * @brief Lazily initialize and return the @a manifest.
    *
@@ -193,6 +201,10 @@ public:
    */
   [[nodiscard]] const Manifest &
   getManifest();
+
+  /** @brief Get the filesystem path to the lockfile ( if any ). */
+  [[nodiscard]] const std::optional<std::filesystem::path> &
+  getLockfilePath() const;
 
   /**
    * @brief Lazily initialize and return the @a lockfile.

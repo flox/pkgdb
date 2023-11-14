@@ -36,11 +36,11 @@ namespace flox {
 
 namespace pkgdb {
 class PkgDbReadOnly;
-} // namespace flox::pkgdb
+}  // namespace pkgdb
 
 namespace resolver {
 struct ManifestDescriptor;
-}  // namespace flox::resolver
+}  // namespace resolver
 
 
 }  // namespace flox

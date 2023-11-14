@@ -30,6 +30,15 @@ namespace flox::resolver {
 
 /* -------------------------------------------------------------------------- */
 
+const std::optional<std::filesystem::path> &
+EnvironmentMixin::getGlobalManifestPath() const
+{
+  return this->globalManifestPath;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 const std::optional<GlobalManifest> &
 EnvironmentMixin::getGlobalManifest()
 {
@@ -44,6 +53,15 @@ EnvironmentMixin::getGlobalManifest()
 
 /* -------------------------------------------------------------------------- */
 
+const std::optional<std::filesystem::path> &
+EnvironmentMixin::getManifestPath() const
+{
+  return this->manifestPath;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 const Manifest &
 EnvironmentMixin::getManifest()
 {
@@ -51,12 +69,22 @@ EnvironmentMixin::getManifest()
     {
       if ( ! this->manifestPath.has_value() )
         {
-          throw InvalidManifestFileException(
-            "you must provide the path to a manifest file" );
+          throw EnvironmentMixinException(
+            "you must provide an inline manifest or the path to a manifest "
+            "file" );
         }
       this->manifest = Manifest( *this->manifestPath );
     }
   return *this->manifest;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+const std::optional<std::filesystem::path> &
+EnvironmentMixin::getLockfilePath() const
+{
+  return this->manifestPath;
 }
 
 
