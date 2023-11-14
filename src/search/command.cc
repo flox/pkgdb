@@ -44,8 +44,8 @@ SearchCommand::addSearchParamArgs( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "parameters" )
     .help( "search paramaters as inline JSON or a path to a file" )
-    .required()
     .metavar( "PARAMS" )
+    .nargs( argparse::nargs_pattern::optional )
     .action(
       [&]( const std::string & params )
       {
@@ -57,12 +57,63 @@ SearchCommand::addSearchParamArgs( argparse::ArgumentParser & parser )
 
 /* -------------------------------------------------------------------------- */
 
+void
+SearchCommand::addSearchQueryFlags( argparse::ArgumentParser & parser )
+{
+  parser.add_argument( "--name" )
+    .help( "search for packages by exact `name` match" )
+    .metavar( "NAME" )
+    .nargs( 1 )
+    .action( [&]( const std::string & arg )
+             { this->params.query.name = arg; } );
+
+  parser.add_argument( "--pname" )
+    .help( "search for packages by exact `pname` match" )
+    .metavar( "PNAME" )
+    .nargs( 1 )
+    .action( [&]( const std::string & arg )
+             { this->params.query.pname = arg; } );
+
+  parser.add_argument( "--version" )
+    .help( "search for packages by exact `version` match" )
+    .metavar( "VERSION" )
+    .nargs( 1 )
+    .action( [&]( const std::string & arg )
+             { this->params.query.version = arg; } );
+
+  parser.add_argument( "--semver" )
+    .help( "search for packages by semantic version range matching" )
+    .metavar( "VERSION" )
+    .nargs( 1 )
+    .action( [&]( const std::string & arg )
+             { this->params.query.semver = arg; } );
+
+  parser.add_argument( "--match" )
+    .help( "search for packages by partially matching `pname`, "
+           "`description`, or `attrName`" )
+    .metavar( "MATCH" )
+    .nargs( 1 )
+    .action( [&]( const std::string & arg )
+             { this->params.query.partialMatch = arg; } );
+
+  parser.add_argument( "--match-name" )
+    .help( "search for packages by partially matching `pname` or `attrName`" )
+    .metavar( "MATCH" )
+    .nargs( 1 )
+    .action( [&]( const std::string & arg )
+             { this->params.query.partialNameMatch = arg; } );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 SearchCommand::SearchCommand() : parser( "search" )
 {
   this->parser.add_description(
     "Search a set of flakes and emit a list satisfactory packages" );
   this->addGAManifestOption( this->parser );
   this->addSearchParamArgs( this->parser );
+  this->addSearchQueryFlags( this->parser );
 }
 
 

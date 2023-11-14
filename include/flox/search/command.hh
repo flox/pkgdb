@@ -38,6 +38,13 @@ private:
   SearchParams           params; /**< Query arguments processor. */
 
   /**
+   * @brief Add options to allow flags such as `--pname PNAME` and
+   *        `--version VERSION` to be used in setting search parameters.
+   */
+  void
+  addSearchQueryFlags( argparse::ArgumentParser & parser );
+
+  /**
    * @brief Add argument to any parser to construct
    *        a @a flox::search::SearchParams.
    */

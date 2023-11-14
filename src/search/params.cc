@@ -73,13 +73,19 @@ from_json( const nlohmann::json & jfrom, SearchQuery & qry )
       else if ( key == "version" ) { getOrFail( key, value, qry.version ); }
       else if ( key == "semver" ) { getOrFail( key, value, qry.semver ); }
       else if ( key == "match" ) { getOrFail( key, value, qry.partialMatch ); }
-      else if ( ( key == "match-name" ) || ( key == "matchName" ) )
+      else if ( key == "match-name" )
         {
           getOrFail( key, value, qry.partialNameMatch );
         }
+      else if ( key == "name-match" )
+        {
+          throw ParseSearchQueryException(
+            "unrecognized key `query.name-match' , did you "
+            "mean `query.match-name'?" );
+        }
       else
         {
-          throw ParseSearchQueryException( "unrecognized key: 'query." + key
+          throw ParseSearchQueryException( "unrecognized key 'query." + key
                                            + "'." );
         }
     }
@@ -91,7 +97,7 @@ to_json( nlohmann::json & jto, const SearchQuery & qry )
 {
   pkgdb::to_json( jto, dynamic_cast<const pkgdb::PkgDescriptorBase &>( qry ) );
   jto["match"]      = qry.partialMatch;
-  jto["name-match"] = qry.partialNameMatch;
+  jto["match-name"] = qry.partialNameMatch;
 }
 
 
@@ -116,13 +122,10 @@ SearchQuery::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 std::optional<std::filesystem::path>
 SearchParams::getLockfilePath()
 {
-  if ( this->lockfile.has_value() )
+  if ( this->lockfile.has_value()
+       && std::holds_alternative<std::filesystem::path>( *this->lockfile ) )
     {
-      if ( std::holds_alternative<std::filesystem::path>( *this->lockfile ) )
-        {
-          return std::get<std::filesystem::path>( *this->lockfile );
-        }
-      return "<INLINE-LOCKFILE>.json";
+      return std::get<std::filesystem::path>( *this->lockfile );
     }
   return std::nullopt;
 }
@@ -148,8 +151,9 @@ SearchParams::getLockfileRaw()
 std::optional<std::filesystem::path>
 SearchParams::getGlobalManifestPath()
 {
-  if ( this->globalManifest.has_value() &&
-       std::holds_alternative<std::filesystem::path>( *this->globalManifest ) )
+  if ( this->globalManifest.has_value()
+       && std::holds_alternative<std::filesystem::path>(
+         *this->globalManifest ) )
     {
       return std::get<std::filesystem::path>( *this->globalManifest );
     }
@@ -178,8 +182,8 @@ SearchParams::getGlobalManifestRaw()
 std::optional<std::filesystem::path>
 SearchParams::getManifestPath()
 {
-  if ( this->manifest.has_value() &&
-       std::holds_alternative<std::filesystem::path>( *this->manifest ) )
+  if ( this->manifest.has_value()
+       && std::holds_alternative<std::filesystem::path>( *this->manifest ) )
     {
       return std::get<std::filesystem::path>( *this->manifest );
     }
@@ -197,7 +201,8 @@ SearchParams::getManifestRaw()
     {
       return std::get<resolver::ManifestRaw>( *this->manifest );
     }
-  return readAndCoerceJSON( std::get<std::filesystem::path>( *this->manifest ) );
+  return readAndCoerceJSON(
+    std::get<std::filesystem::path>( *this->manifest ) );
 }
 
 

@@ -123,7 +123,7 @@ struct SearchParams
    *        inline @a flox::resolver::ManifestRaw.
    */
   std::optional<std::variant<std::filesystem::path, resolver::ManifestRaw>>
-  manifest;
+    manifest;
 
   /**
    * @brief The absolute @a std::filesystem::path to a lockfile or an inline
