@@ -52,7 +52,7 @@ readManifestFromPath( const std::filesystem::path & manifestPath )
 /* -------------------------------------------------------------------------- */
 
 void
-GlobalManifest::init()
+GlobalManifest::initRegistry()
 {
   this->manifestRaw.check();
   if ( this->manifestRaw.registry.has_value() )
@@ -65,10 +65,9 @@ GlobalManifest::init()
 /* -------------------------------------------------------------------------- */
 
 GlobalManifest::GlobalManifest( std::filesystem::path manifestPath )
-  : manifestPath( std::move( manifestPath ) )
-  , manifestRaw( readManifestFromPath<GlobalManifestRaw>( this->manifestPath ) )
+  : manifestRaw( readManifestFromPath<GlobalManifestRaw>( manifestPath ) )
 {
-  this->init();
+  this->initRegistry();
 }
 
 
@@ -114,30 +113,30 @@ void
 Manifest::check() const
 {
   this->manifestRaw.check();
+  std::optional<std::vector<std::string>> maybeSystems;
+  if ( auto maybeOpts = this->getManifestRaw().options; maybeOpts.has_value() )
+    {
+      maybeSystems = maybeOpts->systems;
+    }
+
   for ( const auto & [iid, desc] : this->descriptors )
     {
-      if ( desc.systems.has_value() )
+      if ( ! desc.systems.has_value() ) { continue; }
+      if ( ! maybeSystems.has_value() )
         {
-          if ( ( ! this->manifestRaw.options.has_value() )
-               || ( ! this->manifestRaw.options->systems.has_value() ) )
+          throw InvalidManifestFileException(
+            "descriptor `install." + iid
+            + "' specifies `systems' but no `options.systems' are specified"
+              " in the manifest." );
+        }
+      for ( const auto & system : *desc.systems )
+        {
+          if ( std::find( maybeSystems->begin(), maybeSystems->end(), system )
+               == maybeSystems->end() )
             {
               throw InvalidManifestFileException(
-                "descriptor `install." + iid
-                + "' specifies `systems' but no `options.systems' are specified"
-                  " in the manifest." );
-            }
-          for ( const auto & system : *desc.systems )
-            {
-              if ( std::find( this->manifestRaw.options->systems->begin(),
-                              this->manifestRaw.options->systems->end(),
-                              system )
-                   == this->manifestRaw.options->systems->end() )
-                {
-                  throw InvalidManifestFileException(
-                    "descriptor `install." + iid + "' specifies system `"
-                    + system
-                    + "' which is not in `options.systems' in the manifest." );
-                }
+                "descriptor `install." + iid + "' specifies system `" + system
+                + "' which is not in `options.systems' in the manifest." );
             }
         }
     }
@@ -147,14 +146,8 @@ Manifest::check() const
 /* -------------------------------------------------------------------------- */
 
 void
-Manifest::init()
+Manifest::initDescriptors()
 {
-  this->manifestRaw.check();
-  if ( this->manifestRaw.registry.has_value() )
-    {
-      this->registryRaw = *this->manifestRaw.registry;
-    }
-
   if ( ! this->manifestRaw.install.has_value() ) { return; }
   for ( const auto & [iid, raw] : *this->manifestRaw.install )
     {
@@ -176,21 +169,10 @@ Manifest::init()
 
 /* -------------------------------------------------------------------------- */
 
-Manifest::Manifest( std::filesystem::path manifestPath, ManifestRaw raw )
-{
-  this->manifestPath = std::move( manifestPath );
-  this->manifestRaw  = std::move( raw );
-  this->init();
-}
-
-
-/* -------------------------------------------------------------------------- */
-
 Manifest::Manifest( std::filesystem::path manifestPath )
+  : GlobalManifest( readManifestFromPath<ManifestRaw>( manifestPath ) )
 {
-  this->manifestPath = std::move( manifestPath );
-  this->manifestRaw  = readManifestFromPath<ManifestRaw>( this->manifestPath );
-  this->init();
+  this->initDescriptors();
 }
 
 
@@ -226,6 +208,7 @@ Manifest::getGroupedDescriptors() const
     }
   return allDescriptors;
 }
+
 
 /* -------------------------------------------------------------------------- */
 

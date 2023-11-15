@@ -194,9 +194,14 @@ class Lockfile
 
 private:
 
-  std::optional<std::filesystem::path> lockfilePath;
-  LockfileRaw                          lockfileRaw;
-  Manifest                             manifest;
+  /** Raw representation of the lockfile. */
+  LockfileRaw lockfileRaw;
+
+  /**
+   * Handle for the manifest used to create the lockfile.
+   * This reads the lockfile's `manifest`.
+   */
+  Manifest manifest;
   /** Maps `{ <FINGERPRINT>: <INPUT> }` for all `packages` members' inputs. */
   RegistryRaw packagesRegistryRaw;
 
@@ -245,12 +250,6 @@ public:
     this->init();
   }
 
-  Lockfile( std::filesystem::path lockfilePath, LockfileRaw raw )
-    : lockfilePath( std::move( lockfilePath ) ), lockfileRaw( std::move( raw ) )
-  {
-    this->init();
-  }
-
   explicit Lockfile( std::filesystem::path lockfilePath );
 
   Lockfile &
@@ -260,13 +259,6 @@ public:
   Lockfile &
   operator=( Lockfile && )
     = default;
-
-  /** @brief Get the filesystem path to the lockfile ( if any ). */
-  [[nodiscard]] const std::optional<std::filesystem::path> &
-  getLockfilePath() const
-  {
-    return this->lockfilePath;
-  }
 
   /** @brief Get the _raw_ representation of the lockfile. */
   [[nodiscard]] const LockfileRaw &

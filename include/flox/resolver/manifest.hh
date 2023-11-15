@@ -31,9 +31,10 @@
 
 /* Forward Declarations. */
 
-namespace flox { namespace resolver {
+namespace flox::resolver {
 struct ManifestDescriptor;
-}}  // namespace flox::resolver
+}  // namespace flox::resolver
+
 namespace nix {
 class Store;
 }
@@ -64,16 +65,15 @@ protected:
   /* We need these `protected' so they can be set by `Manifest'. */
   // NOLINTBEGIN(cppcoreguidelines-non-private-member-variables-in-classes)
   // TODO: remove `manifestPath'
-  std::filesystem::path manifestPath;
-  ManifestRaw           manifestRaw;
-  RegistryRaw           registryRaw;
+  ManifestRaw manifestRaw;
+  RegistryRaw registryRaw;
   // NOLINTEND(cppcoreguidelines-non-private-member-variables-in-classes)
 
 
   /**
    * @brief Initialize @a registryRaw from @a manifestRaw. */
-  virtual void
-  init();
+  void
+  initRegistry();
 
 
 public:
@@ -83,21 +83,16 @@ public:
   GlobalManifest( const GlobalManifest & ) = default;
   GlobalManifest( GlobalManifest && )      = default;
 
-  // TODO: remove `manifestPath'
-  GlobalManifest( std::filesystem::path manifestPath, GlobalManifestRaw raw )
-    : manifestPath( std::move( manifestPath ) ), manifestRaw( std::move( raw ) )
+  explicit GlobalManifest( GlobalManifestRaw raw )
+    : manifestRaw( std::move( raw ) )
   {
-    this->manifestRaw.check();
-    if ( this->manifestRaw.registry.has_value() )
-      {
-        this->registryRaw = *this->manifestRaw.registry;
-      }
+    this->initRegistry();
   }
 
-  // TODO: remove `manifestPath'
-  explicit GlobalManifest( GlobalManifestRaw raw )
-    : GlobalManifest( "manifest.json", std::move( raw ) )
-  {}
+  explicit GlobalManifest( ManifestRaw raw ) : manifestRaw( std::move( raw ) )
+  {
+    this->initRegistry();
+  }
 
   explicit GlobalManifest( std::filesystem::path manifestPath );
 
@@ -108,13 +103,6 @@ public:
   GlobalManifest &
   operator=( GlobalManifest && )
     = default;
-
-  // TODO: remove `manifestPath'
-  [[nodiscard]] std::filesystem::path
-  getManifestPath() const
-  {
-    return this->manifestPath;
-  }
 
   [[nodiscard]] const ManifestRaw &
   getManifestRaw() const
@@ -190,10 +178,10 @@ private:
   check() const;
 
   /**
-   * @brief Initialize @a registryRaw and @a descriptors from @a manifestRaw.
+   * @brief Initialize @a descriptors from @a manifestRaw.
    */
   void
-  init() override;
+  initDescriptors();
 
 
 public:
@@ -203,16 +191,12 @@ public:
   Manifest( const Manifest & ) = default;
   Manifest( Manifest && )      = default;
 
-  // TODO: remove `manifestPath'
-  Manifest( std::filesystem::path manifestPath, ManifestRaw raw );
-
-  // TODO: remove `manifestPath'
-  explicit Manifest( ManifestRaw raw )
-    : Manifest( "manifest.json", std::move( raw ) )
-  {}
+  explicit Manifest( ManifestRaw raw ) : GlobalManifest( std::move( raw ) )
+  {
+    this->initDescriptors();
+  }
 
   explicit Manifest( std::filesystem::path manifestPath );
-
 
   Manifest &
   operator=( const Manifest & )
@@ -237,12 +221,8 @@ public:
   [[nodiscard]] std::vector<InstallDescriptors>
   getGroupedDescriptors() const;
 
+
 }; /* End class `Manifest' */
-
-
-/* -------------------------------------------------------------------------- */
-
-// TODO: class GlobalManifestMixin : public pkgdb::PkgDbRegistryMixin
 
 
 /* -------------------------------------------------------------------------- */

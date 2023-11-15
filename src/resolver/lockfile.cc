@@ -131,13 +131,7 @@ Lockfile::init()
         }
     }
 
-  std::string manifestPath = "manifest.json"; /* Phony */
-  if ( this->lockfilePath.has_value() )
-    {
-      manifestPath = this->lockfilePath->parent_path() / manifestPath;
-    }
-
-  this->manifest = Manifest( manifestPath, this->lockfileRaw.manifest );
+  this->manifest = Manifest( this->lockfileRaw.manifest );
 
   this->check();
 }
@@ -160,8 +154,7 @@ readLockfileFromPath( const std::filesystem::path & lockfilePath )
 /* -------------------------------------------------------------------------- */
 
 Lockfile::Lockfile( std::filesystem::path lockfilePath )
-  : lockfilePath( std::move( lockfilePath ) )
-  , lockfileRaw( readLockfileFromPath( this->lockfilePath.value() ) )
+  : lockfileRaw( readLockfileFromPath( lockfilePath ) )
 {
   this->init();
 }

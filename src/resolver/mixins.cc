@@ -199,9 +199,10 @@ EnvironmentMixin::getEnvironment()
 {
   if ( ! this->environment.has_value() )
     {
-      this->environment = Environment( this->getGlobalManifest(),
-                                       this->getManifest(),
-                                       this->getLockfile() );
+      this->environment
+        = std::make_optional<Environment>( this->getGlobalManifest(),
+                                           this->getManifest(),
+                                           this->getLockfile() );
     }
   return *this->environment;
 }
