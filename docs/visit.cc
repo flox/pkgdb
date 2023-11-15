@@ -45,12 +45,15 @@ main()
 
   /* Bad: Gets angry because `Empty2' isn't visited.
    * error: no type named ‘type’ in
-   *   ‘struct std::__invoke_result<overloaded<main()::<
-   *      lambda(std::variant<int, Empty, Empty2>)
-   *    >::<lambda(int)>,
-   *    main()::<lambda(std::variant<
-   *      int, Empty, Empty2>)
-   *    >::<lambda(Empty&)> >, Empty2&>’
+   *   ‘struct std::__invoke_result<
+   *      overloaded<main()::<
+   *        lambda(std::variant<int, Empty, Empty2>)
+   *      >::<lambda(int)>,
+   *      main()::<
+   *        lambda(std::variant<int, Empty, Empty2>)
+   *      >::<lambda(Empty&)>>,
+   *      Empty2&
+   *    >’
    */
   #if 0
   auto evilVisit = []( std::variant<int, Empty, Empty2> value )
