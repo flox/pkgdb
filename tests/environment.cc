@@ -21,6 +21,7 @@ using namespace flox;
 using namespace flox::resolver;
 using namespace nlohmann::literals;
 
+
 /* -------------------------------------------------------------------------- */
 
 class TestEnvironment : public Environment
@@ -31,9 +32,12 @@ public:
   using Environment::groupIsLocked;
 };
 
-/* Scraping should be cross platform, so even though this is hardcoded, it
- * should work on other systems. */
+/**
+ * Scraping should be cross platform, so even though this is hardcoded, it
+ * should work on other systems.
+ */
 const System _system = "x86_64-linux";
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -63,8 +67,7 @@ LockedPackageRaw helloLocked( helloLockedJSON );
 
 /* -------------------------------------------------------------------------- */
 
-/* Change a few fields from what we'd get if actual resultion was performed.
- */
+/** Change a few fields from what we'd get if actual resultion was performed. */
 nlohmann::json mockHelloLockedJSON {
   { "input",
     { { "fingerprint", nixpkgsFingerprintStr },
@@ -142,6 +145,7 @@ equalLockedInputRaw( const LockedInputRaw & first,
   return true;
 }
 
+
 /* -------------------------------------------------------------------------- */
 
 bool
@@ -155,8 +159,8 @@ equalAttrPath( const AttrPath & first, const AttrPath & second )
   return true;
 }
 
-/* -------------------------------------------------------------------------- */
 
+/* -------------------------------------------------------------------------- */
 
 bool
 equalLockedPackageRaw( const LockedPackageRaw & first,
@@ -218,11 +222,10 @@ equalLockfile( const Lockfile & first, const Lockfile & second )
   // RegistryRaw packagesRegistryRaw;
 }
 
+
 /* -------------------------------------------------------------------------- */
 
-/**
- * @brief test unmodified manifest descriptor stays locked.
- */
+/** @brief Test unmodified manifest descriptor stays locked. */
 bool
 test_groupIsLocked0()
 {
@@ -252,9 +255,12 @@ test_groupIsLocked0()
   return true;
 }
 
+
+/* -------------------------------------------------------------------------- */
+
 /**
- * @brief test that explicitly requiring the locked system doesn't unlock the
- *        group.
+ * @brief Test that explicitly requiring the locked system doesn't unlock
+ *        the group.
  */
 bool
 test_groupIsLocked1()
@@ -289,9 +295,10 @@ test_groupIsLocked1()
   return true;
 }
 
-/**
- * @brief test disabling the locked system unlocks the group.
- */
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Test disabling the locked system unlocks the group. */
 bool
 test_groupIsLocked2()
 {
@@ -324,6 +331,9 @@ test_groupIsLocked2()
     }
   return true;
 }
+
+
+/* -------------------------------------------------------------------------- */
 
 /** @brief Test moving a package to a different group unlocks it. */
 bool
@@ -360,9 +370,9 @@ test_groupIsLocked3()
 }
 
 
-/**
- * @brief test adding a package to the default group unlocks it.
- */
+/* -------------------------------------------------------------------------- */
+
+/** @brief Test adding a package to the default group unlocks it. */
 bool
 test_groupIsLocked4()
 {
@@ -394,9 +404,12 @@ test_groupIsLocked4()
   return true;
 }
 
+
+/* -------------------------------------------------------------------------- */
+
 /**
- * @brief test adding a package to a different group doesn't unlock the default
- *        group.
+ * @brief Test adding a package to a different group doesn't unlock the
+ *        default group.
  */
 bool
 test_groupIsLocked5()
@@ -438,9 +451,10 @@ test_groupIsLocked5()
   return true;
 }
 
-/**
- * @brief test that two separate groups both stay locked.
- */
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Test that two separate groups both stay locked. */
 bool
 test_groupIsLocked6()
 {
@@ -471,11 +485,10 @@ test_groupIsLocked6()
   return true;
 }
 
+
 /* -------------------------------------------------------------------------- */
 
-/**
- * @brief test upgrades correctly control locking.
- */
+/** @brief Test upgrades correctly control locking. */
 bool
 test_groupIsLocked_upgrades()
 {
@@ -486,8 +499,7 @@ test_groupIsLocked_upgrades()
   manifestRaw.options->systems = { _system };
   manifestRaw.registry         = registryWithNixpkgs;
 
-  /* TODO move path out of manifest? */
-  Manifest manifest( "dummy path", manifestRaw );
+  Manifest manifest( manifestRaw );
 
   /* Create expected lockfile, reusing manifestRaw */
   LockfileRaw lockfileRaw;
@@ -535,9 +547,7 @@ test_groupIsLocked_upgrades()
 
 /* -------------------------------------------------------------------------- */
 
-/**
- * @brief createLockfile creates a lock when there is no existing lockfile.
- */
+/** @brief createLockfile creates a lock when there is no existing lockfile. */
 bool
 test_createLockfile_new()
 {
@@ -565,11 +575,10 @@ test_createLockfile_new()
   return true;
 }
 
+
 /* -------------------------------------------------------------------------- */
 
-/**
- * @brief createLockfile reuses existing lockfile entry.
- */
+/** @brief `createLockfile()` reuses existing lockfile entry. */
 bool
 test_createLockfile_existing()
 {
@@ -602,8 +611,8 @@ test_createLockfile_existing()
 /* -------------------------------------------------------------------------- */
 
 /**
- * @brief createLockfile both reuses existing lockfile entry and locks unlocked
- *        packages.
+ * @brief `createLockfile()` both reuses existing lockfile entry and locks
+ *        unlocked packages.
  */
 bool
 test_createLockfile_both()

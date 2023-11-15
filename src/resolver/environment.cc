@@ -132,7 +132,8 @@ Environment::groupIsLocked( const InstallDescriptors & group,
       /* Check for upgrades. */
       if ( bool * upgradeEverything = std::get_if<bool>( &this->upgrades ) )
         {
-          /* If we're upgrading everything, the group needs to be locked again. */
+          /* If we're upgrading everything, the group needs to be locked again.
+           */
           if ( *upgradeEverything ) { return false; }
         }
       else
