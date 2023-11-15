@@ -135,8 +135,7 @@ Manifest::check() const
                == maybeSystems->end() )
             {
               throw InvalidManifestFileException(
-                "descriptor `install." + iid + "' specifies system `"
-                + system
+                "descriptor `install." + iid + "' specifies system `" + system
                 + "' which is not in `options.systems' in the manifest." );
             }
         }
