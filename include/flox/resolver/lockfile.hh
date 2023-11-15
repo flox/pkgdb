@@ -201,7 +201,7 @@ private:
    * Handle for the manifest used to create the lockfile.
    * This reads the lockfile's `manifest`.
    */
-  Manifest    manifest;
+  Manifest manifest;
   /** Maps `{ <FINGERPRINT>: <INPUT> }` for all `packages` members' inputs. */
   RegistryRaw packagesRegistryRaw;
 
