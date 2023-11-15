@@ -70,11 +70,11 @@ ManifestDescriptorRaw::check( std::string iid ) const
           throw InvalidManifestDescriptorException(
             "`install." + iid + ".abspath' must have at least three parts." );
         }
-      if ( ! ( glob.at( 0 ).has_value()
-               && ( std::find( getDefaultSubtrees().begin(),
-                               getDefaultSubtrees().end(),
-                               *glob.at( 0 ) )
-                    == getDefaultSubtrees().end() ) ) )
+      if ( ! glob.at( 0 ).has_value()
+           || ( std::find( getDefaultSubtrees().begin(),
+                           getDefaultSubtrees().end(),
+                           *glob.at( 0 ) )
+                == getDefaultSubtrees().end() ) )
         {
           throw InvalidManifestDescriptorException(
             "`install." + iid
