@@ -132,15 +132,13 @@ Environment::groupIsLocked( const InstallDescriptors & group,
       /* Check for upgrades. */
       if ( bool * upgradeEverything = std::get_if<bool>( &this->upgrades ) )
         {
-          /* If we're upgrading everything, the group needs to be locked again.
-           */
+          /* If we're upgrading everything, the group needs to be locked again. */
           if ( *upgradeEverything ) { return false; }
         }
       else
         {
-          /* If the current iid is being upgraded, the group needs to be locked
-           * again.
-           */
+          /* If the current iid is being upgraded, the group needs to be
+           * locked again. */
           auto upgrades = std::get<std::vector<InstallID>>( this->upgrades );
           if ( std::find( upgrades.begin(), upgrades.end(), iid )
                != upgrades.end() )

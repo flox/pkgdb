@@ -88,10 +88,15 @@ private:
   std::optional<Lockfile> oldLockfile;
 
 
-  /* true means upgrade everything, false or an empty vector mean upgrade
-   * nothing */
+  /**
+   * @brief Indicator for lockfile upgrade operations.
+   * 
+    * `true` means upgrade everything.
+    * `false` or an empty vector mean upgrade nothing.
+    * A list of `InstallID`s indicates a subset of packages to be upgraded.
+    */
   using Upgrades = std::variant<bool, std::vector<InstallID>>;
-  /* Packages to force an upgrade for, even if they are already locked. */
+  /** Packages to force an upgrade for, even if they are already locked. */
   Upgrades upgrades;
 
   /** New/modified lockfile being edited. */
