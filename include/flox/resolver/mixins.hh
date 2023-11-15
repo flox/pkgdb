@@ -116,7 +116,7 @@ protected:
    * @a flox::resolver::EnvirontMixin base at runtime without accessing
    * private member variables.
    */
-  void
+  virtual void
   initGlobalManifest( GlobalManifestRaw manifestRaw );
 
   /**
@@ -155,7 +155,7 @@ protected:
    * @a flox::resolver::EnvirontMixin base at runtime without accessing
    * private member variables.
    */
-  void
+  virtual void
   initManifest( ManifestRaw manifestRaw );
 
   /**
@@ -224,7 +224,7 @@ public:
    * If @a globalManifest is unset, but @a globalManifestPath is set then
    * load from the file.
    */
-  [[nodiscard]] const std::optional<GlobalManifest> &
+  [[nodiscard]] virtual const std::optional<GlobalManifest> &
   getGlobalManifest();
 
   /** @brief Get the filesystem path to the manifest ( if any ). */
@@ -238,7 +238,7 @@ public:
    * If @a manifest is unset, but @a manifestPath is set then
    * load from the file.
    */
-  [[nodiscard]] const Manifest &
+  [[nodiscard]] virtual const Manifest &
   getManifest();
 
   /** @brief Get the filesystem path to the lockfile ( if any ). */
@@ -279,15 +279,6 @@ public:
   addGlobalManifestFileOption( argparse::ArgumentParser & parser );
 
   /**
-   * @brief Hard codes a manifest with only `github:NixOS/nixpkgs/release-23.05`
-   * with `--ga-manifest`.
-   * @param parser The parser to add the argument to.
-   * @return The argument added to the parser.
-   */
-  argparse::Argument &
-  addGAManifestOption( argparse::ArgumentParser & parser );
-
-  /**
    * @brief Sets the path to the manifest file to load with `--manifest`.
    * @param parser The parser to add the argument to.
    * @param required Whether the argument is required.
@@ -324,6 +315,65 @@ public:
 
 
 }; /* End class `EnvironmentMixin' */
+
+
+/* -------------------------------------------------------------------------- */
+
+class GAEnvironmentMixin : public EnvironmentMixin
+{
+
+private:
+
+  /** Whether to override manifest registries for use with `flox` GA. */
+  bool gaRegistry = false;
+
+
+protected:
+
+  /**
+   * @brief Initialize the @a globalManifest member variable.
+   *        This form enforces `--ga-registry` by disallowing `registry` in its
+   *        input, and injecting a hard coded `registry`.
+   *
+   * This may only be called once and must be called before
+   * `getEnvironment()` is ever used - otherwise an exception will be thrown.
+   *
+   * This function exists so that child classes can initialize their
+   * @a flox::resolver::EnvirontMixin base at runtime without accessing
+   * private member variables.
+   */
+  void
+  initGlobalManifest( GlobalManifestRaw manifestRaw ) override;
+
+  /**
+   * @brief Initialize the @a manifest member variable.
+   *        This form enforces `--ga-registry` by disallowing `registry` in its
+   *        input, and injecting a hard coded `registry`.
+   *
+   * This may only be called once and must be called before
+   * `getEnvironment()` is ever used - otherwise an exception will be thrown.
+   *
+   * This function exists so that child classes can initialize their
+   * @a flox::resolver::EnvirontMixin base at runtime without accessing
+   * private member variables.
+   */
+  void
+  initManifest( ManifestRaw manifestRaw ) override;
+
+
+public:
+
+  /**
+   * @brief Hard codes a manifest with only `github:NixOS/nixpkgs/release-23.05`
+   * with `--ga-registry`.
+   * @param parser The parser to add the argument to.
+   * @return The argument added to the parser.
+   */
+  argparse::Argument &
+  addGARegistryOption( argparse::ArgumentParser & parser );
+
+
+}; /* End class `GAEnvironmentMixin' */
 
 
 /* -------------------------------------------------------------------------- */
