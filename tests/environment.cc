@@ -471,6 +471,67 @@ test_groupIsLocked6()
   return true;
 }
 
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief test upgrades correctly control locking.
+ */
+bool
+test_groupIsLocked_upgrades()
+{
+  /* Create manifest with hello */
+  ManifestRaw manifestRaw;
+  manifestRaw.install          = { { "hello", std::nullopt } };
+  manifestRaw.options          = Options {};
+  manifestRaw.options->systems = { _system };
+  manifestRaw.registry         = registryWithNixpkgs;
+
+  /* TODO move path out of manifest? */
+  Manifest manifest( "dummy path", manifestRaw );
+
+  /* Create expected lockfile, reusing manifestRaw */
+  LockfileRaw lockfileRaw;
+  lockfileRaw.packages = { { _system, { { "hello", helloLocked } } } };
+  lockfileRaw.manifest = manifestRaw;
+
+  Lockfile lockfile( lockfileRaw );
+
+  /* Reuse lock when upgrades = false. */
+  TestEnvironment environment( std::nullopt, manifest, lockfile, false );
+  for ( const InstallDescriptors & group : manifest.getGroupedDescriptors() )
+    {
+      EXPECT( environment.groupIsLocked( group, lockfile, _system ) );
+    }
+
+  /* Re-lock when upgrades = true. */
+  environment = TestEnvironment( std::nullopt, manifest, lockfile, true );
+  for ( const InstallDescriptors & group : manifest.getGroupedDescriptors() )
+    {
+      EXPECT( ! environment.groupIsLocked( group, lockfile, _system ) );
+    }
+
+  /* Reuse lock when `hello' not in upgrades list. */
+  environment = TestEnvironment( std::nullopt,
+                                 manifest,
+                                 lockfile,
+                                 std::vector<InstallID> {} );
+  for ( const InstallDescriptors & group : manifest.getGroupedDescriptors() )
+    {
+      EXPECT( environment.groupIsLocked( group, lockfile, _system ) );
+    }
+
+  /* Re-lock when `hello' is in upgrades list. */
+  environment = TestEnvironment( std::nullopt,
+                                 manifest,
+                                 lockfile,
+                                 std::vector<InstallID> { "hello" } );
+  for ( const InstallDescriptors & group : manifest.getGroupedDescriptors() )
+    {
+      EXPECT( ! environment.groupIsLocked( group, lockfile, _system ) );
+    }
+  return true;
+}
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -610,6 +671,7 @@ main()
   RUN_TEST( groupIsLocked4 );
   RUN_TEST( groupIsLocked5 );
   RUN_TEST( groupIsLocked6 );
+  RUN_TEST( groupIsLocked_upgrades );
 
   RUN_TEST( createLockfile_new );
   RUN_TEST( createLockfile_existing );

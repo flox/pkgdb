@@ -87,6 +87,18 @@ private:
   /** Previous generation of the lockfile ( if any ). */
   std::optional<Lockfile> oldLockfile;
 
+
+  /**
+   * @brief Indicator for lockfile upgrade operations.
+   * 
+    * `true` means upgrade everything.
+    * `false` or an empty vector mean upgrade nothing.
+    * A list of `InstallID`s indicates a subset of packages to be upgraded.
+    */
+  using Upgrades = std::variant<bool, std::vector<InstallID>>;
+  /** Packages to force an upgrade for, even if they are already locked. */
+  Upgrades upgrades;
+
   /** New/modified lockfile being edited. */
   std::optional<LockfileRaw> lockfileRaw;
 
@@ -195,10 +207,12 @@ public:
 
   Environment( std::optional<GlobalManifest> globalManifest,
                Manifest                      manifest,
-               std::optional<Lockfile>       oldLockfile )
+               std::optional<Lockfile>       oldLockfile,
+               Upgrades                      upgrades = false )
     : globalManifest( std::move( globalManifest ) )
     , manifest( std::move( manifest ) )
     , oldLockfile( std::move( oldLockfile ) )
+    , upgrades( std::move( upgrades ) )
   {}
 
   explicit Environment( Manifest                manifest,
