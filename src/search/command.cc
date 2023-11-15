@@ -44,8 +44,8 @@ SearchCommand::addSearchParamArgs( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "parameters" )
     .help( "search paramaters as inline JSON or a path to a file" )
-    .required()
-    .metavar( "PARAMS" )
+    .metavar( "[PARAMS]" )
+    .nargs( argparse::nargs_pattern::optional )
     .action(
       [&]( const std::string & params )
       {
@@ -57,11 +57,64 @@ SearchCommand::addSearchParamArgs( argparse::ArgumentParser & parser )
 
 /* -------------------------------------------------------------------------- */
 
+void
+SearchCommand::addSearchQueryOptions( argparse::ArgumentParser & parser )
+{
+  parser.add_argument( "--name" )
+    .help( "search for packages by exact `name' match." )
+    .metavar( "NAME" )
+    .nargs( 1 )
+    .action( [&]( const std::string & arg )
+             { this->params.query.name = arg; } );
+
+  parser.add_argument( "--pname" )
+    .help( "search for packages by exact `pname' match." )
+    .metavar( "PNAME" )
+    .nargs( 1 )
+    .action( [&]( const std::string & arg )
+             { this->params.query.pname = arg; } );
+
+  parser.add_argument( "--version" )
+    .help( "search for packages by exact `version' match." )
+    .metavar( "VERSION" )
+    .nargs( 1 )
+    .action( [&]( const std::string & arg )
+             { this->params.query.version = arg; } );
+
+  parser.add_argument( "--semver" )
+    .help( "search for packages by semantic version range matching." )
+    .metavar( "RANGE" )
+    .nargs( 1 )
+    .action( [&]( const std::string & arg )
+             { this->params.query.semver = arg; } );
+
+  parser.add_argument( "--match" )
+    .help( "search for packages by partially matching `pname', "
+           "`description', or `attrName'." )
+    .metavar( "MATCH" )
+    .nargs( 1 )
+    .action( [&]( const std::string & arg )
+             { this->params.query.partialMatch = arg; } );
+
+  parser.add_argument( "--match-name" )
+    .help( "search for packages by partially matching `pname' or `attrName'." )
+    .metavar( "MATCH" )
+    .nargs( 1 )
+    .action( [&]( const std::string & arg )
+             { this->params.query.partialNameMatch = arg; } );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 SearchCommand::SearchCommand() : parser( "search" )
 {
   this->parser.add_description(
-    "Search a set of flakes and emit a list satisfactory packages" );
+    "Search a set of flakes and emit a list satisfactory packages." );
+  this->addGAManifestOption( this->parser );
   this->addSearchParamArgs( this->parser );
+  this->addFloxDirectoryOption( this->parser );
+  this->addSearchQueryOptions( this->parser );
 }
 
 
@@ -75,21 +128,20 @@ SearchCommand::initEnvironment()
   if ( maybePath.has_value() ) { this->initGlobalManifestPath( *maybePath ); }
   if ( auto raw = this->params.getGlobalManifestRaw(); raw.has_value() )
     {
-      this->initGlobalManifest( resolver::GlobalManifest( *maybePath, *raw ) );
+      this->initGlobalManifest( *raw );
     }
 
   /* Init manifest. */
-  auto path = this->params.getManifestPath();
-  this->initManifestPath( path );
-  this->initManifest(
-    resolver::Manifest( path, this->params.getManifestRaw() ) );
+  maybePath = this->params.getManifestPath();
+  if ( maybePath.has_value() ) { this->initGlobalManifestPath( *maybePath ); }
+  this->initManifest( this->params.getManifestRaw() );
 
   /* Init lockfile . */
   maybePath = this->params.getLockfilePath();
   if ( maybePath.has_value() ) { this->initLockfilePath( *maybePath ); }
   if ( auto raw = this->params.getLockfileRaw(); raw.has_value() )
     {
-      this->initLockfile( resolver::Lockfile( *maybePath, *raw ) );
+      this->initLockfile( *raw );
     }
 }
 

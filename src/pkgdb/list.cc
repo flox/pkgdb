@@ -25,19 +25,19 @@ ListCommand::ListCommand() : parser( "list" )
   this->parser.add_description( "Summarize available Package DBs" );
 
   this->parser.add_argument( "-c", "--cachedir" )
-    .help( "Summarize databases in a given directory" )
+    .help( "summarize databases in a given directory" )
     .metavar( "PATH" )
     .nargs( 1 )
     .action( [&]( const std::string & cacheDir )
              { this->cacheDir = nix::absPath( cacheDir ); } );
 
   this->parser.add_argument( "-j", "--json" )
-    .help( "Output as JSON" )
+    .help( "output as JSON" )
     .nargs( 0 )
     .action( [&]( const std::string & ) { this->json = true; } );
 
   this->parser.add_argument( "-b", "--basenames" )
-    .help( "Print basenames of databases instead of absolute paths" )
+    .help( "print basenames of databases instead of absolute paths" )
     .nargs( 0 )
     .action( [&]( const std::string & ) { this->basenames = true; } );
 }

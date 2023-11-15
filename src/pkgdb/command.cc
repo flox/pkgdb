@@ -49,7 +49,7 @@ argparse::Argument &
 DbPathMixin::addDatabasePathOption( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "-d", "--database" )
-    .help( "Use database at PATH" )
+    .help( "use database at PATH" )
     .metavar( "PATH" )
     .nargs( 1 )
     .action(
@@ -149,7 +149,7 @@ argparse::Argument &
 PkgDbMixin<T>::addTargetArg( argparse::ArgumentParser & parser )
 {
   return parser.add_argument( "target" )
-    .help( "The source ( database path or flake-ref ) to read" )
+    .help( "the source ( database path or flake-ref ) to read" )
     .required()
     .metavar( "<DB-PATH|FLAKE-REF>" )
     .action(
