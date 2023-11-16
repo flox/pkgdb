@@ -444,7 +444,7 @@ compile_commands.json: $(COMMON_HEADERS) $(ALL_SRCS)
 	EXTRA_CXXFLAGS='$(EXTRA_CXXFLAGS)'                                         \
 	  PATH="$(MAKEFILE_DIR)/bear.d/:$(PATH)"                                   \
 	  @$(BEAR) --append -- $(MAKE) -C $(MAKEFILE_DIR) -j pre-compiled-headers;
-		@$(MAKE) -C $(MAKEFILE_DIR) clean-pch;
+	@$(MAKE) -C $(MAKEFILE_DIR) clean-pch;
 
 FULLCLEANFILES += compile_commands.json
 
