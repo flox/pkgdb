@@ -545,9 +545,9 @@ PC_LIBS   =  $(shell $(PKG_CONFIG) --libs-only-L nix-main) -lnixfetchers
 lib/pkgconfig/flox-pkgdb.pc: $(lastword $(MAKEFILE_LIST)) $(DEPFILES)
 lib/pkgconfig/flox-pkgdb.pc: lib/pkgconfig/flox-pkgdb.pc.in version
 	@$(SED) -e 's,@PREFIX@,$(PREFIX),g'     \
-	       -e 's,@VERSION@,$(VERSION),g'   \
-	       -e 's,@CFLAGS@,$(PC_CFLAGS),g'  \
-	       -e 's,@LIBS@,$(PC_LIBS),g'      \
+	       -e 's,@VERSION@,$(VERSION),g'    \
+	       -e 's,@CFLAGS@,$(PC_CFLAGS),g'   \
+	       -e 's,@LIBS@,$(PC_LIBS),g'       \
 	       $< > $@;
 
 CLEANFILES += lib/pkgconfig/flox-pkgdb.pc
