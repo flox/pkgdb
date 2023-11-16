@@ -403,8 +403,8 @@ public:
 
 /* -------------------------------------------------------------------------- */
 
-using Manifest   = EnvironmentManifestBase<ManifestRaw>;
-using ManifestGA = EnvironmentManifestBase<ManifestRawGA>;
+using EnvironmentManifest   = EnvironmentManifestBase<ManifestRaw>;
+using EnvironmentManifestGA = EnvironmentManifestBase<ManifestRawGA>;
 
 
 /* -------------------------------------------------------------------------- */

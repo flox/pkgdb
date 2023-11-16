@@ -84,11 +84,11 @@ void
 EnvironmentMixin::initManifest( ManifestRaw manifestRaw )
 {
   ENV_MIXIN_THROW_IF_SET( manifest )
-  this->manifest = Manifest( std::move( manifestRaw ) );
+  this->manifest = EnvironmentManifest( std::move( manifestRaw ) );
 }
 
 void
-EnvironmentMixin::initManifest( Manifest manifest )
+EnvironmentMixin::initManifest( EnvironmentManifest manifest )
 {
   ENV_MIXIN_THROW_IF_SET( manifest )
   this->manifest = std::move( manifest );
@@ -153,7 +153,7 @@ EnvironmentMixin::getManifestPath() const
 
 /* -------------------------------------------------------------------------- */
 
-const Manifest &
+const EnvironmentManifest &
 EnvironmentMixin::getManifest()
 {
   if ( ! this->manifest.has_value() )
@@ -164,7 +164,7 @@ EnvironmentMixin::getManifest()
             "you must provide an inline manifest or the path to a manifest "
             "file" );
         }
-      this->manifest = Manifest( *this->manifestPath );
+      this->manifest = EnvironmentManifest( *this->manifestPath );
     }
   return *this->manifest;
 }

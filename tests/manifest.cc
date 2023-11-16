@@ -388,10 +388,10 @@ test_GlobalManifestGA_getRegistryRaw0()
 /* -------------------------------------------------------------------------- */
 
 bool
-test_ManifestGA_getRegistryRaw0()
+test_EnvironmentManifestGA_getRegistryRaw0()
 {
-  flox::resolver::Manifest   manifest;
-  flox::resolver::ManifestGA manifestGA;
+  flox::resolver::EnvironmentManifest   manifest;
+  flox::resolver::EnvironmentManifestGA manifestGA;
 
   EXPECT( manifest.getRegistryRaw().inputs.empty() );
   EXPECT( ! manifestGA.getRegistryRaw().inputs.empty() );
@@ -431,7 +431,7 @@ main()
   RUN_TEST( serialize_manifest0 );
 
   RUN_TEST( GlobalManifestGA_getRegistryRaw0 );
-  RUN_TEST( ManifestGA_getRegistryRaw0 );
+  RUN_TEST( EnvironmentManifestGA_getRegistryRaw0 );
 
   return exitCode;
 }

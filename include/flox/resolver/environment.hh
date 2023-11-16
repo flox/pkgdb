@@ -82,7 +82,7 @@ private:
   std::optional<GlobalManifest> globalManifest;
 
   /** The environment manifest. */
-  Manifest manifest;
+  EnvironmentManifest manifest;
 
   /** Previous generation of the lockfile ( if any ). */
   std::optional<Lockfile> oldLockfile;
@@ -206,7 +206,7 @@ protected:
 public:
 
   Environment( std::optional<GlobalManifest> globalManifest,
-               Manifest                      manifest,
+               EnvironmentManifest           manifest,
                std::optional<Lockfile>       oldLockfile,
                Upgrades                      upgrades = false )
     : globalManifest( std::move( globalManifest ) )
@@ -215,7 +215,7 @@ public:
     , upgrades( std::move( upgrades ) )
   {}
 
-  explicit Environment( Manifest                manifest,
+  explicit Environment( EnvironmentManifest     manifest,
                         std::optional<Lockfile> oldLockfile = std::nullopt )
     : globalManifest( std::nullopt )
     , manifest( std::move( manifest ) )
@@ -236,7 +236,7 @@ public:
     return global->getManifestRaw();
   }
 
-  [[nodiscard]] const Manifest &
+  [[nodiscard]] const EnvironmentManifest &
   getManifest() const
   {
     return this->manifest;
