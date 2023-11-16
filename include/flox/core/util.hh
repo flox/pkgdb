@@ -392,7 +392,7 @@ merge_vectors( const std::vector<T> & lower, const std::vector<T> & higher )
   std::vector<T> merged = higher;
   for ( const auto & value : lower )
     {
-      if ( std::find( merged.begin(), merged.end(), value ) != merged.end() )
+      if ( std::find( merged.begin(), merged.end(), value ) == merged.end() )
         {
           merged.emplace_back( value );
         }
