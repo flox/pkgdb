@@ -284,7 +284,9 @@ EnvironmentMixin::addFloxDirectoryOption( argparse::ArgumentParser & parser )
           {
             this->initLockfilePath( path );
           }
+
         /* Locate manifest. */
+        // NOLINTBEGIN(bugprone-branch-clone)
         if ( path = dir / "manifest.json"; std::filesystem::exists( path ) )
           {
             this->initManifestPath( path );
@@ -306,25 +308,8 @@ EnvironmentMixin::addFloxDirectoryOption( argparse::ArgumentParser & parser )
               "in directory: "
               + strPath );
           }
+        // NOLINTEND(bugprone-branch-clone)
       } );
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-static RegistryRaw
-getGARegistry()
-{
-  nix::FlakeRef nixpkgsRef = nlohmann::json { { "type", "github" },
-                                              { "owner", "NixOS" },
-                                              { "repo", "nixpkgs" },
-                                              { "ref", "release-23.05" } };
-
-  RegistryInput nixpkgs( std::vector<Subtree> { ST_LEGACY }, nixpkgsRef );
-  RegistryRaw   registry;
-  registry.inputs.emplace( "nixpkgs", std::move( nixpkgs ) );
-  registry.priority = std::vector<std::string> { "nixpkgs" };
-  return registry;
 }
 
 

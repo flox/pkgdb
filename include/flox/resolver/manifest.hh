@@ -47,8 +47,8 @@ namespace flox::resolver {
 /* -------------------------------------------------------------------------- */
 
 /** @brief Read a flox::resolver::ManifestBase from a file. */
-template<typename RawType>
-inline RawType
+template<manifest_raw_type RawType>
+static inline RawType
 readManifestFromPath( const std::filesystem::path & manifestPath )
 {
   if ( ! std::filesystem::exists( manifestPath ) )
@@ -73,7 +73,7 @@ readManifestFromPath( const std::filesystem::path & manifestPath )
  * settings or inputs are not declared in a project, they may be automatically
  * added from the global manifest.
  */
-template<typename RawType = GlobalManifestRaw>
+template<manifest_raw_type RawType>
 class ManifestBase
 {
 
@@ -87,19 +87,6 @@ protected:
   // NOLINTEND(cppcoreguidelines-non-private-member-variables-in-classes)
 
 
-  /**
-   * @brief Initialize @a registryRaw from @a manifestRaw. */
-  void
-  initRegistry()
-  {
-    this->manifestRaw.check();
-    if ( this->manifestRaw.registry.has_value() )
-      {
-        this->registryRaw = *this->manifestRaw.registry;
-      }
-  }
-
-
 public:
 
   using rawType = RawType;
@@ -107,25 +94,20 @@ public:
   virtual ~ManifestBase()              = default;
   ManifestBase()                       = default;
   ManifestBase( const ManifestBase & ) = default;
-  ManifestBase( ManifestBase && )      = default;
+  ManifestBase( ManifestBase && )      noexcept = default;
 
-  explicit ManifestBase( RawType raw ) : manifestRaw( std::move( raw ) )
-  {
-    this->initRegistry();
-  }
+  explicit ManifestBase( RawType raw ) : manifestRaw( std::move( raw ) ) {}
 
-  explicit ManifestBase( std::filesystem::path manifestPath )
+  explicit ManifestBase( const std::filesystem::path & manifestPath )
     : manifestRaw( readManifestFromPath<RawType>( manifestPath ) )
-  {
-    this->initRegistry();
-  }
+  {}
 
   ManifestBase &
   operator=( const ManifestBase & )
     = default;
 
   ManifestBase &
-  operator=( ManifestBase && )
+  operator=( ManifestBase && ) noexcept
     = default;
 
   [[nodiscard]] const RawType &
@@ -142,14 +124,12 @@ public:
 
   /* Ignore linter warning about copying params because `nix::ref` is just
    * a pointer ( `std::shared_pointer' with a `nullptr` check ). */
-  // NOLINTBEGIN(performance-unnecessary-value-param)
   [[nodiscard]] RegistryRaw
-  getLockedRegistry( nix::ref<nix::Store> store
+  getLockedRegistry( const nix::ref<nix::Store> & store
                      = NixStoreMixin().getStore() ) const
   {
     return lockRegistry( this->getRegistryRaw(), store );
   }
-  // NOLINTEND(performance-unnecessary-value-param)
 
   /** @brief Get the list of systems requested by the manifest. */
   [[nodiscard]] std::vector<System>
@@ -200,7 +180,53 @@ public:
 }; /* End class `ManifestBase' */
 
 
-using GlobalManifest = ManifestBase<GlobalManifestRaw>;
+/* -------------------------------------------------------------------------- */
+
+class GlobalManifest : public ManifestBase<GlobalManifestRaw>
+{
+
+protected:
+
+  /** @brief Initialize @a registryRaw from @a manifestRaw. */
+  void
+  initRegistry()
+  {
+    this->manifestRaw.check();
+    if ( this->manifestRaw.registry.has_value() )
+      {
+        this->registryRaw = *this->manifestRaw.registry;
+      }
+  }
+
+
+public:
+
+  ~GlobalManifest() override               = default;
+  GlobalManifest()                         = default;
+  GlobalManifest( const GlobalManifest & ) = default;
+  GlobalManifest( GlobalManifest && )      = default;
+
+  GlobalManifest &
+  operator=( const GlobalManifest & )
+    = default;
+  GlobalManifest &
+  operator=( GlobalManifest && )
+    = default;
+
+  explicit GlobalManifest( GlobalManifestRaw raw )
+    : ManifestBase<GlobalManifestRaw>( std::move( raw ) )
+  {
+    this->initRegistry();
+  }
+
+  explicit GlobalManifest( const std::filesystem::path & manifestPath )
+    : ManifestBase<GlobalManifestRaw>( manifestPath )
+  {
+    this->initRegistry();
+  }
+
+
+}; /* End class `GlobalManifest' */
 
 
 /* -------------------------------------------------------------------------- */
@@ -234,11 +260,23 @@ private:
   void
   check() const;
 
-  /**
-   * @brief Initialize @a descriptors from @a manifestRaw.
-   */
+  /** @brief Initialize @a descriptors from @a manifestRaw. */
   void
   initDescriptors();
+
+
+protected:
+
+  /** @brief Initialize @a registryRaw from @a manifestRaw. */
+  void
+  initRegistry()
+  {
+    this->manifestRaw.check();
+    if ( this->manifestRaw.registry.has_value() )
+      {
+        this->registryRaw = *this->manifestRaw.registry;
+      }
+  }
 
 
 public:
@@ -251,13 +289,15 @@ public:
   explicit Manifest( ManifestRaw raw )
     : ManifestBase<ManifestRaw>( std::move( raw ) )
   {
+    this->initRegistry();
     this->initDescriptors();
   }
 
-  explicit Manifest( std::filesystem::path manifestPath )
+  explicit Manifest( const std::filesystem::path & manifestPath )
     : ManifestBase<ManifestRaw>(
       readManifestFromPath<ManifestRaw>( manifestPath ) )
   {
+    this->initRegistry();
     this->initDescriptors();
   }
 
@@ -289,7 +329,6 @@ public:
 
 
 /* -------------------------------------------------------------------------- */
-
 
 }  // namespace flox::resolver
 

@@ -43,9 +43,10 @@ template class ManifestBase<GlobalManifestRaw>;
 void
 Manifest::check() const
 {
-  this->manifestRaw.check();
+  const auto & raw = this->getManifestRaw();
+  raw.check();
   std::optional<std::vector<std::string>> maybeSystems;
-  if ( auto maybeOpts = this->getManifestRaw().options; maybeOpts.has_value() )
+  if ( auto maybeOpts = raw.options; maybeOpts.has_value() )
     {
       maybeSystems = maybeOpts->systems;
     }
@@ -65,9 +66,11 @@ Manifest::check() const
           if ( std::find( maybeSystems->begin(), maybeSystems->end(), system )
                == maybeSystems->end() )
             {
-              throw InvalidManifestFileException(
-                "descriptor `install." + iid + "' specifies system `" + system
-                + "' which is not in `options.systems' in the manifest." );
+              std::stringstream msg;
+              msg << "descriptor `install." << iid << "' specifies system `"
+                  << system <<
+                  "' which is not in `options.systems' in the manifest.";
+              throw InvalidManifestFileException( msg.str() );
             }
         }
     }
@@ -130,6 +133,42 @@ Manifest::getGroupedDescriptors() const
     }
   return allDescriptors;
 }
+
+
+/* -------------------------------------------------------------------------- */
+
+#if 0
+std::vector<InstallDescriptors>
+ManifestGA::getGroupedDescriptors() const
+{
+  /* Group all packages into a map with group name as key. */
+  std::unordered_map<GroupName, InstallDescriptors> grouped;
+  InstallDescriptors                                defaultGroup;
+  for ( const auto & [iid, desc] : this->descriptors )
+    {
+      // TODO: Use manifest options to decide how ungrouped descriptors
+      //       are grouped.
+      /* For now add all descriptors without a group to `defaultGroup`. */
+      if ( ! desc.group.has_value() ) { defaultGroup.emplace( iid, desc ); }
+      else
+        {
+          grouped.try_emplace( *desc.group, InstallDescriptors {} );
+          grouped.at( *desc.group ).emplace( iid, desc );
+        }
+    }
+
+  /* Add all groups to a vector.
+   * Don't use a map with group name because the defaultGroup doesn't have
+   * a name. */
+  std::vector<InstallDescriptors> allDescriptors;
+  if ( ! defaultGroup.empty() ) { allDescriptors.emplace_back( defaultGroup ); }
+  for ( const auto & [_, group] : grouped )
+    {
+      allDescriptors.emplace_back( group );
+    }
+  return allDescriptors;
+}
+#endif
 
 
 /* -------------------------------------------------------------------------- */

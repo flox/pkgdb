@@ -22,6 +22,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "compat/concepts.hh"
 #include "flox/core/exceptions.hh"
 #include "flox/core/types.hh"
 #include "flox/pkgdb/pkg-query.hh"
@@ -412,8 +413,7 @@ to_json( nlohmann::json & jto, const GlobalManifestRawGA & manifest );
 
 /**
  * @brief A _raw_ description of an environment to be read from a file.
- *        This form is limited to only the `options` field
- *        ( dropping `registry` ) for use with `flox`'s GA release.
+ *        This form drops the `registry` field for use with `flox`'s GA release.
  *
  * This _raw_ struct is defined to generate parsers, and its declarations simply
  * represent what is considered _valid_.
@@ -511,6 +511,22 @@ from_json( const nlohmann::json & jfrom, ManifestRawGA & manifest );
 /** @brief Convert a @a flox::resolver::ManifestRawGA to a JSON object. */
 void
 to_json( nlohmann::json & jto, const ManifestRawGA & manifest );
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief Restrict types to those derived from
+ *        @a flox::resolver::GlobalManifestRaw or
+ *        @a flox::resolver::GlobalManifestRawGA. */
+template<typename RawType>
+concept manifest_raw_type = std::derived_from<RawType, GlobalManifestRaw>
+                            || std::derived_from<RawType, GlobalManifestRawGA>;
+
+static_assert( manifest_raw_type<GlobalManifestRaw> );
+static_assert( manifest_raw_type<GlobalManifestRawGA> );
+static_assert( manifest_raw_type<ManifestRaw> );
+static_assert( manifest_raw_type<ManifestRawGA> );
 
 
 /* -------------------------------------------------------------------------- */

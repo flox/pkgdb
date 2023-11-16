@@ -43,15 +43,11 @@ struct InputPreferences
    */
   std::optional<std::vector<Subtree>> subtrees;
 
-  /* Copy/Move base class boilerplate */
+  /* Base class boilerplate */
+  virtual ~InputPreferences()                  = default;
   InputPreferences()                           = default;
   InputPreferences( const InputPreferences & ) = default;
   InputPreferences( InputPreferences && )      = default;
-  InputPreferences( const std::optional<std::vector<Subtree>> & subtrees )
-    : subtrees( subtrees )
-  {}
-
-  virtual ~InputPreferences() = default;
 
   InputPreferences &
   operator=( const InputPreferences & )
@@ -59,6 +55,11 @@ struct InputPreferences
   InputPreferences &
   operator=( InputPreferences && )
     = default;
+
+  explicit InputPreferences(
+    const std::optional<std::vector<Subtree>> & subtrees )
+    : subtrees( subtrees )
+  {}
 
   /** @brief Reset to default state. */
   virtual void
@@ -273,11 +274,10 @@ struct RegistryRaw
 
 
   /* Base class boilerplate. */
+  virtual ~RegistryRaw()             = default;
   RegistryRaw()                      = default;
   RegistryRaw( const RegistryRaw & ) = default;
   RegistryRaw( RegistryRaw && )      = default;
-
-  virtual ~RegistryRaw() = default;
 
   RegistryRaw &
   operator=( const RegistryRaw & )
@@ -286,8 +286,23 @@ struct RegistryRaw
   operator=( RegistryRaw && )
     = default;
 
+  explicit RegistryRaw( std::map<std::string, RegistryInput> inputs,
+                        InputPreferences                     defaults = {},
+                        std::vector<std::string>             priority = {} )
+    : inputs( std::move( inputs ) )
+    , defaults( std::move( defaults ) )
+    , priority( std::move( priority ) )
+  {}
+
+  explicit RegistryRaw( std::map<std::string, RegistryInput> inputs,
+                        std::vector<std::string>             priority = {} )
+    : RegistryRaw( std::move( inputs ),
+                   InputPreferences {},
+                   std::move( priority ) )
+  {}
+
   /**
-   * @abrief Return an ordered list of input names.
+   * @brief Return an ordered list of input names.
    *
    * This appends @a priority with any missing @a inputs in
    * lexicographical order.
@@ -615,6 +630,8 @@ public:
 }; /* End struct `FloxFlakeInput' */
 
 
+/* -------------------------------------------------------------------------- */
+
 /** @brief A factory for @a flox::FloxFlakeInput objects. */
 class FloxFlakeInputFactory : NixStoreMixin
 {
@@ -659,7 +676,7 @@ class FlakeRegistry : public Registry<FloxFlakeInputFactory>
 public:
 
   FlakeRegistry( RegistryRaw registryRaw, FloxFlakeInputFactory & factory )
-    : Registry<FloxFlakeInputFactory>( registryRaw, factory )
+    : Registry<FloxFlakeInputFactory>( std::move( registryRaw ), factory )
   {}
 
   [[nodiscard]] std::map<std::string, RegistryInput>
@@ -673,8 +690,20 @@ public:
 
 /** @brief Lock an unlocked registry. */
 RegistryRaw
-lockRegistry( const RegistryRaw &  unlocked,
-              nix::ref<nix::Store> store = NixStoreMixin().getStore() );
+lockRegistry( const RegistryRaw &          unlocked,
+              const nix::ref<nix::Store> & store = NixStoreMixin().getStore() );
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief Get a hard coded registry for use with `flox`'s GA release.
+ *
+ * This registry contains on `nixpkgs` input, which is set
+ * to `github:NixOS/nixpkgs/release-23.05`.
+ */
+RegistryRaw
+getGARegistry();
 
 
 /* -------------------------------------------------------------------------- */
