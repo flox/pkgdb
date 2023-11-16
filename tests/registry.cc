@@ -15,6 +15,7 @@
 
 #include "flox/registry.hh"
 #include "flox/resolver/manifest.hh"
+#include "flox/core/util.hh"
 #include "test.hh"
 
 
@@ -54,6 +55,17 @@ test_Manifest_getRegistryRaw0()
   return true;
 }
 
+
+bool
+test_merge_vecs()
+{
+  std::vector<std::string> highPriority = { "a", "b", "c" };
+  std::vector<std::string> lowPriority = { "a", "d", "e" };
+  std::vector<std::string> expected = { "a", "b", "c", "d", "e" };
+  auto merged = flox::merge_vectors(lowPriority, highPriority);
+  EXPECT(merged == expected);
+  return true;
+}
 
 /* -------------------------------------------------------------------------- */
 
@@ -123,6 +135,7 @@ main( int argc, char * argv[] )
   RUN_TEST( Manifest_getRegistryRaw0 );
   RUN_TEST( Manifest_badPath0 );
   RUN_TEST( Manifest_NoIndirectRefs0 );
+  RUN_TEST( merge_vecs );
 
 
   return exitCode;
