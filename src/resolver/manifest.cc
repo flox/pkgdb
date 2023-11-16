@@ -31,144 +31,49 @@ namespace flox::resolver {
 
 /* -------------------------------------------------------------------------- */
 
+std::vector<InstallDescriptors>
+getGroupedDescriptors( const InstallDescriptors & descriptors )
+{
+  /* Group all packages into a map with group name as key. */
+  std::unordered_map<GroupName, InstallDescriptors> grouped;
+  InstallDescriptors                                defaultGroup;
+  for ( const auto & [iid, desc] : descriptors )
+    {
+      // TODO: Use manifest options to decide how ungrouped descriptors
+      //       are grouped.
+      /* For now add all descriptors without a group to `defaultGroup`. */
+      if ( ! desc.group.has_value() ) { defaultGroup.emplace( iid, desc ); }
+      else
+        {
+          grouped.try_emplace( *desc.group, InstallDescriptors {} );
+          grouped.at( *desc.group ).emplace( iid, desc );
+        }
+    }
+
+  /* Add all groups to a vector.
+   * Don't use a map with group name because the defaultGroup doesn't have
+   * a name. */
+  std::vector<InstallDescriptors> allDescriptors;
+  if ( ! defaultGroup.empty() ) { allDescriptors.emplace_back( defaultGroup ); }
+  for ( const auto & [_, group] : grouped )
+    {
+      allDescriptors.emplace_back( group );
+    }
+  return allDescriptors;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 /* Instantiate templates. */
 
 template class ManifestBase<ManifestRaw>;
-
+template class ManifestBase<ManifestRawGA>;
 template class ManifestBase<GlobalManifestRaw>;
+template class ManifestBase<GlobalManifestRawGA>;
 
-
-/* -------------------------------------------------------------------------- */
-
-void
-Manifest::check() const
-{
-  const auto & raw = this->getManifestRaw();
-  raw.check();
-  std::optional<std::vector<std::string>> maybeSystems;
-  if ( auto maybeOpts = raw.options; maybeOpts.has_value() )
-    {
-      maybeSystems = maybeOpts->systems;
-    }
-
-  for ( const auto & [iid, desc] : this->descriptors )
-    {
-      if ( ! desc.systems.has_value() ) { continue; }
-      if ( ! maybeSystems.has_value() )
-        {
-          throw InvalidManifestFileException(
-            "descriptor `install." + iid
-            + "' specifies `systems' but no `options.systems' are specified"
-              " in the manifest." );
-        }
-      for ( const auto & system : *desc.systems )
-        {
-          if ( std::find( maybeSystems->begin(), maybeSystems->end(), system )
-               == maybeSystems->end() )
-            {
-              std::stringstream msg;
-              msg << "descriptor `install." << iid << "' specifies system `"
-                  << system <<
-                  "' which is not in `options.systems' in the manifest.";
-              throw InvalidManifestFileException( msg.str() );
-            }
-        }
-    }
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-void
-Manifest::initDescriptors()
-{
-  if ( ! this->manifestRaw.install.has_value() ) { return; }
-  for ( const auto & [iid, raw] : *this->manifestRaw.install )
-    {
-      /* An empty/null descriptor uses `name' of the attribute. */
-      if ( raw.has_value() )
-        {
-          this->descriptors.emplace( iid, ManifestDescriptor( iid, *raw ) );
-        }
-      else
-        {
-          ManifestDescriptor manDesc;
-          manDesc.name = iid;
-          this->descriptors.emplace( iid, std::move( manDesc ) );
-        }
-    }
-  this->check();
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-std::vector<InstallDescriptors>
-Manifest::getGroupedDescriptors() const
-{
-  /* Group all packages into a map with group name as key. */
-  std::unordered_map<GroupName, InstallDescriptors> grouped;
-  InstallDescriptors                                defaultGroup;
-  for ( const auto & [iid, desc] : this->descriptors )
-    {
-      // TODO: Use manifest options to decide how ungrouped descriptors
-      //       are grouped.
-      /* For now add all descriptors without a group to `defaultGroup`. */
-      if ( ! desc.group.has_value() ) { defaultGroup.emplace( iid, desc ); }
-      else
-        {
-          grouped.try_emplace( *desc.group, InstallDescriptors {} );
-          grouped.at( *desc.group ).emplace( iid, desc );
-        }
-    }
-
-  /* Add all groups to a vector.
-   * Don't use a map with group name because the defaultGroup doesn't have
-   * a name. */
-  std::vector<InstallDescriptors> allDescriptors;
-  if ( ! defaultGroup.empty() ) { allDescriptors.emplace_back( defaultGroup ); }
-  for ( const auto & [_, group] : grouped )
-    {
-      allDescriptors.emplace_back( group );
-    }
-  return allDescriptors;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-#if 0
-std::vector<InstallDescriptors>
-ManifestGA::getGroupedDescriptors() const
-{
-  /* Group all packages into a map with group name as key. */
-  std::unordered_map<GroupName, InstallDescriptors> grouped;
-  InstallDescriptors                                defaultGroup;
-  for ( const auto & [iid, desc] : this->descriptors )
-    {
-      // TODO: Use manifest options to decide how ungrouped descriptors
-      //       are grouped.
-      /* For now add all descriptors without a group to `defaultGroup`. */
-      if ( ! desc.group.has_value() ) { defaultGroup.emplace( iid, desc ); }
-      else
-        {
-          grouped.try_emplace( *desc.group, InstallDescriptors {} );
-          grouped.at( *desc.group ).emplace( iid, desc );
-        }
-    }
-
-  /* Add all groups to a vector.
-   * Don't use a map with group name because the defaultGroup doesn't have
-   * a name. */
-  std::vector<InstallDescriptors> allDescriptors;
-  if ( ! defaultGroup.empty() ) { allDescriptors.emplace_back( defaultGroup ); }
-  for ( const auto & [_, group] : grouped )
-    {
-      allDescriptors.emplace_back( group );
-    }
-  return allDescriptors;
-}
-#endif
+template class EnvironmentManifestBase<ManifestRaw>;
+template class EnvironmentManifestBase<ManifestRawGA>;
 
 
 /* -------------------------------------------------------------------------- */

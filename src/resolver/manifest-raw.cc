@@ -762,6 +762,32 @@ to_json( nlohmann::json & jto, const ManifestRawGA & manifest )
 
 /* -------------------------------------------------------------------------- */
 
+nlohmann::json
+ManifestRawGA::diff( const ManifestRawGA & old ) const
+{
+  return nlohmann::json::diff( nlohmann::json( *this ), old );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+ManifestRawGA::check() const
+{
+  GlobalManifestRawGA::check();
+  if ( this->install.has_value() )
+    {
+      for ( const auto & [iid, desc] : *this->install )
+        {
+          if ( desc.has_value() ) { desc->check( iid ); }
+        }
+    }
+  if ( this->hook.has_value() ) { this->hook->check(); }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 }  // namespace flox::resolver
 
 
