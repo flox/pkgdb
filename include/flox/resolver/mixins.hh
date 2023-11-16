@@ -45,7 +45,7 @@ namespace flox::resolver {
  */
 FLOX_DEFINE_EXCEPTION( EnvironmentMixinException,
                        EC_ENVIRONMENT_MIXIN,
-                       "EnvironmentMixin" )
+                       "error handling manifest or lockfile" )
 /** @} */
 
 

@@ -133,7 +133,7 @@ SearchCommand::initEnvironment()
 
   /* Init manifest. */
   maybePath = this->params.getManifestPath();
-  if ( maybePath.has_value() ) { this->initGlobalManifestPath( *maybePath ); }
+  if ( maybePath.has_value() ) { this->initManifestPath( *maybePath ); }
   this->initManifest( this->params.getManifestRaw() );
 
   /* Init lockfile . */
