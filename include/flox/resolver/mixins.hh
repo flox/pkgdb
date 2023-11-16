@@ -80,7 +80,7 @@ private:
    * Contents of project level manifest with registry, settings,
    * activation hook, and list of packages. ( required )
    */
-  std::optional<Manifest> manifest;
+  std::optional<EnvironmentManifest> manifest;
 
   /** Path to project's lockfile ( if any ). */
   std::optional<std::filesystem::path> lockfilePath;
@@ -169,7 +169,7 @@ protected:
    * private member variables.
    */
   void
-  initManifest( Manifest manifest );
+  initManifest( EnvironmentManifest manifest );
 
   /**
    * @brief Initialize the @a lockfilePath member variable.
@@ -238,7 +238,7 @@ public:
    * If @a manifest is unset, but @a manifestPath is set then
    * load from the file.
    */
-  [[nodiscard]] virtual const Manifest &
+  [[nodiscard]] virtual const EnvironmentManifest &
   getManifest();
 
   /** @brief Get the filesystem path to the lockfile ( if any ). */

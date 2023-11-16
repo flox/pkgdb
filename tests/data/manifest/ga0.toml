@@ -1,9 +1,4 @@
-[registry.inputs.nixpkgs.from]
-type = "github"
-owner = "NixOS"
-repo = "nixpkgs"
-rev = "e8039594435c68eb4f780f3e9bf3972a7399c4b1"
-
+# A manifest that doesn't have a registry so you can use it with --ga-registry
 [options]
 systems = ["x86_64-linux", "aarch64-darwin"]
 

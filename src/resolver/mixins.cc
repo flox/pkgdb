@@ -34,15 +34,15 @@ namespace flox::resolver {
  * @brief Generate exception handling boilerplate for
  *        `EnvironmentMixin::init<MEMBER>' functions.
  */
-#define ENV_MIXIN_THROW_IF_SET( member )                               \
-  if ( this->member.has_value() )                                      \
-    {                                                                  \
-      throw EnvironmentMixinException( "`" #member                     \
+#define ENV_MIXIN_THROW_IF_SET( member )                              \
+  if ( this->member.has_value() )                                     \
+    {                                                                 \
+      throw EnvironmentMixinException( "`" #member                    \
                                        "' was already initialized" ); \
-    }                                                                  \
-  if ( this->environment.has_value() )                                 \
-    {                                                                  \
-      throw EnvironmentMixinException(                                 \
+    }                                                                 \
+  if ( this->environment.has_value() )                                \
+    {                                                                 \
+      throw EnvironmentMixinException(                                \
         "`" #member "' cannot be initialized after `environment'" );  \
     }
 
@@ -84,11 +84,11 @@ void
 EnvironmentMixin::initManifest( ManifestRaw manifestRaw )
 {
   ENV_MIXIN_THROW_IF_SET( manifest )
-  this->manifest = Manifest( std::move( manifestRaw ) );
+  this->manifest = EnvironmentManifest( std::move( manifestRaw ) );
 }
 
 void
-EnvironmentMixin::initManifest( Manifest manifest )
+EnvironmentMixin::initManifest( EnvironmentManifest manifest )
 {
   ENV_MIXIN_THROW_IF_SET( manifest )
   this->manifest = std::move( manifest );
@@ -153,7 +153,7 @@ EnvironmentMixin::getManifestPath() const
 
 /* -------------------------------------------------------------------------- */
 
-const Manifest &
+const EnvironmentManifest &
 EnvironmentMixin::getManifest()
 {
   if ( ! this->manifest.has_value() )
@@ -164,7 +164,7 @@ EnvironmentMixin::getManifest()
             "you must provide an inline manifest or the path to a manifest "
             "file" );
         }
-      this->manifest = Manifest( *this->manifestPath );
+      this->manifest = EnvironmentManifest( *this->manifestPath );
     }
   return *this->manifest;
 }
@@ -284,7 +284,9 @@ EnvironmentMixin::addFloxDirectoryOption( argparse::ArgumentParser & parser )
           {
             this->initLockfilePath( path );
           }
+
         /* Locate manifest. */
+        // NOLINTBEGIN(bugprone-branch-clone)
         if ( path = dir / "manifest.json"; std::filesystem::exists( path ) )
           {
             this->initManifestPath( path );
@@ -306,25 +308,8 @@ EnvironmentMixin::addFloxDirectoryOption( argparse::ArgumentParser & parser )
               "in directory: "
               + strPath );
           }
+        // NOLINTEND(bugprone-branch-clone)
       } );
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-static RegistryRaw
-getGARegistry()
-{
-  nix::FlakeRef nixpkgsRef = nlohmann::json { { "type", "github" },
-                                              { "owner", "NixOS" },
-                                              { "repo", "nixpkgs" },
-                                              { "ref", "release-23.05" } };
-
-  RegistryInput nixpkgs( std::vector<Subtree> { ST_LEGACY }, nixpkgsRef );
-  RegistryRaw   registry;
-  registry.inputs.emplace( "nixpkgs", std::move( nixpkgs ) );
-  registry.priority = std::vector<std::string> { "nixpkgs" };
-  return registry;
 }
 
 

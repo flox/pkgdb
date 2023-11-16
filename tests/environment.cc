@@ -236,7 +236,7 @@ test_groupIsLocked0()
   manifestRaw.options->systems = { _system };
   manifestRaw.registry         = registryWithNixpkgs;
 
-  Manifest manifest( manifestRaw );
+  EnvironmentManifest manifest( manifestRaw );
 
   /* Create expected lockfile, reusing manifestRaw */
   LockfileRaw lockfileRaw;
@@ -284,7 +284,7 @@ test_groupIsLocked1()
   nlohmann::json helloJSON = { { "systems", { _system } } };
   modifiedManifestRaw.install->at( "hello" )
     = ManifestDescriptorRaw( helloJSON );
-  Manifest manifest( modifiedManifestRaw );
+  EnvironmentManifest manifest( modifiedManifestRaw );
 
   /* All groups should be locked. */
   TestEnvironment environment( std::nullopt, manifest, lockfile );
@@ -321,7 +321,7 @@ test_groupIsLocked2()
   nlohmann::json helloJSON = { { "systems", nlohmann::json::array() } };
   modifiedManifestRaw.install->at( "hello" )
     = ManifestDescriptorRaw( helloJSON );
-  Manifest manifest( modifiedManifestRaw );
+  EnvironmentManifest manifest( modifiedManifestRaw );
 
   /* All groups should be unlocked. */
   TestEnvironment environment( std::nullopt, manifest, lockfile );
@@ -358,7 +358,7 @@ test_groupIsLocked3()
   nlohmann::json helloJSON = { { "package-group", "red" } };
   modifiedManifestRaw.install->at( "hello" )
     = ManifestDescriptorRaw( helloJSON );
-  Manifest manifest( modifiedManifestRaw );
+  EnvironmentManifest manifest( modifiedManifestRaw );
 
   /* All groups should be unlocked. */
   TestEnvironment environment( std::nullopt, manifest, lockfile );
@@ -393,7 +393,7 @@ test_groupIsLocked4()
   /* Add curl to the manifest (but not the lockfile) */
   ManifestRaw modifiedManifestRaw( manifestRaw );
   ( *modifiedManifestRaw.install )["curl"] = std::nullopt;
-  Manifest manifest( modifiedManifestRaw );
+  EnvironmentManifest manifest( modifiedManifestRaw );
 
   /* All groups should be unlocked. */
   TestEnvironment environment( std::nullopt, manifest, lockfile );
@@ -432,7 +432,7 @@ test_groupIsLocked5()
   ManifestRaw    modifiedManifestRaw( manifestRaw );
   nlohmann::json curlJSON                  = { { "package-group", "blue" } };
   ( *modifiedManifestRaw.install )["curl"] = ManifestDescriptorRaw( curlJSON );
-  Manifest manifest( manifestRaw );
+  EnvironmentManifest manifest( manifestRaw );
 
   /* The group with hello should stay locked, but curl should be unlocked. */
   TestEnvironment environment( std::nullopt, manifest, lockfile );
@@ -465,7 +465,7 @@ test_groupIsLocked6()
   manifestRaw.options     = Options {};
   manifestRaw.options->systems = { _system };
   manifestRaw.registry         = registryWithNixpkgs;
-  Manifest manifest( manifestRaw );
+  EnvironmentManifest manifest( manifestRaw );
 
   /* Create expected lockfile, reusing manifestRaw */
   LockfileRaw lockfileRaw;
@@ -499,7 +499,7 @@ test_groupIsLocked_upgrades()
   manifestRaw.options->systems = { _system };
   manifestRaw.registry         = registryWithNixpkgs;
 
-  Manifest manifest( manifestRaw );
+  EnvironmentManifest manifest( manifestRaw );
 
   /* Create expected lockfile, reusing manifestRaw */
   LockfileRaw lockfileRaw;
@@ -558,7 +558,7 @@ test_createLockfile_new()
   manifestRaw.options->systems = { _system };
   manifestRaw.registry         = registryWithNixpkgs;
 
-  Manifest manifest( manifestRaw );
+  EnvironmentManifest manifest( manifestRaw );
 
   /* Create expected lockfile, reusing manifestRaw */
   LockfileRaw expectedLockfileRaw;
@@ -589,7 +589,7 @@ test_createLockfile_existing()
   manifestRaw.options->systems = { _system };
   manifestRaw.registry         = registryWithNixpkgs;
 
-  Manifest manifest( manifestRaw );
+  EnvironmentManifest manifest( manifestRaw );
 
   /* Create existing/expected lockfile, reusing manifestRaw */
   LockfileRaw expectedLockfileRaw;
@@ -626,7 +626,7 @@ test_createLockfile_both()
   manifestRaw.options->systems = { _system };
   manifestRaw.registry         = registryWithNixpkgs;
 
-  Manifest manifest( manifestRaw );
+  EnvironmentManifest manifest( manifestRaw );
 
   /* Create existing lockfile with hello but not curl. We have to create another
    * manifest with hello but not curl. */
@@ -638,7 +638,7 @@ test_createLockfile_both()
   existingManifestRaw.options->systems = { _system };
   existingManifestRaw.registry         = registryWithNixpkgs;
 
-  Manifest existingManifest( existingManifestRaw );
+  EnvironmentManifest existingManifest( existingManifestRaw );
 
   LockfileRaw existingLockfileRaw;
   existingLockfileRaw.packages

@@ -131,7 +131,7 @@ Lockfile::init()
         }
     }
 
-  this->manifest = Manifest( this->lockfileRaw.manifest );
+  this->manifest = EnvironmentManifest( this->lockfileRaw.manifest );
 
   this->check();
 }

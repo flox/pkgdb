@@ -135,6 +135,7 @@
         # For lints/fmt
         pkgs.clang-tools_16
         pkgs.include-what-you-use
+        pkgs.llvm  # for `llvm-symbolizer'
         # For debugging
         ( if pkgs.stdenv.cc.isGNU or false then pkgs.gdb else pkgs.lldb )
       ] ++ ( if pkgs.stdenv.isLinux or false then [pkgs.valgrind] else [] );
