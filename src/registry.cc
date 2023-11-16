@@ -101,25 +101,25 @@ from_json( const nlohmann::json & jfrom, RegistryInput & rip )
             {
               value.get_to( rip.subtrees );
             }
-          catch ( nlohmann::json::exception & e )
+          catch ( nlohmann::json::exception & err )
             {
               throw InvalidRegistryException(
                 "couldn't interpret registry input field `subtrees'",
-                flox::extract_json_errmsg( e ) );
+                flox::extract_json_errmsg( err ) );
             }
         }
       else if ( key == "from" )
         {
           try
             {
-              nix::FlakeRef fr = value.get<nix::FlakeRef>();
-              rip.from         = std::make_shared<nix::FlakeRef>( fr );
+              nix::FlakeRef ref = value.get<nix::FlakeRef>();
+              rip.from          = std::make_shared<nix::FlakeRef>( ref );
             }
-          catch ( nlohmann::json::exception & e )
+          catch ( nlohmann::json::exception & err )
             {
               throw InvalidRegistryException(
                 "couldn't interpret registry input field `from'",
-                flox::extract_json_errmsg( e ) );
+                flox::extract_json_errmsg( err ) );
             }
         }
       else { throw InvalidRegistryException( "unknown field `" + key + "'" ); }
@@ -161,11 +161,11 @@ from_json( const nlohmann::json & jfrom, RegistryRaw & reg )
                 {
                   ivalue.get_to( input );
                 }
-              catch ( nlohmann::json::exception & e )
+              catch ( nlohmann::json::exception & err )
                 {
                   throw InvalidRegistryException(
                     "couldn't extract input `" + ikey + "'",
-                    flox::extract_json_errmsg( e ) );
+                    flox::extract_json_errmsg( err ) );
                 }
               inputs.insert( { ikey, input } );
             }
@@ -178,27 +178,28 @@ from_json( const nlohmann::json & jfrom, RegistryRaw & reg )
             {
               value.get_to( prefs );
             }
-          catch ( nlohmann::json::exception & e )
+          catch ( nlohmann::json::exception & err )
             {
               throw InvalidRegistryException(
                 "couldn't extract input preferences",
-                flox::extract_json_errmsg( e ) );
+                flox::extract_json_errmsg( err ) );
             }
           reg.defaults = prefs;
         }
       else if ( key == "priority" )
         {
-          std::vector<std::string> p;
+          std::vector<std::string> priority;
           try
             {
-              value.get_to( p );
+              value.get_to( priority );
             }
-          catch ( nlohmann::json::exception & e )
+          catch ( nlohmann::json::exception & err )
             {
-              throw InvalidRegistryException( "couldn't extract input priority",
-                                              flox::extract_json_errmsg( e ) );
+              throw InvalidRegistryException(
+                "couldn't extract input priority",
+                flox::extract_json_errmsg( err ) );
             }
-          reg.priority = p;
+          reg.priority = std::move( priority );
         }
       else
         {
@@ -339,11 +340,11 @@ from_json( const nlohmann::json & jfrom, InputPreferences & prefs )
             {
               value.get_to( prefs.subtrees );
             }
-          catch ( nlohmann::json::exception & e )
+          catch ( nlohmann::json::exception & err )
             {
               throw InvalidRegistryException(
                 "couldn't interpret field `subtrees'",
-                flox::extract_json_errmsg( e ) );
+                flox::extract_json_errmsg( err ) );
             }
         }
       else { throw InvalidRegistryException( "unknown field `" + key + "'" ); }
@@ -361,12 +362,30 @@ to_json( nlohmann::json & jto, const InputPreferences & prefs )
 /* -------------------------------------------------------------------------- */
 
 RegistryRaw
-lockRegistry( const RegistryRaw & unlocked, nix::ref<nix::Store> store )
+lockRegistry( const RegistryRaw & unlocked, const nix::ref<nix::Store> & store )
 {
   auto factory  = FloxFlakeInputFactory( store );
   auto locked   = unlocked;
   locked.inputs = FlakeRegistry( unlocked, factory ).getLockedInputs();
   return locked;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+RegistryRaw
+getGARegistry()
+{
+  static const nix::FlakeRef nixpkgsRef
+    = nlohmann::json { { "type", "github" },
+                       { "owner", "NixOS" },
+                       { "repo", "nixpkgs" },
+                       { "ref", "release-23.05" } };
+  return RegistryRaw(
+    std::map<std::string, RegistryInput> {
+      { "nixpkgs",
+        RegistryInput( std::vector<Subtree> { ST_LEGACY }, nixpkgsRef ) } },
+    std::vector<std::string> { "nixpkgs" } );
 }
 
 

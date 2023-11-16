@@ -376,7 +376,7 @@ to_json( nlohmann::json & jto, const GlobalManifestRaw & manifest )
 /* -------------------------------------------------------------------------- */
 
 void
-ManifestRaw::EnvBase::check() const
+EnvBaseRaw::check() const
 {
   if ( this->floxhub.has_value() && this->dir.has_value() )
     {
@@ -390,11 +390,11 @@ ManifestRaw::EnvBase::check() const
 /* -------------------------------------------------------------------------- */
 
 static void
-from_json( const nlohmann::json & jfrom, ManifestRaw::EnvBase & env )
+from_json( const nlohmann::json & jfrom, EnvBaseRaw & env )
 {
   assertIsJSONObject<InvalidManifestFileException>(
     jfrom,
-    "manifest field `options.env-base'" );
+    "manifest field `env-base'" );
 
   /* Clear fields. */
   env.dir     = std::nullopt;
@@ -439,7 +439,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::EnvBase & env )
 
 
 static void
-to_json( nlohmann::json & jto, const ManifestRaw::EnvBase & env )
+to_json( nlohmann::json & jto, const EnvBaseRaw & env )
 {
   env.check();
   if ( env.dir.has_value() ) { jto = { { "dir", *env.dir } }; }
@@ -451,7 +451,7 @@ to_json( nlohmann::json & jto, const ManifestRaw::EnvBase & env )
 /* -------------------------------------------------------------------------- */
 
 static void
-from_json( const nlohmann::json & jfrom, ManifestRaw::Hook & hook )
+from_json( const nlohmann::json & jfrom, HookRaw & hook )
 {
   assertIsJSONObject<InvalidManifestFileException>( jfrom,
                                                     "manifest field `hook'" );
@@ -500,7 +500,7 @@ from_json( const nlohmann::json & jfrom, ManifestRaw::Hook & hook )
 
 
 static void
-to_json( nlohmann::json & jto, const ManifestRaw::Hook & hook )
+to_json( nlohmann::json & jto, const HookRaw & hook )
 {
   hook.check();
   if ( hook.file.has_value() ) { jto = { { "file", *hook.file } }; }
@@ -512,7 +512,7 @@ to_json( nlohmann::json & jto, const ManifestRaw::Hook & hook )
 /* -------------------------------------------------------------------------- */
 
 void
-ManifestRaw::Hook::check() const
+HookRaw::check() const
 {
   if ( this->script.has_value() && this->file.has_value() )
     {
@@ -659,6 +659,130 @@ nlohmann::json
 ManifestRaw::diff( const ManifestRaw & old ) const
 {
   return nlohmann::json::diff( nlohmann::json( *this ), old );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+from_json( const nlohmann::json & jfrom, GlobalManifestRawGA & manifest )
+{
+  assertIsJSONObject<InvalidManifestFileException>( jfrom, "global manifest" );
+
+  for ( const auto & [key, value] : jfrom.items() )
+    {
+      if ( key == "options" ) { value.get_to( manifest.options ); }
+      else
+        {
+          throw InvalidManifestFileException(
+            "unrecognized global manifest field: `" + key + "'." );
+        }
+    }
+  manifest.check();
+}
+
+
+void
+to_json( nlohmann::json & jto, const GlobalManifestRawGA & manifest )
+{
+  manifest.check();
+  jto = nlohmann::json::object();
+
+  if ( manifest.options.has_value() ) { jto["options"] = *manifest.options; }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+from_json( const nlohmann::json & jfrom, ManifestRawGA & manifest )
+{
+  assertIsJSONObject<InvalidManifestFileException>( jfrom, "manifest" );
+
+  for ( const auto & [key, value] : jfrom.items() )
+    {
+      if ( key == "install" )
+        {
+          std::unordered_map<std::string, std::optional<ManifestDescriptorRaw>>
+            install;
+          for ( const auto & [name, desc] : value.items() )
+            {
+              /* An empty/null descriptor uses `name' of the attribute. */
+              if ( desc.is_null() ) { install.emplace( name, std::nullopt ); }
+              else  // TODO: parse CLI strings
+                {
+                  try
+                    {
+                      install.emplace( name,
+                                       desc.get<ManifestDescriptorRaw>() );
+                    }
+                  catch ( const nlohmann::json::exception & )
+                    {
+                      throw InvalidManifestFileException(
+                        "failed to parse manifest field `install." + name
+                        + "'." );
+                    }
+                }
+            }
+          manifest.install = std::move( install );
+        }
+      else if ( key == "vars" )
+        {
+          std::unordered_map<std::string, std::string> vars;
+          varsFromJSON( value, vars );
+          manifest.vars = std::move( vars );
+        }
+      else if ( key == "hook" ) { value.get_to( manifest.hook ); }
+      else if ( key == "options" ) { value.get_to( manifest.options ); }
+      else
+        {
+          throw InvalidManifestFileException( "unrecognized manifest field: `"
+                                              + key + "'." );
+        }
+    }
+  manifest.check();
+}
+
+
+void
+to_json( nlohmann::json & jto, const ManifestRawGA & manifest )
+{
+  manifest.check();
+  jto = nlohmann::json::object();
+
+  if ( manifest.options.has_value() ) { jto["options"] = *manifest.options; }
+
+  if ( manifest.install.has_value() ) { jto["install"] = *manifest.install; }
+
+  if ( manifest.vars.has_value() ) { jto["vars"] = *manifest.vars; }
+
+  if ( manifest.hook.has_value() ) { jto["hook"] = *manifest.hook; }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+nlohmann::json
+ManifestRawGA::diff( const ManifestRawGA & old ) const
+{
+  return nlohmann::json::diff( nlohmann::json( *this ), old );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+ManifestRawGA::check() const
+{
+  GlobalManifestRawGA::check();
+  if ( this->install.has_value() )
+    {
+      for ( const auto & [iid, desc] : *this->install )
+        {
+          if ( desc.has_value() ) { desc->check( iid ); }
+        }
+    }
+  if ( this->hook.has_value() ) { this->hook->check(); }
 }
 
 

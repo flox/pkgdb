@@ -372,6 +372,36 @@ test_serialize_manifest0()
 
 /* -------------------------------------------------------------------------- */
 
+bool
+test_GlobalManifestGA_getRegistryRaw0()
+{
+  flox::resolver::GlobalManifest   manifest;
+  flox::resolver::GlobalManifestGA manifestGA;
+
+  EXPECT( manifest.getRegistryRaw().inputs.empty() );
+  EXPECT( ! manifestGA.getRegistryRaw().inputs.empty() );
+
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+bool
+test_EnvironmentManifestGA_getRegistryRaw0()
+{
+  flox::resolver::EnvironmentManifest   manifest;
+  flox::resolver::EnvironmentManifestGA manifestGA;
+
+  EXPECT( manifest.getRegistryRaw().inputs.empty() );
+  EXPECT( ! manifestGA.getRegistryRaw().inputs.empty() );
+
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 int
 main()
 {
@@ -399,6 +429,9 @@ main()
   RUN_TEST( parseManifestRaw_toml0 );
 
   RUN_TEST( serialize_manifest0 );
+
+  RUN_TEST( GlobalManifestGA_getRegistryRaw0 );
+  RUN_TEST( EnvironmentManifestGA_getRegistryRaw0 );
 
   return exitCode;
 }

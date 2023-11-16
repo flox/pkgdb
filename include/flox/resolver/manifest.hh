@@ -20,6 +20,7 @@
 #include <nix/globals.hh>
 #include <nix/ref.hh>
 
+#include "compat/concepts.hh"
 #include "flox/core/nix-state.hh"
 #include "flox/core/types.hh"
 #include "flox/pkgdb/pkg-query.hh"
@@ -46,6 +47,22 @@ namespace flox::resolver {
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief Read a flox::resolver::ManifestBase from a file. */
+template<manifest_raw_type RawType>
+static inline RawType
+readManifestFromPath( const std::filesystem::path & manifestPath )
+{
+  if ( ! std::filesystem::exists( manifestPath ) )
+    {
+      throw InvalidManifestFileException( "no such path: "
+                                          + manifestPath.string() );
+    }
+  return readAndCoerceJSON( manifestPath );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 /**
  * @brief A _global_ manifest containing only `registry` and `options` fields.
  *
@@ -57,7 +74,8 @@ namespace flox::resolver {
  * settings or inputs are not declared in a project, they may be automatically
  * added from the global manifest.
  */
-class GlobalManifest
+template<manifest_raw_type RawType>
+class ManifestBase
 {
 
 protected:
@@ -65,46 +83,68 @@ protected:
   /* We need these `protected' so they can be set by `Manifest'. */
   // NOLINTBEGIN(cppcoreguidelines-non-private-member-variables-in-classes)
   // TODO: remove `manifestPath'
-  ManifestRaw manifestRaw;
+  RawType     manifestRaw;
   RegistryRaw registryRaw;
   // NOLINTEND(cppcoreguidelines-non-private-member-variables-in-classes)
 
+  /** @brief Initialize @a registryRaw from @a manifestRaw. */
+  template<manifest_raw_type _RawType = RawType>
+  typename std::enable_if<std::derived_from<_RawType, GlobalManifestRaw>,
+                          void>::type
+  initRegistry()
+  {
+    if ( this->manifestRaw.registry.has_value() )
+      {
+        this->registryRaw = *this->manifestRaw.registry;
+      }
+  }
 
-  /**
-   * @brief Initialize @a registryRaw from @a manifestRaw. */
-  void
-  initRegistry();
+  /** @brief Initialize @a registryRaw from @a manifestRaw. */
+  template<manifest_raw_type _RawType = RawType>
+  typename std::enable_if<std::derived_from<_RawType, GlobalManifestRawGA>,
+                          void>::type
+  initRegistry()
+  {
+    this->registryRaw = getGARegistry();
+  }
 
 
 public:
 
-  virtual ~GlobalManifest()                = default;
-  GlobalManifest()                         = default;
-  GlobalManifest( const GlobalManifest & ) = default;
-  GlobalManifest( GlobalManifest && )      = default;
+  using rawType = RawType;
 
-  explicit GlobalManifest( GlobalManifestRaw raw )
-    : manifestRaw( std::move( raw ) )
+  virtual ~ManifestBase()                  = default;
+  ManifestBase( const ManifestBase & )     = default;
+  ManifestBase( ManifestBase && ) noexcept = default;
+
+  ManifestBase()
   {
+    this->manifestRaw.check();
     this->initRegistry();
   }
 
-  explicit GlobalManifest( ManifestRaw raw ) : manifestRaw( std::move( raw ) )
+  explicit ManifestBase( RawType raw ) : manifestRaw( std::move( raw ) )
   {
+    this->manifestRaw.check();
     this->initRegistry();
   }
 
-  explicit GlobalManifest( std::filesystem::path manifestPath );
+  explicit ManifestBase( const std::filesystem::path & manifestPath )
+    : manifestRaw( readManifestFromPath<RawType>( manifestPath ) )
+  {
+    this->manifestRaw.check();
+    this->initRegistry();
+  }
 
-  GlobalManifest &
-  operator=( const GlobalManifest & )
+  ManifestBase &
+  operator=( const ManifestBase & )
     = default;
 
-  GlobalManifest &
-  operator=( GlobalManifest && )
+  ManifestBase &
+  operator=( ManifestBase && ) noexcept
     = default;
 
-  [[nodiscard]] const ManifestRaw &
+  [[nodiscard]] const RawType &
   getManifestRaw() const
   {
     return this->manifestRaw;
@@ -118,14 +158,12 @@ public:
 
   /* Ignore linter warning about copying params because `nix::ref` is just
    * a pointer ( `std::shared_pointer' with a `nullptr` check ). */
-  // NOLINTBEGIN(performance-unnecessary-value-param)
   [[nodiscard]] RegistryRaw
-  getLockedRegistry( nix::ref<nix::Store> store
+  getLockedRegistry( const nix::ref<nix::Store> & store
                      = NixStoreMixin().getStore() ) const
   {
     return lockRegistry( this->getRegistryRaw(), store );
   }
-  // NOLINTEND(performance-unnecessary-value-param)
 
   /** @brief Get the list of systems requested by the manifest. */
   [[nodiscard]] std::vector<System>
@@ -140,10 +178,79 @@ public:
   }
 
   [[nodiscard]] pkgdb::PkgQueryArgs
-  getBaseQueryArgs() const;
+  getBaseQueryArgs() const
+  {
+    pkgdb::PkgQueryArgs args;
+    if ( ! this->manifestRaw.options.has_value() ) { return args; }
+
+    if ( this->manifestRaw.options->systems.has_value() )
+      {
+        args.systems = *this->manifestRaw.options->systems;
+      }
+
+    if ( this->manifestRaw.options->allow.has_value() )
+      {
+        if ( this->manifestRaw.options->allow->unfree.has_value() )
+          {
+            args.allowUnfree = *this->manifestRaw.options->allow->unfree;
+          }
+        if ( this->manifestRaw.options->allow->broken.has_value() )
+          {
+            args.allowBroken = *this->manifestRaw.options->allow->broken;
+          }
+        args.licenses = this->manifestRaw.options->allow->licenses;
+      }
+
+    if ( this->manifestRaw.options->semver.has_value()
+         && this->manifestRaw.options->semver->preferPreReleases.has_value() )
+      {
+        args.preferPreReleases
+          = *this->manifestRaw.options->semver->preferPreReleases;
+      }
+    return args;
+  }
 
 
-}; /* End class `GlobalManifest' */
+}; /* End class `ManifestBase' */
+
+
+/* -------------------------------------------------------------------------- */
+
+template<manifest_raw_type RawType>
+class GlobalManifestBase : public ManifestBase<RawType>
+{
+
+public:
+
+  ~GlobalManifestBase() override                   = default;
+  GlobalManifestBase()                             = default;
+  GlobalManifestBase( const GlobalManifestBase & ) = default;
+  GlobalManifestBase( GlobalManifestBase && )      = default;
+
+  GlobalManifestBase &
+  operator=( const GlobalManifestBase & )
+    = default;
+
+  GlobalManifestBase &
+  operator=( GlobalManifestBase && )
+    = default;
+
+  explicit GlobalManifestBase( RawType raw )
+    : ManifestBase<RawType>( std::move( raw ) )
+  {}
+
+  explicit GlobalManifestBase( const std::filesystem::path & manifestPath )
+    : ManifestBase<RawType>( manifestPath )
+  {}
+
+
+}; /* End class `GlobalManifestBase' */
+
+
+/* -------------------------------------------------------------------------- */
+
+using GlobalManifest   = GlobalManifestBase<GlobalManifestRaw>;
+using GlobalManifestGA = GlobalManifestBase<GlobalManifestRawGA>;
 
 
 /* -------------------------------------------------------------------------- */
@@ -151,9 +258,21 @@ public:
 /** @brief A map of _install IDs_ to _manifest descriptors_. */
 using InstallDescriptors = std::unordered_map<InstallID, ManifestDescriptor>;
 
+/**
+ * @brief Returns all descriptors, grouping those with a _group_ field, and
+ *        returning those without a group field as a map with a
+ *        single element.
+ */
+[[nodiscard]] std::vector<InstallDescriptors>
+getGroupedDescriptors( const InstallDescriptors & descriptors );
+
+
+/* -------------------------------------------------------------------------- */
+
 
 /** @brief Description of an environment in its _unlocked_ form. */
-class Manifest : public GlobalManifest
+template<manifest_raw_type RawType>
+class EnvironmentManifestBase : public ManifestBase<RawType>
 {
 
 private:
@@ -175,35 +294,89 @@ private:
    * - All `install.<IID>.systems` are in `options.systems`.
    */
   void
-  check() const;
+  check() const
+  {
+    const auto & raw = this->getManifestRaw();
+    raw.check();
+    std::optional<std::vector<std::string>> maybeSystems;
+    if ( auto maybeOpts = raw.options; maybeOpts.has_value() )
+      {
+        maybeSystems = maybeOpts->systems;
+      }
 
-  /**
-   * @brief Initialize @a descriptors from @a manifestRaw.
-   */
+    for ( const auto & [iid, desc] : this->descriptors )
+      {
+        if ( ! desc.systems.has_value() ) { continue; }
+        if ( ! maybeSystems.has_value() )
+          {
+            throw InvalidManifestFileException(
+              "descriptor `install." + iid
+              + "' specifies `systems' but no `options.systems' are specified"
+                " in the manifest." );
+          }
+        for ( const auto & system : *desc.systems )
+          {
+            if ( std::find( maybeSystems->begin(), maybeSystems->end(), system )
+                 == maybeSystems->end() )
+              {
+                std::stringstream msg;
+                msg << "descriptor `install." << iid << "' specifies system `"
+                    << system
+                    << "' which is not in `options.systems' in the manifest.";
+                throw InvalidManifestFileException( msg.str() );
+              }
+          }
+      }
+  }
+
+  /** @brief Initialize @a descriptors from @a manifestRaw. */
   void
-  initDescriptors();
+  initDescriptors()
+  {
+    if ( ! this->manifestRaw.install.has_value() ) { return; }
+    for ( const auto & [iid, raw] : *this->manifestRaw.install )
+      {
+        /* An empty/null descriptor uses `name' of the attribute. */
+        if ( raw.has_value() )
+          {
+            this->descriptors.emplace( iid, ManifestDescriptor( iid, *raw ) );
+          }
+        else
+          {
+            ManifestDescriptor manDesc;
+            manDesc.name = iid;
+            this->descriptors.emplace( iid, std::move( manDesc ) );
+          }
+      }
+    this->check();
+  }
 
 
 public:
 
-  ~Manifest() override         = default;
-  Manifest()                   = default;
-  Manifest( const Manifest & ) = default;
-  Manifest( Manifest && )      = default;
+  ~EnvironmentManifestBase() override                        = default;
+  EnvironmentManifestBase()                                  = default;
+  EnvironmentManifestBase( const EnvironmentManifestBase & ) = default;
+  EnvironmentManifestBase( EnvironmentManifestBase && )      = default;
 
-  explicit Manifest( ManifestRaw raw ) : GlobalManifest( std::move( raw ) )
+  explicit EnvironmentManifestBase( RawType raw )
+    : ManifestBase<RawType>( std::move( raw ) )
   {
     this->initDescriptors();
   }
 
-  explicit Manifest( std::filesystem::path manifestPath );
+  explicit EnvironmentManifestBase( const std::filesystem::path & manifestPath )
+    : ManifestBase<RawType>( readManifestFromPath<RawType>( manifestPath ) )
+  {
+    this->initDescriptors();
+  }
 
-  Manifest &
-  operator=( const Manifest & )
+  EnvironmentManifestBase &
+  operator=( const EnvironmentManifestBase & )
     = default;
 
-  Manifest &
-  operator=( Manifest && )
+  EnvironmentManifestBase &
+  operator=( EnvironmentManifestBase && )
     = default;
 
   /** @brief Get _descriptors_ from the manifest's `install' field. */
@@ -219,14 +392,22 @@ public:
    *        single element.
    */
   [[nodiscard]] std::vector<InstallDescriptors>
-  getGroupedDescriptors() const;
+  getGroupedDescriptors() const
+  {
+    return flox::resolver::getGroupedDescriptors( this->descriptors );
+  }
 
 
-}; /* End class `Manifest' */
+}; /* End class `EnvironmentManifestBase' */
 
 
 /* -------------------------------------------------------------------------- */
 
+using EnvironmentManifest   = EnvironmentManifestBase<ManifestRaw>;
+using EnvironmentManifestGA = EnvironmentManifestBase<ManifestRawGA>;
+
+
+/* -------------------------------------------------------------------------- */
 
 }  // namespace flox::resolver
 

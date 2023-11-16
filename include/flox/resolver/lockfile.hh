@@ -201,7 +201,7 @@ private:
    * Handle for the manifest used to create the lockfile.
    * This reads the lockfile's `manifest`.
    */
-  Manifest manifest;
+  EnvironmentManifest manifest;
   /** Maps `{ <FINGERPRINT>: <INPUT> }` for all `packages` members' inputs. */
   RegistryRaw packagesRegistryRaw;
 
@@ -282,7 +282,7 @@ public:
   }
 
   /** @brief Get old manifest. */
-  [[nodiscard]] const Manifest &
+  [[nodiscard]] const EnvironmentManifest &
   getManifest() const
   {
     return this->manifest;

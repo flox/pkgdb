@@ -47,14 +47,17 @@ test_FloxFlakeInputRegistry0()
 /* -------------------------------------------------------------------------- */
 
 bool
-test_Manifest_getRegistryRaw0()
+test_EnvironmentManifest_getRegistryRaw0()
 {
-  flox::resolver::Manifest manifest( TEST_DATA_DIR "/registry/registry0.json" );
+  flox::resolver::EnvironmentManifest manifest( TEST_DATA_DIR
+                                                "/registry/registry0.json" );
   (void) manifest.getRegistryRaw();
 
   return true;
 }
 
+
+/* -------------------------------------------------------------------------- */
 
 bool
 test_merge_vecs()
@@ -70,12 +73,12 @@ test_merge_vecs()
 /* -------------------------------------------------------------------------- */
 
 bool
-test_Manifest_badPath0()
+test_EnvironmentManifest_badPath0()
 {
   /* Try loading the registry without setting the path. */
   try
     {
-      flox::resolver::Manifest manifest( "" );
+      flox::resolver::EnvironmentManifest manifest( "" );
       (void) manifest.getRegistryRaw();
       return false;
     }
@@ -97,12 +100,12 @@ test_Manifest_badPath0()
  * ( which invokes the `Registry<T>()` contstructor ) to catch the error.
  */
 bool
-test_Manifest_NoIndirectRefs0()
+test_EnvironmentManifest_NoIndirectRefs0()
 {
   try
     {
-      flox::resolver::Manifest manifest( TEST_DATA_DIR
-                                         "/registry/registry1.json" );
+      flox::resolver::EnvironmentManifest manifest(
+        TEST_DATA_DIR "/registry/registry1.json" );
       (void) manifest.getRegistryRaw();
       return false;
     }
@@ -132,9 +135,9 @@ main( int argc, char * argv[] )
 
   RUN_TEST( FloxFlakeInputRegistry0 );
 
-  RUN_TEST( Manifest_getRegistryRaw0 );
-  RUN_TEST( Manifest_badPath0 );
-  RUN_TEST( Manifest_NoIndirectRefs0 );
+  RUN_TEST( EnvironmentManifest_getRegistryRaw0 );
+  RUN_TEST( EnvironmentManifest_badPath0 );
+  RUN_TEST( EnvironmentManifest_NoIndirectRefs0 );
   RUN_TEST( merge_vecs );
 
 
