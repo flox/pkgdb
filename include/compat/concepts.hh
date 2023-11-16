@@ -79,6 +79,7 @@ concept derived_from
 
 }  // namespace std
 
+
 /* -------------------------------------------------------------------------- */
 
 #endif  // defined( __clang__ ) && ( __clang_major__ < 15 )
