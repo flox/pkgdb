@@ -343,6 +343,129 @@ Environment::lockPackage( const LockedInputRaw & input,
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * @brief Get locked input from a lockfile to try to use to resolve a group of
+ *        packages.
+ *
+ * Helper function for @a flox::resolver::Environment::lockSystem. Choosing the
+ * locked input for a group is full of edge cases, because the new group may be
+ * different than whatever was in the group in the old lockfile. We still want
+ * to reuse old locked inputs when we can. For example:
+ * - If the group name has changed, but nothing else has, we want to use the
+ * locked input.
+ * - If packages have been added to a group, we want to use the locked input
+ * from a package that was already in the group.
+ * - If groups are combined into a new group with a new name, we want to try to
+ * use one of the old locked inputs (for now we just use the first one we find).
+ *
+ * If, on the other hand, a package has changed, we don't want to use its locked
+ * input.
+ *
+ * @return a locked input related to the group if we can find one, or else
+ *         `std::nullopt`
+ */
+std::optional<LockedInputRaw>
+Environment::getGroupInput( const InstallDescriptors & group,
+                            const Lockfile &           oldLockfile,
+                            const System &             system ) const
+{
+  auto packages = oldLockfile.getLockfileRaw().packages;
+  if ( ! packages.contains( system ) ) { return std::nullopt; }
+  SystemPackages oldSystemPackages = packages.at( system );
+
+  InstallDescriptors oldDescriptors = oldLockfile.getDescriptors();
+
+  std::optional<LockedInputRaw> wrongGroupInput;
+  /* We could look for packages where just the iid has changed, but for now just
+   * use iid. */
+  for ( const auto & [iid, descriptor] : group )
+    {
+      if ( auto it = oldSystemPackages.find( iid );
+           it != oldSystemPackages.end() )
+        {
+          auto & [_, maybeLockedPackage] = *it;
+          if ( maybeLockedPackage.has_value() )
+            {
+              if ( auto oldDescriptorPair = oldDescriptors.find( iid );
+                   oldDescriptorPair != oldDescriptors.end() )
+                {
+                  auto & [_, oldDescriptor] = *oldDescriptorPair;
+                  /* At this point we know the same iid is both locked in the
+                   * old lockfile and present in the new manifest */
+
+                  /* Don't use a locked input if the package has changed. The
+                   * following fields control what the package actually *is*,
+                   * while:
+                   * - `optional' and `systems' control how we behave if
+                   * resolution fails, but they don't change the package.
+                   * - `priority' is a setting for mkEnv
+                   * - `group' is handled below
+                   */
+                  if ( ( descriptor.name == oldDescriptor.name )
+                       && ( descriptor.path == oldDescriptor.path )
+                       && ( descriptor.version == oldDescriptor.version )
+                       && ( descriptor.semver == oldDescriptor.semver )
+                       && ( descriptor.subtree == oldDescriptor.subtree )
+                       && ( descriptor.input == oldDescriptor.input ) )
+                    {
+                      if ( descriptor.group == oldDescriptor.group )
+                        {
+                          return maybeLockedPackage->input;
+                        }
+
+                      /* The group has changed but the package hasn't, so we'll
+                       * return this input below if we don't ever find a package
+                       * with the correct group.
+                       * If packages have come from multiple different wrong
+                       * groups, just return the first one we encounter. We
+                       * could come up with a better heuristic like most
+                       * packages or newest, or we could try resolving in all of
+                       * them. For now, don't get too fancy.
+                       */
+                      if ( ! wrongGroupInput.has_value() )
+                        {
+                          wrongGroupInput = maybeLockedPackage->input;
+                        }
+                    }
+                }
+            }
+        }
+    }
+  return wrongGroupInput;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+std::optional<SystemPackages>
+Environment::tryResolveGroup( const InstallDescriptors & group,
+                              const System &             system )
+{
+  if ( auto oldLockfile = this->getOldLockfile(); oldLockfile.has_value() )
+    {
+      auto lockedInput
+        = getGroupInput( group, *this->getOldLockfile(), system );
+      if ( lockedInput.has_value() )
+        {
+          RegistryInput        registryInput( *lockedInput );
+          nix::ref<nix::Store> store = this->getStore();
+          pkgdb::PkgDbInput    input( store, registryInput );
+          auto maybeResolved = this->tryResolveGroupIn( group, input, system );
+          if ( maybeResolved.has_value() ) { return maybeResolved; }
+        }
+    }
+  // TODO: Use `getCombinedRegistryRaw()'
+  for ( const auto & [_, input] : *this->getPkgDbRegistry() )
+    {
+      auto maybeResolved = this->tryResolveGroupIn( group, *input, system );
+      if ( maybeResolved.has_value() ) { return maybeResolved; }
+    }
+  return std::nullopt;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 std::optional<SystemPackages>
 Environment::tryResolveGroupIn( const InstallDescriptors & group,
                                 const pkgdb::PkgDbInput &  input,
@@ -406,21 +529,17 @@ Environment::lockSystem( const System & system )
 
   auto groups = this->getUnlockedGroups( system );
 
-  // TODO: Use `getCombinedRegistryRaw()'
-  for ( const auto & [_, input] : *this->getPkgDbRegistry() )
+  /* Try resolving unresolved groups. */
+  for ( auto group = groups.begin(); group != groups.end(); )
     {
-      /* Try resolving unresolved groups. */
-      for ( auto group = groups.begin(); group != groups.end(); )
+      std::optional<SystemPackages> maybeResolved
+        = this->tryResolveGroup( *group, system );
+      if ( maybeResolved.has_value() )
         {
-          std::optional<SystemPackages> maybeResolved
-            = this->tryResolveGroupIn( *group, *input, system );
-          if ( maybeResolved.has_value() )
-            {
-              pkgs.merge( *maybeResolved );
-              group = groups.erase( group );
-            }
-          else { ++group; }
+          pkgs.merge( *maybeResolved );
+          group = groups.erase( group );
         }
+      else { ++group; }
     }
 
   if ( ! groups.empty() )

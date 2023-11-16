@@ -163,6 +163,19 @@ private:
                           const System &             system );
 
   /**
+   * @brief Try to resolve a group of descriptors
+   *
+   * Attempts to resolve using a locked input from the old lockfile if it exists
+   * for the group. If not, inputs from the combined environment registry are
+   * used.
+   *
+   * @return `std::nullopt` if resolution fails, otherwise a set of
+   *          resolved packages.
+   */
+  [[nodiscard]] std::optional<SystemPackages>
+  tryResolveGroup( const InstallDescriptors & group, const System & system );
+
+  /**
    * @brief Try to resolve a group of descriptors in a given package database.
    *
    * @return `std::nullopt` if resolution fails, otherwise a set of
@@ -187,6 +200,33 @@ private:
   lockSystem( const System & system );
 
 protected:
+
+  /**
+   * @brief Get locked input from a lockfile to try to use to resolve a group of
+   *        packages.
+   *
+   * Helper function for @a flox::resolver::Environment::lockSystem. Choosing
+   * the locked input for a group is full of edge cases, because the new group
+   * may be different than whatever was in the group in the old lockfile. We
+   * still want to reuse old locked inputs when we can. For example:
+   * - If the group name has changed, but nothing else has, we want to use the
+   * locked input.
+   * - If packages have been added to a group, we want to use the locked input
+   * from a package that was already in the group.
+   * - If groups are combined into a new group with a new name, we want to try
+   * to use one of the old locked inputs (for now we just use the first one we
+   * find).
+   *
+   * If, on the other hand, a package has changed, we don't want to use its
+   * locked input.
+   *
+   * @return a locked input related to the group if we can find one, or else
+   *         `std::nullopt`
+   */
+  [[nodiscard]] std::optional<LockedInputRaw>
+  getGroupInput( const InstallDescriptors & group,
+                 const Lockfile &           oldLockfile,
+                 const System &             system ) const;
 
   /**
    * @brief Check if lock from @ oldLockfile can be reused for a group.

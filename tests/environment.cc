@@ -29,6 +29,7 @@ class TestEnvironment : public Environment
 public:
 
   using Environment::Environment;
+  using Environment::getGroupInput;
   using Environment::groupIsLocked;
 };
 
@@ -118,6 +119,35 @@ LockedPackageRaw curlLocked( curlLockedJSON );
 
 
 /* -------------------------------------------------------------------------- */
+
+/** Change a few fields from what we'd get if actual resultion was performed.
+ */
+nlohmann::json mockCurlLockedJSON {
+  { "input",
+    { { "fingerprint", nixpkgsFingerprintStr },
+      { "url", nixpkgsRef },
+      { "attrs",
+        { { "owner", "owner" },
+          { "repo", "repo" },
+          { "rev", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" },
+          { "type", "github" },
+          { "lastModified", 1685979279 },
+          { "narHash",
+            "sha256-1UGacsv5coICyvAzwuq89v9NsS00Lo8sz22cDHwhnn8=" } } } } },
+  { "attr-path", { "mock", "curl" } },
+  { "priority", 5 },
+  { "info",
+    { { "broken", false },
+      { "license", "GPL-3.0-or-later" },
+      { "pname", "curl" },
+      { "unfree", false },
+      { "version", "2.12.1" } } }
+};
+LockedPackageRaw mockCurlLocked( mockCurlLockedJSON );
+
+
+// /* --------------------------------------------------------------------------
+// */
 
 nlohmann::json registryWithNixpkgsJSON {
   { "inputs",
@@ -547,6 +577,194 @@ test_groupIsLocked_upgrades()
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * @brief `getGroupInput` returns the locked input even if the group name
+ *        changes
+ */
+bool
+test_getGroupInput0()
+{
+  /* Create manifest with hello */
+  ManifestRaw manifestRaw;
+  manifestRaw.install          = { { "hello", std::nullopt } };
+  manifestRaw.options          = Options {};
+  manifestRaw.options->systems = { _system };
+  manifestRaw.registry         = registryWithNixpkgs;
+
+  /* Create expected lockfile, reusing manifestRaw */
+  LockfileRaw lockfileRaw;
+  lockfileRaw.packages = { { _system, { { "hello", mockHelloLocked } } } };
+  lockfileRaw.manifest = manifestRaw;
+
+  Lockfile lockfile( lockfileRaw );
+
+  /* Name the group hello is in. */
+  ManifestRaw    modifiedManifestRaw( manifestRaw );
+  nlohmann::json helloJSON = { { "package-group", "blue" } };
+  modifiedManifestRaw.install->at( "hello" )
+    = ManifestDescriptorRaw( helloJSON );
+  EnvironmentManifest manifest( modifiedManifestRaw );
+
+  /* The locked input is returned by `getGroupInput`. */
+  TestEnvironment environment( std::nullopt, manifest, lockfile );
+  for ( const InstallDescriptors & group : manifest.getGroupedDescriptors() )
+    {
+      auto input = environment.getGroupInput( group, lockfile, _system );
+      EXPECT( input.has_value() );
+      EXPECT( equalLockedInputRaw( *input, mockHelloLocked.input ) );
+    }
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief `getGroupInput` respects the lock of a package that used to be in a
+ *        group over a package that was just added.
+ */
+bool
+test_getGroupInput1()
+{
+  /* Create manifest with hello and curl in separate group */
+  ManifestRaw           manifestRaw;
+  nlohmann::json        curlJSON = { { "package-group", "blue" } };
+  ManifestDescriptorRaw curl( curlJSON );
+  manifestRaw.install = { { "hello", std::nullopt }, { "curl", curl } };
+  manifestRaw.options = Options {};
+  manifestRaw.options->systems = { _system };
+  manifestRaw.registry         = registryWithNixpkgs;
+
+  /* Create expected lockfile, reusing manifestRaw, and ensuring curl's input is
+   * different than hello's. */
+  LockedPackageRaw mockCurlLockedModified( mockCurlLocked );
+  mockCurlLockedModified.input.url = "not the same as hello's input";
+  LockfileRaw lockfileRaw;
+  lockfileRaw.packages = { { _system,
+                             { { "hello", mockHelloLocked },
+                               { "curl", mockCurlLockedModified } } } };
+  lockfileRaw.manifest = manifestRaw;
+
+  Lockfile lockfile( lockfileRaw );
+
+  /* Move hello to the same group as curl. */
+  ManifestRaw    modifiedManifestRaw( manifestRaw );
+  nlohmann::json helloJSON = { { "package-group", "blue" } };
+  modifiedManifestRaw.install->at( "hello" )
+    = ManifestDescriptorRaw( helloJSON );
+  EnvironmentManifest manifest( modifiedManifestRaw );
+
+  /* The locked input is returned by `getGroupInput`. */
+  TestEnvironment environment( std::nullopt, manifest, lockfile );
+  for ( const InstallDescriptors & group : manifest.getGroupedDescriptors() )
+    {
+      auto input = environment.getGroupInput( group, lockfile, _system );
+      EXPECT( input.has_value() );
+      // TODO this prints "Expectation failed" which should probably be silenced
+      EXPECT( ! equalLockedInputRaw( *input, mockHelloLocked.input ) );
+      EXPECT( equalLockedInputRaw( *input, mockCurlLockedModified.input ) );
+    }
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief `getGroupInput` uses a locked input when two groups are combined into
+ *        a group with a new name.
+ */
+bool
+test_getGroupInput2()
+{
+  /* Create manifest with hello and curl in separate group */
+  ManifestRaw           manifestRaw;
+  nlohmann::json        curlJSON = { { "package-group", "blue" } };
+  ManifestDescriptorRaw curl( curlJSON );
+  manifestRaw.install = { { "hello", std::nullopt }, { "curl", curl } };
+  manifestRaw.options = Options {};
+  manifestRaw.options->systems = { _system };
+  manifestRaw.registry         = registryWithNixpkgs;
+
+  /* Create expected lockfile, reusing manifestRaw, and ensuring curl's input is
+   * different than hello's. */
+  LockedPackageRaw mockCurlLockedModified( mockCurlLocked );
+  mockCurlLockedModified.input.url = "not the same as hello's input";
+  LockfileRaw lockfileRaw;
+  lockfileRaw.packages = { { _system,
+                             { { "hello", mockHelloLocked },
+                               { "curl", mockCurlLockedModified } } } };
+  lockfileRaw.manifest = manifestRaw;
+
+  Lockfile lockfile( lockfileRaw );
+
+  /* Move hello and curl to a new group. */
+  ManifestRaw    modifiedManifestRaw( manifestRaw );
+  nlohmann::json helloJSON = { { "package-group", "new-blue" } };
+  modifiedManifestRaw.install->at( "hello" )
+    = ManifestDescriptorRaw( helloJSON );
+  nlohmann::json modifiedCurlJSON = { { "package-group", "new-blue" } };
+  modifiedManifestRaw.install->at( "curl" )
+    = ManifestDescriptorRaw( modifiedCurlJSON );
+  EnvironmentManifest manifest( modifiedManifestRaw );
+
+  /* The locked input of one of the packages is returned. At this point, we
+   * don't care which. */
+  TestEnvironment environment( std::nullopt, manifest, lockfile );
+  for ( const InstallDescriptors & group : manifest.getGroupedDescriptors() )
+    {
+      auto input = environment.getGroupInput( group, lockfile, _system );
+      EXPECT( input.has_value() );
+      EXPECT( equalLockedInputRaw( *input, mockHelloLocked.input )
+              || equalLockedInputRaw( *input, mockCurlLockedModified.input ) );
+    }
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief `getGroupInput` does not use a locked input if the package has
+ *        changed.
+ */
+bool
+test_getGroupInput3()
+{
+  /* Create manifest with hello */
+  ManifestRaw manifestRaw;
+  manifestRaw.install          = { { "hello", std::nullopt } };
+  manifestRaw.options          = Options {};
+  manifestRaw.options->systems = { _system };
+  manifestRaw.registry         = registryWithNixpkgs;
+
+  /* Create expected lockfile, reusing manifestRaw */
+  LockfileRaw lockfileRaw;
+  lockfileRaw.packages = { { _system, { { "hello", mockHelloLocked } } } };
+  lockfileRaw.manifest = manifestRaw;
+
+  Lockfile lockfile( lockfileRaw );
+
+  /* Add a version for hello. */
+  ManifestRaw    modifiedManifestRaw( manifestRaw );
+  nlohmann::json helloJSON = { { "version", "2.12" } };
+  modifiedManifestRaw.install->at( "hello" )
+    = ManifestDescriptorRaw( helloJSON );
+  EnvironmentManifest manifest( modifiedManifestRaw );
+
+  /* The old locked input is *not* used. */
+  TestEnvironment environment( std::nullopt, manifest, lockfile );
+  for ( const InstallDescriptors & group : manifest.getGroupedDescriptors() )
+    {
+      auto input = environment.getGroupInput( group, lockfile, _system );
+      EXPECT( ! input.has_value() );
+    }
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 /** @brief createLockfile creates a lock when there is no existing lockfile. */
 bool
 test_createLockfile_new()
@@ -681,6 +899,11 @@ main()
   RUN_TEST( groupIsLocked5 );
   RUN_TEST( groupIsLocked6 );
   RUN_TEST( groupIsLocked_upgrades );
+
+  RUN_TEST( getGroupInput0 );
+  RUN_TEST( getGroupInput1 );
+  RUN_TEST( getGroupInput2 );
+  RUN_TEST( getGroupInput3 );
 
   RUN_TEST( createLockfile_new );
   RUN_TEST( createLockfile_existing );
