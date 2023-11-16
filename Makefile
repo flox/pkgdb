@@ -276,7 +276,7 @@ fullclean: clean
 # ---------------------------------------------------------------------------- #
 
 %.o: %.cc $(COMMON_HEADERS)
-	$(CXX) $(CXXFLAGS) -c $< -o $@;
+	@$(CXX) $(CXXFLAGS) -c $< -o $@;
 
 ifeq (Linux,$(OS))
 SONAME_FLAG = -Wl,-soname,$(LIBFLOXPKGDB)
@@ -286,8 +286,8 @@ endif
 
 lib/$(LIBFLOXPKGDB): CXXFLAGS += $(lib_CXXFLAGS)
 lib/$(LIBFLOXPKGDB): $(lib_SRCS:.cc=.o)
-	$(MKDIR_P) $(@D);
-	$(CXX) $(filter %.o,$^) $(LDFLAGS) $(lib_LDFLAGS) $(SONAME_FLAG) -o $@;
+	@$(MKDIR_P) $(@D);
+	@$(CXX) $(filter %.o,$^) $(LDFLAGS) $(lib_LDFLAGS) $(SONAME_FLAG) -o $@;
 
 
 # ---------------------------------------------------------------------------- #
@@ -295,11 +295,11 @@ lib/$(LIBFLOXPKGDB): $(lib_SRCS:.cc=.o)
 src/pkgdb/write.o: src/pkgdb/schemas.hh
 
 $(bin_SRCS:.cc=.o): %.o: %.cc $(COMMON_HEADERS)
-	$(CXX) $(CXXFLAGS) $(bin_CXXFLAGS) -c $< -o $@;
+	@$(CXX) $(CXXFLAGS) $(bin_CXXFLAGS) -c $< -o $@;
 
 bin/pkgdb: $(bin_SRCS:.cc=.o) lib/$(LIBFLOXPKGDB)
-	$(MKDIR_P) $(@D);
-	$(CXX) $(filter %.o,$^) $(LDFLAGS) $(bin_LDFLAGS) -o $@;
+	@$(MKDIR_P) $(@D);
+	@$(CXX) $(filter %.o,$^) $(LDFLAGS) $(bin_LDFLAGS) -o $@;
 
 
 # ---------------------------------------------------------------------------- #
@@ -307,7 +307,7 @@ bin/pkgdb: $(bin_SRCS:.cc=.o) lib/$(LIBFLOXPKGDB)
 $(TESTS) $(TEST_UTILS): $(COMMON_HEADERS)
 $(TESTS) $(TEST_UTILS): bin_CXXFLAGS += '-DTEST_DATA_DIR="$(TEST_DATA_DIR)"'
 $(TESTS) $(TEST_UTILS): tests/%: tests/%.cc lib/$(LIBFLOXPKGDB)
-	$(CXX) $(CXXFLAGS) $(bin_CXXFLAGS) $< $(LDFLAGS) $(bin_LDFLAGS) -o $@;
+	@$(CXX) $(CXXFLAGS) $(bin_CXXFLAGS) $< $(LDFLAGS) $(bin_LDFLAGS) -o $@;
 
 
 # ---------------------------------------------------------------------------- #
@@ -316,32 +316,32 @@ $(TESTS) $(TEST_UTILS): tests/%: tests/%.cc lib/$(LIBFLOXPKGDB)
 install: install-dirs install-bin install-lib install-include
 
 install-dirs: FORCE
-	$(MKDIR_P) $(BINDIR) $(LIBDIR) $(LIBDIR)/pkgconfig;
-	$(MKDIR_P) $(INCLUDEDIR)/flox $(INCLUDEDIR)/flox/core;
-	$(MKDIR_P) $(INCLUDEDIR)/flox/pkgdb $(INCLUDEDIR)/flox/search;
-	$(MKDIR_P) $(INCLUDEDIR)/flox/resolver $(INCLUDEDIR)/compat;
+	@$(MKDIR_P) $(BINDIR) $(LIBDIR) $(LIBDIR)/pkgconfig;
+	@$(MKDIR_P) $(INCLUDEDIR)/flox $(INCLUDEDIR)/flox/core;
+	@$(MKDIR_P) $(INCLUDEDIR)/flox/pkgdb $(INCLUDEDIR)/flox/search;
+	@$(MKDIR_P) $(INCLUDEDIR)/flox/resolver $(INCLUDEDIR)/compat;
 
 $(INCLUDEDIR)/%: include/% | install-dirs
-	$(CP) -- "$<" "$@";
+	@$(CP) -- "$<" "$@";
 
 $(LIBDIR)/%: lib/% | install-dirs
-	$(CP) -- "$<" "$@";
+	@$(CP) -- "$<" "$@";
 
 $(BINDIR)/%: bin/% | install-dirs
-	$(CP) -- "$<" "$@";
+	@$(CP) -- "$<" "$@";
 
 # Darwin has to relink
 ifneq (Linux,$(OS))
 LINK_INAME_FLAG = -Wl,-install_name,$(LIBDIR)/$(LIBFLOXPKGDB)
 $(LIBDIR)/$(LIBFLOXPKGDB): CXXFLAGS += $(lib_CXXFLAGS)
 $(LIBDIR)/$(LIBFLOXPKGDB): $(lib_SRCS:.cc=.o)
-	$(MKDIR_P) $(@D);
-	$(CXX) $(filter %.o,$^) $(LDFLAGS) $(lib_LDFLAGS) $(LINK_INAME_FLAG)  \
+	@$(MKDIR_P) $(@D);
+	@$(CXX) $(filter %.o,$^) $(LDFLAGS) $(lib_LDFLAGS) $(LINK_INAME_FLAG)  \
 	       -o $@;
 
 $(BINDIR)/pkgdb: $(bin_SRCS:.cc=.o) $(LIBDIR)/$(LIBFLOXPKGDB)
-	$(MKDIR_P) $(@D);
-	$(CXX) $(filter %.o,$^) $(LDFLAGS) $(bin_LDFLAGS) -o $@;
+	@$(MKDIR_P) $(@D);
+	@$(CXX) $(filter %.o,$^) $(LDFLAGS) $(bin_LDFLAGS) -o $@;
 endif # ifneq (Linux,$(OS))
 
 install-bin: $(addprefix $(BINDIR)/,$(BINS))
@@ -374,7 +374,7 @@ $(PRE_COMPILED_HEADERS): $(COMMON_HEADERS) $(DEPFILES)
 $(PRE_COMPILED_HEADERS): $(lastword $(MAKEFILE_LIST))
 $(PRE_COMPILED_HEADERS): %.gch: %
 	@echo "Generating pre-compiled header \`$@' ( warnings are suppressed )" >&2;
-	$(CXX) $(CXXFLAGS) -x c++-header -c $< -o $@ 2>/dev/null;
+	@$(CXX) $(CXXFLAGS) -x c++-header -c $< -o $@ 2>/dev/null;
 
 pre-compiled-headers: $(PRE_COMPILED_HEADERS)
 
@@ -382,7 +382,7 @@ pre-compiled-headers: $(PRE_COMPILED_HEADERS)
 # This is used when creating our compilation databases to ensure that
 # pre-compiled headers aren't taking priority over _real_ headers.
 clean-pch: FORCE
-	$(RM) $(PRE_COMPILED_HEADERS);
+	@$(RM) $(PRE_COMPILED_HEADERS);
 
 
 # ---------------------------------------------------------------------------- #
@@ -395,7 +395,7 @@ clean-pch: FORCE
 ccls: .ccls
 
 .ccls: $(lastword $(MAKEFILE_LIST)) $(DEPFILES)
-	echo '%compile_commands.json' > "$@";
+	@echo '%compile_commands.json' > "$@";
 	{                                                                     \
 	  if $(TEST) -n "$(NIX_CC)"; then                                     \
 	    $(CAT) "$(NIX_CC)/nix-support/libc-cflags";                       \
@@ -428,8 +428,8 @@ BEAR_WRAPPER := $(dir $(shell command -v $(BEAR)))
 BEAR_WRAPPER := $(dir $(patsubst %/,%,$(BEAR_WRAPPER)))lib/bear/wrapper
 
 bear.d/c++:
-	$(MKDIR_P) $(@D);
-	$(LN) -s $(BEAR_WRAPPER) bear.d/c++;
+	@$(MKDIR_P) $(@D);
+	@$(LN) -s $(BEAR_WRAPPER) bear.d/c++;
 
 FULLCLEANDIRS += bear.d
 
@@ -440,11 +440,11 @@ compile_commands.json: $(COMMON_HEADERS) $(ALL_SRCS)
 	-$(MAKE) -C $(MAKEFILE_DIR) clean;
 	EXTRA_CXXFLAGS='$(EXTRA_CXXFLAGS)'                     \
 	  PATH="$(MAKEFILE_DIR)/bear.d/:$(PATH)"               \
-	  $(BEAR) -- $(MAKE) -C $(MAKEFILE_DIR) -j bin tests;
+	  @$(BEAR) -- $(MAKE) -C $(MAKEFILE_DIR) -j bin tests;
 	EXTRA_CXXFLAGS='$(EXTRA_CXXFLAGS)'                                         \
 	  PATH="$(MAKEFILE_DIR)/bear.d/:$(PATH)"                                   \
-	  $(BEAR) --append -- $(MAKE) -C $(MAKEFILE_DIR) -j pre-compiled-headers;
-		$(MAKE) -C $(MAKEFILE_DIR) clean-pch;
+	  @$(BEAR) --append -- $(MAKE) -C $(MAKEFILE_DIR) -j pre-compiled-headers;
+		@$(MAKE) -C $(MAKEFILE_DIR) clean-pch;
 
 FULLCLEANFILES += compile_commands.json
 
@@ -466,7 +466,7 @@ iwyu: iwyu.log
 iwyu.log: compile_commands.json $(COMMON_HEADERS) $(ALL_SRCS) flake.nix
 iwyu.log: flake.lock pkg-fun.nix pkgs/nlohmann_json.nix pkgs/nix/pkg-fun.nix
 iwyu.log: build-aux/iwyu build-aux/iwyu-mappings.json
-	build-aux/iwyu|$(TEE) "$@";
+	@build-aux/iwyu|$(TEE) "$@";
 
 FULLCLEANFILES += iwyu.log
 
@@ -475,7 +475,7 @@ FULLCLEANFILES += iwyu.log
 
 .PHONY: lint
 lint: compile_commands.json $(COMMON_HEADERS) $(ALL_SRCS)
-	$(TIDY) $(filter-out compile_commands.json,$^);
+	@$(TIDY) $(filter-out compile_commands.json,$^);
 
 
 # ---------------------------------------------------------------------------- #
@@ -519,7 +519,7 @@ most: bin lib ignores
 docs: docs/index.html
 
 docs/index.html: FORCE
-	$(DOXYGEN) ./Doxyfile
+	@$(DOXYGEN) ./Doxyfile
 
 CLEANFILES += $(addprefix docs/,*.png *.html *.svg *.css *.js)
 CLEANDIRS  += docs/search
@@ -544,7 +544,7 @@ PC_CFLAGS += '-DSEMVER_PATH=\\\\\"$(SEMVER_PATH)\\\\\"'
 PC_LIBS   =  $(shell $(PKG_CONFIG) --libs-only-L nix-main) -lnixfetchers
 lib/pkgconfig/flox-pkgdb.pc: $(lastword $(MAKEFILE_LIST)) $(DEPFILES)
 lib/pkgconfig/flox-pkgdb.pc: lib/pkgconfig/flox-pkgdb.pc.in version
-	$(SED) -e 's,@PREFIX@,$(PREFIX),g'     \
+	@$(SED) -e 's,@PREFIX@,$(PREFIX),g'     \
 	       -e 's,@VERSION@,$(VERSION),g'   \
 	       -e 's,@CFLAGS@,$(PC_CFLAGS),g'  \
 	       -e 's,@LIBS@,$(PC_LIBS),g'      \
@@ -559,15 +559,15 @@ install-lib: $(LIBDIR)/pkgconfig/flox-pkgdb.pc
 
 ignores: tests/.gitignore
 tests/.gitignore: FORCE
-	$(MKDIR_P) $(@D);
-	printf '%s\n' $(patsubst tests/%,%,$(test_SRCS:.cc=)) > $@;
+	@$(MKDIR_P) $(@D);
+	@printf '%s\n' $(patsubst tests/%,%,$(test_SRCS:.cc=)) > $@;
 
 
 # ---------------------------------------------------------------------------- #
 
 .PHONY: fmt
 fmt: $(COMMON_HEADERS) $(ALL_SRCS)
-	$(FMT) -i $^;
+	@$(FMT) -i $^;
 
 
 # ---------------------------------------------------------------------------- #
