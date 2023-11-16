@@ -233,8 +233,7 @@ public:
   {
     const auto & global = this->getGlobalManifest();
     if ( ! global.has_value() ) { return std::nullopt; }
-    const ManifestRaw & raw = global->getManifestRaw();
-    return GlobalManifestRaw( raw.registry, raw.options );
+    return global->getManifestRaw();
   }
 
   [[nodiscard]] const Manifest &

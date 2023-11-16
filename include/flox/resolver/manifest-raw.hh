@@ -120,8 +120,12 @@ to_json( nlohmann::json & jto, const Options & opts );
  */
 struct GlobalManifestRaw
 {
+  /** A collection of _inputs_ to find packages. */
   std::optional<RegistryRaw> registry;
-  std::optional<Options>     options;
+
+  /** @brief Options controlling environment and search behaviors. */
+  std::optional<Options> options;
+
 
   virtual ~GlobalManifestRaw()                   = default;
   GlobalManifestRaw()                            = default;
@@ -144,7 +148,6 @@ struct GlobalManifestRaw
   operator=( GlobalManifestRaw && )
     = default;
 
-
   /**
    * @brief Validate manifest fields, throwing an exception if its contents
    *        are invalid.
@@ -166,13 +169,71 @@ struct GlobalManifestRaw
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief Convert a JSON object to a @a flox::resolver::GlobalManifest. */
+/** @brief Convert a JSON object to a @a flox::resolver::GlobalManifestRaw. */
 void
 from_json( const nlohmann::json & jfrom, GlobalManifestRaw & manifest );
 
-/** @brief Convert a @a flox::resolver::GlobalManifest to a JSON object. */
+/** @brief Convert a @a flox::resolver::GlobalManifestRaw to a JSON object. */
 void
 to_json( nlohmann::json & jto, const GlobalManifestRaw & manifest );
+
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Declares a base environment to extend. */
+struct EnvBaseRaw
+{
+  /** Indicates a remote URL to be extended. */
+  std::optional<std::string> floxhub;
+
+  /**
+   * Indicates a local directory with a `.flox/` subdirectory to be extended.
+   */
+  std::optional<std::string> dir;
+
+
+  /**
+   * @brief Validate the `env-base` field, throwing an exception if invalid
+   *        information is found.
+   *
+   * This asserts:
+   * - Only one of `floxhub` or `dir` is set.
+   */
+  void
+  check() const;
+
+  void
+  clear()
+  {
+    this->floxhub = std::nullopt;
+    this->dir     = std::nullopt;
+  }
+
+
+}; /* End struct `EnvBaseRaw' */
+
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Declares a hook to be run at environment activation. */
+struct HookRaw
+{
+  /** Define an inline script to be run at activation time. */
+  std::optional<std::string> script;
+
+  /** Reads activation script from a file. */
+  std::optional<std::string> file;
+
+
+  /**
+   * @brief Validate `Hook` fields, throwing an exception if its contents
+   *        are invalid.
+   */
+  void
+  check() const;
+
+
+}; /* End struct `HookRaw' */
 
 
 /* -------------------------------------------------------------------------- */
@@ -189,30 +250,7 @@ to_json( nlohmann::json & jto, const GlobalManifestRaw & manifest );
 struct ManifestRaw : public GlobalManifestRaw
 {
 
-  struct EnvBase
-  {
-    std::optional<std::string> floxhub;
-    std::optional<std::string> dir;
-
-    /**
-     * @brief Validate the `env-base` field, throwing an exception if invalid
-     *        information is found.
-     *
-     * This asserts:
-     * - Only one of `floxhub` or `dir` is set.
-     */
-    void
-    check() const;
-
-    void
-    clear()
-    {
-      this->floxhub = std::nullopt;
-      this->dir     = std::nullopt;
-    }
-
-  }; /* End struct `EnvBase' */
-  std::optional<EnvBase> envBase;
+  std::optional<EnvBaseRaw> envBase;
 
   std::optional<
     std::unordered_map<InstallID, std::optional<ManifestDescriptorRaw>>>
@@ -220,20 +258,8 @@ struct ManifestRaw : public GlobalManifestRaw
 
   std::optional<std::unordered_map<std::string, std::string>> vars;
 
-  struct Hook
-  {
-    std::optional<std::string> script;
-    std::optional<std::string> file;
+  std::optional<HookRaw> hook;
 
-    /**
-     * @brief Validate `Hook` fields, throwing an exception if its contents
-     *        are invalid.
-     */
-    void
-    check() const;
-
-  }; /* End struct `ManifestRaw::Hook' */
-  std::optional<Hook> hook;
 
   ~ManifestRaw() override            = default;
   ManifestRaw()                      = default;
@@ -317,6 +343,174 @@ from_json( const nlohmann::json & jfrom, ManifestRaw & manifest );
 /** @brief Convert a @a flox::resolver::ManifestRaw to a JSON object. */
 void
 to_json( nlohmann::json & jto, const ManifestRaw & manifest );
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief A _global_ manifest containing only `registry` and `options` fields
+ *        in its _raw_ form.
+ *        This form is limited to only the `options` field
+ *        ( dropping `registry` ) for use with `flox`'s GA release.
+ *
+ * This _raw_ struct is defined to generate parsers, and its declarations simply
+ * represent what is considered _valid_.
+ * On its own, it performs no real work, other than to validate the input.
+ *
+ * @see flox::resolver::GlobalManifestGA
+ */
+struct GlobalManifestRawGA
+{
+
+  /** @brief Options controlling environment and search behaviors. */
+  std::optional<Options> options;
+
+
+  virtual ~GlobalManifestRawGA()                     = default;
+  GlobalManifestRawGA()                              = default;
+  GlobalManifestRawGA( const GlobalManifestRawGA & ) = default;
+  GlobalManifestRawGA( GlobalManifestRawGA && )      = default;
+
+  GlobalManifestRawGA &
+  operator=( const GlobalManifestRawGA & )
+    = default;
+
+  GlobalManifestRawGA &
+  operator=( GlobalManifestRawGA && )
+    = default;
+
+  /**
+   * @brief Validate manifest fields, throwing an exception if its contents
+   *        are invalid.
+   */
+  virtual void
+  check() const
+  {}
+
+  virtual void
+  clear()
+  {
+    this->options = std::nullopt;
+  }
+
+
+}; /* End struct `GlobalManifestRawGA' */
+
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Convert a JSON object to a @a flox::resolver::GlobalManifestRawGA. */
+void
+from_json( const nlohmann::json & jfrom, GlobalManifestRawGA & manifest );
+
+/** @brief Convert a @a flox::resolver::GlobalManifestRawGA to a JSON object. */
+void
+to_json( nlohmann::json & jto, const GlobalManifestRawGA & manifest );
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief A _raw_ description of an environment to be read from a file.
+ *        This form is limited to only the `options` field
+ *        ( dropping `registry` ) for use with `flox`'s GA release.
+ *
+ * This _raw_ struct is defined to generate parsers, and its declarations simply
+ * represent what is considered _valid_.
+ * On its own, it performs no real work, other than to validate the input.
+ *
+ * @see flox::resolver::ManifestGA
+ */
+struct ManifestRawGA : public GlobalManifestRawGA
+{
+
+  std::optional<
+    std::unordered_map<InstallID, std::optional<ManifestDescriptorRaw>>>
+    install;
+
+  std::optional<std::unordered_map<std::string, std::string>> vars;
+
+  std::optional<HookRaw> hook;
+
+
+  ~ManifestRawGA() override              = default;
+  ManifestRawGA()                        = default;
+  ManifestRawGA( const ManifestRawGA & ) = default;
+  ManifestRawGA( ManifestRawGA && )      = default;
+
+  explicit ManifestRawGA( const GlobalManifestRawGA & globalManifestRawGA )
+    : GlobalManifestRawGA( globalManifestRawGA )
+  {}
+
+  explicit ManifestRawGA( GlobalManifestRawGA && globalManifestRawGA )
+    : GlobalManifestRawGA( globalManifestRawGA )
+  {}
+
+  ManifestRawGA &
+  operator=( const ManifestRawGA & )
+    = default;
+
+  ManifestRawGA &
+  operator=( ManifestRawGA && )
+    = default;
+
+  ManifestRawGA &
+  operator=( const GlobalManifestRawGA & globalManifestRawGA )
+  {
+    GlobalManifestRawGA::operator=( globalManifestRawGA );
+    return *this;
+  }
+
+  ManifestRawGA &
+  operator=( GlobalManifestRawGA && globalManifestRawGA )
+  {
+    GlobalManifestRawGA::operator=( globalManifestRawGA );
+    return *this;
+  }
+
+  /**
+   * @brief Validate manifest fields, throwing an exception if its contents
+   *        are invalid.
+   *
+   * This asserts:
+   * - All members of @a install are valid.
+   * - @a hook is valid.
+   */
+  void
+  check() const override;
+
+  void
+  clear() override
+  {
+    /* From `GlobalManifestRawGA' */
+    this->options = std::nullopt;
+    /* From `ManifestRawGA' */
+    this->install = std::nullopt;
+    this->vars    = std::nullopt;
+    this->hook    = std::nullopt;
+  }
+
+  /**
+   * @brief Generate a JSON _diff_ between @a this manifest an @a old manifest.
+   *
+   * The _diff_ is represented as an [JSON patch](https://jsonpatch.com) object.
+   */
+  nlohmann::json
+  diff( const ManifestRawGA & old ) const;
+
+
+}; /* End struct `ManifestRawGA' */
+
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Convert a JSON object to a @a flox::resolver::ManifestRawGA. */
+void
+from_json( const nlohmann::json & jfrom, ManifestRawGA & manifest );
+
+/** @brief Convert a @a flox::resolver::ManifestRawGA to a JSON object. */
+void
+to_json( nlohmann::json & jto, const ManifestRawGA & manifest );
 
 
 /* -------------------------------------------------------------------------- */

@@ -34,15 +34,15 @@ namespace flox::resolver {
  * @brief Generate exception handling boilerplate for
  *        `EnvironmentMixin::init<MEMBER>' functions.
  */
-#define ENV_MIXIN_THROW_IF_SET( member )                               \
-  if ( this->member.has_value() )                                      \
-    {                                                                  \
-      throw EnvironmentMixinException( "`" #member                     \
+#define ENV_MIXIN_THROW_IF_SET( member )                              \
+  if ( this->member.has_value() )                                     \
+    {                                                                 \
+      throw EnvironmentMixinException( "`" #member                    \
                                        "' was already initialized" ); \
-    }                                                                  \
-  if ( this->environment.has_value() )                                 \
-    {                                                                  \
-      throw EnvironmentMixinException(                                 \
+    }                                                                 \
+  if ( this->environment.has_value() )                                \
+    {                                                                 \
+      throw EnvironmentMixinException(                                \
         "`" #member "' cannot be initialized after `environment'" );  \
     }
 

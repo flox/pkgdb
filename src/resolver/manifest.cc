@@ -31,80 +31,11 @@ namespace flox::resolver {
 
 /* -------------------------------------------------------------------------- */
 
-/**
- * @brief Read a flox::resolver::GlobalManifestRaw or
- *        flox::resolver::ManifestRaw from a file.
- */
-template<typename ManifestType>
-static ManifestType
-readManifestFromPath( const std::filesystem::path & manifestPath )
-  requires std::is_base_of<GlobalManifestRaw, ManifestType>::value
-{
-  if ( ! std::filesystem::exists( manifestPath ) )
-    {
-      throw InvalidManifestFileException( "no such path: "
-                                          + manifestPath.string() );
-    }
-  return readAndCoerceJSON( manifestPath );
-}
+/* Instantiate templates. */
 
+template class ManifestBase<ManifestRaw>;
 
-/* -------------------------------------------------------------------------- */
-
-void
-GlobalManifest::initRegistry()
-{
-  this->manifestRaw.check();
-  if ( this->manifestRaw.registry.has_value() )
-    {
-      this->registryRaw = *this->manifestRaw.registry;
-    }
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-GlobalManifest::GlobalManifest( std::filesystem::path manifestPath )
-  : manifestRaw( readManifestFromPath<GlobalManifestRaw>( manifestPath ) )
-{
-  this->initRegistry();
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-pkgdb::PkgQueryArgs
-GlobalManifest::getBaseQueryArgs() const
-{
-  pkgdb::PkgQueryArgs args;
-  if ( ! this->manifestRaw.options.has_value() ) { return args; }
-
-  if ( this->manifestRaw.options->systems.has_value() )
-    {
-      args.systems = *this->manifestRaw.options->systems;
-    }
-
-  if ( this->manifestRaw.options->allow.has_value() )
-    {
-      if ( this->manifestRaw.options->allow->unfree.has_value() )
-        {
-          args.allowUnfree = *this->manifestRaw.options->allow->unfree;
-        }
-      if ( this->manifestRaw.options->allow->broken.has_value() )
-        {
-          args.allowBroken = *this->manifestRaw.options->allow->broken;
-        }
-      args.licenses = this->manifestRaw.options->allow->licenses;
-    }
-
-  if ( this->manifestRaw.options->semver.has_value()
-       && this->manifestRaw.options->semver->preferPreReleases.has_value() )
-    {
-      args.preferPreReleases
-        = *this->manifestRaw.options->semver->preferPreReleases;
-    }
-  return args;
-}
+template class ManifestBase<GlobalManifestRaw>;
 
 
 /* -------------------------------------------------------------------------- */
@@ -164,15 +95,6 @@ Manifest::initDescriptors()
         }
     }
   this->check();
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-Manifest::Manifest( std::filesystem::path manifestPath )
-  : GlobalManifest( readManifestFromPath<ManifestRaw>( manifestPath ) )
-{
-  this->initDescriptors();
 }
 
 

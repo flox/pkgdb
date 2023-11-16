@@ -46,6 +46,22 @@ namespace flox::resolver {
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief Read a flox::resolver::ManifestBase from a file. */
+template<typename RawType>
+inline RawType
+readManifestFromPath( const std::filesystem::path & manifestPath )
+{
+  if ( ! std::filesystem::exists( manifestPath ) )
+    {
+      throw InvalidManifestFileException( "no such path: "
+                                          + manifestPath.string() );
+    }
+  return readAndCoerceJSON( manifestPath );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 /**
  * @brief A _global_ manifest containing only `registry` and `options` fields.
  *
@@ -57,7 +73,8 @@ namespace flox::resolver {
  * settings or inputs are not declared in a project, they may be automatically
  * added from the global manifest.
  */
-class GlobalManifest
+template<typename RawType = GlobalManifestRaw>
+class ManifestBase
 {
 
 protected:
@@ -65,7 +82,7 @@ protected:
   /* We need these `protected' so they can be set by `Manifest'. */
   // NOLINTBEGIN(cppcoreguidelines-non-private-member-variables-in-classes)
   // TODO: remove `manifestPath'
-  ManifestRaw manifestRaw;
+  RawType     manifestRaw;
   RegistryRaw registryRaw;
   // NOLINTEND(cppcoreguidelines-non-private-member-variables-in-classes)
 
@@ -73,38 +90,45 @@ protected:
   /**
    * @brief Initialize @a registryRaw from @a manifestRaw. */
   void
-  initRegistry();
+  initRegistry()
+  {
+    this->manifestRaw.check();
+    if ( this->manifestRaw.registry.has_value() )
+      {
+        this->registryRaw = *this->manifestRaw.registry;
+      }
+  }
 
 
 public:
 
-  virtual ~GlobalManifest()                = default;
-  GlobalManifest()                         = default;
-  GlobalManifest( const GlobalManifest & ) = default;
-  GlobalManifest( GlobalManifest && )      = default;
+  using rawType = RawType;
 
-  explicit GlobalManifest( GlobalManifestRaw raw )
-    : manifestRaw( std::move( raw ) )
+  virtual ~ManifestBase()              = default;
+  ManifestBase()                       = default;
+  ManifestBase( const ManifestBase & ) = default;
+  ManifestBase( ManifestBase && )      = default;
+
+  explicit ManifestBase( RawType raw ) : manifestRaw( std::move( raw ) )
   {
     this->initRegistry();
   }
 
-  explicit GlobalManifest( ManifestRaw raw ) : manifestRaw( std::move( raw ) )
+  explicit ManifestBase( std::filesystem::path manifestPath )
+    : manifestRaw( readManifestFromPath<RawType>( manifestPath ) )
   {
     this->initRegistry();
   }
 
-  explicit GlobalManifest( std::filesystem::path manifestPath );
-
-  GlobalManifest &
-  operator=( const GlobalManifest & )
+  ManifestBase &
+  operator=( const ManifestBase & )
     = default;
 
-  GlobalManifest &
-  operator=( GlobalManifest && )
+  ManifestBase &
+  operator=( ManifestBase && )
     = default;
 
-  [[nodiscard]] const ManifestRaw &
+  [[nodiscard]] const RawType &
   getManifestRaw() const
   {
     return this->manifestRaw;
@@ -140,10 +164,43 @@ public:
   }
 
   [[nodiscard]] pkgdb::PkgQueryArgs
-  getBaseQueryArgs() const;
+  getBaseQueryArgs() const
+  {
+    pkgdb::PkgQueryArgs args;
+    if ( ! this->manifestRaw.options.has_value() ) { return args; }
+
+    if ( this->manifestRaw.options->systems.has_value() )
+      {
+        args.systems = *this->manifestRaw.options->systems;
+      }
+
+    if ( this->manifestRaw.options->allow.has_value() )
+      {
+        if ( this->manifestRaw.options->allow->unfree.has_value() )
+          {
+            args.allowUnfree = *this->manifestRaw.options->allow->unfree;
+          }
+        if ( this->manifestRaw.options->allow->broken.has_value() )
+          {
+            args.allowBroken = *this->manifestRaw.options->allow->broken;
+          }
+        args.licenses = this->manifestRaw.options->allow->licenses;
+      }
+
+    if ( this->manifestRaw.options->semver.has_value()
+         && this->manifestRaw.options->semver->preferPreReleases.has_value() )
+      {
+        args.preferPreReleases
+          = *this->manifestRaw.options->semver->preferPreReleases;
+      }
+    return args;
+  }
 
 
-}; /* End class `GlobalManifest' */
+}; /* End class `ManifestBase' */
+
+
+using GlobalManifest = ManifestBase<GlobalManifestRaw>;
 
 
 /* -------------------------------------------------------------------------- */
@@ -153,7 +210,7 @@ using InstallDescriptors = std::unordered_map<InstallID, ManifestDescriptor>;
 
 
 /** @brief Description of an environment in its _unlocked_ form. */
-class Manifest : public GlobalManifest
+class Manifest : public ManifestBase<ManifestRaw>
 {
 
 private:
@@ -191,12 +248,18 @@ public:
   Manifest( const Manifest & ) = default;
   Manifest( Manifest && )      = default;
 
-  explicit Manifest( ManifestRaw raw ) : GlobalManifest( std::move( raw ) )
+  explicit Manifest( ManifestRaw raw )
+    : ManifestBase<ManifestRaw>( std::move( raw ) )
   {
     this->initDescriptors();
   }
 
-  explicit Manifest( std::filesystem::path manifestPath );
+  explicit Manifest( std::filesystem::path manifestPath )
+    : ManifestBase<ManifestRaw>(
+      readManifestFromPath<ManifestRaw>( manifestPath ) )
+  {
+    this->initDescriptors();
+  }
 
   Manifest &
   operator=( const Manifest & )
