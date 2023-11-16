@@ -38,12 +38,12 @@ namespace flox::resolver {
   if ( this->member.has_value() )                                      \
     {                                                                  \
       throw EnvironmentMixinException( "`" #member                     \
-                                       "' was already initializaed" ); \
+                                       "' was already initialized" ); \
     }                                                                  \
   if ( this->environment.has_value() )                                 \
     {                                                                  \
       throw EnvironmentMixinException(                                 \
-        "`" #member "' cannot be initializaed after `environment'" );  \
+        "`" #member "' cannot be initialized after `environment'" );  \
     }
 
 
