@@ -114,9 +114,14 @@ public:
   using rawType = RawType;
 
   virtual ~ManifestBase()                  = default;
-  ManifestBase()                           = default;
   ManifestBase( const ManifestBase & )     = default;
   ManifestBase( ManifestBase && ) noexcept = default;
+
+  ManifestBase()
+  {
+    this->manifestRaw.check();
+    this->initRegistry();
+  }
 
   explicit ManifestBase( RawType raw ) : manifestRaw( std::move( raw ) )
   {
