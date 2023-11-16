@@ -200,7 +200,7 @@ protected:
   [[nodiscard]] bool
   groupIsLocked( const InstallDescriptors & group,
                  const Lockfile &           oldLockfile,
-                 const System &             system );
+                 const System &             system ) const;
 
 
 public:

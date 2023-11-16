@@ -121,16 +121,19 @@ systemSkipped( const System &                             system,
 bool
 Environment::groupIsLocked( const InstallDescriptors & group,
                             const Lockfile &           oldLockfile,
-                            const System &             system )
+                            const System &             system ) const
 {
+  auto packages = oldLockfile.getLockfileRaw().packages;
+  if ( ! packages.contains( system ) ) { return false; }
+  SystemPackages oldSystemPackages = packages.at( system );
+
   InstallDescriptors oldDescriptors = oldLockfile.getDescriptors();
-  SystemPackages     oldSystemPackages
-    = oldLockfile.getLockfileRaw().packages.at( system );
 
   for ( auto & [iid, descriptor] : group )
     {
       /* Check for upgrades. */
-      if ( bool * upgradeEverything = std::get_if<bool>( &this->upgrades ) )
+      if ( const bool * upgradeEverything
+           = std::get_if<bool>( &this->upgrades ) )
         {
           /* If we're upgrading everything, the group needs to be locked again.
            */
@@ -454,7 +457,9 @@ Environment::lockSystem( const System & system )
 
 
   /* Copy over old lockfile entries we want to keep. */
-  if ( auto oldLockfile = this->getOldLockfile() )
+  if ( auto oldLockfile = this->getOldLockfile();
+       oldLockfile.has_value()
+       && oldLockfile->getLockfileRaw().packages.contains( system ) )
     {
       SystemPackages systemPackages
         = oldLockfile->getLockfileRaw().packages.at( system );
