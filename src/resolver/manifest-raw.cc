@@ -538,13 +538,41 @@ HookRaw::check() const
 
 /* -------------------------------------------------------------------------- */
 
-static void
-varsFromJSON( const nlohmann::json &                         jfrom,
-              std::unordered_map<std::string, std::string> & vars )
+static std::unordered_map<std::string, std::optional<ManifestDescriptorRaw>>
+installFromJSON( const nlohmann::json & install )
+{
+  assertIsJSONObject( install, "manifest field `install'" );
+  std::unordered_map<std::string, std::optional<ManifestDescriptorRaw>> result;
+  for ( const auto & [name, desc] : install.items() )
+    {
+      /* An empty/null descriptor uses `name' of the attribute. */
+      if ( desc.is_null() ) { result.emplace( name, std::nullopt ); }
+      else  // TODO: parse CLI strings
+        {
+          try
+            {
+              result.emplace( name, desc.get<ManifestDescriptorRaw>() );
+            }
+          catch ( const nlohmann::json::exception & )
+            {
+              throw InvalidManifestFileException(
+                "failed to parse field `install." + name
+                + "' with value: " + desc.dump() );
+            }
+        }
+    }
+  return result;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+static std::unordered_map<std::string, std::string>
+varsFromJSON( const nlohmann::json & jfrom )
 {
   assertIsJSONObject<InvalidManifestFileException>( jfrom,
                                                     "manifest field `vars'" );
-  vars.clear();
+  std::unordered_map<std::string, std::string> vars;
   for ( const auto & [key, value] : jfrom.items() )
     {
       std::string val;
@@ -554,12 +582,13 @@ varsFromJSON( const nlohmann::json &                         jfrom,
         }
       catch ( const nlohmann::json::exception & err )
         {
-          throw InvalidManifestFileException( "invalid value for `vars." + key
-                                              + "' with value: "
+          throw InvalidManifestFileException( "failed to parse field `vars."
+                                              + key + "' with value: "
                                               + value.dump() );
         }
       vars.emplace( key, std::move( val ) );
     }
+  return vars;
 }
 
 
@@ -587,35 +616,22 @@ from_json( const nlohmann::json & jfrom, ManifestRaw & manifest )
     {
       if ( key == "install" )
         {
-          std::unordered_map<std::string, std::optional<ManifestDescriptorRaw>>
-            install;
-          for ( const auto & [name, desc] : value.items() )
+          if ( value.is_null() )
             {
-              /* An empty/null descriptor uses `name' of the attribute. */
-              if ( desc.is_null() ) { install.emplace( name, std::nullopt ); }
-              else  // TODO: parse CLI strings
-                {
-                  try
-                    {
-                      install.emplace( name,
-                                       desc.get<ManifestDescriptorRaw>() );
-                    }
-                  catch ( const nlohmann::json::exception & )
-                    {
-                      throw InvalidManifestFileException(
-                        "failed to parse manifest field `install." + name
-                        + "'." );
-                    }
-                }
+              manifest.install = std::nullopt;
+              continue;
             }
-          manifest.install = std::move( install );
+          manifest.install = installFromJSON( value );
         }
       else if ( key == "registry" ) { value.get_to( manifest.registry ); }
       else if ( key == "vars" )
         {
-          std::unordered_map<std::string, std::string> vars;
-          varsFromJSON( value, vars );
-          manifest.vars = std::move( vars );
+          if ( value.is_null() )
+            {
+              manifest.vars = std::nullopt;
+              continue;
+            }
+          manifest.vars = varsFromJSON( value );
         }
       else if ( key == "hook" ) { value.get_to( manifest.hook ); }
       else if ( key == "options" ) { value.get_to( manifest.options ); }
@@ -730,34 +746,21 @@ from_json( const nlohmann::json & jfrom, ManifestRawGA & manifest )
     {
       if ( key == "install" )
         {
-          std::unordered_map<std::string, std::optional<ManifestDescriptorRaw>>
-            install;
-          for ( const auto & [name, desc] : value.items() )
+          if ( value.is_null() )
             {
-              /* An empty/null descriptor uses `name' of the attribute. */
-              if ( desc.is_null() ) { install.emplace( name, std::nullopt ); }
-              else  // TODO: parse CLI strings
-                {
-                  try
-                    {
-                      install.emplace( name,
-                                       desc.get<ManifestDescriptorRaw>() );
-                    }
-                  catch ( const nlohmann::json::exception & )
-                    {
-                      throw InvalidManifestFileException(
-                        "failed to parse manifest field `install." + name
-                        + "'." );
-                    }
-                }
+              manifest.install = std::nullopt;
+              continue;
             }
-          manifest.install = std::move( install );
+          manifest.install = installFromJSON( value );
         }
       else if ( key == "vars" )
         {
-          std::unordered_map<std::string, std::string> vars;
-          varsFromJSON( value, vars );
-          manifest.vars = std::move( vars );
+          if ( value.is_null() )
+            {
+              manifest.vars = std::nullopt;
+              continue;
+            }
+          manifest.vars = varsFromJSON( value );
         }
       else if ( key == "hook" ) { value.get_to( manifest.hook ); }
       else if ( key == "options" ) { value.get_to( manifest.options ); }
