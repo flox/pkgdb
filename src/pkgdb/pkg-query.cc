@@ -436,9 +436,10 @@ PkgQuery::initOrderBy()
   /* Establish ordering. */
   this->addOrderBy( R"SQL(
     exactPname              DESC
-  , exactAttrName           DESC
   , matchExactPname         DESC
+  , exactAttrName           DESC
   , matchExactAttrName      DESC
+  , depth                   ASC
   , matchPartialPname       DESC
   , matchPartialAttrName    DESC
   , matchPartialDescription DESC
@@ -475,7 +476,6 @@ PkgQuery::initOrderBy()
   , v_PackagesSearch.version ASC NULLS LAST
   , brokenRank ASC
   , unfreeRank ASC
-  , depth ASC
   , attrName ASC
   )SQL" );
 }
