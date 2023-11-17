@@ -13,9 +13,9 @@
 
 #include <nlohmann/json.hpp>
 
+#include "flox/core/util.hh"
 #include "flox/registry.hh"
 #include "flox/resolver/manifest.hh"
-#include "flox/core/util.hh"
 #include "test.hh"
 
 
@@ -63,10 +63,10 @@ bool
 test_merge_vecs()
 {
   std::vector<std::string> highPriority = { "a", "b", "c" };
-  std::vector<std::string> lowPriority = { "a", "d", "e" };
-  std::vector<std::string> expected = { "a", "b", "c", "d", "e" };
-  auto merged = flox::merge_vectors(lowPriority, highPriority);
-  EXPECT(merged == expected);
+  std::vector<std::string> lowPriority  = { "a", "d", "e" };
+  std::vector<std::string> expected     = { "a", "b", "c", "d", "e" };
+  auto merged = flox::merge_vectors( lowPriority, highPriority );
+  EXPECT( merged == expected );
   return true;
 }
 

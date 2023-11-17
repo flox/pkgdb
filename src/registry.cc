@@ -391,6 +391,28 @@ getGARegistry()
 
 /* -------------------------------------------------------------------------- */
 
+bool
+RegistryRaw::operator==( const RegistryRaw & other ) const
+{
+  if ( this->priority != other.priority ) { return false; }
+  if ( this->defaults != other.defaults ) { return false; }
+  for ( const auto & [key, value] : this->inputs )
+    {
+      try
+        {
+          if ( other.inputs.at( key ) != value ) { return false; }
+        }
+      catch ( ... )
+        {
+          return false;
+        }
+    }
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 }  // namespace flox
 
 

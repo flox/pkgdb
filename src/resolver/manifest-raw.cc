@@ -343,6 +343,20 @@ to_json( nlohmann::json & jto, const Options & opts )
 
 /* -------------------------------------------------------------------------- */
 
+GlobalManifestRaw::operator GlobalManifestRawGA() const
+{
+  if ( this->registry.has_value()
+       && ( ( *this->registry ) != getGARegistry() ) )
+    {
+      throw InvalidManifestFileException(
+        "global manifest `registry' does not match the GA registry" );
+    }
+  return GlobalManifestRawGA( this->options );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 void
 from_json( const nlohmann::json & jfrom, GlobalManifestRaw & manifest )
 {
@@ -546,6 +560,19 @@ varsFromJSON( const nlohmann::json &                         jfrom,
         }
       vars.emplace( key, std::move( val ) );
     }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+ManifestRaw::operator ManifestRawGA() const
+{
+  ManifestRawGA raw( static_cast<GlobalManifestRawGA>(
+    static_cast<GlobalManifestRaw>( *this ) ) );
+  raw.install = this->install;
+  raw.vars    = this->vars;
+  raw.hook    = this->hook;
+  return raw;
 }
 
 
