@@ -240,6 +240,26 @@ At this time there is no automated garbage collection mechanism, but simply
 deleting you cache directory will suffice.
 
 
+### Options and Settings
+
+#### `--ga-registry`
+
+Several commands such as `pkgdb search` and `pkgdb manifest` take an option
+`--ga-registry` which changes the behavior of _registry_ constructs to contain
+only a single input which provides `nixpkgs=github:NixOS/nixpkgs/release-23.05`.
+
+When `--ga-registry` is provided, it is an error for users to write `env-base`
+or `registry` fields.
+
+In the future this flag will be removed allowing users to set custom registries
+with multiple inputs or multiple branches.
+
+For the purposes of testing we have provided an environment variable
+`_PKGDB_GA_REGISTRY_REF_OR_REV` where you can provide an alternative `git` ref
+( tag or branch name ) or a long revision hash.
+This is used in our test suite.
+
+
 ## More Documentation
 - [Registry Schema](./docs/registry.md)
 - [Search Parameters](./docs/search.md)
