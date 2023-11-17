@@ -57,17 +57,21 @@ EnvironmentMixin::initGlobalManifestPath( std::filesystem::path path )
 }
 
 void
+EnvironmentMixin::initGlobalManifest( std::filesystem::path path )
+{
+  ENV_MIXIN_THROW_IF_SET( globalManifest )
+  if ( ! this->globalManifestPath.has_value() )
+    {
+      this->globalManifestPath = path;
+    }
+  this->globalManifest = GlobalManifest( std::move( path ) );
+}
+
+void
 EnvironmentMixin::initGlobalManifest( GlobalManifestRaw manifestRaw )
 {
   ENV_MIXIN_THROW_IF_SET( globalManifest )
   this->globalManifest = GlobalManifest( std::move( manifestRaw ) );
-}
-
-void
-EnvironmentMixin::initGlobalManifest( GlobalManifest manifest )
-{
-  ENV_MIXIN_THROW_IF_SET( globalManifest )
-  this->globalManifest = std::move( manifest );
 }
 
 
@@ -81,17 +85,21 @@ EnvironmentMixin::initManifestPath( std::filesystem::path path )
 }
 
 void
+EnvironmentMixin::initManifest( std::filesystem::path path )
+{
+  ENV_MIXIN_THROW_IF_SET( manifest )
+  if ( ! this->manifestPath.has_value() )
+    {
+      this->globalManifestPath = path;
+    }
+  this->manifest = EnvironmentManifest( std::move( path ) );
+}
+
+void
 EnvironmentMixin::initManifest( ManifestRaw manifestRaw )
 {
   ENV_MIXIN_THROW_IF_SET( manifest )
   this->manifest = EnvironmentManifest( std::move( manifestRaw ) );
-}
-
-void
-EnvironmentMixin::initManifest( EnvironmentManifest manifest )
-{
-  ENV_MIXIN_THROW_IF_SET( manifest )
-  this->manifest = std::move( manifest );
 }
 
 
@@ -137,7 +145,7 @@ EnvironmentMixin::getGlobalManifest()
   if ( ( ! this->globalManifest.has_value() )
        && this->globalManifestPath.has_value() )
     {
-      this->globalManifest = GlobalManifest( *this->globalManifestPath );
+      this->initGlobalManifest( * this->globalManifestPath );
     }
   return this->globalManifest;
 }
@@ -154,7 +162,6 @@ EnvironmentMixin::getManifestPath() const
 
 /* -------------------------------------------------------------------------- */
 
-// FIXME: Use `initManifest'
 const EnvironmentManifest &
 EnvironmentMixin::getManifest()
 {
