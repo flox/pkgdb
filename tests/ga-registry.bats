@@ -11,7 +11,7 @@ load setup_suite.bash;
 # bats file_tags=search
 
 setup_file() {
-  export TDATA="$TESTS_DIR/data/search";
+  export TDATA="$TESTS_DIR/data/manifest";
 
   # We don't parallelize these to avoid DB sync headaches and to recycle the
   # cache between tests.
@@ -62,6 +62,58 @@ setup_file() {
   run sh -c "$PKGDB search --ga-registry --pname hello -vv 2>&1 >/dev/null";
   assert_success;
   assert_output --partial "$NIXPKGS_REF";
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# bats test_tags=search:ga-registry, manifest:ga-registry
+
+@test "'pkgdb search --ga-registry' disallows 'registry' in manifests" {
+  run $PKGDB search --ga-registry "{
+    \"manifest\": { \"registry\": {} },
+    \"query\": { \"pname\": \"hello\" }
+  }";
+  assert_failure;
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# bats test_tags=search:ga-registry, manifest:ga-registry
+
+@test "'pkgdb search --ga-registry' disallows 'registry' in global manifests" {
+  run $PKGDB search --ga-registry "{
+    \"global-manifest\": { \"registry\": {} },
+    \"query\": { \"pname\": \"hello\" }
+  }";
+  assert_failure;
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# bats test_tags=search:ga-registry, manifest:ga-registry
+
+@test "'pkgdb search --ga-registry' allows 'options' in manifests" {
+  run $PKGDB search --ga-registry "{
+    \"manifest\": { \"options\": { \"allow\": { \"unfree\": true } } },
+    \"query\": { \"pname\": \"hello\" }
+  }";
+  assert_success;
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# bats test_tags=search:ga-registry, manifest:ga-registry
+
+@test "'pkgdb search --ga-registry' allows 'options' in global manifests" {
+  run $PKGDB search --ga-registry "{
+    \"global-manifest\": { \"options\": { \"allow\": { \"unfree\": true } } },
+    \"query\": { \"pname\": \"hello\" }
+  }";
+  assert_success;
 }
 
 
