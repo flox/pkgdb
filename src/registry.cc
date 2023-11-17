@@ -376,11 +376,18 @@ lockRegistry( const RegistryRaw & unlocked, const nix::ref<nix::Store> & store )
 RegistryRaw
 getGARegistry()
 {
+  static const std::string refOrRev
+    = nix::getEnv( "_PKGDB_GA_REGISTRY_REF_OR_REV" )
+        .value_or( "release-23.05" );
   static const nix::FlakeRef nixpkgsRef
-    = nlohmann::json { { "type", "github" },
-                       { "owner", "NixOS" },
-                       { "repo", "nixpkgs" },
-                       { "ref", "release-23.05" } };
+    = nix::parseFlakeRef( "github:NixOS/nixpkgs/" + refOrRev );
+  if ( nix::lvlTalkative < nix::verbosity )
+    {
+      nix::logger->log( nix::lvlTalkative,
+                        "GA Registry is using `nixpkgs' as `"
+                        + nixpkgsRef.to_string() + "'."
+                      );
+    }
   return RegistryRaw(
     std::map<std::string, RegistryInput> {
       { "nixpkgs",
