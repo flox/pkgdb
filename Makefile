@@ -437,13 +437,13 @@ compile_commands.json: EXTRA_CXXFLAGS += $(_CXX_SYSTEM_INCDIRS)
 compile_commands.json: bear.d/c++ $(DEPFILES)
 compile_commands.json: $(lastword $(MAKEFILE_LIST))
 compile_commands.json: $(COMMON_HEADERS) $(ALL_SRCS)
-	-$(MAKE) -C $(MAKEFILE_DIR) clean;
+	@-$(MAKE) -C $(MAKEFILE_DIR) clean;
 	@EXTRA_CXXFLAGS='$(EXTRA_CXXFLAGS)'                    \
 	  PATH="$(MAKEFILE_DIR)/bear.d/:$(PATH)"               \
 	  $(BEAR) -- $(MAKE) -C $(MAKEFILE_DIR) -j bin tests;
-	@EXTRA_CXXFLAGS='$(EXTRA_CXXFLAGS)'                                         \
-	  PATH="$(MAKEFILE_DIR)/bear.d/:$(PATH)"                                    \
-	  @$(BEAR) --append -- $(MAKE) -C $(MAKEFILE_DIR) -j pre-compiled-headers;
+	@EXTRA_CXXFLAGS='$(EXTRA_CXXFLAGS)'                                        \
+	  PATH="$(MAKEFILE_DIR)/bear.d/:$(PATH)"                                   \
+	  $(BEAR) --append -- $(MAKE) -C $(MAKEFILE_DIR) -j pre-compiled-headers;
 	@$(MAKE) -C $(MAKEFILE_DIR) clean-pch;
 
 FULLCLEANFILES += compile_commands.json
