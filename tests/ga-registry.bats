@@ -31,9 +31,19 @@ setup_file() {
 
 # bats test_tags=search:ga-registry
 
-# Assert that the search command accepts the `--ga-registry' options.
 @test "'pkgdb search --help' has '--ga-registry'" {
   run $PKGDB search --help;
+  assert_success;
+  assert_output --partial "--ga-registry";
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# bats test_tags=manifest:ga-registry, lock:ga-registry
+
+@test "'pkgdb manifest lock --help' has '--ga-registry'" {
+  run $PKGDB manifest lock --help;
   assert_success;
   assert_output --partial "--ga-registry";
 }
@@ -113,6 +123,16 @@ setup_file() {
     \"global-manifest\": { \"options\": { \"allow\": { \"unfree\": true } } },
     \"query\": { \"pname\": \"hello\" }
   }";
+  assert_success;
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# bats test_tags=manifest:ga-registry, lock:ga-registry
+
+@test "'pkgdb manifest lock --ga-registry' provides registry" {
+  run $PKGDB manifest lock --ga-registry "$TDATA/ga0.toml";
   assert_success;
 }
 

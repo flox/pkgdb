@@ -55,8 +55,8 @@ Environment::getCombinedRegistryRaw()
     {
       if ( this->globalManifest.has_value() )
         {
-          this->combinedRegistryRaw = this->globalManifest->getRegistryRaw();
-          this->combinedRegistryRaw.value().merge(
+          this->combinedRegistryRaw = this->globalManifest->getLockedRegistry();
+          this->combinedRegistryRaw->merge(
             this->manifest.getLockedRegistry() );
         }
       else { this->combinedRegistryRaw = this->manifest.getLockedRegistry(); }

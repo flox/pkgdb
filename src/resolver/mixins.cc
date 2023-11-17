@@ -130,6 +130,7 @@ EnvironmentMixin::getGlobalManifestPath() const
 
 /* -------------------------------------------------------------------------- */
 
+// FIXME: Use `initGlobalManifest'
 const std::optional<GlobalManifest> &
 EnvironmentMixin::getGlobalManifest()
 {
@@ -153,6 +154,7 @@ EnvironmentMixin::getManifestPath() const
 
 /* -------------------------------------------------------------------------- */
 
+// FIXME: Use `initManifest'
 const EnvironmentManifest &
 EnvironmentMixin::getManifest()
 {
@@ -346,6 +348,20 @@ GAEnvironmentMixin::initManifest( ManifestRaw manifestRaw )
       manifestRaw.registry = getGARegistry();
     }
   this->EnvironmentMixin::initManifest( std::move( manifestRaw ) );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+const std::optional<GlobalManifest> &
+GAEnvironmentMixin::getGlobalManifest()
+{
+  if ( ( ! this->EnvironmentMixin::getGlobalManifest().has_value() )
+       && this->gaRegistry )
+    {
+      this->initGlobalManifest( GlobalManifestRaw() );
+    }
+  return this->EnvironmentMixin::getGlobalManifest();
 }
 
 

@@ -238,7 +238,7 @@ public:
    * If @a manifest is unset, but @a manifestPath is set then
    * load from the file.
    */
-  [[nodiscard]] virtual const EnvironmentManifest &
+  [[nodiscard]] const EnvironmentManifest &
   getManifest();
 
   /** @brief Get the filesystem path to the lockfile ( if any ). */
@@ -266,7 +266,7 @@ public:
    * After @a getEnvironment() has been called once, it is no longer possible
    * to use any `init*( MEMBER )` functions.
    */
-  [[nodiscard]] Environment &
+  [[nodiscard]] virtual Environment &
   getEnvironment();
 
   /**
@@ -359,6 +359,16 @@ protected:
    */
   void
   initManifest( ManifestRaw manifestRaw ) override;
+
+  /**
+   * @brief Lazily initialize and return the @a globalManifest.
+   *
+   * If @a globalManifest is set simply return it.
+   * If @a globalManifest is unset, but @a globalManifestPath is set then
+   * load from the file.
+   */
+  [[nodiscard]] const std::optional<GlobalManifest> &
+  getGlobalManifest() override;
 
 
 public:
