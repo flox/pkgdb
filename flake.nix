@@ -129,6 +129,7 @@
       interactivePkgs = [
         # For profiling
         pkgs.lcov
+        pkgs.remake
         # For IDEs
         pkgs.ccls
         pkgs.bear

@@ -1,6 +1,50 @@
 # ============================================================================ #
 #
+# Target/Task Highlights:
+#   - most (default)        Build binaries, libs, and generated files
+#   - all                   Build binaries, libs, tests, and generated files
 #
+#   - bin                   Build binaries
+#   - tests                 Build test executables and resources
+#   - lib                   Build libraries
+#   - include               Build/generate include files
+#   - docs                  Generate documentation
+#
+#   - check                 Run all tests
+#   - bats-check            Run all bats tests
+#   - cc-check              Run all C++ unit tests
+#
+#   - clean                 Remove build artifacts
+#   - clean-pch             Remove all `pre-compiled-headers'.
+#   - fullclean             Remove build artifacts and metadata files
+#
+#   - install               Install binaries, libraries, and include files
+#   - install-bin           Install binaries
+#   - install-dirs          Create directories in the install prefix
+#   - install-include       Install include files
+#
+#   - ccls                  Create `.ccls' file used by CCLS LSP
+#   - compile_commands.json Create `compile_commands.json' file used for LSPs
+#   - compilation-databases Create `compile_commands.json' and `.ccls'
+#   - cdb                   Create `compile_commands.json' and `.ccls'
+#
+#   - fmt                   Run `clang-format' across entire project#
+#   - iwyu                  Generate `include-what-you-use' report
+#   - lint                  Run `clang-tidy' across entire project
+#
+#
+# Tips:
+#   - Use `remake --tasks' to see a list of common targets.
+#   - Recommend using `make -j' to build in parallel.
+#     + For "build then test" `make -j all && make check' is recommended to
+#       preserve colored test suite output.
+#   - `make cdb` should be run any time you add a new source file so that it
+#     can be added to the `compile_commands.json' file.
+#   - Use `$(info CXXFLAGS: $(CXXFLAGS))' to print the value of a variable.
+#     + This can be placed at global scope or inside of a target.
+#     + This is useful for debugging `make' issues.
+#     + To run `make' just to see `$(info ...)' output use `make -n'
+#       or `make FORCE'.
 #
 # ---------------------------------------------------------------------------- #
 
@@ -13,6 +57,11 @@ MAKEFILE_DIR ?= $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 
 
 # ---------------------------------------------------------------------------- #
+
+# Utilities
+# ---------
+# We use variables to refer to all tools so that we can easily override them
+# from the command line.
 
 BEAR       ?= bear
 CAT        ?= cat
@@ -38,6 +87,9 @@ UNAME      ?= uname
 
 # ---------------------------------------------------------------------------- #
 
+# Detect OS and Set Shared Library Extension
+# ------------------------------------------
+
 OS ?= $(shell $(UNAME))
 OS := $(OS)
 ifndef libExt
@@ -51,10 +103,38 @@ endif  # ifndef libExt
 
 # ---------------------------------------------------------------------------- #
 
+# Detect the C++ compiler toolchain
+# ---------------------------------
+
+ifndef TOOLCHAIN
+
+ifneq "" "$(shell $(CXX) --version|$(GREP) -i 'gcc'||:)"
+TOOLCHAIN = gcc
+else ifneq "" "$(shell $(CXX) --version|$(GREP) -i 'clang'||:)"
+TOOLCHAIN = clang
+else
+$(error "Unable to detect C++ compiler toolchain")
+endif  # ifneq "" "$(shell $(CXX) --version|$(GREP) -i 'gcc'||:)"
+
+else  # ifndef TOOLCHAIN
+
+# If the user set TOOLCHAIN, ensure that it is valid.
+ifeq "" "$(filter gcc clang,$(TOOLCHAIN))"
+$(error "Invalid C++ compiler toolchain: $(TOOLCHAIN)")
+endif  # ifeq "" "$(filter gcc clang,$(TOOLCHAIN))"
+
+endif  # ifndef TOOLCHAIN
+
+
+# ---------------------------------------------------------------------------- #
+
 VERSION := $(file < $(MAKEFILE_DIR)/version)
 
 
 # ---------------------------------------------------------------------------- #
+
+# Install Prefixes
+# ----------------
 
 PREFIX     ?= $(MAKEFILE_DIR)/out
 BINDIR     ?= $(PREFIX)/bin
@@ -74,7 +154,10 @@ rwildcard = $(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2)        \
 
 # ---------------------------------------------------------------------------- #
 
+# Our shared library target
 LIBFLOXPKGDB = libflox-pkgdb$(libExt)
+
+# Various file and target lists
 
 LIBS           =  $(LIBFLOXPKGDB)
 COMMON_HEADERS =  $(call rwildcard,include,*.hh)
@@ -96,6 +179,7 @@ CLEANFILES     += $(TESTS) $(TEST_UTILS)
 FULLCLEANDIRS  =
 FULLCLEANFILES =
 
+# Where to find test suite input data files.
 TEST_DATA_DIR = $(MAKEFILE_DIR)/tests/data
 
 
@@ -108,44 +192,49 @@ DEPFILES += pkgs/nix/pkg-fun.nix
 
 # ---------------------------------------------------------------------------- #
 
+# Compiler Flags
+# --------------
+
 # You can disable these optional gripes with `make EXTRA_CXXFLAGS='' ...;'
 ifndef EXTRA_CXXFLAGS
+
 EXTRA_CXXFLAGS = -Wall -Wextra -Wpedantic
-ifneq (Linux,$(OS))
-# Clang
+
+# Clang only
+ifeq (clang,$(TOOLCHAIN))
 EXTRA_CXXFLAGS += -Wno-gnu-zero-variadic-macro-arguments
-endif  # ifneq (Linux,$(OS))
+endif  # ifneq (clang,$(TOOLCHAIN))
+
 endif	# ifndef EXTRA_CXXFLAGS
 
-CXXFLAGS       ?= $(EXTRA_CFLAGS) $(EXTRA_CXXFLAGS)
-CXXFLAGS       += '-I$(MAKEFILE_DIR)/include'
-CXXFLAGS       += '-DFLOX_PKGDB_VERSION="$(VERSION)"'
-LDFLAGS        ?= $(EXTRA_LDFLAGS)
 
-ifeq (Linux,$(OS))
-# GCC
+CXXFLAGS ?= $(EXTRA_CFLAGS) $(EXTRA_CXXFLAGS)
+CXXFLAGS += '-I$(MAKEFILE_DIR)/include'
+CXXFLAGS += '-DFLOX_PKGDB_VERSION="$(VERSION)"'
+LDFLAGS  ?= $(EXTRA_LDFLAGS)
+
+
+ifeq (gcc,$(TOOLCHAIN))
 lib_CXXFLAGS ?= -shared -fPIC
 lib_LDFLAGS  ?= -shared -fPIC -Wl,--no-undefined
-else
-# Clang
-lib_CXXFLAGS   ?= -fPIC
-lib_LDFLAGS    ?= -shared -fPIC -Wl,-undefined,error
-endif # ifeq (Linux,$(OS))
+else # Clang
+lib_CXXFLAGS ?= -fPIC
+lib_LDFLAGS  ?= -shared -fPIC -Wl,-undefined,error
+endif # ifeq (gcc,$(TOOLCHAIN))
+
 
 bin_CXXFLAGS ?=
 bin_LDFLAGS  ?=
 
 # Debug Mode
 ifneq ($(DEBUG),)
-ifeq (Linux,$(OS))
-# GCC
+ifeq (gcc,$(TOOLCHAIN))
 CXXFLAGS += -ggdb3 -pg
 LDFLAGS  += -ggdb3 -pg
-else
-# Clang
+else # Clang
 CXXFLAGS += -g -pg
 LDFLAGS  += -g -pg
-endif # ifeq (Linux,$(OS))
+endif # ifeq (gcc,$(TOOLCHAIN))
 endif # ifneq ($(DEBUG),)
 
 # Coverage Mode
@@ -156,6 +245,9 @@ endif # ifneq ($(COV),)
 
 
 # ---------------------------------------------------------------------------- #
+
+# Dependency Flags
+# ----------------
 
 nljson_CFLAGS ?=                                                            \
 	$(patsubst -I%,-isystem %,$(shell $(PKG_CONFIG) --cflags nlohmann_json))
@@ -226,21 +318,24 @@ lib_CXXFLAGS += $(sqlite3pp_CFLAGS)
 bin_CXXFLAGS += $(argparse_CFLAGS)
 CXXFLAGS     += $(nix_CFLAGS) $(nljson_CFLAGS) $(toml_CFLAGS) $(yaml_CFLAGS)
 
-ifeq (Linux,$(OS))
+ifeq (gcc,$(TOOLCHAIN))
 lib_LDFLAGS += -Wl,--as-needed
-endif # ifeq (Linux,$(OS))
+endif # ifeq (gcc,$(TOOLCHAIN))
 
 lib_LDFLAGS += $(nix_LDFLAGS) $(sqlite3_LDFLAGS)
 
-ifeq (Linux,$(OS))
+ifeq (gcc,$(TOOLCHAIN))
 lib_LDFLAGS += -Wl,--no-as-needed
-endif # ifeq (Linux,$(OS))
+endif # ifeq (gcc,$(TOOLCHAIN))
 
 bin_LDFLAGS += $(nix_LDFLAGS) $(flox_pkgdb_LDFLAGS) $(sqlite3_LDFLAGS)
 LDFLAGS     += $(yaml_LDFLAGS)
 
 
 # ---------------------------------------------------------------------------- #
+
+# Locate `semver'
+# ---------------
 
 SEMVER_PATH ?=                                                        \
   $(shell $(NIX) build --no-link --print-out-paths                    \
@@ -250,16 +345,24 @@ CXXFLAGS += '-DSEMVER_PATH="$(SEMVER_PATH)"'
 
 # ---------------------------------------------------------------------------- #
 
+# Standard Targets
+# ----------------
+
 .PHONY: bin lib include tests
 
+#: Build binaries
 bin:     lib $(addprefix bin/,$(BINS))
+#: Build libraries
 lib:     $(addprefix lib/,$(LIBS))
+#: Build/generate include files
 include: $(COMMON_HEADERS)
+#: Build test executables and resources
 tests:   $(TESTS) $(TEST_UTILS)
 
 
 # ---------------------------------------------------------------------------- #
 
+#: Remove build artifacts
 clean: FORCE
 	-$(RM) $(CLEANFILES);
 	-$(RM) -r $(CLEANDIRS);
@@ -268,6 +371,7 @@ clean: FORCE
 	-$(RM) **/*.gcno *.gcno **/*.gcda *.gcda **/*.gcov *.gcov;
 
 
+#: Remove build artifacts and metadata files
 fullclean: clean
 	-$(RM) $(FULLCLEANFILES);
 	-$(RM) -r $(FULLCLEANDIRS);
@@ -312,9 +416,15 @@ $(TESTS) $(TEST_UTILS): tests/%: tests/%.cc lib/$(LIBFLOXPKGDB)
 
 # ---------------------------------------------------------------------------- #
 
+# Install Targets
+# ---------------
+
 .PHONY: install-dirs install-bin install-lib install-include install
+
+#: Install binaries, libraries, and include files
 install: install-dirs install-bin install-lib install-include
 
+#: Create directories in the install prefix
 install-dirs: FORCE
 	@$(MKDIR_P) $(BINDIR) $(LIBDIR) $(LIBDIR)/pkgconfig;
 	@$(MKDIR_P) $(INCLUDEDIR)/flox $(INCLUDEDIR)/flox/core;
@@ -344,8 +454,13 @@ $(BINDIR)/pkgdb: $(bin_SRCS:.cc=.o) $(LIBDIR)/$(LIBFLOXPKGDB)
 	@$(CXX) $(filter %.o,$^) $(LDFLAGS) $(bin_LDFLAGS) -o $@;
 endif # ifneq (Linux,$(OS))
 
+#: Install binaries
 install-bin: $(addprefix $(BINDIR)/,$(BINS))
+
+#: Install libraries
 install-lib: $(addprefix $(LIBDIR)/,$(LIBS))
+
+#: Install include files
 install-include:                                                     \
 	$(addprefix $(INCLUDEDIR)/,$(subst include/,,$(COMMON_HEADERS)));
 
@@ -376,9 +491,10 @@ $(PRE_COMPILED_HEADERS): %.gch: %
 	@echo "Generating pre-compiled header \`$@' ( warnings are suppressed )" >&2;
 	@$(CXX) $(CXXFLAGS) -x c++-header -c $< -o $@ 2>/dev/null;
 
+#: Create pre-compiled-headers
 pre-compiled-headers: $(PRE_COMPILED_HEADERS)
 
-# Remove all `pre-compiled-headers'.
+#: Remove all `pre-compiled-headers'.
 # This is used when creating our compilation databases to ensure that
 # pre-compiled headers aren't taking priority over _real_ headers.
 clean-pch: FORCE
@@ -392,6 +508,7 @@ clean-pch: FORCE
 # This will be ignored by other LSPs such as `clangd'.
 
 .PHONY: ccls
+#: Create `.ccls' file used by CCLS LSP
 ccls: .ccls
 
 .ccls: $(lastword $(MAKEFILE_LIST)) $(DEPFILES)
@@ -451,9 +568,13 @@ FULLCLEANFILES += compile_commands.json
 
 # ---------------------------------------------------------------------------- #
 
-# Create `compile_commands.json' and `ccls' file used for LSPs.
+# LSP Metadata
+# ------------
+
 .PHONY: compilation-databases cdb
+#: Create `compile_commands.json' and `ccls' file used for LSPs
 compilation-databases: compile_commands.json ccls
+#: Create `compile_commands.json' and `ccls' file used for LSPs
 cdb: compilation-databases
 
 
@@ -461,6 +582,7 @@ cdb: compilation-databases
 
 # Run `include-what-you-use' ( wrapped )
 .PHONY: iwyu
+#: Generate `include-what-you-use' report
 iwyu: iwyu.log
 
 iwyu.log: compile_commands.json $(COMMON_HEADERS) $(ALL_SRCS) flake.nix
@@ -474,6 +596,7 @@ FULLCLEANFILES += iwyu.log
 # ---------------------------------------------------------------------------- #
 
 .PHONY: lint
+#: Run `clang-tidy' across entire project
 lint: compile_commands.json $(COMMON_HEADERS) $(ALL_SRCS)
 	@$(TIDY) $(filter-out compile_commands.json,$^);
 
@@ -482,8 +605,10 @@ lint: compile_commands.json $(COMMON_HEADERS) $(ALL_SRCS)
 
 .PHONY: check cc-check bats-check
 
+#: Run all tests
 check: cc-check bats-check
 
+#: Run all C++ unit tests
 cc-check: $(TESTS:.cc=)
 	@_ec=0;                     \
 	echo '';                    \
@@ -499,6 +624,7 @@ cc-check: $(TESTS:.cc=)
 	done;                       \
 	exit "$$_ec";
 
+#: Run all bats tests
 bats-check: bin $(TEST_UTILS)
 	PKGDB="$(MAKEFILE_DIR)/bin/pkgdb"                        \
 	IS_SQLITE3="$(MAKEFILE_DIR)/tests/is_sqlite3"            \
@@ -508,7 +634,10 @@ bats-check: bin $(TEST_UTILS)
 
 # ---------------------------------------------------------------------------- #
 
+#: Build binaries, libraries, tests, and generated `.gitignore' files
 all: bin lib tests ignores
+
+#: Build binaries, libraries, and generated `.gitignore' files
 most: bin lib ignores
 
 
@@ -516,6 +645,7 @@ most: bin lib ignores
 
 .PHONY: docs
 
+#: Generate documentation
 docs: docs/index.html
 
 docs/index.html: FORCE
@@ -528,7 +658,7 @@ CLEANDIRS  += docs/search
 # ---------------------------------------------------------------------------- #
 
 # Generate `pkg-config' file.
-#
+# ---------------------------
 # The `PC_CFLAGS' and `PC_LIBS' variables carry flags that are not covered by
 # `nlohmann_json`, `argparse`, `sqlite3pp`, `sqlite`, and `nix{main,cmd,expr}`
 # `Requires' handling.
@@ -557,6 +687,7 @@ install-lib: $(LIBDIR)/pkgconfig/flox-pkgdb.pc
 
 # ---------------------------------------------------------------------------- #
 
+#: Generate `.gitignore' files for
 ignores: tests/.gitignore
 tests/.gitignore: FORCE
 	@$(MKDIR_P) $(@D);
@@ -565,7 +696,11 @@ tests/.gitignore: FORCE
 
 # ---------------------------------------------------------------------------- #
 
+# Formatter
+# ---------
+
 .PHONY: fmt
+#: Run `clang-format' across entire project
 fmt: $(COMMON_HEADERS) $(ALL_SRCS)
 	@$(FMT) -i $^;
 
