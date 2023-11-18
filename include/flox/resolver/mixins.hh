@@ -404,6 +404,16 @@ public:
   argparse::Argument &
   addGARegistryOption( argparse::ArgumentParser & parser );
 
+  /**
+   * @brief Lazily initialize and return the @a globalManifest.
+   *
+   * If @a globalManifest is set simply return it.
+   * If @a globalManifest is unset, but @a globalManifestPath is set then
+   * load from the file.
+   */
+  [[nodiscard]] const std::optional<GlobalManifest> &
+  getGlobalManifest() override;
+
 
 }; /* End class `GAEnvironmentMixin' */
 

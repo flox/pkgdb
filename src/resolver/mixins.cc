@@ -138,7 +138,6 @@ EnvironmentMixin::getGlobalManifestPath() const
 
 /* -------------------------------------------------------------------------- */
 
-// FIXME: Use `initGlobalManifest'
 const std::optional<GlobalManifest> &
 EnvironmentMixin::getGlobalManifest()
 {
@@ -173,7 +172,7 @@ EnvironmentMixin::getManifest()
             "you must provide an inline manifest or the path to a manifest "
             "file" );
         }
-      this->manifest = EnvironmentManifest( *this->manifestPath );
+      this->initManifest( *this->manifestPath );
     }
   return *this->manifest;
 }
@@ -343,6 +342,25 @@ GAEnvironmentMixin::initGlobalManifest( GlobalManifestRaw manifestRaw )
 /* -------------------------------------------------------------------------- */
 
 void
+GAEnvironmentMixin::initGlobalManifest( std::filesystem::path path )
+{
+  if ( this->gaRegistry )
+    {
+      GlobalManifestGA  manifest( std::move( path ) );
+      GlobalManifestRaw manifestRaw( manifest.getManifestRaw() );
+      manifestRaw.registry = manifest.getRegistryRaw();
+      this->EnvironmentMixin::initGlobalManifest( std::move( manifestRaw ) );
+    }
+  else
+    {
+      this->EnvironmentMixin::initGlobalManifest( std::move( path ) );
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
 GAEnvironmentMixin::initManifest( ManifestRaw manifestRaw )
 {
   if ( this->gaRegistry )
@@ -355,6 +373,25 @@ GAEnvironmentMixin::initManifest( ManifestRaw manifestRaw )
       manifestRaw.registry = getGARegistry();
     }
   this->EnvironmentMixin::initManifest( std::move( manifestRaw ) );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+void
+GAEnvironmentMixin::initManifest( std::filesystem::path path )
+{
+  if ( this->gaRegistry )
+    {
+      EnvironmentManifestGA manifest( std::move( path ) );
+      ManifestRaw           manifestRaw( manifest.getManifestRaw() );
+      manifestRaw.registry = manifest.getRegistryRaw();
+      this->EnvironmentMixin::initManifest( std::move( manifestRaw ) );
+    }
+  else
+    {
+      this->EnvironmentMixin::initManifest( std::move( path ) );
+    }
 }
 
 

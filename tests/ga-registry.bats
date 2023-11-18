@@ -138,6 +138,42 @@ setup_file() {
 
 
 # ---------------------------------------------------------------------------- #
+
+# bats test_tags=manifest:ga-registry, lock:ga-registry, manifest:global
+
+@test "'pkgdb manifest lock --ga-registry' merges global manifest options" {
+  run $PKGDB manifest lock --ga-registry                               \
+                           --global-manifest "$TDATA/global-ga0.toml"  \
+                           "$TDATA/ga0.toml";
+  assert_success;
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# bats test_tags=manifest:ga-registry, lock:ga-registry, manifest:global
+
+@test "'pkgdb manifest lock --ga-registry' rejects global manifest registry" {
+  run $PKGDB manifest lock --ga-registry                                     \
+                           --global-manifest "$TDATA/global-manifest0.toml"  \
+                           "$TDATA/ga0.toml";
+  assert_failure;
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# bats test_tags=manifest:ga-registry, lock:ga-registry
+
+@test "'pkgdb manifest lock --ga-registry' rejects env manifest registry" {
+  run $PKGDB manifest lock --ga-registry                               \
+                           --global-manifest "$TDATA/global-ga0.toml"  \
+                           "$TDATA/post-ga0.toml";
+  assert_failure;
+}
+
+
+# ---------------------------------------------------------------------------- #
 #
 #
 #
