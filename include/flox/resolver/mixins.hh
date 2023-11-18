@@ -272,7 +272,7 @@ public:
    * After @a getEnvironment() has been called once, it is no longer possible
    * to use any `init*( MEMBER )` functions.
    */
-  [[nodiscard]] virtual Environment &
+  [[nodiscard]] Environment &
   getEnvironment();
 
   /**
