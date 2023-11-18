@@ -82,6 +82,8 @@ jobs:
             sudo systemctl daemon-reload;
             sudo systemctl restart nix-daemon.service;
           elif [[ "$RUNNER_OS" == 'macOS' ]]; then
+            # double kick does the trick
+            sudo launchctl kickstart -k system/org.nixos.nix-daemon;
             sudo launchctl kickstart -k system/org.nixos.nix-daemon;
           else
             echo "Unsupported OS: $RUNNER_OS";
