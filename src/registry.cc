@@ -385,8 +385,7 @@ getGARegistry()
     {
       nix::logger->log( nix::lvlTalkative,
                         "GA Registry is using `nixpkgs' as `"
-                        + nixpkgsRef.to_string() + "'."
-                      );
+                          + nixpkgsRef.to_string() + "'." );
     }
   return RegistryRaw(
     std::map<std::string, RegistryInput> {

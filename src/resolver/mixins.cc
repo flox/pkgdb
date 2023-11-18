@@ -88,10 +88,7 @@ void
 EnvironmentMixin::initManifest( std::filesystem::path path )
 {
   ENV_MIXIN_THROW_IF_SET( manifest )
-  if ( ! this->manifestPath.has_value() )
-    {
-      this->globalManifestPath = path;
-    }
+  if ( ! this->manifestPath.has_value() ) { this->globalManifestPath = path; }
   this->manifest = EnvironmentManifest( std::move( path ) );
 }
 
@@ -144,7 +141,7 @@ EnvironmentMixin::getGlobalManifest()
   if ( ( ! this->globalManifest.has_value() )
        && this->globalManifestPath.has_value() )
     {
-      this->initGlobalManifest( * this->globalManifestPath );
+      this->initGlobalManifest( *this->globalManifestPath );
     }
   return this->globalManifest;
 }
@@ -351,10 +348,7 @@ GAEnvironmentMixin::initGlobalManifest( std::filesystem::path path )
       manifestRaw.registry = manifest.getRegistryRaw();
       this->EnvironmentMixin::initGlobalManifest( std::move( manifestRaw ) );
     }
-  else
-    {
-      this->EnvironmentMixin::initGlobalManifest( std::move( path ) );
-    }
+  else { this->EnvironmentMixin::initGlobalManifest( std::move( path ) ); }
 }
 
 
@@ -388,10 +382,7 @@ GAEnvironmentMixin::initManifest( std::filesystem::path path )
       manifestRaw.registry = manifest.getRegistryRaw();
       this->EnvironmentMixin::initManifest( std::move( manifestRaw ) );
     }
-  else
-    {
-      this->EnvironmentMixin::initManifest( std::move( path ) );
-    }
+  else { this->EnvironmentMixin::initManifest( std::move( path ) ); }
 }
 
 
