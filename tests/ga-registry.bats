@@ -56,7 +56,7 @@ setup_file() {
 # Ensure that the search command succeeds with the `--ga-registry' option and
 # no other registry.
 @test "'pkgdb search --ga-registry' provides 'global-manifest'" {
-  run sh -c "$PKGDB search --ga-registry --pname hello|wc -l";
+  run --separate-stderr sh -c "$PKGDB search --ga-registry --pname hello|wc -l";
   assert_success;
   assert_output 1;
 }
