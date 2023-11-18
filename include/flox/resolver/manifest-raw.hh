@@ -386,7 +386,7 @@ struct GlobalManifestRawGA
   GlobalManifestRawGA( const GlobalManifestRawGA & ) = default;
   GlobalManifestRawGA( GlobalManifestRawGA && )      = default;
 
-  GlobalManifestRawGA( std::optional<Options> options )
+  explicit GlobalManifestRawGA( std::optional<Options> options )
     : options( std::move( options ) )
   {}
 
@@ -528,11 +528,11 @@ struct ManifestRawGA : public GlobalManifestRawGA
 
   explicit operator ManifestRaw() const
   {
-    ManifestRaw raw( static_cast<GlobalManifestRaw>(
-      static_cast<GlobalManifestRawGA>( *this ) ) );
-    raw.install = this->install;
-    raw.vars    = this->vars;
-    raw.hook    = this->hook;
+    ManifestRaw raw;
+    raw.registry = getGARegistry();
+    raw.install  = this->install;
+    raw.vars     = this->vars;
+    raw.hook     = this->hook;
     return raw;
   }
 
