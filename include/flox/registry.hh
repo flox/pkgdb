@@ -176,7 +176,7 @@ struct RegistryInput : public InputPreferences
         return false;
       }
 
-    return this->from->to_string() != other.from->to_string();
+    return ( *this->from ) == ( *other.from );
   }
 
   [[nodiscard]] bool
