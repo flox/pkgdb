@@ -86,6 +86,18 @@ struct InputPreferences
   void
   merge( const InputPreferences & overrides );
 
+  [[nodiscard]] bool
+  operator==( const InputPreferences & other ) const
+  {
+    return this->subtrees == other.subtrees;
+  }
+
+  [[nodiscard]] bool
+  operator!=( const InputPreferences & other ) const
+  {
+    return ! ( ( *this ) == other );
+  }
+
 
 }; /* End struct `InputPreferences' */
 
@@ -147,6 +159,31 @@ struct RegistryInput : public InputPreferences
   {
     return static_cast<nix::ref<nix::FlakeRef>>( this->from );
   };
+
+  [[nodiscard]] bool
+  operator==( const RegistryInput & other ) const
+  {
+    if ( static_cast<InputPreferences>( *this )
+         != static_cast<InputPreferences>( other ) )
+      {
+        return false;
+      }
+
+    if ( this->from == other.from ) { return true; }
+
+    if ( ( this->from == nullptr ) || ( other.from == nullptr ) )
+      {
+        return false;
+      }
+
+    return ( *this->from ) == ( *other.from );
+  }
+
+  [[nodiscard]] bool
+  operator!=( const RegistryInput & other ) const
+  {
+    return ! ( ( *this ) == other );
+  }
 
 
 }; /* End struct `RegistryInput' */
@@ -359,6 +396,15 @@ struct RegistryRaw
    */
   void
   merge( const RegistryRaw & overrides );
+
+  [[nodiscard]] bool
+  operator==( const RegistryRaw & other ) const;
+
+  [[nodiscard]] bool
+  operator!=( const RegistryRaw & other ) const
+  {
+    return ! ( *this == other );
+  }
 
 
 }; /* End struct `RegistryRaw' */

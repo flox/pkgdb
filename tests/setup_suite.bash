@@ -114,12 +114,13 @@ misc_vars_setup() {
 
   export _PKGDB_TEST_SUITE_MODE=:;
 
-  NIXPKGS_REF="github:NixOS/nixpkgs/e8039594435c68eb4f780f3e9bf3972a7399c4b1";
+  NIXPKGS_REV="e8039594435c68eb4f780f3e9bf3972a7399c4b1";
+  NIXPKGS_REF="github:NixOS/nixpkgs/$NIXPKGS_REV";
 
   NIXPKGS_FINGERPRINT="5fde12e3424840cc2752dae09751b09b03f5a33"
   NIXPKGS_FINGERPRINT="${NIXPKGS_FINGERPRINT}c3ec4de672fc89d236720bdc7";
 
-  export NIXPKGS_REF NIXPKGS_FINGERPRINT;
+  export NIXPKGS_REV NIXPKGS_REF NIXPKGS_FINGERPRINT;
 
   export __PD_RAN_MISC_VARS_SETUP=:;
 }
@@ -133,6 +134,7 @@ env_setup() {
   misc_vars_setup;
   {
     print_var NIX_SYSTEM;
+    print_var NIXPKGS_REV;
     print_var NIXPKGS_REF;
   } >&3;
 }

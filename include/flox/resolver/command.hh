@@ -24,7 +24,7 @@ namespace flox::resolver {
 /* -------------------------------------------------------------------------- */
 
 /** @brief Lock a manifest file. */
-class LockCommand : public EnvironmentMixin
+class LockCommand : public GAEnvironmentMixin
 {
 
 private:

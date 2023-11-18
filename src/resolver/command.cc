@@ -26,6 +26,7 @@ LockCommand::LockCommand() : parser( "lock" )
   this->addGlobalManifestFileOption( this->parser );
   this->addManifestFileArg( this->parser );
   this->addLockfileOption( this->parser );
+  this->addGARegistryOption( this->parser );
 }
 
 

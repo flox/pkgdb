@@ -120,7 +120,8 @@ protected:
   initGlobalManifest( GlobalManifestRaw manifestRaw );
 
   /**
-   * @brief Initialize the @a globalManifest member variable.
+   * @brief Initialize the @a globalManifest member variable by reading from
+   *        a path.
    *
    * This may only be called once and must be called before
    * `getEnvironment()` is ever used - otherwise an exception will be thrown.
@@ -129,8 +130,8 @@ protected:
    * @a flox::resolver::EnvirontMixin base at runtime without accessing
    * private member variables.
    */
-  void
-  initGlobalManifest( GlobalManifest manifest );
+  virtual void
+  initGlobalManifest( std::filesystem::path path );
 
   /**
    * @brief Initialize the @a manifestPath member variable.
@@ -159,7 +160,7 @@ protected:
   initManifest( ManifestRaw manifestRaw );
 
   /**
-   * @brief Initialize the @a manifest member variable.
+   * @brief Initialize the @a manifest member variable by reading from a path.
    *
    * This may only be called once and must be called before
    * `getEnvironment()` is ever used - otherwise an exception will be thrown.
@@ -168,8 +169,8 @@ protected:
    * @a flox::resolver::EnvirontMixin base at runtime without accessing
    * private member variables.
    */
-  void
-  initManifest( EnvironmentManifest manifest );
+  virtual void
+  initManifest( std::filesystem::path path );
 
   /**
    * @brief Initialize the @a lockfilePath member variable.
@@ -238,7 +239,7 @@ public:
    * If @a manifest is unset, but @a manifestPath is set then
    * load from the file.
    */
-  [[nodiscard]] virtual const EnvironmentManifest &
+  [[nodiscard]] const EnvironmentManifest &
   getManifest();
 
   /** @brief Get the filesystem path to the lockfile ( if any ). */
@@ -266,7 +267,7 @@ public:
    * After @a getEnvironment() has been called once, it is no longer possible
    * to use any `init*( MEMBER )` functions.
    */
-  [[nodiscard]] Environment &
+  [[nodiscard]] virtual Environment &
   getEnvironment();
 
   /**
@@ -346,6 +347,22 @@ protected:
   initGlobalManifest( GlobalManifestRaw manifestRaw ) override;
 
   /**
+   * @brief Initialize the @a globalManifest member variable by reading from
+   *        a path.
+   *        This form enforces `--ga-registry` by disallowing `registry` in its
+   *        input, and injecting a hard coded `registry`.
+   *
+   * This may only be called once and must be called before
+   * `getEnvironment()` is ever used - otherwise an exception will be thrown.
+   *
+   * This function exists so that child classes can initialize their
+   * @a flox::resolver::EnvirontMixin base at runtime without accessing
+   * private member variables.
+   */
+  void
+  initGlobalManifest( std::filesystem::path path ) override;
+
+  /**
    * @brief Initialize the @a manifest member variable.
    *        This form enforces `--ga-registry` by disallowing `registry` in its
    *        input, and injecting a hard coded `registry`.
@@ -360,6 +377,21 @@ protected:
   void
   initManifest( ManifestRaw manifestRaw ) override;
 
+  /**
+   * @brief Initialize the @a manifest member variable by reading from a path.
+   *        This form enforces `--ga-registry` by disallowing `registry` in its
+   *        input, and injecting a hard coded `registry`.
+   *
+   * This may only be called once and must be called before
+   * `getEnvironment()` is ever used - otherwise an exception will be thrown.
+   *
+   * This function exists so that child classes can initialize their
+   * @a flox::resolver::EnvirontMixin base at runtime without accessing
+   * private member variables.
+   */
+  void
+  initManifest( std::filesystem::path path ) override;
+
 
 public:
 
@@ -371,6 +403,16 @@ public:
    */
   argparse::Argument &
   addGARegistryOption( argparse::ArgumentParser & parser );
+
+  /**
+   * @brief Lazily initialize and return the @a globalManifest.
+   *
+   * If @a globalManifest is set simply return it.
+   * If @a globalManifest is unset, but @a globalManifestPath is set then
+   * load from the file.
+   */
+  [[nodiscard]] const std::optional<GlobalManifest> &
+  getGlobalManifest() override;
 
 
 }; /* End class `GAEnvironmentMixin' */

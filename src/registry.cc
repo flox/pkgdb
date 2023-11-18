@@ -376,16 +376,44 @@ lockRegistry( const RegistryRaw & unlocked, const nix::ref<nix::Store> & store )
 RegistryRaw
 getGARegistry()
 {
+  static const std::string refOrRev
+    = nix::getEnv( "_PKGDB_GA_REGISTRY_REF_OR_REV" )
+        .value_or( "release-23.05" );
   static const nix::FlakeRef nixpkgsRef
-    = nlohmann::json { { "type", "github" },
-                       { "owner", "NixOS" },
-                       { "repo", "nixpkgs" },
-                       { "ref", "release-23.05" } };
+    = nix::parseFlakeRef( "github:NixOS/nixpkgs/" + refOrRev );
+  if ( nix::lvlTalkative < nix::verbosity )
+    {
+      nix::logger->log( nix::lvlTalkative,
+                        "GA Registry is using `nixpkgs' as `"
+                          + nixpkgsRef.to_string() + "'." );
+    }
   return RegistryRaw(
     std::map<std::string, RegistryInput> {
       { "nixpkgs",
         RegistryInput( std::vector<Subtree> { ST_LEGACY }, nixpkgsRef ) } },
     std::vector<std::string> { "nixpkgs" } );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+bool
+RegistryRaw::operator==( const RegistryRaw & other ) const
+{
+  if ( this->priority != other.priority ) { return false; }
+  if ( this->defaults != other.defaults ) { return false; }
+  for ( const auto & [key, value] : this->inputs )
+    {
+      try
+        {
+          if ( other.inputs.at( key ) != value ) { return false; }
+        }
+      catch ( ... )
+        {
+          return false;
+        }
+    }
+  return true;
 }
 
 

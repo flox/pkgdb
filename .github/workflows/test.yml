@@ -134,7 +134,7 @@ jobs:
         run: nix develop '.#ci' --no-update-lock-file --command make tests -j4
 
       - name: Run Tests
-        run: nix develop '.#ci' --no-update-lock-file --command make check -j4
+        run: nix develop '.#ci' --no-update-lock-file --command make check
 
       - name: Run Installed
         run: nix run . --no-update-lock-file -- --help

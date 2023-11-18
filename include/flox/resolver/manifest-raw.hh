@@ -36,6 +36,16 @@ namespace flox::resolver {
 
 /* -------------------------------------------------------------------------- */
 
+/* Forward Declarations */
+
+struct GlobalManifestRaw;
+struct ManifestRaw;
+struct GlobalManifestRawGA;
+struct ManifestRawGA;
+
+
+/* -------------------------------------------------------------------------- */
+
 /**
  * @class flox::resolver::InvalidManifestFileException
  * @brief An exception thrown when a manifest file is invalid.
@@ -163,6 +173,8 @@ struct GlobalManifestRaw
     this->registry = std::nullopt;
     this->options  = std::nullopt;
   }
+
+  explicit operator GlobalManifestRawGA() const;
 
 
 }; /* End struct `GlobalManifestRaw' */
@@ -331,6 +343,8 @@ struct ManifestRaw : public GlobalManifestRaw
   nlohmann::json
   diff( const ManifestRaw & old ) const;
 
+  explicit operator ManifestRawGA() const;
+
 
 }; /* End struct `ManifestRaw' */
 
@@ -372,6 +386,10 @@ struct GlobalManifestRawGA
   GlobalManifestRawGA( const GlobalManifestRawGA & ) = default;
   GlobalManifestRawGA( GlobalManifestRawGA && )      = default;
 
+  explicit GlobalManifestRawGA( std::optional<Options> options )
+    : options( std::move( options ) )
+  {}
+
   GlobalManifestRawGA &
   operator=( const GlobalManifestRawGA & )
     = default;
@@ -392,6 +410,16 @@ struct GlobalManifestRawGA
   clear()
   {
     this->options = std::nullopt;
+  }
+
+  explicit operator GlobalManifestRaw() const
+  {
+    return GlobalManifestRaw( getGARegistry(), this->options );
+  }
+
+  explicit operator ManifestRaw() const
+  {
+    return ManifestRaw( static_cast<GlobalManifestRaw>( *this ) );
   }
 
 
@@ -497,6 +525,16 @@ struct ManifestRawGA : public GlobalManifestRawGA
    */
   nlohmann::json
   diff( const ManifestRawGA & old ) const;
+
+  explicit operator ManifestRaw() const
+  {
+    ManifestRaw raw;
+    raw.registry = getGARegistry();
+    raw.install  = this->install;
+    raw.vars     = this->vars;
+    raw.hook     = this->hook;
+    return raw;
+  }
 
 
 }; /* End struct `ManifestRawGA' */
