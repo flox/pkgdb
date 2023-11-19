@@ -94,6 +94,8 @@ jobs:
             sudo systemctl restart nix-daemon.service;
           elif [[ "$RUNNER_OS" == 'macOS' ]]; then
             # double kick does the trick
+            sudo launchctl unload /Library/LaunchDaemons/org.nixos.nix-daemon.plist
+            sudo launchctl load /Library/LaunchDaemons/org.nixos.nix-daemon.plist
             sudo launchctl kickstart -k system/org.nixos.nix-daemon;
             sudo launchctl kickstart -k system/org.nixos.nix-daemon;
           else
