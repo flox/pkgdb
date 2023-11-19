@@ -83,7 +83,7 @@ jobs:
                 /Library/LaunchDaemons/org.nixos.nix-daemon.plist
             sudo plutil \
               -insert EnvironmentVariables.AWS_ACCESS_KEY_ID \
-              -string "${{ secrets.AWS_ACCESS_KEY_ID }} " \
+              -string "${{ secrets.AWS_ACCESS_KEY_ID }}" \
                 /Library/LaunchDaemons/org.nixos.nix-daemon.plist
           fi
 
