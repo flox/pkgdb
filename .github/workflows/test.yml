@@ -66,15 +66,26 @@ jobs:
 
       - name: Nix AWS Setup
         run: |
-          SERVICE_D='/etc/systemd/system/nix-daemon.service.d';
-          sudo mkdir -p "$SERVICE_D";
-          {
-            echo '[Service]';
-            printf 'Environment=AWS_ACCESS_KEY_ID=';
-            echo '${{ secrets.AWS_ACCESS_KEY_ID }}';
-            printf 'Environment=AWS_SECRET_ACCESS_KEY=';
-            echo '${{ secrets.AWS_SECRET_ACCESS_KEY }}';
-          }|sudo tee -a "$SERVICE_D/aws-credentials.conf" >/dev/null;
+          if [[ "$RUNNER_OS" == 'Linux' ]]; then
+            SERVICE_D='/etc/systemd/system/nix-daemon.service.d';
+            sudo mkdir -p "$SERVICE_D";
+            {
+              echo '[Service]';
+              printf 'Environment=AWS_ACCESS_KEY_ID=';
+              echo '${{ secrets.AWS_ACCESS_KEY_ID }}';
+              printf 'Environment=AWS_SECRET_ACCESS_KEY=';
+              echo '${{ secrets.AWS_SECRET_ACCESS_KEY }}';
+            }|sudo tee -a "$SERVICE_D/aws-credentials.conf" >/dev/null;
+          elif [[ "$RUNNER_OS" == 'macOS' ]]; then
+            sudo plutil \
+              -insert EnvironmentVariables.AWS_SECRET_ACCESS_KEY \
+              -string "${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
+                /Library/LaunchDaemons/org.nixos.nix-daemon.plist
+            sudo plutil \
+              -insert EnvironmentVariables.AWS_ACCESS_KEY_ID \
+              -string "${{ secrets.AWS_ACCESS_KEY_ID }} " \
+                /Library/LaunchDaemons/org.nixos.nix-daemon.plist
+          fi
 
       - name: Restart Nix Daemon
         run: |
