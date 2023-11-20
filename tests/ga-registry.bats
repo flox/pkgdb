@@ -193,12 +193,6 @@ setup_file() {
                                    '$PROJ1/manifest.toml'              \
             |jq -r '.combined.inputs.nixpkgs.from.rev';";
   assert_success;
-  if [[ "$output" != "$OTHER_REV" ]]; then
-    $PKGDB manifest registry --ga-registry                      \
-                            --lockfile "$PROJ1/manifest2.lock"  \
-                            "$PROJ1/manifest.toml"              \
-      |jq -r '.combined' >&3;
-  fi
   assert_output "$OTHER_REV";
 }
 
