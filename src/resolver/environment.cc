@@ -67,10 +67,21 @@ Environment::getCombinedRegistryRaw()
           this->combinedRegistryRaw = this->getManifest().getLockedRegistry();
         }
 
-      /* If there's a lockfile, use pinned inputs. */
+      /* If there's a lockfile, use pinned inputs.
+       * However, do not preserve any inputs that were removed from
+       * the manifest. */
       if ( auto maybeLock = this->getOldLockfile(); maybeLock.has_value() )
         {
-          this->combinedRegistryRaw->merge( maybeLock->getRegistryRaw() );
+          auto lockedRegistry = maybeLock->getRegistryRaw();
+          for ( auto & [name, input] : this->combinedRegistryRaw->inputs )
+            {
+              /* Use the pinned input from the lock if it exists. */
+              if ( auto locked = lockedRegistry.inputs.find( name );
+                   locked != lockedRegistry.inputs.end() )
+                {
+                  input = locked->second;
+                }
+            }
         }
     }
   return *this->combinedRegistryRaw;

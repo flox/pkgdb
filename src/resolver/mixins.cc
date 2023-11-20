@@ -61,7 +61,8 @@ EnvironmentMixin::initGlobalManifestPath( std::filesystem::path path )
 {
   ENV_MIXIN_THROW_IF_SET( globalManifestPath )
   this->globalManifestPath = std::move( path );
-  this->initGlobalManifest( readManifestFromPath<GlobalManifestRaw>( path ) );
+  this->initGlobalManifest(
+    readManifestFromPath<GlobalManifestRaw>( *this->globalManifestPath ) );
 }
 
 
@@ -79,7 +80,8 @@ EnvironmentMixin::initManifestPath( std::filesystem::path path )
 {
   ENV_MIXIN_THROW_IF_SET( manifestPath )
   this->manifestPath = std::move( path );
-  this->initManifest( readManifestFromPath<ManifestRaw>( path ) );
+  this->initManifest(
+    readManifestFromPath<ManifestRaw>( *this->manifestPath ) );
 }
 
 

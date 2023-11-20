@@ -24,9 +24,9 @@ LockCommand::LockCommand() : parser( "lock" )
 {
   this->parser.add_description( "Lock a manifest" );
   this->addGlobalManifestFileOption( this->parser );
-  this->addManifestFileArg( this->parser );
   this->addLockfileOption( this->parser );
   this->addGARegistryOption( this->parser );
+  this->addManifestFileArg( this->parser );
 }
 
 
@@ -125,13 +125,74 @@ DiffCommand::run()
 
 /* -------------------------------------------------------------------------- */
 
+UpdateCommand::UpdateCommand() : parser( "update" )
+{
+  this->parser.add_description( "Update environment inputs" );
+  this->addGlobalManifestFileOption( this->parser );
+  this->addLockfileOption( this->parser );
+  this->addGARegistryOption( this->parser );
+
+  this->parser.add_argument( "-i", "--input" )
+    .help( "name of input to update" )
+    .nargs( 1 )
+    .metavar( "NAME" )
+    .action( [&]( const std::string & inputName )
+             { this->inputName = inputName; } );
+
+  this->addManifestFileArg( this->parser );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+int
+UpdateCommand::run()
+{
+  if ( auto maybeLockfile = this->getLockfile(); maybeLockfile.has_value() )
+    {
+      auto lockedRaw = maybeLockfile->getLockfileRaw();
+      auto manifestRegistry
+        = this->getEnvironment().getManifest().getLockedRegistry();
+      if ( this->inputName.has_value() )
+        {
+          if ( const auto & maybeInput
+               = manifestRegistry.inputs.find( *this->inputName );
+               maybeInput != manifestRegistry.inputs.end() )
+            {
+              lockedRaw.registry.inputs[*this->inputName] = maybeInput->second;
+              lockedRaw.registry.defaults = manifestRegistry.defaults;
+              lockedRaw.registry.priority = manifestRegistry.priority;
+            }
+          else
+            {
+              throw FloxException( "input `" + *this->inputName
+                                   + "' does not exist in manifest." );
+            }
+        }
+      else { lockedRaw.registry = std::move( manifestRegistry ); }
+      std::cout << nlohmann::json( lockedRaw ).dump() << std::endl;
+    }
+  else
+    {
+      // TODO: `RegistryRaw' should drop empty fields.
+      nlohmann::json lockfile
+        = this->getEnvironment().createLockfile().getLockfileRaw();
+      /* Print that bad boii */
+      std::cout << lockfile.dump() << std::endl;
+    }
+  return EXIT_SUCCESS;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 RegistryCommand::RegistryCommand() : parser( "registry" )
 {
   this->parser.add_description( "Show environment registry information" );
   this->addGlobalManifestFileOption( this->parser );
-  this->addManifestFileArg( this->parser );
   this->addLockfileOption( this->parser );
   this->addGARegistryOption( this->parser );
+  this->addManifestFileArg( this->parser );
 }
 
 
@@ -184,6 +245,7 @@ ManifestCommand::ManifestCommand() : parser( "manifest" ), cmdLock(), cmdDiff()
   this->parser.add_subparser( this->cmdLock.getParser() );
   this->parser.add_subparser( this->cmdDiff.getParser() );
   this->parser.add_subparser( this->cmdRegistry.getParser() );
+  this->parser.add_subparser( this->cmdUpdate.getParser() );
 }
 
 
@@ -199,6 +261,10 @@ ManifestCommand::run()
   if ( this->parser.is_subcommand_used( "diff" ) )
     {
       return this->cmdDiff.run();
+    }
+  if ( this->parser.is_subcommand_used( "update" ) )
+    {
+      return this->cmdUpdate.run();
     }
   if ( this->parser.is_subcommand_used( "registry" ) )
     {
