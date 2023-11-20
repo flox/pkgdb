@@ -83,8 +83,21 @@ struct LockedInputRaw
     return RegistryInput( static_cast<nix::FlakeRef>( *this ) );
   }
 
+  [[nodiscard]] bool
+  operator==( const LockedInputRaw & other ) const
+  {
+    return ( this->fingerprint == other.fingerprint )
+           && ( this->url == other.url ) && ( this->attrs == other.attrs );
+  }
 
-}; /* End struct `LockedInputRaw::Input' */
+  [[nodiscard]] bool
+  operator!=( const LockedInputRaw & other ) const
+  {
+    return ! ( ( *this ) == other );
+  }
+
+
+}; /* End struct `LockedInputRaw' */
 
 
 /* -------------------------------------------------------------------------- */
@@ -100,14 +113,39 @@ to_json( nlohmann::json & jto, const LockedInputRaw & raw );
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief Print a locked input's to an output stream as a JSON object. */
+std::ostream &
+operator<<( std::ostream & oss, const LockedInputRaw & raw );
+
+
+/* -------------------------------------------------------------------------- */
+
 /** @brief A locked package's _installable URI_. */
 struct LockedPackageRaw
 {
+
   LockedInputRaw input;
   AttrPath       attrPath;
   unsigned       priority;
   nlohmann::json info; /* pname, version, license */
-};                     /* End struct `LockedPackageRaw' */
+
+  [[nodiscard]] bool
+  operator==( const LockedPackageRaw & other ) const
+  {
+    return ( this->input == other.input )
+           && ( this->attrPath == other.attrPath )
+           && ( this->priority == other.priority )
+           && ( this->info == other.info );
+  }
+
+  [[nodiscard]] bool
+  operator!=( const LockedPackageRaw & other ) const
+  {
+    return ! ( ( *this ) == other );
+  }
+
+
+}; /* End struct `LockedPackageRaw' */
 
 
 /* -------------------------------------------------------------------------- */
@@ -119,6 +157,13 @@ from_json( const nlohmann::json & jfrom, LockedPackageRaw & raw );
 /** @brief Convert a @a flox::resolver::LockedPackageRaw to a JSON object. */
 void
 to_json( nlohmann::json & jto, const LockedPackageRaw & raw );
+
+
+/* -------------------------------------------------------------------------- */
+
+/** @brief Print a locked package to an output stream as a JSON object. */
+std::ostream &
+operator<<( std::ostream & oss, const LockedPackageRaw & raw );
 
 
 /* -------------------------------------------------------------------------- */

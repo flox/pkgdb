@@ -53,13 +53,25 @@ Environment::getCombinedRegistryRaw()
 {
   if ( ! this->combinedRegistryRaw.has_value() )
     {
-      if ( this->globalManifest.has_value() )
+      /* Start with the global manifest's registry ( if any ), and merge it with
+       * the environment manifest's registry. */
+      if ( auto maybeGlobal = this->getGlobalManifest();
+           maybeGlobal.has_value() )
         {
-          this->combinedRegistryRaw = this->globalManifest->getLockedRegistry();
+          this->combinedRegistryRaw = maybeGlobal->getLockedRegistry();
           this->combinedRegistryRaw->merge(
-            this->manifest.getLockedRegistry() );
+            this->getManifest().getLockedRegistry() );
         }
-      else { this->combinedRegistryRaw = this->manifest.getLockedRegistry(); }
+      else
+        {
+          this->combinedRegistryRaw = this->getManifest().getLockedRegistry();
+        }
+
+      /* If there's a lockfile, use pinned inputs. */
+      if ( auto maybeLock = this->getOldLockfile(); maybeLock.has_value() )
+        {
+          this->combinedRegistryRaw->merge( maybeLock->getRegistryRaw() );
+        }
     }
   return *this->combinedRegistryRaw;
 }

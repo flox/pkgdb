@@ -236,6 +236,15 @@ to_json( nlohmann::json & jto, const LockedInputRaw & raw )
 
 /* -------------------------------------------------------------------------- */
 
+std::ostream &
+operator<<( std::ostream & oss, const LockedInputRaw & raw )
+{
+  return oss << nlohmann::json( raw ).dump();
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 void
 from_json( const nlohmann::json & jfrom, LockedPackageRaw & raw )
 {
@@ -299,6 +308,15 @@ to_json( nlohmann::json & jto, const LockedPackageRaw & raw )
           { "attr-path", raw.attrPath },
           { "priority", raw.priority },
           { "info", raw.info } };
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+std::ostream &
+operator<<( std::ostream & oss, const LockedPackageRaw & raw )
+{
+  return oss << nlohmann::json( raw ).dump();
 }
 
 

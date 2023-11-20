@@ -142,31 +142,32 @@ RegistryCommand::run()
 {
   nlohmann::json registries = {
     { "manifest", this->getEnvironment().getManifest().getRegistryRaw() },
-    { "manifest-locked", this->getEnvironment().getManifest().getLockedRegistry() },
+    { "manifest-locked",
+      this->getEnvironment().getManifest().getLockedRegistry() },
     { "combined", this->getEnvironment().getCombinedRegistryRaw() },
   };
 
   if ( auto maybeGlobal = this->getEnvironment().getGlobalManifest();
        maybeGlobal.has_value() )
     {
-      registries["global"] = maybeGlobal->getRegistryRaw();
+      registries["global"]        = maybeGlobal->getRegistryRaw();
       registries["global-locked"] = maybeGlobal->getLockedRegistry();
     }
   else
     {
-      registries["global"] = nullptr;
+      registries["global"]        = nullptr;
       registries["global-locked"] = nullptr;
     }
 
   if ( auto maybeLock = this->getEnvironment().getOldLockfile();
        maybeLock.has_value() )
     {
-      registries["lockfile"] = maybeLock->getRegistryRaw();
+      registries["lockfile"]          = maybeLock->getRegistryRaw();
       registries["lockfile-packages"] = maybeLock->getPackagesRegistryRaw();
     }
   else
     {
-      registries["lockfile"] = nullptr;
+      registries["lockfile"]          = nullptr;
       registries["lockfile-packages"] = nullptr;
     }
 
