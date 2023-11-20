@@ -187,10 +187,11 @@ setup_file() {
 # pin used by our test suite.
 # This should detect whether the lockfile's `rev` is preserved in `combined`.
 @test "Combined registry prefers lockfile inputs" {
-  run sh -c "$PKGDB manifest registry --ga-registry                       \
-                                      --lockfile '$PROJ1/manifest2.lock'  \
-                                      '$PROJ1/manifest.toml'              \
-               |jq -r '.combined.inputs.nixpkgs.from.rev';";
+  run --separate-stderr                                                \
+    sh -c "$PKGDB manifest registry --ga-registry                      \
+                                   --lockfile '$PROJ1/manifest2.lock'  \
+                                   '$PROJ1/manifest.toml'              \
+            |jq -r '.combined.inputs.nixpkgs.from.rev';";
   assert_success;
   assert_output "$OTHER_REV";
 }
@@ -204,10 +205,11 @@ setup_file() {
 # pin used by our test suite.
 # This should cause the `rev` to be updated.
 @test "'pkgdb manifest update --ga-registry' updates lockfile rev" {
-  run sh -c "$PKGDB manifest update --ga-registry                       \
-                                    --lockfile '$PROJ1/manifest2.lock'  \
-                                    '$PROJ1/manifest.toml'              \
-               |jq -r '.registry.inputs.nixpkgs.from.rev';";
+  run --separate-stderr                                               \
+    sh -c "$PKGDB manifest update --ga-registry                       \
+                                  --lockfile '$PROJ1/manifest2.lock'  \
+                                  '$PROJ1/manifest.toml'              \
+            |jq -r '.registry.inputs.nixpkgs.from.rev';";
   assert_success;
   assert_output "$NIXPKGS_REV";
 }
@@ -219,13 +221,14 @@ setup_file() {
 
 @test "'pkgdb search --ga-registry' uses lockfile rev" {
   # `$NIXPKGS_REV'
-  run sh -c "$PKGDB search --ga-registry --match-name nodejs|head -n1  \
+  run --separate-stderr                                              \
+    sh -c "$PKGDB search --ga-registry --match-name nodejs|head -n1  \
                |jq -r '.version';";
   assert_success;
   assert_output '18.16.0';
 
   # `$OTHER_REV'
-  run sh -c "$PKGDB search --ga-registry '{
+  run --separate-stderr sh -c "$PKGDB search --ga-registry '{
     \"lockfile\": \"$PROJ1/manifest2.lock\",
     \"query\": { \"match-name\": \"nodejs\" }
   }'|head -n1|jq -r '.version';";
@@ -239,7 +242,8 @@ setup_file() {
 # bats test_tags=manifest:ga-registry, lock:ga-registry, manifest:update
 
 @test "'pkgdb manifest update --ga-registry' creates missing lockfile" {
-  run $PKGDB manifest update --ga-registry "$PROJ1/manifest.toml";
+  run --separate-stderr                                             \
+    "$PKGDB" manifest update --ga-registry "$PROJ1/manifest.toml";
   assert_success;
   assert_output < "$PROJ1/manifest.lock";
 }
