@@ -152,6 +152,60 @@ LockedPackageRaw mockCurlLocked( mockCurlLockedJSON );
 
 /* -------------------------------------------------------------------------- */
 
+nlohmann::json pythonLockedJSON {
+  inputWithNixpkgsJSON,
+  { "attr-path",
+    // TODO this should be python310Packages not emacsPackages
+    { "legacyPackages", _system, "emacsPackages", "python" } },
+  { "priority", 5 },
+  { "info",
+    { { "broken", false },
+      { "license", nullptr },
+      { "pname", "python" },
+      { "unfree", false },
+      // TODO fix once python310Packages is used
+      { "version", "0.28" } } }
+};
+LockedPackageRaw pythonLocked( pythonLockedJSON );
+
+
+/* -------------------------------------------------------------------------- */
+
+nlohmann::json requestsLockedJSON {
+  inputWithNixpkgsJSON,
+  { "attr-path",
+    { "legacyPackages", _system, "python310Packages", "requests" } },
+  { "priority", 5 },
+  { "info",
+    { { "broken", false },
+      { "license", "Apache-2.0" },
+      { "pname", "requests" },
+      { "unfree", false },
+      { "version", "2.31.0" } } }
+};
+LockedPackageRaw requestsLocked( requestsLockedJSON );
+
+
+/* -------------------------------------------------------------------------- */
+
+nlohmann::json pandasLockedJSON {
+  inputWithNixpkgsJSON,
+  { "attr-path", { "legacyPackages", _system, "python310Packages", "pandas" } },
+  { "priority", 5 },
+  { "info",
+    { { "broken", false },
+      { "license", "BSD-3-Clause" },
+      { "pname", "pandas" },
+      { "unfree", false },
+      { "version", "1.5.3" } } }
+};
+LockedPackageRaw pandasLocked( pandasLockedJSON );
+
+
+
+
+/* -------------------------------------------------------------------------- */
+
 bool
 equalLockedInputRaw( const LockedInputRaw & first,
                      const LockedInputRaw & second )
@@ -784,6 +838,65 @@ test_createLockfile_new()
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * @brief createLockfile locks python and python modules to a single input when
+ *        they are in the same group. */
+bool
+test_createLockfile_new_python_modules()
+{
+  /* Create manifest with python, requests, and pandas in the same group. */
+  ManifestRaw manifestRaw;
+  /* If we change the default grouping strategy, we'll need to add an explicit
+   * group. */
+  manifestRaw.install          = { { "python", std::nullopt },
+                                   { "requests", std::nullopt },
+                                   { "pandas", std::nullopt } };
+  manifestRaw.options          = Options {};
+  manifestRaw.options->systems = { _system };
+  manifestRaw.registry         = registryWithNixpkgs;
+
+  EnvironmentManifest manifest( manifestRaw );
+
+  /* Create expected lockfile, reusing manifestRaw */
+  LockfileRaw expectedLockfileRaw;
+  expectedLockfileRaw.packages = { { _system,
+                                     { { "python", pythonLocked },
+                                       { "requests", requestsLocked },
+                                       { "pandas", pandasLocked } } } };
+  expectedLockfileRaw.manifest = manifestRaw;
+
+  Lockfile expectedLockfile( expectedLockfileRaw );
+
+  /* Test locking manifest creates expectedLockfile, and the input for all 3
+   * packages is the same. */
+  Environment environment( std::nullopt, manifest, std::nullopt );
+  Lockfile    actualLockfile = environment.createLockfile();
+  /* We could just check the inputs, but might as well check the whole lockfile.
+   */
+  EXPECT( equalLockfile( actualLockfile, expectedLockfile ) );
+  EXPECT( equalLockedInputRaw( actualLockfile.getLockfileRaw()
+                                 .packages.at( _system )
+                                 .at( "python" )
+                                 ->input,
+                               actualLockfile.getLockfileRaw()
+                                 .packages.at( _system )
+                                 .at( "requests" )
+                                 ->input ) );
+  EXPECT( equalLockedInputRaw( actualLockfile.getLockfileRaw()
+                                 .packages.at( _system )
+                                 .at( "requests" )
+                                 ->input,
+                               actualLockfile.getLockfileRaw()
+                                 .packages.at( _system )
+                                 .at( "pandas" )
+                                 ->input ) );
+
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 /** @brief `createLockfile()` reuses existing lockfile entry. */
 bool
 test_createLockfile_existing()
@@ -931,6 +1044,7 @@ main()
   RUN_TEST( getGroupInput3 );
 
   RUN_TEST( createLockfile_new );
+  RUN_TEST( createLockfile_new_python_modules );
   RUN_TEST( createLockfile_existing );
   RUN_TEST( createLockfile_both );
   RUN_TEST( createLockfile_error );
