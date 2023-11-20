@@ -125,11 +125,64 @@ DiffCommand::run()
 
 /* -------------------------------------------------------------------------- */
 
+RegistryCommand::RegistryCommand() : parser( "registry" )
+{
+  this->parser.add_description( "Show environment registry information" );
+  this->addGlobalManifestFileOption( this->parser );
+  this->addManifestFileArg( this->parser );
+  this->addLockfileOption( this->parser );
+  this->addGARegistryOption( this->parser );
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+int
+RegistryCommand::run()
+{
+  nlohmann::json registries = {
+    { "manifest", this->getEnvironment().getManifest().getRegistryRaw() },
+    { "manifest-locked", this->getEnvironment().getManifest().getLockedRegistry() },
+    { "combined", this->getEnvironment().getCombinedRegistryRaw() },
+  };
+
+  if ( auto maybeGlobal = this->getEnvironment().getGlobalManifest();
+       maybeGlobal.has_value() )
+    {
+      registries["global"] = maybeGlobal->getRegistryRaw();
+      registries["global-locked"] = maybeGlobal->getLockedRegistry();
+    }
+  else
+    {
+      registries["global"] = nullptr;
+      registries["global-locked"] = nullptr;
+    }
+
+  if ( auto maybeLock = this->getEnvironment().getOldLockfile();
+       maybeLock.has_value() )
+    {
+      registries["lockfile"] = maybeLock->getRegistryRaw();
+      registries["lockfile-packages"] = maybeLock->getPackagesRegistryRaw();
+    }
+  else
+    {
+      registries["lockfile"] = nullptr;
+      registries["lockfile-packages"] = nullptr;
+    }
+
+  std::cout << registries.dump() << std::endl;
+  return EXIT_SUCCESS;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 ManifestCommand::ManifestCommand() : parser( "manifest" ), cmdLock(), cmdDiff()
 {
   this->parser.add_description( "Manifest subcommands" );
   this->parser.add_subparser( this->cmdLock.getParser() );
   this->parser.add_subparser( this->cmdDiff.getParser() );
+  this->parser.add_subparser( this->cmdRegistry.getParser() );
 }
 
 
@@ -145,6 +198,10 @@ ManifestCommand::run()
   if ( this->parser.is_subcommand_used( "diff" ) )
     {
       return this->cmdDiff.run();
+    }
+  if ( this->parser.is_subcommand_used( "registry" ) )
+    {
+      return this->cmdRegistry.run();
     }
   std::cerr << this->parser << std::endl;
   throw flox::FloxException( "You must provide a valid `manifest' subcommand" );

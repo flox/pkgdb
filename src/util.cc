@@ -108,7 +108,10 @@ readAndCoerceJSON( const std::filesystem::path & path )
 
   std::ifstream ifs( path );
   auto          ext = path.extension();
-  if ( ext == ".json" ) { return nlohmann::json::parse( ifs ); }
+  if ( ( ext == ".json" ) || ( ext == ".lock" ) )
+    {
+      return nlohmann::json::parse( ifs );
+    }
 
   /* Read file to buffer */
   std::ostringstream oss;

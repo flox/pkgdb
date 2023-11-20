@@ -126,7 +126,7 @@ SearchCommand::initEnvironment()
   /* Init global manifest. */
   auto maybePath = this->params.getGlobalManifestPath();
   if ( maybePath.has_value() ) { this->initGlobalManifestPath( *maybePath ); }
-  if ( auto raw = this->params.getGlobalManifestRaw(); raw.has_value() )
+  else if ( auto raw = this->params.getGlobalManifestRaw(); raw.has_value() )
     {
       this->initGlobalManifest( *raw );
     }
@@ -134,12 +134,12 @@ SearchCommand::initEnvironment()
   /* Init manifest. */
   maybePath = this->params.getManifestPath();
   if ( maybePath.has_value() ) { this->initManifestPath( *maybePath ); }
-  this->initManifest( this->params.getManifestRaw() );
+  else { this->initManifest( this->params.getManifestRaw() ); }
 
   /* Init lockfile . */
   maybePath = this->params.getLockfilePath();
   if ( maybePath.has_value() ) { this->initLockfilePath( *maybePath ); }
-  if ( auto raw = this->params.getLockfileRaw(); raw.has_value() )
+  else if ( auto raw = this->params.getLockfileRaw(); raw.has_value() )
     {
       this->initLockfile( *raw );
     }

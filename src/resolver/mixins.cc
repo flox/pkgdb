@@ -61,8 +61,7 @@ EnvironmentMixin::initGlobalManifestPath( std::filesystem::path path )
 {
   ENV_MIXIN_THROW_IF_SET( globalManifestPath )
   this->globalManifestPath = std::move( path );
-  this->initGlobalManifest( readManifestFromPath<GlobalManifestRaw>(
-    path ) );
+  this->initGlobalManifest( readManifestFromPath<GlobalManifestRaw>( path ) );
 }
 
 
@@ -267,7 +266,7 @@ GAEnvironmentMixin::initGlobalManifestPath( std::filesystem::path path )
   if ( this->gaRegistry )
     {
       auto manifestRawGA = readManifestFromPath<GlobalManifestRawGA>( path );
-      auto manifestRaw = static_cast<GlobalManifestRaw>( manifestRawGA );
+      auto manifestRaw   = static_cast<GlobalManifestRaw>( manifestRawGA );
       this->setGlobalManifestPath( std::move( path ) );
       this->EnvironmentMixin::initGlobalManifest( std::move( manifestRaw ) );
     }
@@ -300,7 +299,7 @@ GAEnvironmentMixin::initManifestPath( std::filesystem::path path )
   if ( this->gaRegistry )
     {
       auto manifestRawGA = readManifestFromPath<ManifestRawGA>( path );
-      auto manifestRaw = static_cast<ManifestRaw>( manifestRawGA );
+      auto manifestRaw   = static_cast<ManifestRaw>( manifestRawGA );
       this->setManifestPath( std::move( path ) );
       this->EnvironmentMixin::initManifest( std::move( manifestRaw ) );
     }
