@@ -410,6 +410,8 @@ Environment::getGroupInput( const InstallDescriptors & group,
                     {
                       if ( descriptor.group == oldDescriptor.group )
                         {
+                          // TODO: check that input is still present in a
+                          // registry somewhere?
                           return maybeLockedPackage->input;
                         }
 
@@ -431,16 +433,18 @@ Environment::getGroupInput( const InstallDescriptors & group,
             }
         }
     }
+  // TODO: check that input is still present in a registry somewhere?
   return wrongGroupInput;
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-std::optional<SystemPackages>
+ResolutionResult
 Environment::tryResolveGroup( const InstallDescriptors & group,
                               const System &             system )
 {
+  ResolutionFailure failure;
   if ( auto oldLockfile = this->getOldLockfile(); oldLockfile.has_value() )
     {
       auto lockedInput
@@ -451,22 +455,54 @@ Environment::tryResolveGroup( const InstallDescriptors & group,
           nix::ref<nix::Store> store = this->getStore();
           pkgdb::PkgDbInput    input( store, registryInput );
           auto maybeResolved = this->tryResolveGroupIn( group, input, system );
-          if ( maybeResolved.has_value() ) { return maybeResolved; }
+          if ( const SystemPackages * resolved
+               = std::get_if<SystemPackages>( &maybeResolved ) )
+            {
+              return *resolved;
+            }
+          else if ( const InstallID * iid
+                    = std::get_if<InstallID>( &maybeResolved ) )
+            {
+              failure.push_back( std::pair<InstallID, std::string> {
+                *iid,
+                input.getDbReadOnly()->lockedRef.string } );
+            }
+          else
+            {
+              throw ResolutionFailureException(
+                "we thought this was an unreachable error" );
+            }
         }
     }
   // TODO: Use `getCombinedRegistryRaw()'
   for ( const auto & [_, input] : *this->getPkgDbRegistry() )
     {
       auto maybeResolved = this->tryResolveGroupIn( group, *input, system );
-      if ( maybeResolved.has_value() ) { return maybeResolved; }
+      if ( const SystemPackages * resolved
+           = std::get_if<SystemPackages>( &maybeResolved ) )
+        {
+          return *resolved;
+        }
+      else if ( const InstallID * iid
+                = std::get_if<InstallID>( &maybeResolved ) )
+        {
+          failure.push_back( std::pair<InstallID, std::string> {
+            *iid,
+            input->getDbReadOnly()->lockedRef.string } );
+        }
+      else
+        {
+          throw ResolutionFailureException(
+            "we thought this was an unreachable error" );
+        }
     }
-  return std::nullopt;
+  return failure;
 }
 
 
 /* -------------------------------------------------------------------------- */
 
-std::optional<SystemPackages>
+std::variant<InstallID, SystemPackages>
 Environment::tryResolveGroupIn( const InstallDescriptors & group,
                                 const pkgdb::PkgDbInput &  input,
                                 const System &             system )
@@ -493,7 +529,7 @@ Environment::tryResolveGroupIn( const InstallDescriptors & group,
         {
           pkgRows.emplace( iid, maybeRow );
         }
-      else { return std::nullopt; }
+      else { return iid; }
     }
 
   /* Convert to `LockedPackageRaw's */
@@ -530,50 +566,53 @@ Environment::lockSystem( const System & system )
   auto groups = this->getUnlockedGroups( system );
 
   /* Try resolving unresolved groups. */
+  std::vector<ResolutionFailure> failures;
+  std::stringstream              msg;
+  msg << "failed to resolve some package(s):" << std::endl;
   for ( auto group = groups.begin(); group != groups.end(); )
     {
-      std::optional<SystemPackages> maybeResolved
-        = this->tryResolveGroup( *group, system );
-      if ( maybeResolved.has_value() )
-        {
-          pkgs.merge( *maybeResolved );
-          group = groups.erase( group );
-        }
-      else { ++group; }
+      ResolutionResult maybeResolved = this->tryResolveGroup( *group, system );
+      std::visit(
+        overloaded {
+          /* Add to pkgs if the group was successfully resolved. */
+          [&]( SystemPackages & resolved )
+          {
+            pkgs.merge( resolved );
+            group = groups.erase( group );
+          },
+          /* Otherwise add a description of the resolution failure to msg. */
+          [&]( const ResolutionFailure & failure )
+          {
+            /* We should only hit this on the first iteration.
+             * TODO: throw sooner rather than trying to resolve every
+             * group? */
+            if ( failure.empty() )
+              {
+                throw ResolutionFailureException(
+                  "no inputs found to search for packages" );
+              }
+            /* Print group name if this isn't the default group. */
+            if ( auto descriptor = group->begin();
+                 descriptor != group->end()
+                 && descriptor->second.group.has_value() )
+              {
+
+                msg << "  in group `" << *descriptor->second.group << "': ";
+              }
+            else { msg << "  in default group:"; }
+            msg << std::endl;
+            for ( const auto & [iid, url] : failure )
+              {
+                msg << "    failed to resolve `" << iid << "' in input `" << url
+                    << "'";
+              }
+
+            ++group;
+          } },
+        maybeResolved );
     }
 
-  if ( ! groups.empty() )
-    {
-      std::stringstream msg;
-      msg << "failed to resolve some packages(s):";
-      for ( const auto & group : groups )
-        {
-          // TODO tryResolveGroupIn should report which packages failed
-          //      to resolve.
-          if ( auto descriptor = group.begin();
-               descriptor != group.end()
-               && descriptor->second.group.has_value() )
-            {
-
-              msg << std::endl
-                  << "  some package in group " << *descriptor->second.group
-                  << " failed to resolve: ";
-            }
-          else
-            {
-              msg << std::endl << "  one of the following failed to resolve: ";
-            }
-          bool first = true;
-          for ( const auto & [iid, descriptor] : group )
-            {
-              if ( first ) { first = false; }
-              else { msg << ", "; }
-              msg << iid;
-            }
-        }
-      throw ResolutionFailure( msg.str() );
-    }
-
+  if ( ! groups.empty() ) { throw ResolutionFailureException( msg.str() ); }
 
   /* Copy over old lockfile entries we want to keep. */
   if ( auto oldLockfile = this->getOldLockfile();

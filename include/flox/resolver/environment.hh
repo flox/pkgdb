@@ -52,12 +52,15 @@ namespace flox::resolver {
 
 /* -------------------------------------------------------------------------- */
 
-FLOX_DEFINE_EXCEPTION( ResolutionFailure,
+FLOX_DEFINE_EXCEPTION( ResolutionFailureException,
                        EC_RESOLUTION_FAILURE,
                        "resolution failure" );
 
 
 /* -------------------------------------------------------------------------- */
+
+using ResolutionFailure = std::vector<std::pair<InstallID, std::string>>;
+using ResolutionResult = std::variant<ResolutionFailure, SystemPackages>;
 
 /**
  * @brief A collection of data associated with an environment and its state.
@@ -172,7 +175,7 @@ private:
    * @return `std::nullopt` if resolution fails, otherwise a set of
    *          resolved packages.
    */
-  [[nodiscard]] std::optional<SystemPackages>
+  [[nodiscard]] ResolutionResult
   tryResolveGroup( const InstallDescriptors & group, const System & system );
 
   /**
@@ -181,7 +184,7 @@ private:
    * @return `std::nullopt` if resolution fails, otherwise a set of
    *          resolved packages for.
    */
-  [[nodiscard]] std::optional<SystemPackages>
+  [[nodiscard]] std::variant<InstallID, SystemPackages>
   tryResolveGroupIn( const InstallDescriptors & group,
                      const pkgdb::PkgDbInput &  input,
                      const System &             system );

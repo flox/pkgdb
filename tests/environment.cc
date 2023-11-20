@@ -42,113 +42,6 @@ const System _system = "x86_64-linux";
 
 /* -------------------------------------------------------------------------- */
 
-nlohmann::json helloLockedJSON {
-  { "input",
-    { { "fingerprint", nixpkgsFingerprintStr },
-      { "url", nixpkgsRef },
-      { "attrs",
-        { { "owner", "NixOS" },
-          { "repo", "nixpkgs" },
-          { "rev", nixpkgsRev },
-          { "type", "github" },
-          { "lastModified", 1685979279 },
-          { "narHash",
-            "sha256-1UGacsv5coICyvAzwuq89v9NsS00Lo8sz22cDHwhnn8=" } } } } },
-  { "attr-path", { "legacyPackages", _system, "hello" } },
-  { "priority", 5 },
-  { "info",
-    { { "broken", false },
-      { "license", "GPL-3.0-or-later" },
-      { "pname", "hello" },
-      { "unfree", false },
-      { "version", "2.12.1" } } }
-};
-LockedPackageRaw helloLocked( helloLockedJSON );
-
-
-/* -------------------------------------------------------------------------- */
-
-/** Change a few fields from what we'd get if actual resultion was performed. */
-nlohmann::json mockHelloLockedJSON {
-  { "input",
-    { { "fingerprint", nixpkgsFingerprintStr },
-      { "url", nixpkgsRef },
-      { "attrs",
-        { { "owner", "owner" },
-          { "repo", "repo" },
-          { "rev", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" },
-          { "type", "github" },
-          { "lastModified", 1685979279 },
-          { "narHash",
-            "sha256-1UGacsv5coICyvAzwuq89v9NsS00Lo8sz22cDHwhnn8=" } } } } },
-  { "attr-path", { "mock", "hello" } },
-  { "priority", 5 },
-  { "info",
-    { { "broken", false },
-      { "license", "GPL-3.0-or-later" },
-      { "pname", "hello" },
-      { "unfree", false },
-      { "version", "2.12.1" } } }
-};
-LockedPackageRaw mockHelloLocked( mockHelloLockedJSON );
-
-
-/* -------------------------------------------------------------------------- */
-
-nlohmann::json curlLockedJSON
-  = { { "input",
-        { { "fingerprint", nixpkgsFingerprintStr },
-          { "url", nixpkgsRef },
-          { "attrs",
-            { { "owner", "NixOS" },
-              { "repo", "nixpkgs" },
-              { "rev", nixpkgsRev },
-              { "type", "github" },
-              { "lastModified", 1685979279 },
-              { "narHash",
-                "sha256-1UGacsv5coICyvAzwuq89v9NsS00Lo8sz22cDHwhnn8=" } } } } },
-      { "attr-path", { "legacyPackages", _system, "curl" } },
-      { "priority", 5 },
-      { "info",
-        { { "broken", false },
-          { "license", "curl" },
-          { "pname", "curl" },
-          { "unfree", false },
-          { "version", "8.1.1" } } } };
-LockedPackageRaw curlLocked( curlLockedJSON );
-
-
-/* -------------------------------------------------------------------------- */
-
-/** Change a few fields from what we'd get if actual resultion was performed.
- */
-nlohmann::json mockCurlLockedJSON {
-  { "input",
-    { { "fingerprint", nixpkgsFingerprintStr },
-      { "url", nixpkgsRef },
-      { "attrs",
-        { { "owner", "owner" },
-          { "repo", "repo" },
-          { "rev", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" },
-          { "type", "github" },
-          { "lastModified", 1685979279 },
-          { "narHash",
-            "sha256-1UGacsv5coICyvAzwuq89v9NsS00Lo8sz22cDHwhnn8=" } } } } },
-  { "attr-path", { "mock", "curl" } },
-  { "priority", 5 },
-  { "info",
-    { { "broken", false },
-      { "license", "GPL-3.0-or-later" },
-      { "pname", "curl" },
-      { "unfree", false },
-      { "version", "2.12.1" } } }
-};
-LockedPackageRaw mockCurlLocked( mockCurlLockedJSON );
-
-
-// /* --------------------------------------------------------------------------
-// */
-
 nlohmann::json registryWithNixpkgsJSON {
   { "inputs",
     { { "nixpkgs",
@@ -160,6 +53,101 @@ nlohmann::json registryWithNixpkgsJSON {
           { "subtrees", { "legacyPackages" } } } } } }
 };
 RegistryRaw registryWithNixpkgs( registryWithNixpkgsJSON );
+
+
+/* -------------------------------------------------------------------------- */
+
+nlohmann::json inputWithNixpkgsJSON {
+  "input",
+  { { "fingerprint", nixpkgsFingerprintStr },
+    { "url", nixpkgsRef },
+    { "attrs",
+      { { "owner", "NixOS" },
+        { "repo", "nixpkgs" },
+        { "rev", nixpkgsRev },
+        { "type", "github" },
+        { "lastModified", 1685979279 },
+        { "narHash",
+          "sha256-1UGacsv5coICyvAzwuq89v9NsS00Lo8sz22cDHwhnn8=" } } } }
+};
+
+
+/* -------------------------------------------------------------------------- */
+
+nlohmann::json mockInputJSON {
+  "input",
+  { { "fingerprint", nixpkgsFingerprintStr },
+    { "url", nixpkgsRef },
+    { "attrs",
+      { { "owner", "owner" },
+        { "repo", "repo" },
+        { "rev", "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" },
+        { "type", "github" },
+        { "lastModified", 1685979279 },
+        { "narHash",
+          "sha256-1UGacsv5coICyvAzwuq89v9NsS00Lo8sz22cDHwhnn8=" } } } }
+};
+
+
+/* -------------------------------------------------------------------------- */
+
+nlohmann::json   helloLockedJSON { inputWithNixpkgsJSON,
+                                   { "attr-path",
+                                     { "legacyPackages", _system, "hello" } },
+                                   { "priority", 5 },
+                                   { "info",
+                                     { { "broken", false },
+                                       { "license", "GPL-3.0-or-later" },
+                                       { "pname", "hello" },
+                                       { "unfree", false },
+                                       { "version", "2.12.1" } } } };
+LockedPackageRaw helloLocked( helloLockedJSON );
+
+
+/* -------------------------------------------------------------------------- */
+
+/** Change a few fields from what we'd get if actual resultion was performed. */
+nlohmann::json   mockHelloLockedJSON { mockInputJSON,
+                                       { "attr-path", { "mock", "hello" } },
+                                       { "priority", 5 },
+                                       { "info",
+                                         { { "broken", false },
+                                           { "license", "GPL-3.0-or-later" },
+                                           { "pname", "hello" },
+                                           { "unfree", false },
+                                           { "version", "2.12.1" } } } };
+LockedPackageRaw mockHelloLocked( mockHelloLockedJSON );
+
+
+/* -------------------------------------------------------------------------- */
+
+nlohmann::json   curlLockedJSON { inputWithNixpkgsJSON,
+                                  { "attr-path",
+                                    { "legacyPackages", _system, "curl" } },
+                                  { "priority", 5 },
+                                  { "info",
+                                    { { "broken", false },
+                                      { "license", "curl" },
+                                      { "pname", "curl" },
+                                      { "unfree", false },
+                                      { "version", "8.1.1" } } } };
+LockedPackageRaw curlLocked( curlLockedJSON );
+
+
+/* -------------------------------------------------------------------------- */
+
+/** Change a few fields from what we'd get if actual resultion was performed.
+ */
+nlohmann::json   mockCurlLockedJSON { mockInputJSON,
+                                      { "attr-path", { "mock", "curl" } },
+                                      { "priority", 5 },
+                                      { "info",
+                                        { { "broken", false },
+                                          { "license", "GPL-3.0-or-later" },
+                                          { "pname", "curl" },
+                                          { "unfree", false },
+                                          { "version", "2.12.1" } } } };
+LockedPackageRaw mockCurlLocked( mockCurlLockedJSON );
 
 
 /* -------------------------------------------------------------------------- */
@@ -884,6 +872,43 @@ test_createLockfile_both()
 
 /* -------------------------------------------------------------------------- */
 
+/** @brief createLockfile gives a helpful error message when a package can't be
+ * resolved. */
+bool
+test_createLockfile_error()
+{
+  /* Create manifest with hello */
+  ManifestRaw manifestRaw;
+  manifestRaw.install          = { { "not-a-package", std::nullopt } };
+  manifestRaw.options          = Options {};
+  manifestRaw.options->systems = { _system };
+  manifestRaw.registry         = registryWithNixpkgs;
+
+  EnvironmentManifest manifest( manifestRaw );
+
+  /* Test locking manifest creates expectedLockfile */
+  Environment environment( std::nullopt, manifest, std::nullopt );
+  try
+    {
+      Lockfile actualLockfile = environment.createLockfile();
+      return false;
+    }
+  catch ( flox::FloxException & err )
+    {
+      EXPECT_EQ(
+        err.what(),
+        std::string(
+          "resolution failure: failed to resolve some package(s):\n"
+          "  in default group:\n"
+          "    failed to resolve `not-a-package' in input "
+          "`github:NixOS/nixpkgs/e8039594435c68eb4f780f3e9bf3972a7399c4b1'" ) );
+      return true;
+    }
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 int
 main()
 {
@@ -908,6 +933,7 @@ main()
   RUN_TEST( createLockfile_new );
   RUN_TEST( createLockfile_existing );
   RUN_TEST( createLockfile_both );
+  RUN_TEST( createLockfile_error );
 
   return exitCode;
 }
