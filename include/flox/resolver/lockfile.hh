@@ -352,6 +352,16 @@ public:
     return this->packagesRegistryRaw;
   }
 
+  /**
+   * @brief Drop any `registry.inputs` and `registry.priority` members that are
+   *        not explicitly declared in the manifest `registry` or used by
+   *        resolved packages.
+   *
+   * @return The number of removed inputs.
+   */
+  std::size_t
+  removeUnusedInputs();
+
 
 }; /* End class `Lockfile' */
 

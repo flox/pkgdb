@@ -633,15 +633,15 @@ Environment::createLockfile()
     {
       this->lockfileRaw           = LockfileRaw {};
       this->lockfileRaw->manifest = this->getManifestRaw();
-      // TODO: Once you figure out `getCombinedRegistryRaw' you might need to
-      //       remove some unused registry members.
       this->lockfileRaw->registry = this->getCombinedRegistryRaw();
       for ( const auto & system : this->getSystems() )
         {
           this->lockSystem( system );
         }
     }
-  return Lockfile( *this->lockfileRaw );
+  Lockfile lockfile( *this->lockfileRaw );
+  lockfile.removeUnusedInputs();
+  return lockfile;
 }
 
 
