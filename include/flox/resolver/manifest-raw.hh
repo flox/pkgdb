@@ -530,6 +530,7 @@ struct ManifestRawGA : public GlobalManifestRawGA
   {
     ManifestRaw raw;
     raw.registry = getGARegistry();
+    raw.options  = this->options;
     raw.install  = this->install;
     raw.vars     = this->vars;
     raw.hook     = this->hook;

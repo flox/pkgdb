@@ -222,6 +222,7 @@ setup_file() {
 @test "'pkgdb search --ga-registry' uses lockfile rev" {
   # `$NIXPKGS_REV'
   run --separate-stderr sh -c "$PKGDB search --ga-registry '{
+      \"manifest\": \"$PROJ1/manifest.toml\",
       \"lockfile\": \"$PROJ1/manifest.lock\",
       \"query\": { \"match-name\": \"nodejs\" }
     }'|head -n1|jq -r '.version';";
@@ -230,9 +231,10 @@ setup_file() {
 
   # `$OTHER_REV'
   run --separate-stderr sh -c "$PKGDB search --ga-registry '{
-    \"lockfile\": \"$PROJ1/manifest2.lock\",
-    \"query\": { \"match-name\": \"nodejs\" }
-  }'|head -n1|jq -r '.version';";
+      \"manifest\": \"$PROJ1/manifest.toml\",
+      \"lockfile\": \"$PROJ1/manifest2.lock\",
+      \"query\": { \"match-name\": \"nodejs\" }
+    }'|head -n1|jq -r '.version';";
   assert_success;
   assert_output '18.17.1';
 }
