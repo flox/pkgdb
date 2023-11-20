@@ -416,9 +416,9 @@ Environment::getGroupInput( const InstallDescriptors & group,
                   /* At this point we know the same iid is both locked in the
                    * old lockfile and present in the new manifest */
 
-                  /* Don't use a locked input if the package has changed. The
-                   * following fields control what the package actually *is*,
-                   * while:
+                  /* Don't use a locked input if the package has changed.
+                   * The * following fields control what the package actually
+                   * *is*, * while:
                    * - `optional' and `systems' control how we behave if
                    * resolution fails, but they don't change the package.
                    * - `priority' is a setting for mkEnv
