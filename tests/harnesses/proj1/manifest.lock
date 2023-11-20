@@ -4,6 +4,11 @@
     "install": {
       "nodejs": null
     },
+    "options": {
+      "systems": [
+        "x86_64-linux"
+      ]
+    },
     "registry": {
       "defaults": {
         "subtrees": null
