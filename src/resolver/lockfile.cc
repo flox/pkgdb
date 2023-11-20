@@ -438,8 +438,9 @@ Lockfile::removeUnusedInputs()
   auto inManifestRegistry = [&]( const std::string & name ) -> bool
   {
     const auto & maybeRegistry = this->getManifestRaw().registry;
-    return maybeRegistry.has_value() &&
-           ( maybeRegistry->inputs.find( name ) != maybeRegistry->inputs.end() );
+    return maybeRegistry.has_value()
+           && ( maybeRegistry->inputs.find( name )
+                != maybeRegistry->inputs.end() );
   };
 
   /* Check to see if an input is used by a package. */
@@ -456,11 +457,11 @@ Lockfile::removeUnusedInputs()
   std::size_t count = 0;
 
   /* Remove. */
-  for ( auto elem = this->getRegistryRaw().inputs.begin(); elem
-        != this->getRegistryRaw().inputs.end(); )
+  for ( auto elem = this->getRegistryRaw().inputs.begin();
+        elem != this->getRegistryRaw().inputs.end(); )
     {
-      if ( ( ! inManifestRegistry( elem->first ) ) &&
-           ( ! inPackagesRegistry( elem->second.from->to_string() ) ) )
+      if ( ( ! inManifestRegistry( elem->first ) )
+           && ( ! inPackagesRegistry( elem->second.from->to_string() ) ) )
         {
           std::remove( this->lockfileRaw.registry.priority.begin(),
                        this->lockfileRaw.registry.priority.end(),
@@ -468,10 +469,7 @@ Lockfile::removeUnusedInputs()
           this->lockfileRaw.registry.inputs.erase( elem->first );
           ++count;
         }
-      else
-        {
-          ++elem;
-        }
+      else { ++elem; }
     }
 
   return count;
