@@ -39,8 +39,7 @@ jobs:
           extra_nix_config: |
             experimental-features = nix-command flakes
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
-            substituters = https://cache.nixos.org
-            trusted-substituters = https://cache.floxdev.com
+            substituters = https://cache.nixos.org https://cache.floxdev.com
             trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= flox-store-public-0:8c/B+kjIaQ+BloCmNkRUKwaVPFWkriSAd0JJvuDu4F0=
             max-jobs = auto
             cores = 0
@@ -56,7 +55,7 @@ jobs:
           echo '${{ secrets.FLOX_STORE_PUBLIC_NIX_SECRET_KEY }}'  \
                > /tmp/secret-key
           {
-            printf 'extra-trusted-substituters = s3://flox-store';
+            printf 'extra-substituters = s3://flox-store';
             printf '?secret-key=/tmp/secret-key&write-nar-listing=1';
             echo '&ls-compression=br';
 
@@ -67,15 +66,26 @@ jobs:
 
       - name: Nix AWS Setup
         run: |
-          SERVICE_D='/etc/systemd/system/nix-daemon.service.d';
-          sudo mkdir -p "$SERVICE_D";
-          {
-            echo '[Service]';
-            printf 'Environment=AWS_ACCESS_KEY_ID=';
-            echo '${{ secrets.AWS_ACCESS_KEY_ID }}';
-            printf 'Environment=AWS_SECRET_ACCESS_KEY=';
-            echo '${{ secrets.AWS_SECRET_ACCESS_KEY }}';
-          }|sudo tee -a "$SERVICE_D/aws-credentials.conf" >/dev/null;
+          if [[ "$RUNNER_OS" == 'Linux' ]]; then
+            SERVICE_D='/etc/systemd/system/nix-daemon.service.d';
+            sudo mkdir -p "$SERVICE_D";
+            {
+              echo '[Service]';
+              printf 'Environment=AWS_ACCESS_KEY_ID=';
+              echo '${{ secrets.AWS_ACCESS_KEY_ID }}';
+              printf 'Environment=AWS_SECRET_ACCESS_KEY=';
+              echo '${{ secrets.AWS_SECRET_ACCESS_KEY }}';
+            }|sudo tee -a "$SERVICE_D/aws-credentials.conf" >/dev/null;
+          elif [[ "$RUNNER_OS" == 'macOS' ]]; then
+            sudo plutil \
+              -insert EnvironmentVariables.AWS_SECRET_ACCESS_KEY \
+              -string "${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
+                /Library/LaunchDaemons/org.nixos.nix-daemon.plist
+            sudo plutil \
+              -insert EnvironmentVariables.AWS_ACCESS_KEY_ID \
+              -string "${{ secrets.AWS_ACCESS_KEY_ID }}" \
+                /Library/LaunchDaemons/org.nixos.nix-daemon.plist
+          fi
 
       - name: Restart Nix Daemon
         run: |
@@ -83,6 +93,10 @@ jobs:
             sudo systemctl daemon-reload;
             sudo systemctl restart nix-daemon.service;
           elif [[ "$RUNNER_OS" == 'macOS' ]]; then
+            # double kick does the trick
+            sudo launchctl unload /Library/LaunchDaemons/org.nixos.nix-daemon.plist
+            sudo launchctl load /Library/LaunchDaemons/org.nixos.nix-daemon.plist
+            sudo launchctl kickstart -k system/org.nixos.nix-daemon;
             sudo launchctl kickstart -k system/org.nixos.nix-daemon;
           else
             echo "Unsupported OS: $RUNNER_OS";
