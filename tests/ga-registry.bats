@@ -221,9 +221,10 @@ setup_file() {
 
 @test "'pkgdb search --ga-registry' uses lockfile rev" {
   # `$NIXPKGS_REV'
-  run --separate-stderr                                              \
-    sh -c "$PKGDB search --ga-registry --match-name nodejs|head -n1  \
-               |jq -r '.version';";
+  run --separate-stderr sh -c "$PKGDB search --ga-registry '{
+      \"lockfile\": \"$PROJ1/manifest.lock\",
+      \"query\": { \"match-name\": \"nodejs\" }
+    }'|head -n1|jq -r '.version';";
   assert_success;
   assert_output '18.16.0';
 
