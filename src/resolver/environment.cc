@@ -414,13 +414,13 @@ Environment::getGroupInput( const InstallDescriptors & group,
                 {
                   auto & [_, oldDescriptor] = *oldDescriptorPair;
                   /* At this point we know the same iid is both locked in the
-                   * old lockfile and present in the new manifest */
-
-                  /* Don't use a locked input if the package has changed.
+                   * old lockfile and present in the new manifest.
+                   *
+                   * Don't use a locked input if the package has changed.
                    * The * following fields control what the package actually
                    * *is*, * while:
                    * - `optional' and `systems' control how we behave if
-                   * resolution fails, but they don't change the package.
+                   *   resolution fails, but they don't change the package.
                    * - `priority' is a setting for mkEnv
                    * - `group' is handled below
                    */
@@ -440,10 +440,11 @@ Environment::getGroupInput( const InstallDescriptors & group,
                        * return this input below if we don't ever find a package
                        * with the correct group.
                        * If packages have come from multiple different wrong
-                       * groups, just return the first one we encounter. We
-                       * could come up with a better heuristic like most
-                       * packages or newest, or we could try resolving in all of
-                       * them. For now, don't get too fancy.
+                       * groups, just return the first one we encounter.
+                       * We could come up with a better heuristic like most
+                       * packages or newest, or we could try resolving in all
+                       * of them.
+                       * For now, don't get too fancy.
                        */
                       if ( ! wrongGroupInput.has_value() )
                         {
