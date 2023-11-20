@@ -298,7 +298,6 @@ public:
     return this->oldLockfile;
   }
 
-  // TODO: Implement
   /**
    * @brief Get a merged form of @a oldLockfile ( if available ),
    *        @a globalManifest ( if available ) and @a manifest registries.

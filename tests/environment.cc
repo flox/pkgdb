@@ -165,48 +165,6 @@ RegistryRaw registryWithNixpkgs( registryWithNixpkgsJSON );
 /* -------------------------------------------------------------------------- */
 
 bool
-equalLockedInputRaw( const LockedInputRaw & first,
-                     const LockedInputRaw & second )
-{
-  // TODO check:
-  // pkgdb::Fingerprint fingerprint;
-  EXPECT_EQ( first.url, second.url );
-  EXPECT_EQ( first.attrs, second.attrs );
-  return true;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-bool
-equalAttrPath( const AttrPath & first, const AttrPath & second )
-{
-  EXPECT_EQ( first.size(), second.size() );
-  for ( size_t i = 0; i < first.size(); ++i )
-    {
-      EXPECT_EQ( first[i], second[i] );
-    }
-  return true;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-bool
-equalLockedPackageRaw( const LockedPackageRaw & first,
-                       const LockedPackageRaw & second )
-{
-  EXPECT( equalLockedInputRaw( first.input, second.input ) );
-  EXPECT( equalAttrPath( first.attrPath, second.attrPath ) );
-  EXPECT_EQ( first.priority, second.priority );
-  EXPECT_EQ( first.info, second.info );
-  return true;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-bool
 equalLockfileRaw( const LockfileRaw & first, const LockfileRaw & second )
 {
   for ( const auto & [system, firstSystemPackages] : first.packages )
@@ -224,8 +182,7 @@ equalLockfileRaw( const LockfileRaw & first, const LockfileRaw & second )
           if ( lockedPackageRaw.has_value()
                && secondLockedPackageRaw.has_value() )
             {
-              if ( ! equalLockedPackageRaw( *lockedPackageRaw,
-                                            *secondLockedPackageRaw ) )
+              if ( ( *lockedPackageRaw ) != ( *secondLockedPackageRaw ) )
                 {
                   return false;
                 };
@@ -611,7 +568,7 @@ test_getGroupInput0()
     {
       auto input = environment.getGroupInput( group, lockfile, _system );
       EXPECT( input.has_value() );
-      EXPECT( equalLockedInputRaw( *input, mockHelloLocked.input ) );
+      EXPECT_EQ( *input, mockHelloLocked.input );
     }
   return true;
 }
@@ -661,8 +618,8 @@ test_getGroupInput1()
       auto input = environment.getGroupInput( group, lockfile, _system );
       EXPECT( input.has_value() );
       // TODO this prints "Expectation failed" which should probably be silenced
-      EXPECT( ! equalLockedInputRaw( *input, mockHelloLocked.input ) );
-      EXPECT( equalLockedInputRaw( *input, mockCurlLockedModified.input ) );
+      EXPECT( ( *input ) != mockHelloLocked.input );
+      EXPECT_EQ( *input, mockCurlLockedModified.input );
     }
   return true;
 }
@@ -715,8 +672,8 @@ test_getGroupInput2()
     {
       auto input = environment.getGroupInput( group, lockfile, _system );
       EXPECT( input.has_value() );
-      EXPECT( equalLockedInputRaw( *input, mockHelloLocked.input )
-              || equalLockedInputRaw( *input, mockCurlLockedModified.input ) );
+      EXPECT( ( ( *input ) == mockHelloLocked.input )
+              || ( ( *input ) == mockCurlLockedModified.input ) );
     }
   return true;
 }

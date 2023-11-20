@@ -53,13 +53,36 @@ Environment::getCombinedRegistryRaw()
 {
   if ( ! this->combinedRegistryRaw.has_value() )
     {
-      if ( this->globalManifest.has_value() )
+      /* Start with the global manifest's registry ( if any ), and merge it with
+       * the environment manifest's registry. */
+      if ( auto maybeGlobal = this->getGlobalManifest();
+           maybeGlobal.has_value() )
         {
-          this->combinedRegistryRaw = this->globalManifest->getLockedRegistry();
+          this->combinedRegistryRaw = maybeGlobal->getLockedRegistry();
           this->combinedRegistryRaw->merge(
-            this->manifest.getLockedRegistry() );
+            this->getManifest().getLockedRegistry() );
         }
-      else { this->combinedRegistryRaw = this->manifest.getLockedRegistry(); }
+      else
+        {
+          this->combinedRegistryRaw = this->getManifest().getLockedRegistry();
+        }
+
+      /* If there's a lockfile, use pinned inputs.
+       * However, do not preserve any inputs that were removed from
+       * the manifest. */
+      if ( auto maybeLock = this->getOldLockfile(); maybeLock.has_value() )
+        {
+          auto lockedRegistry = maybeLock->getRegistryRaw();
+          for ( auto & [name, input] : this->combinedRegistryRaw->inputs )
+            {
+              /* Use the pinned input from the lock if it exists. */
+              if ( auto locked = lockedRegistry.inputs.find( name );
+                   locked != lockedRegistry.inputs.end() )
+                {
+                  input = locked->second;
+                }
+            }
+        }
     }
   return *this->combinedRegistryRaw;
 }
@@ -391,13 +414,13 @@ Environment::getGroupInput( const InstallDescriptors & group,
                 {
                   auto & [_, oldDescriptor] = *oldDescriptorPair;
                   /* At this point we know the same iid is both locked in the
-                   * old lockfile and present in the new manifest */
-
-                  /* Don't use a locked input if the package has changed. The
-                   * following fields control what the package actually *is*,
-                   * while:
+                   * old lockfile and present in the new manifest.
+                   *
+                   * Don't use a locked input if the package has changed.
+                   * The * following fields control what the package actually
+                   * *is*, * while:
                    * - `optional' and `systems' control how we behave if
-                   * resolution fails, but they don't change the package.
+                   *   resolution fails, but they don't change the package.
                    * - `priority' is a setting for mkEnv
                    * - `group' is handled below
                    */
@@ -417,10 +440,11 @@ Environment::getGroupInput( const InstallDescriptors & group,
                        * return this input below if we don't ever find a package
                        * with the correct group.
                        * If packages have come from multiple different wrong
-                       * groups, just return the first one we encounter. We
-                       * could come up with a better heuristic like most
-                       * packages or newest, or we could try resolving in all of
-                       * them. For now, don't get too fancy.
+                       * groups, just return the first one we encounter.
+                       * We could come up with a better heuristic like most
+                       * packages or newest, or we could try resolving in all
+                       * of them.
+                       * For now, don't get too fancy.
                        */
                       if ( ! wrongGroupInput.has_value() )
                         {
@@ -609,16 +633,15 @@ Environment::createLockfile()
     {
       this->lockfileRaw           = LockfileRaw {};
       this->lockfileRaw->manifest = this->getManifestRaw();
-      // TODO: Once you figure out `getCombinedRegistryRaw' you might need to
-      //       remove some unused registry members.
-      this->lockfileRaw->registry
-        = this->getManifest().getLockedRegistry( this->getStore() );
+      this->lockfileRaw->registry = this->getCombinedRegistryRaw();
       for ( const auto & system : this->getSystems() )
         {
           this->lockSystem( system );
         }
     }
-  return Lockfile( *this->lockfileRaw );
+  Lockfile lockfile( *this->lockfileRaw );
+  lockfile.removeUnusedInputs();
+  return lockfile;
 }
 
 

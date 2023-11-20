@@ -9,6 +9,8 @@
  *
  * -------------------------------------------------------------------------- */
 
+#include <algorithm>
+
 #include <nix/hash.hh>
 
 #include "flox/core/util.hh"
@@ -236,6 +238,15 @@ to_json( nlohmann::json & jto, const LockedInputRaw & raw )
 
 /* -------------------------------------------------------------------------- */
 
+std::ostream &
+operator<<( std::ostream & oss, const LockedInputRaw & raw )
+{
+  return oss << nlohmann::json( raw ).dump();
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 void
 from_json( const nlohmann::json & jfrom, LockedPackageRaw & raw )
 {
@@ -299,6 +310,15 @@ to_json( nlohmann::json & jto, const LockedPackageRaw & raw )
           { "attr-path", raw.attrPath },
           { "priority", raw.priority },
           { "info", raw.info } };
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+std::ostream &
+operator<<( std::ostream & oss, const LockedPackageRaw & raw )
+{
+  return oss << nlohmann::json( raw ).dump();
 }
 
 
@@ -406,6 +426,53 @@ to_json( nlohmann::json & jto, const LockfileRaw & raw )
           { "registry", raw.registry },
           { "packages", raw.packages },
           { "lockfile-version", raw.lockfileVersion } };
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+std::size_t
+Lockfile::removeUnusedInputs()
+{
+  /* Check to see if an input was declared in the manifest registry. */
+  auto inManifestRegistry = [&]( const std::string & name ) -> bool
+  {
+    const auto & maybeRegistry = this->getManifestRaw().registry;
+    return maybeRegistry.has_value()
+           && ( maybeRegistry->inputs.find( name )
+                != maybeRegistry->inputs.end() );
+  };
+
+  /* Check to see if an input is used by a package. */
+  auto inPackagesRegistry = [&]( const std::string & url ) -> bool
+  {
+    for ( const auto & [name, input] : this->getPackagesRegistryRaw().inputs )
+      {
+        if ( input.from->to_string() == url ) { return true; }
+      }
+    return false;
+  };
+
+  /* Counts the number of removed inputs. */
+  std::size_t count = 0;
+
+  /* Remove. */
+  for ( auto elem = this->getRegistryRaw().inputs.begin();
+        elem != this->getRegistryRaw().inputs.end(); )
+    {
+      if ( ( ! inManifestRegistry( elem->first ) )
+           && ( ! inPackagesRegistry( elem->second.from->to_string() ) ) )
+        {
+          std::remove( this->lockfileRaw.registry.priority.begin(),
+                       this->lockfileRaw.registry.priority.end(),
+                       elem->first );
+          this->lockfileRaw.registry.inputs.erase( elem->first );
+          ++count;
+        }
+      else { ++elem; }
+    }
+
+  return count;
 }
 
 

@@ -94,7 +94,8 @@ private:
 protected:
 
   /**
-   * @brief Initialize the @a globalManifestPath member variable.
+   * @brief Initialize the @a globalManifestPath and @a globalManifest member
+   *        variables by reading from a file.
    *
    * This may only be called once and must be called before
    * `getEnvironment()` is ever used - otherwise an exception will be thrown.
@@ -103,8 +104,22 @@ protected:
    * @a flox::resolver::EnvirontMixin base at runtime without accessing
    * private member variables.
    */
-  void
+  virtual void
   initGlobalManifestPath( std::filesystem::path path );
+
+  /**
+   * @brief Manually set @a globalManifestPath without checking to see if it was
+   *        previously set, and do not initialize @manifest.
+   *
+   * This function exists so that child classes can override their
+   * @a flox::resolver::EnvirontMixin base @a globalManifestPath at runtime
+   * without accessing private member variables.
+   */
+  void
+  setGlobalManifestPath( std::optional<std::filesystem::path> maybePath )
+  {
+    this->globalManifestPath = std::move( maybePath );
+  }
 
   /**
    * @brief Initialize the @a globalManifest member variable.
@@ -120,8 +135,8 @@ protected:
   initGlobalManifest( GlobalManifestRaw manifestRaw );
 
   /**
-   * @brief Initialize the @a globalManifest member variable by reading from
-   *        a path.
+   * @brief Initialize the @a manifestPath and @a manifest member variables by
+   *        reading from a file.
    *
    * This may only be called once and must be called before
    * `getEnvironment()` is ever used - otherwise an exception will be thrown.
@@ -131,20 +146,21 @@ protected:
    * private member variables.
    */
   virtual void
-  initGlobalManifest( std::filesystem::path path );
+  initManifestPath( std::filesystem::path path );
 
   /**
-   * @brief Initialize the @a manifestPath member variable.
+   * @brief Manually set `manifestPath' without checking to see if it was
+   *        previously set, and do not initialize @manifest.
    *
-   * This may only be called once and must be called before
-   * `getEnvironment()` is ever used - otherwise an exception will be thrown.
-   *
-   * This function exists so that child classes can initialize their
-   * @a flox::resolver::EnvirontMixin base at runtime without accessing
-   * private member variables.
+   * This function exists so that child classes can override their
+   * @a flox::resolver::EnvirontMixin base @a manifestPath at runtime without
+   * accessing private member variables.
    */
   void
-  initManifestPath( std::filesystem::path path );
+  setManifestPath( std::optional<std::filesystem::path> maybePath )
+  {
+    this->manifestPath = std::move( maybePath );
+  }
 
   /**
    * @brief Initialize the @a manifest member variable.
@@ -160,19 +176,6 @@ protected:
   initManifest( ManifestRaw manifestRaw );
 
   /**
-   * @brief Initialize the @a manifest member variable by reading from a path.
-   *
-   * This may only be called once and must be called before
-   * `getEnvironment()` is ever used - otherwise an exception will be thrown.
-   *
-   * This function exists so that child classes can initialize their
-   * @a flox::resolver::EnvirontMixin base at runtime without accessing
-   * private member variables.
-   */
-  virtual void
-  initManifest( std::filesystem::path path );
-
-  /**
    * @brief Initialize the @a lockfilePath member variable.
    *
    * This may only be called once and must be called before
@@ -182,7 +185,7 @@ protected:
    * @a flox::resolver::EnvirontMixin base at runtime without accessing
    * private member variables.
    */
-  void
+  virtual void
   initLockfilePath( std::filesystem::path path );
 
   /**
@@ -195,28 +198,18 @@ protected:
    * @a flox::resolver::EnvirontMixin base at runtime without accessing
    * private member variables.
    */
-  void
+  virtual void
   initLockfile( LockfileRaw lockfileRaw );
-
-  /**
-   * @brief Initialize the @a lockfile member variable.
-   *
-   * This may only be called once and must be called before
-   * `getEnvironment()` is ever used - otherwise an exception will be thrown.
-   *
-   * This function exists so that child classes can initialize their
-   * @a flox::resolver::EnvirontMixin base at runtime without accessing
-   * private member variables.
-   */
-  void
-  initLockfile( Lockfile lockfile );
 
 
 public:
 
   /** @brief Get the filesystem path to the global manifest ( if any ). */
   [[nodiscard]] const std::optional<std::filesystem::path> &
-  getGlobalManifestPath() const;
+  getGlobalManifestPath() const
+  {
+    return this->globalManifestPath;
+  }
 
   /**
    * @brief Lazily initialize and return the @a globalManifest.
@@ -226,11 +219,17 @@ public:
    * load from the file.
    */
   [[nodiscard]] virtual const std::optional<GlobalManifest> &
-  getGlobalManifest();
+  getGlobalManifest()
+  {
+    return this->globalManifest;
+  }
 
   /** @brief Get the filesystem path to the manifest ( if any ). */
   [[nodiscard]] const std::optional<std::filesystem::path> &
-  getManifestPath() const;
+  getManifestPath() const
+  {
+    return this->manifestPath;
+  }
 
   /**
    * @brief Lazily initialize and return the @a manifest.
@@ -244,7 +243,10 @@ public:
 
   /** @brief Get the filesystem path to the lockfile ( if any ). */
   [[nodiscard]] const std::optional<std::filesystem::path> &
-  getLockfilePath() const;
+  getLockfilePath() const
+  {
+    return this->lockfilePath;
+  }
 
   /**
    * @brief Lazily initialize and return the @a lockfile.
@@ -254,7 +256,10 @@ public:
    * load from the file.
    */
   [[nodiscard]] const std::optional<Lockfile> &
-  getLockfile();
+  getLockfile()
+  {
+    return this->lockfile;
+  }
 
   /**
    * @brief Laziliy initialize and return the @a environment.
@@ -267,7 +272,7 @@ public:
    * After @a getEnvironment() has been called once, it is no longer possible
    * to use any `init*( MEMBER )` functions.
    */
-  [[nodiscard]] virtual Environment &
+  [[nodiscard]] Environment &
   getEnvironment();
 
   /**
@@ -332,6 +337,22 @@ private:
 protected:
 
   /**
+   * @brief Initialize the @a globalManifestPath and @a globalManifest member
+   *        variables by reading from a file.
+   *        This form enforces `--ga-registry` by disallowing `registry` in its
+   *        input, and injecting a hard coded `registry`.
+   *
+   * This may only be called once and must be called before
+   * `getEnvironment()` is ever used - otherwise an exception will be thrown.
+   *
+   * This function exists so that child classes can initialize their
+   * @a flox::resolver::EnvirontMixin base at runtime without accessing
+   * private member variables.
+   */
+  void
+  initGlobalManifestPath( std::filesystem::path path ) override;
+
+  /**
    * @brief Initialize the @a globalManifest member variable.
    *        This form enforces `--ga-registry` by disallowing `registry` in its
    *        input, and injecting a hard coded `registry`.
@@ -347,8 +368,8 @@ protected:
   initGlobalManifest( GlobalManifestRaw manifestRaw ) override;
 
   /**
-   * @brief Initialize the @a globalManifest member variable by reading from
-   *        a path.
+   * @brief Initialize the @a manifestPath and @a manifest member variables by
+   *        reading from a file.
    *        This form enforces `--ga-registry` by disallowing `registry` in its
    *        input, and injecting a hard coded `registry`.
    *
@@ -360,7 +381,7 @@ protected:
    * private member variables.
    */
   void
-  initGlobalManifest( std::filesystem::path path ) override;
+  initManifestPath( std::filesystem::path path ) override;
 
   /**
    * @brief Initialize the @a manifest member variable.
@@ -376,21 +397,6 @@ protected:
    */
   void
   initManifest( ManifestRaw manifestRaw ) override;
-
-  /**
-   * @brief Initialize the @a manifest member variable by reading from a path.
-   *        This form enforces `--ga-registry` by disallowing `registry` in its
-   *        input, and injecting a hard coded `registry`.
-   *
-   * This may only be called once and must be called before
-   * `getEnvironment()` is ever used - otherwise an exception will be thrown.
-   *
-   * This function exists so that child classes can initialize their
-   * @a flox::resolver::EnvirontMixin base at runtime without accessing
-   * private member variables.
-   */
-  void
-  initManifest( std::filesystem::path path ) override;
 
 
 public:

@@ -12,6 +12,12 @@ load setup_suite.bash;
 
 setup_file() {
   export TDATA="$TESTS_DIR/data/manifest";
+  export PROJ1="$TESTS_DIR/harnesses/proj1";
+
+  OTHER_REV="$(
+    jq -r '.registry.inputs.nixpkgs.from.rev' "$PROJ1/manifest2.lock";
+  )";
+  export OTHER_REV;
 
   # We don't parallelize these to avoid DB sync headaches and to recycle the
   # cache between tests.
@@ -170,6 +176,79 @@ setup_file() {
                            --global-manifest "$TDATA/global-ga0.toml"  \
                            "$TDATA/post-ga0.toml";
   assert_failure;
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# bats test_tags=manifest:ga-registry, lock:ga-registry, manifest:registry-cmd
+
+# The lockfile provided contains a `rev` which differs from the `--ga-registry`
+# pin used by our test suite.
+# This should detect whether the lockfile's `rev` is preserved in `combined`.
+@test "Combined registry prefers lockfile inputs" {
+  run --separate-stderr                                                \
+    sh -c "$PKGDB manifest registry --ga-registry                      \
+                                   --lockfile '$PROJ1/manifest2.lock'  \
+                                   '$PROJ1/manifest.toml'              \
+            |jq -r '.combined.inputs.nixpkgs.from.rev';";
+  assert_success;
+  assert_output "$OTHER_REV";
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# bats test_tags=manifest:ga-registry, lock:ga-registry, manifest:update
+
+# The lockfile provided contains a `rev` which differs from the `--ga-registry`
+# pin used by our test suite.
+# This should cause the `rev` to be updated.
+@test "'pkgdb manifest update --ga-registry' updates lockfile rev" {
+  run --separate-stderr                                               \
+    sh -c "$PKGDB manifest update --ga-registry                       \
+                                  --lockfile '$PROJ1/manifest2.lock'  \
+                                  '$PROJ1/manifest.toml'              \
+            |jq -r '.registry.inputs.nixpkgs.from.rev';";
+  assert_success;
+  assert_output "$NIXPKGS_REV";
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# bats test_tags=search:ga-registry, search:lockfile
+
+@test "'pkgdb search --ga-registry' uses lockfile rev" {
+  # `$NIXPKGS_REV'
+  run --separate-stderr sh -c "$PKGDB search --ga-registry '{
+      \"manifest\": \"$PROJ1/manifest.toml\",
+      \"lockfile\": \"$PROJ1/manifest.lock\",
+      \"query\": { \"match-name\": \"nodejs\" }
+    }'|head -n1|jq -r '.version';";
+  assert_success;
+  assert_output '18.16.0';
+
+  # `$OTHER_REV'
+  run --separate-stderr sh -c "$PKGDB search --ga-registry '{
+      \"manifest\": \"$PROJ1/manifest.toml\",
+      \"lockfile\": \"$PROJ1/manifest2.lock\",
+      \"query\": { \"match-name\": \"nodejs\" }
+    }'|head -n1|jq -r '.version';";
+  assert_success;
+  assert_output '18.17.1';
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# bats test_tags=manifest:ga-registry, lock:ga-registry, manifest:update
+
+@test "'pkgdb manifest update --ga-registry' creates missing lockfile" {
+  run --separate-stderr                                             \
+    "$PKGDB" manifest update --ga-registry "$PROJ1/manifest.toml";
+  assert_success;
+  assert_output < "$PROJ1/manifest.lock";
 }
 
 
