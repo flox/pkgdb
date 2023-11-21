@@ -608,8 +608,8 @@ Environment::lockSystem( const System & system )
           [&]( const ResolutionFailure & failure )
           {
             /* We should only hit this on the first iteration.
-             * TODO: throw sooner rather than trying to resolve every
-             * group? */
+             * TODO: throw sooner rather than trying to resolve
+             * every group? */
             if ( failure.empty() )
               {
                 throw ResolutionFailureException(
