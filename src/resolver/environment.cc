@@ -468,7 +468,8 @@ ResolutionResult
 Environment::tryResolveGroup( const InstallDescriptors & group,
                               const System &             system )
 {
-  ResolutionFailure failure;
+  ResolutionFailure failureForOldInput;
+  ResolutionFailure failureForNewInput;
   if ( auto oldLockfile = this->getOldLockfile(); oldLockfile.has_value() )
     {
       auto lockedInput
@@ -487,7 +488,7 @@ Environment::tryResolveGroup( const InstallDescriptors & group,
           else if ( const InstallID * iid
                     = std::get_if<InstallID>( &maybeResolved ) )
             {
-              failure.push_back( std::pair<InstallID, std::string> {
+              failureForOldInput.push_back( std::pair<InstallID, std::string> {
                 *iid,
                 input.getDbReadOnly()->lockedRef.string } );
             }
@@ -510,7 +511,7 @@ Environment::tryResolveGroup( const InstallDescriptors & group,
       else if ( const InstallID * iid
                 = std::get_if<InstallID>( &maybeResolved ) )
         {
-          failure.push_back( std::pair<InstallID, std::string> {
+          failureForNewInput.push_back( std::pair<InstallID, std::string> {
             *iid,
             input->getDbReadOnly()->lockedRef.string } );
         }
@@ -520,7 +521,9 @@ Environment::tryResolveGroup( const InstallDescriptors & group,
             "we thought this was an unreachable error" );
         }
     }
-  return failure;
+  if ( ! failureForNewInput.empty() ) { return failureForNewInput; }  
+  if ( ! failureForOldInput.empty() ) { return failureForOldInput; }
+  throw ResolutionFailureException("failed to resolve but there were no errors" );
 }
 
 
