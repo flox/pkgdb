@@ -113,6 +113,10 @@ runTest( std::string_view name, F f, Args && ... args )
  *
  * Assert that two expressions produce equal results, otherwise print them and
  * return `false'.
+ *
+ * Beware of comparing two char *. The following, for example, will fail:
+ * std::string foo( "foo" );
+ * EXPECT_EQ( "foo", foo.c_str() );
  */
 #define EXPECT_EQ( EXPR_A, EXPR_B )                                            \
   {                                                                            \
