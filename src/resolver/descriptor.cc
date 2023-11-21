@@ -462,18 +462,17 @@ to_json( nlohmann::json & jto, const ManifestDescriptorRaw & descriptor )
 ManifestDescriptorRaw::ManifestDescriptorRaw(
   const std::string_view & descriptor )
 {
-  ManifestDescriptorRaw parsed;
-  size_t                cursor = 0;
+  size_t cursor = 0;
   // Grab the input if it exists
   if ( auto inputSepIdx
        = descriptor.find_first_of( ManifestDescriptorRaw::inputSigil );
        inputSepIdx != std::string_view::npos )
     {
-      parsed.packageRepository
-        = std::string( descriptor.substr( cursor, inputSepIdx ) );
+      this->packageRepository
+        = std::string( descriptor.substr( cursor, inputSepIdx - cursor ) );
       cursor = inputSepIdx + 1;
     }
-  // Grab the
+  // Grab the attribute path or package name
   size_t attrsEndIdx;
   bool   hasVersion = false;
   if ( auto versionSepIdx
@@ -484,7 +483,8 @@ ManifestDescriptorRaw::ManifestDescriptorRaw(
       hasVersion  = true;
     }
   else { attrsEndIdx = descriptor.size(); }
-  auto maybeAttrs = std::string( descriptor.substr( cursor, attrsEndIdx ) );
+  auto maybeAttrs
+    = std::string( descriptor.substr( cursor, attrsEndIdx - cursor ) );
   auto numAttrSeparators
     = std::count_if( maybeAttrs.begin(),
                      maybeAttrs.end(),
@@ -493,15 +493,15 @@ ManifestDescriptorRaw::ManifestDescriptorRaw(
     {
       case 0:
         // We were given a `pname`
-        parsed.name = maybeAttrs;
+        this->name = maybeAttrs;
         break;
       case 1:
         // We were given a relative path
-        parsed.path = maybeAttrs;
+        this->path = maybeAttrs;
         break;
       case 2:
         // We were given an absolute path
-        parsed.absPath = maybeAttrs;
+        this->absPath = maybeAttrs;
         break;
       default:
         // Someone gave us an absolute path for an input type we don't
@@ -512,8 +512,8 @@ ManifestDescriptorRaw::ManifestDescriptorRaw(
     }
   if ( hasVersion )
     {
-      cursor         = attrsEndIdx + 1;
-      parsed.version = std::string( descriptor.substr( cursor ) );
+      cursor        = attrsEndIdx + 1;
+      this->version = std::string( descriptor.substr( cursor ) );
     }
 }
 
