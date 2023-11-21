@@ -521,22 +521,9 @@ Environment::tryResolveGroup( const InstallDescriptors & group,
             "we thought this was an unreachable error" );
         }
     }
-  if ( failureForNewInput.empty() )
-    {
-      if ( failureForOldInput.empty() )
-        {
-          throw ResolutionFailureException(
-            "failed to resolve but there were no errors" );
-        }
-      else
-        {
-          return failureForOldInput;
-        }
-    }
-  else
-    {
-      return failureForNewInput;
-    }
+  if ( ! failureForNewInput.empty() ) { return failureForNewInput; }  
+  if ( ! failureForOldInput.empty() ) { return failureForOldInput; }
+  throw ResolutionFailureException("failed to resolve but there were no errors" );
 }
 
 

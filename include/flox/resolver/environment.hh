@@ -182,7 +182,7 @@ private:
    * @brief Try to resolve a group of descriptors in a given package database.
    *
    * @return InstallID of the package that can't be resolved if resolution fails,
-   *          otherwise a set of resolved packages for the system.
+   *         otherwise a set of resolved packages for the system.
    */
   [[nodiscard]] std::variant<InstallID, SystemPackages>
   tryResolveGroupIn( const InstallDescriptors & group,
