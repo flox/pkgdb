@@ -468,8 +468,8 @@ ResolutionResult
 Environment::tryResolveGroup( const InstallDescriptors & group,
                               const System &             system )
 {
-  ResolutionFailure failureForOldInput;
-  ResolutionFailure failureForNewInput;
+  ResolutionFailure                failure;
+  std::optional<pkgdb::PkgDbInput> oldGroupInput;
   if ( auto oldLockfile = this->getOldLockfile(); oldLockfile.has_value() )
     {
       auto lockedInput
@@ -478,8 +478,9 @@ Environment::tryResolveGroup( const InstallDescriptors & group,
         {
           RegistryInput        registryInput( *lockedInput );
           nix::ref<nix::Store> store = this->getStore();
-          pkgdb::PkgDbInput    input( store, registryInput );
-          auto maybeResolved = this->tryResolveGroupIn( group, input, system );
+          oldGroupInput = pkgdb::PkgDbInput( store, registryInput );
+          auto maybeResolved
+            = this->tryResolveGroupIn( group, *oldGroupInput, system );
           if ( const SystemPackages * resolved
                = std::get_if<SystemPackages>( &maybeResolved ) )
             {
@@ -488,9 +489,9 @@ Environment::tryResolveGroup( const InstallDescriptors & group,
           else if ( const InstallID * iid
                     = std::get_if<InstallID>( &maybeResolved ) )
             {
-              failureForOldInput.push_back( std::pair<InstallID, std::string> {
+              failure.push_back( std::pair<InstallID, std::string> {
                 *iid,
-                input.getDbReadOnly()->lockedRef.string } );
+                oldGroupInput->getDbReadOnly()->lockedRef.string } );
             }
           else
             {
@@ -502,28 +503,33 @@ Environment::tryResolveGroup( const InstallDescriptors & group,
   // TODO: Use `getCombinedRegistryRaw()'
   for ( const auto & [_, input] : *this->getPkgDbRegistry() )
     {
-      auto maybeResolved = this->tryResolveGroupIn( group, *input, system );
-      if ( const SystemPackages * resolved
-           = std::get_if<SystemPackages>( &maybeResolved ) )
+      // If we already tried to resolve in this input, skip it.
+      if ( ! oldGroupInput.has_value() || *input == *oldGroupInput )
         {
-          return *resolved;
-        }
-      else if ( const InstallID * iid
-                = std::get_if<InstallID>( &maybeResolved ) )
-        {
-          failureForNewInput.push_back( std::pair<InstallID, std::string> {
-            *iid,
-            input->getDbReadOnly()->lockedRef.string } );
-        }
-      else
-        {
-          throw ResolutionFailureException(
-            "we thought this was an unreachable error" );
+          {
+            auto maybeResolved
+              = this->tryResolveGroupIn( group, *input, system );
+            if ( const SystemPackages * resolved
+                 = std::get_if<SystemPackages>( &maybeResolved ) )
+              {
+                return *resolved;
+              }
+            else if ( const InstallID * iid
+                      = std::get_if<InstallID>( &maybeResolved ) )
+              {
+                failure.push_back( std::pair<InstallID, std::string> {
+                  *iid,
+                  input->getDbReadOnly()->lockedRef.string } );
+              }
+            else
+              {
+                throw ResolutionFailureException(
+                  "we thought this was an unreachable error" );
+              }
+          }
         }
     }
-  if ( ! failureForNewInput.empty() ) { return failureForNewInput; }  
-  if ( ! failureForOldInput.empty() ) { return failureForOldInput; }
-  throw ResolutionFailureException("failed to resolve but there were no errors" );
+  return failure;
 }
 
 
