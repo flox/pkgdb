@@ -45,7 +45,9 @@ initNix()
 
   nix::evalSettings.enableImportFromDerivation.setDefault( false );
   nix::evalSettings.pureEval.setDefault( true );
-  nix::evalSettings.useEvalCache.setDefault( true );
+  nix::evalSettings.useEvalCache.assign( true );
+  nix::experimentalFeatureSettings.experimentalFeatures.assign(
+    std::set( { nix::Xp::Flakes } ) );
 
   /* Use custom logger */
   bool printBuildLogs = nix::logger->isVerbose();
