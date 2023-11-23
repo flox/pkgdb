@@ -38,112 +38,6 @@ namespace flox::pkgdb {
 /* -------------------------------------------------------------------------- */
 
 void
-PkgDescriptorBase::clear()
-{
-  this->name    = std::nullopt;
-  this->pname   = std::nullopt;
-  this->version = std::nullopt;
-  this->semver  = std::nullopt;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-void
-from_json( const nlohmann::json & jfrom, PkgDescriptorBase & pkgDescriptorBase )
-{
-  assertIsJSONObject<ParsePkgDescriptorBaseException>( jfrom,
-                                                       "package descriptor" );
-  /* Clear fields. */
-  pkgDescriptorBase.clear();
-  for ( const auto & [key, value] : jfrom.items() )
-    {
-      if ( key == "name" )
-        {
-          try
-            {
-              value.get_to( pkgDescriptorBase.name );
-            }
-          catch ( nlohmann::json::exception & e )
-            {
-              throw ParsePkgDescriptorBaseException(
-                "couldn't interpret field `name'",
-                flox::extract_json_errmsg( e ) );
-            }
-        }
-      else if ( key == "pname" )
-        {
-          try
-            {
-              value.get_to( pkgDescriptorBase.pname );
-            }
-          catch ( nlohmann::json::exception & e )
-            {
-              throw ParsePkgDescriptorBaseException(
-                "couldn't interpret field `pname'",
-                flox::extract_json_errmsg( e ) );
-            }
-        }
-      else if ( key == "version" )
-        {
-          try
-            {
-              value.get_to( pkgDescriptorBase.version );
-            }
-          catch ( nlohmann::json::exception & e )
-            {
-              throw ParsePkgDescriptorBaseException(
-                "couldn't interpret field `version'",
-                flox::extract_json_errmsg( e ) );
-            }
-        }
-      else if ( key == "semver" )
-        {
-          try
-            {
-              value.get_to( pkgDescriptorBase.semver );
-            }
-          catch ( nlohmann::json::exception & e )
-            {
-              throw ParsePkgDescriptorBaseException(
-                "couldn't interpret field `semver'",
-                flox::extract_json_errmsg( e ) );
-            }
-        }
-      else
-        {
-          throw ParsePkgDescriptorBaseException(
-            "encountered unrecognized field `" + key
-            + "' while parsing package descriptor" );
-        }
-    }
-}
-
-void
-to_json( nlohmann::json & jto, const PkgDescriptorBase & pkgDescriptorBase )
-{
-  if ( pkgDescriptorBase.name.has_value() )
-    {
-      jto["name"] = *pkgDescriptorBase.name;
-    };
-  if ( pkgDescriptorBase.pname.has_value() )
-    {
-      jto["pname"] = *pkgDescriptorBase.pname;
-    };
-  if ( pkgDescriptorBase.version.has_value() )
-    {
-      jto["version"] = *pkgDescriptorBase.version;
-    };
-  if ( pkgDescriptorBase.semver.has_value() )
-    {
-      jto["semver"] = *pkgDescriptorBase.semver;
-    };
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-void
 PkgQueryArgs::check() const
 {
 
@@ -203,7 +97,10 @@ PkgQueryArgs::check() const
 void
 PkgQueryArgs::clear()
 {
-  this->PkgDescriptorBase::clear();
+  this->name              = std::nullopt;
+  this->pname             = std::nullopt;
+  this->version           = std::nullopt;
+  this->semver            = std::nullopt;
   this->partialMatch      = std::nullopt;
   this->partialNameMatch  = std::nullopt;
   this->pnameOrAttrName   = std::nullopt;

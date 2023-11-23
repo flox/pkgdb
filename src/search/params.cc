@@ -20,7 +20,10 @@ namespace flox::search {
 void
 SearchQuery::clear()
 {
-  this->pkgdb::PkgDescriptorBase::clear();
+  this->name             = std::nullopt;
+  this->pname            = std::nullopt;
+  this->version          = std::nullopt;
+  this->semver           = std::nullopt;
   this->partialMatch     = std::nullopt;
   this->partialNameMatch = std::nullopt;
 }
@@ -31,6 +34,25 @@ SearchQuery::clear()
 void
 SearchQuery::check() const
 {
+  /* `name' and `pname' or `version' cannot be used together. */
+  if ( this->name.has_value() && this->pname.has_value() )
+    {
+      throw ParseSearchQueryException(
+        "`name' and `pname' filters may not be used together." );
+    }
+  if ( this->name.has_value() && this->version.has_value() )
+    {
+      throw ParseSearchQueryException(
+        "`name' and `version' filters may not be used together." );
+    }
+
+  /* `version' and `semver' cannot be used together. */
+  if ( this->version.has_value() && this->semver.has_value() )
+    {
+      throw ParseSearchQueryException(
+        "`version' and `semver' filters may not be used together." );
+    }
+
   /* `partialMatch' and `partialNameMatch' cannot be used together. */
   if ( this->partialMatch.has_value() && this->partialNameMatch.has_value() )
     {

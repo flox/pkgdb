@@ -55,8 +55,6 @@ enum error_category {
   EC_PACKAGE_INIT,
   /** Exception parsing `flox::resolver::ManifestDescriptorRaw` from JSON. */
   EC_PARSE_MANIFEST_DESCRIPTOR_RAW,
-  /** Exception parsing `PkgDescriptorBase` from JSON. */
-  EC_PARSE_PKG_DESCRIPTOR_BASE,
   /** Exception parsing `flox::resolver::Resolved` from JSON. */
   EC_PARSE_RESOLVED,
   /** Exception parsing @a flox::search::SearchQuery from JSON. */
