@@ -39,15 +39,13 @@ namespace flox::search {
  * This is essentially a reorganized form of @a flox::pkgdb::PkgQueryArgs
  * that is suited for JSON input.
  */
-struct SearchQuery : public pkgdb::PkgDescriptorBase
+struct SearchQuery
 {
 
-  /* From `pkgdb::PkgDescriptorBase`:
-   *   std::optional<std::string> name;
-   *   std::optional<std::string> pname;
-   *   std::optional<std::string> version;
-   *   std::optional<std::string> semver;
-   */
+  std::optional<std::string> name;    /**< Filter results by exact `name`. */
+  std::optional<std::string> pname;   /**< Filter results by exact `pname`. */
+  std::optional<std::string> version; /**< Filter results by exact version. */
+  std::optional<std::string> semver;  /**< Filter results by version range. */
 
   /** Filter results by partial match on pname, attrName, or description */
   std::optional<std::string> partialMatch;
@@ -57,7 +55,7 @@ struct SearchQuery : public pkgdb::PkgDescriptorBase
 
   /** @brief Reset to default state. */
   void
-  clear() override;
+  clear();
 
   /** @brief Check validity of fields, throwing an exception if invalid. */
   void
