@@ -23,6 +23,7 @@
 #include "flox/core/command.hh"
 #include "flox/core/exceptions.hh"
 #include "flox/pkgdb/command.hh"
+#include "flox/repl.hh"
 #include "flox/resolver/command.hh"
 #include "flox/search/command.hh"
 
@@ -52,6 +53,9 @@ run( int argc, char * argv[] )
   flox::resolver::ManifestCommand cmdManifest;
   prog.add_subparser( cmdManifest.getParser() );
 
+  flox::ReplCommand cmdRepl;
+  prog.add_subparser( cmdRepl.getParser() );
+
 
   /* Parse Args */
 
@@ -71,6 +75,7 @@ run( int argc, char * argv[] )
   if ( prog.is_subcommand_used( "list" ) ) { return cmdList.run(); }
   if ( prog.is_subcommand_used( "search" ) ) { return cmdSearch.run(); }
   if ( prog.is_subcommand_used( "manifest" ) ) { return cmdManifest.run(); }
+  if ( prog.is_subcommand_used( "repl" ) ) { return cmdRepl.run(); }
 
   // TODO: better error for this,
   // likely only occurs if we add a new command without handling it (?)

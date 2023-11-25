@@ -60,7 +60,7 @@ FLOX_DEFINE_EXCEPTION( ResolutionFailureException,
 /* -------------------------------------------------------------------------- */
 
 using ResolutionFailure = std::vector<std::pair<InstallID, std::string>>;
-using ResolutionResult = std::variant<ResolutionFailure, SystemPackages>;
+using ResolutionResult  = std::variant<ResolutionFailure, SystemPackages>;
 
 /**
  * @brief A collection of data associated with an environment and its state.
@@ -181,8 +181,8 @@ private:
   /**
    * @brief Try to resolve a group of descriptors in a given package database.
    *
-   * @return InstallID of the package that can't be resolved if resolution fails,
-   *         otherwise a set of resolved packages for the system.
+   * @return InstallID of the package that can't be resolved if resolution
+   * fails, otherwise a set of resolved packages for the system.
    */
   [[nodiscard]] std::variant<InstallID, SystemPackages>
   tryResolveGroupIn( const InstallDescriptors & group,
