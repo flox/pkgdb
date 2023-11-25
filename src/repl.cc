@@ -30,6 +30,7 @@ ReplCommand::ReplCommand() : parser( "repl" )
 int
 ReplCommand::run()
 {
+  nix::evalSettings.pureEval = false;
   auto repl = nix::AbstractNixRepl::create(
     nix::SearchPath(),
     this->getStore(),
