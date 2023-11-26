@@ -39,6 +39,11 @@ prim_resolve( nix::EvalState &  state,
   nix::NixStringContext context;
   Options               options
     = nix::printValueAsJSON( state, true, *args[0], pos, context, false );
+
+  if ( args[1]->isThunk() && args[1]->isTrivial() )
+    {
+      state.forceValue( *args[1], pos );
+    }
   auto          type = args[1]->type();
   RegistryInput input;
   if ( type == nix::nAttrs )
@@ -71,6 +76,10 @@ prim_resolve( nix::EvalState &  state,
   registry.inputs.emplace( std::make_pair( "input", std::move( input ) ) );
 
 
+  if ( args[2]->isThunk() && args[2]->isTrivial() )
+    {
+      state.forceValue( *args[2], pos );
+    }
   ManifestDescriptorRaw descriptor;
   type = args[2]->type();
   if ( type == nix::nAttrs )

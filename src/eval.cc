@@ -103,8 +103,8 @@ EvalCommand::run()
     {
       if ( ( *this->file ) == "-" )
         {
-          auto e = state->parseStdin();
-          state->eval( e, *value );
+          auto expr = state->parseStdin();
+          state->eval( expr, *value );
         }
       else
         {
@@ -120,10 +120,10 @@ EvalCommand::run()
           throw FloxException(
             "you must provide a file or expression to evaluate" );
         }
-      auto e = state->parseExprFromString(
+      auto expr = state->parseExprFromString(
         *this->expr,
         state->rootPath( nix::CanonPath::fromCwd() ) );
-      state->eval( e, *value );
+      state->eval( expr, *value );
     }
 
   nix::NixStringContext context;
