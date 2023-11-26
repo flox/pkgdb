@@ -1,6 +1,6 @@
 /* ========================================================================== *
  *
- * @file repl.hh
+ * @file repl.cc
  *
  * @brief Executable command helpers, argument parsers, etc.
  *
@@ -31,7 +31,7 @@ int
 ReplCommand::run()
 {
   nix::evalSettings.pureEval = false;  // TODO: make a `--pure' option.
-  auto repl = nix::AbstractNixRepl::create(
+  auto repl                  = nix::AbstractNixRepl::create(
     nix::SearchPath(),
     this->getStore(),
     this->getState(),
