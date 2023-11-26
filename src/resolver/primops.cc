@@ -140,9 +140,9 @@ static nix::RegisterPrimOp
 
     - `flake-ref`: Either an attribute set or string.
 
-    - `query`: Either a string or attribute set representing a descriptor.
-               The fields `name`, `version`, `path`, `absPath`, and `systems`
-               are respected.
+    - `descriptor`: Either a string or attribute set representing a descriptor.
+                    The fields `name`, `version`, `path`, `absPath`, and
+                    `systems` are respected.
   )",
                     .fun                 = prim_resolve,
                     .experimentalFeature = nix::Xp::Flakes } );
