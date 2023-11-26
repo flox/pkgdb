@@ -138,7 +138,7 @@ static nix::RegisterPrimOp
 
     - `options`: An attribute set of `flox::Options`.
 
-    - `flake-ref`: Either an attribute set or string.
+    - `input`: Either an attribute set or string flake-ref.
 
     - `descriptor`: Either a string or attribute set representing a descriptor.
                     The fields `name`, `version`, `path`, `absPath`, and
