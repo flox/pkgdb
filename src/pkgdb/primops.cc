@@ -12,6 +12,7 @@
 #include <nix/value-to-json.hh>
 #include <nlohmann/json.hpp>
 
+#include "flox/core/nix-state.hh"
 #include "flox/pkgdb/pkg-query.hh"
 #include "flox/pkgdb/primops.hh"
 #include "flox/registry.hh"
@@ -35,40 +36,11 @@ prim_getFingerprint( nix::EvalState &  state,
     {
       state.forceValue( *args[0], pos );
     }
-  auto          type = args[0]->type();
-  RegistryInput input;
-  if ( type == nix::nAttrs )
-    {
-      state.forceAttrs(
-        *args[0],
-        pos,
-        "while processing 'flakeRef' argument to 'builtins.getFingerprint'" );
-      input = RegistryInput(
-        nlohmann::json { { "from",
-                           nix::printValueAsJSON( state,
-                                                  true,
-                                                  *args[0],
-                                                  pos,
-                                                  context,
-                                                  false ) } } );
-    }
-  else if ( type == nix::nString )
-    {
-      state.forceStringNoCtx(
-        *args[0],
-        pos,
-        "while processing 'flakeRef' argument to 'builtins.getFingerprint'" );
-      input
-        = RegistryInput( nix::parseFlakeRef( std::string( args[0]->str() ) ) );
-    }
-  else
-    {
-      state
-        .error( "flake reference was expected to be a set or a string, but "
-                "got '%s'",
-                nix::showType( type ) )
-        .debugThrow<nix::EvalError>();
-    }
+  RegistryInput input( valueToFlakeRef(
+    state,
+    *args[0],
+    pos,
+    "while processing 'flakeRef' argument to 'builtins.getFingerprint'" ) );
 
   FloxFlakeInput flake( state.store, input );
   value.mkString(

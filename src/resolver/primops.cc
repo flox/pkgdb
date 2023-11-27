@@ -40,45 +40,12 @@ prim_resolve( nix::EvalState &  state,
   Options               options
     = nix::printValueAsJSON( state, true, *args[0], pos, context, false );
 
-  if ( args[1]->isThunk() && args[1]->isTrivial() )
-    {
-      state.forceValue( *args[1], pos );
-    }
-  auto          type = args[1]->type();
-  RegistryInput input;
-  if ( type == nix::nAttrs )
-    {
-      state.forceAttrs(
-        *args[1],
-        pos,
-        "while processing 'input' argument to 'builtins.resolve'" );
-      input = RegistryInput(
-        nlohmann::json { { "from",
-                           nix::printValueAsJSON( state,
-                                                  true,
-                                                  *args[1],
-                                                  pos,
-                                                  context,
-                                                  false ) } } );
-    }
-  else if ( type == nix::nString )
-    {
-      state.forceStringNoCtx(
-        *args[1],
-        pos,
-        "while processing 'input' argument to 'builtins.resolve'" );
-      input
-        = RegistryInput( nix::parseFlakeRef( std::string( args[1]->str() ) ) );
-    }
-  else
-    {
-      state
-        .error( "flake reference was expected to be a set or a string, but "
-                "got '%s'",
-                nix::showType( type ) )
-        .debugThrow<nix::EvalError>();
-    }
-  RegistryRaw registry;
+  RegistryInput input( valueToFlakeRef(
+    state,
+    *args[1],
+    pos,
+    "while processing 'input' argument to 'builtins.resolve'" ) );
+  RegistryRaw   registry;
   registry.inputs.emplace( std::make_pair( "input", std::move( input ) ) );
 
 
@@ -87,7 +54,7 @@ prim_resolve( nix::EvalState &  state,
       state.forceValue( *args[2], pos );
     }
   ManifestDescriptorRaw descriptor;
-  type = args[2]->type();
+  auto                  type = args[2]->type();
   if ( type == nix::nAttrs )
     {
       state.forceAttrs(

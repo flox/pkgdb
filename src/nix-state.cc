@@ -16,6 +16,7 @@
 #include <nix/logging.hh>
 #include <nix/shared.hh>
 #include <nix/util.hh>
+#include <nix/value-to-json.hh>
 
 #include "flox/core/nix-state.hh"
 
@@ -55,6 +56,42 @@ initNix()
   nix::logger = makeFilteredLogger( printBuildLogs );
 
   didNixInit = true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+nix::FlakeRef
+valueToFlakeRef( nix::EvalState &    state,
+                 nix::Value &        value,
+                 const nix::PosIdx   pos,
+                 const std::string & errorMsg )
+{
+  nix::NixStringContext context;
+  if ( value.isThunk() && value.isTrivial() )
+    {
+      state.forceValue( value, pos );
+    }
+  auto type = value.type();
+  if ( type == nix::nAttrs )
+    {
+      state.forceAttrs( value, pos, errorMsg );
+      return nix::FlakeRef::fromAttrs( nix::fetchers::jsonToAttrs(
+        nix::printValueAsJSON( state, true, value, pos, context, false ) ) );
+    }
+  else if ( type == nix::nString )
+    {
+      state.forceStringNoCtx( value, pos, errorMsg );
+      return nix::parseFlakeRef( std::string( value.str() ) );
+    }
+  else
+    {
+      state
+        .error( "flake reference was expected to be a set or a string, but "
+                "got '%s'",
+                nix::showType( type ) )
+        .debugThrow<nix::EvalError>();
+    }
 }
 
 

@@ -12,6 +12,7 @@
 #include <memory>
 
 #include <nix/eval.hh>
+#include <nix/flake/flakeref.hh>
 #include <nix/ref.hh>
 #include <nix/repair-flag.hh>
 #include <nix/search-path.hh>
@@ -165,6 +166,20 @@ public:
 
 
 }; /* End class `NixState' */
+
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief Convert a `nix::Value` attribute set or string into
+ *        a `nix::FlakeRef`.
+ */
+nix::FlakeRef
+valueToFlakeRef( nix::EvalState &    state,
+                 nix::Value &        value,
+                 const nix::PosIdx   pos = nix::noPos,
+                 const std::string & errorMsg
+                 = "while parsing flake reference" );
 
 
 /* -------------------------------------------------------------------------- */
