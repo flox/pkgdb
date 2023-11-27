@@ -647,7 +647,9 @@ Environment::lockSystem( const System & system )
 
   if ( ! groups.empty() ) { throw ResolutionFailureException( msg.str() ); }
 
-  /* Copy over old lockfile entries we want to keep. */
+  /* Copy over old lockfile entries we want to keep.
+     Make sure to update the priority if the entry was copied over from the old.
+   */
   if ( auto oldLockfile = this->getOldLockfile();
        oldLockfile.has_value()
        && oldLockfile->getLockfileRaw().packages.contains( system ) )
@@ -663,6 +665,7 @@ Environment::lockSystem( const System & system )
                    oldLockedPackagePair != systemPackages.end() )
                 {
                   pkgs.emplace( *oldLockedPackagePair );
+                  pkgs.at( iid )->priority = descriptor.priority;
                 }
             }
         }
