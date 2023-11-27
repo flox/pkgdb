@@ -13,20 +13,6 @@ described below.
 the following abstract schema:
 
 ```
-System ::= "x86_64-linux" | "aarch64-linux" | "x86_64-darwin" | "aarch64-darwin"
-
-License ::= ? SPDX License Identifier ?
-
-Allows ::= {
-  unfree   = true | false
-, broken   = true | false
-, licenses = null | [License...]
-}
-
-Semver ::= {
-  preferPreReleases = true | false
-}
-
 SearchQuery ::= {
   name       = null | <STRING>
   pname      = null | <STRING>
@@ -37,66 +23,36 @@ SearchQuery ::= {
 }
 
 SearchParams ::= {
-  registry = Registry
-, systems  = null | [System...]
-, allow    = Allows
-, semver   = Semver
+  manifest = null | <STRING> | Manifest
+, global-manifest = <STRING> | GlobalManifest
+, lockfile = null | <STRING> | Lockfile
 , query    = SearchQuery
 }
 ```
 
-- `query.match-name` strings are used to test partial matches found in a package's
-  `name` or `pname` fields as well as partial matches on a
-  calculated column `attrName`.
-  May not be used with `query.match`.
-- `query.match` strings are used to test partial matches found in a package's
-  `name`, `pname`, or `description` fields as well as partial matches on a
-  calculated column `attrName`.
-  May not be used with `query.match-name`.
-  + `attrName` is _the last attribute path element_ for `packages` and
-     `legacyPackages` subtrees.
-  + Exact matches cause search results to appear before ( higher ) than
-    partial matches.
-- `query.semver` strings are a
-  [node-semver](https://github.com/npm/node-semver#ranges) range filter.
-  + These use the exact syntax found in tools such as `npm`, `yarn`, `pip`, and
-    many other package managers.
-- `query.name`, `query.pname`, and `query.version` fields indicate an EXACT
-  match on a derivation's `<DRV>.name`, `<DRV>.pname`, `<DRV>.version` field.
-  + For derivations which lack `<DRV>.pname` and/or `<DRV>.version` fields,
-    `builtins.parseDrvName` is used parse them from `<DRV>.name`.
-- `allow.licenses` strings are those found in many _nixpkgs_
-  `meta.license.spdxId` fields.
-  + If `null` is used or this field is omitted, any license is allowed.
-  + A complete list of SPDX Identifiers may be
-    found [here](https://spdx.org/licenses/).
-- `allow.broken` is associated with _nixpkgs_ `meta.broken` field.
-  + The default value is `false` which causes any packages marked `broken` to
-    be omitted from search results.
-  + Derivations which lack this field are assumed to be _unbroken_, and will be
-    unaffected by this setting.
-- `allow.unfree` is associated with the _nixpkgs_ `meta.unfree` field.
-  + The default value is `true` which allows _unfree_
-    ( non-[FOSS](https://www.gnu.org/philosophy/floss-and-foss.en.html) ) to
-    appear in search results.
-  + Derivations which lack this field are assumed to be _free_, and will be
-    unaffected by this setting.
-- `semver.preferPreReleases` controls whether packages with _pre-release tags_
-  before ( higher ) than untagged releases.
-  + The default value is `false`, causing _pre-release tagged_ packages to
-    appear after ( lower ) major _official_ release, so `4.1.9` will appear
-    before `4.2.0-pre`.
-  + Setting this to `true` causes search results sort _pre-release_ versions
-    _normally_, so `4.2.0-pre` will appear before `4.1.9`.
-  + Conventionally _pre-release tags_ are used to mark development or unstable
-    builds, which may not be what users actually want to install/search for.
-  + This setting only effects packages who have `<DRV>.version` strings which
-    can be interpreted as semantic version strings.
-- The `systems` field controls which systems will appear in results.
-  + If omitted or `null`, only the _current_ system will be searched.
+- `SearchQuery`
+  - `match-name`: Partially match a package's `name` or `pname` fields as well as on a calculated column `attrName`.
+    - May not be used with `match`.
+    - `attrName` is _the last attribute path element_ for `packages` and `legacyPackages` subtrees.
+    - Exact matches cause search results to appear before ( higher ) than partial matches.
+  - `match`: Partially match a package's `name`, `pname`, or `description` fields as well as on a calculated column `attrName`.
+    - May not be used with `query.match-name`.
+    - `attrName` is _the last attribute path element_ for `packages` and `legacyPackages` subtrees.
+    - Exact matches cause search results to appear before ( higher ) than partial matches.
+  - `semver`: a [node-semver](https://github.com/npm/node-semver#ranges) range filter.
+    - These use the exact syntax found in tools such as `npm`, `yarn`, `pip`, and many other package managers.
+  - `name`: Exactly match the derivation's `name` attribute.
+  - `pname`: Exactly match the derivation's `pname` attribute.
+    - For derivations which lack a `pname` field it will be parsed from the derivation's `name` attribute using `builtins.parseDrvName`.
+  - `version`: Exactly match a derivation's `version` field.
+    - For derivations that lack a `version` field it will be parsed from the derivation's `name` attribute using `builtins.parseDrvName`.
+- `manifest`: An optional path to a Manifest, or an inline JSON manifest.
+- `global-manifest`: A path to a GlobalManifest or an inline JSON GlobalManifest.
+  - Note that this parameter is not optional, whereas `manifest` and `lockfile` are.
+- `lockfile`: An optional path to an existing Lockfile, or an inline JSON Lockfile.
 
 
-Full details about the registry field may be found [here](./registry.md).
+See the corresponding documentation for [global manifests](./manifests.md#global-manifest), [manifests](./manifests.md#manifest), and [lockfiles](./lockfile.md) for details on those schemas.
 
 
 ### Example Query
@@ -107,24 +63,7 @@ on `x86_64-linux`.
 
 ```json
 {
-  "registry": {
-    "inputs": {
-      "nixpkgs": {
-        "from": {
-          "type": "github"
-        , "owner": "NixOS"
-        , "repo": "nixpkgs"
-        , "rev": "e8039594435c68eb4f780f3e9bf3972a7399c4b1"
-        }
-      , "subtrees": ["legacyPackages"]
-      }
-    , "floco": { "from": "github:aakropotkin/floco" }
-  , "defaults": {
-      "subtrees": ["packages"]
-    }
-  , "priority": ["nixpkgs"]
-  }
-, "systems": ["x86_64-linux"]
+  "global-manifest": "/path/to/global-manifest.toml"
 , "query": { "match": "hello", "semver": "2" }
 }
 ```
@@ -134,41 +73,9 @@ applied to `inputs` by showing the _explicit_ form of the same params:
 
 ```json
 {
-  "registry": {
-    "inputs": {
-      "nixpkgs": {
-        "from": {
-          "type": "github"
-        , "owner": "NixOS"
-        , "repo": "nixpkgs"
-        , "rev": "e8039594435c68eb4f780f3e9bf3972a7399c4b1"
-        }
-      , "subtrees": ["legacyPackages"]
-      }
-    , "floco": {
-        "from": {
-          "type": "github"
-        , "owner": "aakropotkin"
-        , "repo": "floco"
-        , "rev": "1e84b4b16bba5746e1195fa3a4d8addaaf2d9ef4"
-        }
-        , "subtrees": ["packages"]
-      }
-    }
-  , "defaults": {
-      "subtrees": ["packages"]
-    }
-  , "priority": ["nixpkgs", "floco"]
-  }
-, "systems": ["x86_64-linux"]
-, "allow": {
-    "unfree": true
-  , "broken": false
-  , "licenses": null
-  }
-, "semver": {
-    "preferPreReleases": false
-  }
+  "global-manifest": "/path/to/global-manifest.toml"
+, "manifest": null,
+, "lockfile": null,
 , "query": {
     "name": null
   , "pname": null
