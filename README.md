@@ -263,3 +263,5 @@ This is used in our test suite.
 ## More Documentation
 - [Registry Schema](./docs/registry.md)
 - [Search Parameters](./docs/search.md)
+- [Manifests](./docs/manifests.md)
+- [Lockfiles](./docs/lockfile.md)
