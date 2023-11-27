@@ -345,8 +345,7 @@ Environment::tryResolveDescriptorIn( const ManifestDescriptor & descriptor,
 LockedPackageRaw
 Environment::lockPackage( const LockedInputRaw & input,
                           pkgdb::PkgDbReadOnly & dbRO,
-                          pkgdb::row_id          row,
-                          unsigned               priority )
+                          pkgdb::row_id          row )
 {
   nlohmann::json   info = dbRO.getPackage( row );
   LockedPackageRaw pkg;
@@ -358,8 +357,7 @@ Environment::lockPackage( const LockedInputRaw & input,
   info.erase( "subtree" );
   info.erase( "system" );
   info.erase( "relPath" );
-  pkg.priority = priority;
-  pkg.info     = std::move( info );
+  pkg.info = std::move( info );
   return pkg;
 }
 
@@ -573,11 +571,9 @@ Environment::tryResolveGroupIn( const InstallDescriptors & group,
     {
       if ( maybeRow.has_value() )
         {
-          pkgs.emplace( iid,
-                        Environment::lockPackage( lockedInput,
-                                                  *dbRO,
-                                                  *maybeRow,
-                                                  group.at( iid ).priority ) );
+          pkgs.emplace(
+            iid,
+            Environment::lockPackage( lockedInput, *dbRO, *maybeRow ) );
         }
       else { pkgs.emplace( iid, std::nullopt ); }
     }
@@ -665,7 +661,6 @@ Environment::lockSystem( const System & system )
                    oldLockedPackagePair != systemPackages.end() )
                 {
                   pkgs.emplace( *oldLockedPackagePair );
-                  pkgs.at( iid )->priority = descriptor.priority;
                 }
             }
         }

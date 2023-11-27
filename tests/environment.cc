@@ -94,7 +94,6 @@ nlohmann::json mockInputJSON {
 nlohmann::json   helloLockedJSON { inputWithNixpkgsJSON,
                                    { "attr-path",
                                      { "legacyPackages", _system, "hello" } },
-                                   { "priority", 5 },
                                    { "info",
                                      { { "broken", false },
                                        { "license", "GPL-3.0-or-later" },
@@ -109,7 +108,6 @@ LockedPackageRaw helloLocked( helloLockedJSON );
 /** Change a few fields from what we'd get if actual resultion was performed. */
 nlohmann::json   mockHelloLockedJSON { mockInputJSON,
                                        { "attr-path", { "mock", "hello" } },
-                                       { "priority", 5 },
                                        { "info",
                                          { { "broken", false },
                                            { "license", "GPL-3.0-or-later" },
@@ -124,7 +122,6 @@ LockedPackageRaw mockHelloLocked( mockHelloLockedJSON );
 nlohmann::json   curlLockedJSON { inputWithNixpkgsJSON,
                                   { "attr-path",
                                     { "legacyPackages", _system, "curl" } },
-                                  { "priority", 5 },
                                   { "info",
                                     { { "broken", false },
                                       { "license", "curl" },
@@ -140,7 +137,6 @@ LockedPackageRaw curlLocked( curlLockedJSON );
  */
 nlohmann::json   mockCurlLockedJSON { mockInputJSON,
                                       { "attr-path", { "mock", "curl" } },
-                                      { "priority", 5 },
                                       { "info",
                                         { { "broken", false },
                                           { "license", "GPL-3.0-or-later" },

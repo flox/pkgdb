@@ -50,7 +50,6 @@ test_LockedPackageRawFromJSON0()
                 { "repo", "nixpkgs" },
                 { "rev", nixpkgsRev } } } } },
         { "attr-path", { "legacyPackages", "x86_64-linux", "hello" } },
-        { "priority", 5 },
         { "info", {} } };
   LockedPackageRaw raw( json );
   return true;

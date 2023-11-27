@@ -126,7 +126,6 @@ struct LockedPackageRaw
 
   LockedInputRaw input;
   AttrPath       attrPath;
-  unsigned       priority;
   nlohmann::json info; /* pname, version, license */
 
   [[nodiscard]] bool
@@ -134,7 +133,6 @@ struct LockedPackageRaw
   {
     return ( this->input == other.input )
            && ( this->attrPath == other.attrPath )
-           && ( this->priority == other.priority )
            && ( this->info == other.info );
   }
 

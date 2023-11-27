@@ -280,19 +280,6 @@ from_json( const nlohmann::json & jfrom, LockedPackageRaw & raw )
                 extract_json_errmsg( err ) );
             }
         }
-      else if ( key == "priority" )
-        {
-          try
-            {
-              value.get_to( raw.priority );
-            }
-          catch ( nlohmann::json::exception & err )
-            {
-              throw InvalidLockfileException(
-                "couldn't parse package input field `" + key + "'",
-                extract_json_errmsg( err ) );
-            }
-        }
       else if ( key == "info" ) { raw.info = value; }
       else
         {
@@ -308,7 +295,6 @@ to_json( nlohmann::json & jto, const LockedPackageRaw & raw )
 {
   jto = { { "input", raw.input },
           { "attr-path", raw.attrPath },
-          { "priority", raw.priority },
           { "info", raw.info } };
 }
 
