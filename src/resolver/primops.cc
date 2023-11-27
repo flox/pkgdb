@@ -51,16 +51,22 @@ prim_resolve( nix::EvalState &  state,
       state.forceAttrs(
         *args[1],
         pos,
-        "while processing input argument to 'builtins.resolve'" );
+        "while processing 'input' argument to 'builtins.resolve'" );
       input = RegistryInput(
-        nix::printValueAsJSON( state, true, *args[1], pos, context, false ) );
+        nlohmann::json { { "from",
+                           nix::printValueAsJSON( state,
+                                                  true,
+                                                  *args[1],
+                                                  pos,
+                                                  context,
+                                                  false ) } } );
     }
   else if ( type == nix::nString )
     {
       state.forceStringNoCtx(
         *args[1],
         pos,
-        "while processing input argument to 'builtins.resolve'" );
+        "while processing 'input' argument to 'builtins.resolve'" );
       input
         = RegistryInput( nix::parseFlakeRef( std::string( args[1]->str() ) ) );
     }
@@ -87,7 +93,7 @@ prim_resolve( nix::EvalState &  state,
       state.forceAttrs(
         *args[2],
         pos,
-        "while processing descriptor argument to 'builtins.resolve'" );
+        "while processing 'descriptor' argument to 'builtins.resolve'" );
       descriptor
         = nix::printValueAsJSON( state, true, *args[2], pos, context, false );
       if ( descriptor.systems.has_value() && ( ! options.systems.has_value() ) )
@@ -99,9 +105,9 @@ prim_resolve( nix::EvalState &  state,
   else if ( type == nix::nString )
     {
       state.forceStringNoCtx(
-        *args[1],
+        *args[2],
         pos,
-        "while processing input argument to 'builtins.resolve'" );
+        "while processing 'descriptor' argument to 'builtins.resolve'" );
       descriptor.name = args[2]->str();
     }
   else
