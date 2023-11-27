@@ -57,8 +57,7 @@
           },
           "fingerprint": "5fde12e3424840cc2752dae09751b09b03f5a33c3ec4de672fc89d236720bdc7",
           "url": "github:NixOS/nixpkgs/e8039594435c68eb4f780f3e9bf3972a7399c4b1"
-        },
-        "priority": 5
+        }
       }
     }
   },
