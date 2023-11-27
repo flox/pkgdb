@@ -12,6 +12,7 @@
 #include <nix/value-to-json.hh>
 #include <nlohmann/json.hpp>
 
+#include "flox/core/expr.hh"
 #include "flox/registry.hh"
 #include "flox/resolver/descriptor.hh"
 #include "flox/resolver/environment.hh"

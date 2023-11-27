@@ -12,6 +12,7 @@
 #include <nix/value-to-json.hh>
 #include <nlohmann/json.hpp>
 
+#include "flox/core/expr.hh"
 #include "flox/core/nix-state.hh"
 #include "flox/pkgdb/pkg-query.hh"
 #include "flox/pkgdb/primops.hh"
