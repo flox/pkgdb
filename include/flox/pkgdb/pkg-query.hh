@@ -50,74 +50,6 @@ using row_id = uint64_t; /**< A _row_ index in a SQLite3 table. */
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief Minimal set of query parameters related to a single package. */
-struct PkgDescriptorBase
-{
-
-  std::optional<std::string> name;    /**< Filter results by exact `name`. */
-  std::optional<std::string> pname;   /**< Filter results by exact `pname`. */
-  std::optional<std::string> version; /**< Filter results by exact version. */
-  std::optional<std::string> semver;  /**< Filter results by version range. */
-
-
-  /* Base struct boilerplate */
-  PkgDescriptorBase()                            = default;
-  PkgDescriptorBase( const PkgDescriptorBase & ) = default;
-  PkgDescriptorBase( PkgDescriptorBase && )      = default;
-
-  virtual ~PkgDescriptorBase() = default;
-
-  PkgDescriptorBase &
-  operator=( const PkgDescriptorBase & )
-    = default;
-  PkgDescriptorBase &
-  operator=( PkgDescriptorBase && )
-    = default;
-
-  /** @brief Reset to default state. */
-  virtual void
-  clear();
-
-
-}; /* End struct `PkgDescriptorBase' */
-
-
-/**
- * @brief Convert a JSON object to a @a flox::pkgdb::PkgDescriptorBase.
- */
-void
-from_json( const nlohmann::json & jfrom,
-           PkgDescriptorBase &    pkgDescriptorBase );
-/**
- *
- * @brief Convert a @a flox::pkgdb::PkgDescriptorBase to a JSON object.
- */
-void
-to_json( nlohmann::json & jto, const PkgDescriptorBase & pkgDescriptorBase );
-
-/**
- * @class flox::pkgdb::ParsePkgDescriptorBaseException
- * @brief An exception thrown when parsing @a flox::pkgdb::PkgDescriptorBase
- * from JSON.
- *
- * @{
- */
-FLOX_DEFINE_EXCEPTION( ParsePkgDescriptorBaseException,
-                       EC_PARSE_PKG_DESCRIPTOR_BASE,
-                       "error parsing package descriptor base" )
-/** @} */
-
-
-/**
- * @brief A concept that checks if a typename is derived
- *        from @a flox::pkgdb::PkgDescriptorBase.
- */
-template<typename T>
-concept pkg_descriptor_typename = std::derived_from<T, PkgDescriptorBase>;
-
-
-/* -------------------------------------------------------------------------- */
-
 /**
  * @class flox::pkgdb::InvalidPkgQueryArg
  * @brief Indicates invalid arguments were set in a
@@ -139,15 +71,13 @@ FLOX_DEFINE_EXCEPTION( InvalidPkgQueryArg,
  * These use a combination of SQL statements and post processing with
  * `node-semver` to produce a list of satisfactory packages.
  */
-struct PkgQueryArgs : public PkgDescriptorBase
+struct PkgQueryArgs
 {
 
-  /* From `PkgDescriptorBase':
-   *   std::optional<std::string> name;    //< Filter results by exact `name`.
-   *   std::optional<std::string> pname;   //< Filter results by exact `pname`.
-   *   std::optional<std::string> version; //< Filter results by exact version.
-   *   std::optional<std::string> semver;  //< Filter results by version range.
-   */
+  std::optional<std::string> name;    /**< Filter results by exact `name`. */
+  std::optional<std::string> pname;   /**< Filter results by exact `pname`. */
+  std::optional<std::string> version; /**< Filter results by exact version. */
+  std::optional<std::string> semver;  /**< Filter results by version range. */
 
   /** Filter results by partial match on pname, attrName, or description. */
   std::optional<std::string> partialMatch;
@@ -155,10 +85,7 @@ struct PkgQueryArgs : public PkgDescriptorBase
   /** Filter results by partial match on pname or attrName. */
   std::optional<std::string> partialNameMatch;
 
-  /**
-   * Filter results by an exact match on either `pname` or `attrName`.
-   * To match just `pname` see @a flox::pkgdb::PkgDescriptorBase.
-   */
+  /** Filter results by an exact match on either `pname` or `attrName`. */
   std::optional<std::string> pnameOrAttrName;
 
   /**
@@ -196,9 +123,10 @@ struct PkgQueryArgs : public PkgDescriptorBase
    */
   std::optional<flox::AttrPath> relPath;
 
+
   /** @brief Reset argset to its _default_ state. */
   void
-  clear() override;
+  clear();
 
   /**
    * @brief Sanity check parameters throwing a

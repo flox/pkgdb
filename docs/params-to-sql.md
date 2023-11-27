@@ -54,45 +54,6 @@ harder for readers to trace; the aim of this section is to aggregate all of
 classes related to this transformation in one place, and describe their
 relationships to one another.
 
-
-### flox::pkgdb::PkgDescriptorBase
-
-Declared in
-[<pkgdb>/include/flox/pkgdb/pkg-query.hh](../include/flox/pkgdb/pkg-query.hh).
-
-This is the most common set of query filters related to a single package,
-and is used as a base for several more complex descriptors.
-
-It has the following members:
-```c++
-// NOTE: This document may be out of sync with `pkg-query.hh'.
-//       The header itself is the _source of truth_.
-
-struct PkgDescriptorBase
-{
-
-  std::optional<std::string> name;    /**< Filter results by exact `name`. */
-  std::optional<std::string> pname;   /**< Filter results by exact `pname`. */
-  std::optional<std::string> version; /**< Filter results by exact version. */
-  std::optional<std::string> semver;  /**< Filter results by version range. */
-
-  // ...<SNIP>...
-
-};
-
-/**
- * @brief A concept that checks if a typename is derived
- *        from @a flox::pkgdb::PkgDescriptorBase.
- */
-template<typename T>
-concept pkg_descriptor_typename = std::derived_from<T, PkgDescriptorBase>;
-```
-
-Child Classes:
-- `flox::pkgdb::PkgQueryArgs`
-- `flox::search::SearchQuery`
-    
-    
 ### flox::RegistryRaw
 
 Declared in [<pkgdb>/include/flox/registry.hh](../include/flox/registry.hh).
@@ -120,26 +81,21 @@ will be performed.
 // NOTE: This document may be out of sync with `pkg-query.hh'.
 //       The header itself is the _source of truth_.
 
-struct PkgQueryArgs : public PkgDescriptorBase
+struct PkgQueryArgs
 {
 
-  /* From `PkgDescriptorBase':
-   *   std::optional<std::string> name;    //< Filter results by exact `name`.
-   *   std::optional<std::string> pname;   //< Filter results by exact `pname`.
-   *   std::optional<std::string> version; //< Filter results by exact version.
-   *   std::optional<std::string> semver;  //< Filter results by version range.
-   */
-
+   std::optional<std::string> name;    //< Filter results by exact `name`.
+   std::optional<std::string> pname;   //< Filter results by exact `pname`.
+   std::optional<std::string> version; //< Filter results by exact version.
+   std::optional<std::string> semver;  //< Filter results by version range.
+   
   /** Filter results by partial match on pname, attrName, or description. */
   std::optional<std::string> partialMatch;
 
   /** Filter results by partial match on pname or attrName. */
   std::optional<std::string> partialNameMatch;
 
-  /**
-   * Filter results by an exact match on either `pname` or `attrName`.
-   * To match just `pname` see @a flox::pkgdb::PkgDescriptorBase.
-   */
+  /** Filter results by an exact match on either `pname` or `attrName`. */
   std::optional<std::string> pnameOrAttrName;
 
   /** 
@@ -190,11 +146,6 @@ Declared in
 
 This set of parameters is used by `pkgdb search` in order to support
 `flox search` and `flox show` sub-commands.
-
-This is an incredibly lightweight extension of `flox::pkgdb::PkgDescriptorBase`
-which simply adds the ability to filter by a partial match on
-`pname`, `attrName`, or `description` fields ( using `partialMatch` field
-in `flox::pkgdb::PkgQueryArgs` ).
 It has the following declaration:
 
 ```c++
@@ -206,18 +157,19 @@ It has the following declaration:
  * This is essentially a reorganized form of @a flox::pkgdb::PkgQueryArgs
  * that is suited for JSON input.
  */
-struct SearchQuery : public pkgdb::PkgDescriptorBase
+struct SearchQuery
 {
 
-  /* From `pkgdb::PkgDescriptorBase`:
-   *   std::optional<std::string> name;
-   *   std::optional<std::string> pname;
-   *   std::optional<std::string> version;
-   *   std::optional<std::string> semver;
-   */
+  std::optional<std::string> name;
+  std::optional<std::string> pname;
+  std::optional<std::string> version;
+  std::optional<std::string> semver;
 
   /** Filter results by partial match on pname, attrName, or description */
   std::optional<std::string> partialMatch;
+
+  /** Filter results by partial match on pname or attrName. */
+  std::optional<std::string> partialNameMatch;
   
   // ...<SNIP>...
 
@@ -236,8 +188,7 @@ For a detailed look at `SearchParams` see
 Declared in
 [<pkgdb>/include/flox/resolver/descriptor.hh](../include/flox/resolver/descriptor.hh).
 
-This form of descriptor is found in `manifest.{toml,yaml,json}` files, and
-is the only descriptor that does not extend `flox::pkgdb::PkgDescriptorBase`.
+This form of descriptor is found in `manifest.{toml,yaml,json}` files.
 
 It currently uses an intermediate struct `ManifestDescriptor` as an intermediate
 step in its conversion to `flox::pkgdb::PkgQueryArgs`; but these two structures

@@ -276,40 +276,6 @@ test_descriptions0( flox::pkgdb::PkgDb & db )
 
 /* -------------------------------------------------------------------------- */
 
-/** @brief Test `flox::pkgdb::PkgDescriptorBase` gets deserialized correctly. */
-bool
-test_deserialize_PkgDescriptorBase()
-{
-  flox::pkgdb::PkgDescriptorBase pkgDescriptorBase
-    = pkgDescriptorBaseRaw.template get<flox::pkgdb::PkgDescriptorBase>();
-
-  // Do a non-exhaustive sanity check for now
-  EXPECT_EQ( pkgDescriptorBase.name.value(), "name" );
-  EXPECT_EQ( pkgDescriptorBase.pname.value(), "pname" );
-  EXPECT_EQ( pkgDescriptorBase.version.value(), "version" );
-  EXPECT_EQ( pkgDescriptorBase.semver.value(), "semver" );
-
-  return true;
-}
-
-/* -------------------------------------------------------------------------- */
-
-/** @brief Test `flox::pkgdb::PkgDescriptorBase` gets serialized correctly. */
-bool
-test_serialize_PkgDescriptorBase()
-{
-  flox::pkgdb::PkgDescriptorBase pkgDescriptorBase
-    = pkgDescriptorBaseRaw.template get<flox::pkgdb::PkgDescriptorBase>();
-
-  EXPECT_EQ( nlohmann::json( pkgDescriptorBase ).dump(),
-             pkgDescriptorBaseRaw.dump() );
-
-  return true;
-}
-
-
-/* -------------------------------------------------------------------------- */
-
 /* Tests `systems', `name', `pname', `version', and `subtree' filtering. */
 bool
 test_PkgQuery0( flox::pkgdb::PkgDb & db )
@@ -1042,9 +1008,6 @@ main( int argc, char * argv[] )
     RUN_TEST( hasPackage0, db );
 
     RUN_TEST( descriptions0, db );
-
-    RUN_TEST( deserialize_PkgDescriptorBase );
-    RUN_TEST( serialize_PkgDescriptorBase );
 
     RUN_TEST( PkgQuery0, db );
     RUN_TEST( PkgQuery1, db );
