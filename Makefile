@@ -308,7 +308,7 @@ else  # Darwin
 ifneq "$(findstring install,$(MAKECMDGOALS))" ""
 flox_pkgdb_LDFLAGS = '-L$(LIBDIR)' -lflox-pkgdb
 else
-flox_pkgdb_LDFLAGS += '-l$(MAKEFILE_DIR)/lib/libflox-pkgdb$(libExt)'
+flox_pkgdb_LDFLAGS += '$(MAKEFILE_DIR)/lib/libflox-pkgdb$(libExt)'
 endif # ifneq $(,$(findstring install,$(MAKECMDGOALS)))
 endif # ifeq (Linux,$(OS))
 endif # ifndef flox_pkgdb_LDFLAGS
