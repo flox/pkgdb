@@ -306,10 +306,11 @@ flox_pkgdb_LDFLAGS = -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
 flox_pkgdb_LDFLAGS += '-L$(MAKEFILE_DIR)/lib' -lflox-pkgdb
 else  # Darwin
 ifneq "$(findstring install,$(MAKECMDGOALS))" ""
-flox_pkgdb_LDFLAGS = '-L$(LIBDIR)' -lflox-pkgdb
+flox_pkgdb_LDFLAGS = '-L$(LIBDIR)'
 else
-flox_pkgdb_LDFLAGS += '$(MAKEFILE_DIR)/lib/libflox-pkgdb$(libExt)'
+flox_pkgdb_LDFLAGS += '-L$(MAKEFILE_DIR)/lib' -Wl,-rpath,@executable_path/../lib
 endif # ifneq $(,$(findstring install,$(MAKECMDGOALS)))
+flox_pkgdb_LDFLAGS += '-lflox-pkgdb'
 endif # ifeq (Linux,$(OS))
 endif # ifndef flox_pkgdb_LDFLAGS
 
@@ -390,6 +391,10 @@ else
 SONAME_FLAG =
 endif
 
+ifneq (Linux,$(OS))
+LINK_INAME_FLAG = -Wl,-install_name,@rpath/$(LIBFLOXPKGDB)
+lib/$(LIBFLOXPKGDB): CXXFLAGS += $(LINK_INAME_FLAG)
+endif # ifneq (Linux,$(OS))
 lib/$(LIBFLOXPKGDB): CXXFLAGS += $(lib_CXXFLAGS)
 lib/$(LIBFLOXPKGDB): $(lib_SRCS:.cc=.o)
 	$(MKDIR_P) $(@D);
