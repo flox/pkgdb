@@ -382,8 +382,7 @@ fullclean: clean
 # ---------------------------------------------------------------------------- #
 
 %.o: %.cc $(COMMON_HEADERS)
-	@echo '$(CXX) <CXXFLAGS> -c $< -o $@;' >&2;
-	@$(CXX) $(CXXFLAGS) -c $< -o $@;
+	$(CXX) $(CXXFLAGS) -c $< -o $@;
 
 ifeq (Linux,$(OS))
 SONAME_FLAG = -Wl,-soname,$(LIBFLOXPKGDB)
@@ -394,8 +393,7 @@ endif
 lib/$(LIBFLOXPKGDB): CXXFLAGS += $(lib_CXXFLAGS)
 lib/$(LIBFLOXPKGDB): $(lib_SRCS:.cc=.o)
 	$(MKDIR_P) $(@D);
-	@echo '$(CXX) $(filter %.o,$^) <LDFLAGS> -o $@;' >&2;
-	@$(CXX) $(filter %.o,$^) $(LDFLAGS) $(lib_LDFLAGS) $(SONAME_FLAG) -o $@;
+	$(CXX) $(filter %.o,$^) $(LDFLAGS) $(lib_LDFLAGS) $(SONAME_FLAG) -o $@;
 
 
 # ---------------------------------------------------------------------------- #
@@ -403,13 +401,11 @@ lib/$(LIBFLOXPKGDB): $(lib_SRCS:.cc=.o)
 src/pkgdb/write.o: src/pkgdb/schemas.hh
 
 $(bin_SRCS:.cc=.o): %.o: %.cc $(COMMON_HEADERS)
-	@echo '$(CXX) <CXXFLAGS> -c $< -o $@;' >&2;
-	@$(CXX) $(CXXFLAGS) $(bin_CXXFLAGS) -c $< -o $@;
+	$(CXX) $(CXXFLAGS) $(bin_CXXFLAGS) -c $< -o $@;
 
 bin/pkgdb: $(bin_SRCS:.cc=.o) lib/$(LIBFLOXPKGDB)
 	$(MKDIR_P) $(@D);
-	@echo '$(CXX) $(filter %.o,$^) <LDFLAGS> -o $@;' >&2;
-	@$(CXX) $(filter %.o,$^) $(LDFLAGS) $(bin_LDFLAGS) -o $@;
+	$(CXX) $(filter %.o,$^) $(LDFLAGS) $(bin_LDFLAGS) -o $@;
 
 
 # ---------------------------------------------------------------------------- #
@@ -417,8 +413,7 @@ bin/pkgdb: $(bin_SRCS:.cc=.o) lib/$(LIBFLOXPKGDB)
 $(TESTS) $(TEST_UTILS): $(COMMON_HEADERS)
 $(TESTS) $(TEST_UTILS): bin_CXXFLAGS += '-DTEST_DATA_DIR="$(TEST_DATA_DIR)"'
 $(TESTS) $(TEST_UTILS): tests/%: tests/%.cc lib/$(LIBFLOXPKGDB)
-	@echo '$(CXX) <CXXFLAGS> $< <LDFLAGS> -o $@;' >&2;
-	@$(CXX) $(CXXFLAGS) $(bin_CXXFLAGS) $< $(LDFLAGS) $(bin_LDFLAGS) -o $@;
+	$(CXX) $(CXXFLAGS) $(bin_CXXFLAGS) $< $(LDFLAGS) $(bin_LDFLAGS) -o $@;
 
 
 # ---------------------------------------------------------------------------- #
@@ -453,14 +448,12 @@ LINK_INAME_FLAG = -Wl,-install_name,$(LIBDIR)/$(LIBFLOXPKGDB)
 $(LIBDIR)/$(LIBFLOXPKGDB): CXXFLAGS += $(lib_CXXFLAGS)
 $(LIBDIR)/$(LIBFLOXPKGDB): $(lib_SRCS:.cc=.o)
 	$(MKDIR_P) $(@D);
-	@echo '$(CXX) $(filter %.o,$^) <LDFLAGS> -o $@;' >&2;
-	@$(CXX) $(filter %.o,$^) $(LDFLAGS) $(lib_LDFLAGS) $(LINK_INAME_FLAG)  \
+	$(CXX) $(filter %.o,$^) $(LDFLAGS) $(lib_LDFLAGS) $(LINK_INAME_FLAG)  \
 	       -o $@;
 
 $(BINDIR)/pkgdb: $(bin_SRCS:.cc=.o) $(LIBDIR)/$(LIBFLOXPKGDB)
 	$(MKDIR_P) $(@D);
-	@echo '$(CXX) $(filter %.o,$^) <LDFLAGS> -o $@;' >&2;
-	@$(CXX) $(filter %.o,$^) $(LDFLAGS) $(bin_LDFLAGS) -o $@;
+	$(CXX) $(filter %.o,$^) $(LDFLAGS) $(bin_LDFLAGS) -o $@;
 endif # ifneq (Linux,$(OS))
 
 #: Install binaries
@@ -497,8 +490,7 @@ $(PRE_COMPILED_HEADERS): CXXFLAGS += $(lib_CXXFLAGS) $(bin_CXXFLAGS)
 $(PRE_COMPILED_HEADERS): $(COMMON_HEADERS) $(DEPFILES)
 $(PRE_COMPILED_HEADERS): $(lastword $(MAKEFILE_LIST))
 $(PRE_COMPILED_HEADERS): %.gch: %
-	@echo '$(CXX) <CXXFLAGS> -x c++-header -c $< -o $@ 2>/dev/null;' >&2;
-	@$(CXX) $(CXXFLAGS) -x c++-header -c $< -o $@ 2>/dev/null;
+	$(CXX) $(CXXFLAGS) -x c++-header -c $< -o $@ 2>/dev/null;
 
 #: Create pre-compiled-headers
 pre-compiled-headers: $(PRE_COMPILED_HEADERS)
@@ -507,8 +499,7 @@ pre-compiled-headers: $(PRE_COMPILED_HEADERS)
 # This is used when creating our compilation databases to ensure that
 # pre-compiled headers aren't taking priority over _real_ headers.
 clean-pch: FORCE
-	@echo $(RM) '<PRE_COMPILED_HEADERS>;' >&2;
-	@$(RM) $(PRE_COMPILED_HEADERS);
+	$(RM) $(PRE_COMPILED_HEADERS);
 
 
 # ---------------------------------------------------------------------------- #
@@ -565,12 +556,10 @@ compile_commands.json: bear.d/c++ $(DEPFILES)
 compile_commands.json: $(lastword $(MAKEFILE_LIST))
 compile_commands.json: $(COMMON_HEADERS) $(ALL_SRCS)
 	-$(MAKE) -C $(MAKEFILE_DIR) clean;
-	@echo '$(BEAR) -- $(MAKE) -C $(MAKEFILE_DIR) -j bin tests' >&2;
-	@EXTRA_CXXFLAGS='$(EXTRA_CXXFLAGS)'                    \
+	EXTRA_CXXFLAGS='$(EXTRA_CXXFLAGS)'                     \
 	  PATH="$(MAKEFILE_DIR)/bear.d/:$(PATH)"               \
 	  $(BEAR) -- $(MAKE) -C $(MAKEFILE_DIR) -j bin tests;
-	@echo '$(BEAR) -- $(MAKE) -C $(MAKEFILE_DIR) -j pre-compiled-headers' >&2;
-	@EXTRA_CXXFLAGS='$(EXTRA_CXXFLAGS)'                                        \
+	EXTRA_CXXFLAGS='$(EXTRA_CXXFLAGS)'                                         \
 	  PATH="$(MAKEFILE_DIR)/bear.d/:$(PATH)"                                   \
 	  $(BEAR) --append -- $(MAKE) -C $(MAKEFILE_DIR) -j pre-compiled-headers;
 	$(MAKE) -C $(MAKEFILE_DIR) clean-pch;
