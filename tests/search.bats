@@ -195,7 +195,7 @@ genParamsNixpkgsFlox() {
     genParams '.manifest.options.allow.unfree=false';
   )'|wc -l;";
   assert_success;
-  assert_output 61338;
+  assert_output 61423;
 }
 
 
@@ -209,7 +209,7 @@ genParamsNixpkgsFlox() {
     genParams '.manifest.options.allow.broken=true';
   )'|wc -l;";
   assert_success;
-  assert_output 64037;
+  assert_output 64163;
 }
 
 

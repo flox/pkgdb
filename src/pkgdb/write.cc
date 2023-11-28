@@ -444,7 +444,13 @@ PkgDb::scrape( nix::SymbolTable & syms, const Target & target, Todos & todo )
             }
           if ( ! tryRecur ) { continue; }
           if ( auto maybe = child->maybeGetAttr( "recurseForDerivations" );
-               ( maybe != nullptr ) && maybe->getBool() )
+               ( ( maybe != nullptr ) && maybe->getBool() )
+               /* We explicitly recurse into legacyPackages.*.darwin
+                * due to a bug in nixpkgs which doesn't set
+                * recurseForDerivations attribute correctly.
+                */
+               || ( prefix.front() == "legacyPackages" && syms[aname] == "darwin" )
+             )
             {
               flox::AttrPath path = prefix;
               path.emplace_back( syms[aname] );
