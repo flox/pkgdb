@@ -393,12 +393,13 @@ endif
 
 ifneq (Linux,$(OS))
 LINK_INAME_FLAG = -install_name '@rpath/$(LIBFLOXPKGDB)'
-lib/$(LIBFLOXPKGDB): CXXFLAGS += $(LINK_INAME_FLAG)
+lib/$(LIBFLOXPKGDB): LDFLAGS += $(LINK_INAME_FLAG)
 endif # ifneq (Linux,$(OS))
+lib/$(LIBFLOXPKGDB): LDFLAGS  += $(lib_LDFLAGS)
 lib/$(LIBFLOXPKGDB): CXXFLAGS += $(lib_CXXFLAGS)
 lib/$(LIBFLOXPKGDB): $(lib_SRCS:.cc=.o)
 	$(MKDIR_P) $(@D);
-	$(CXX) $(filter %.o,$^) $(LDFLAGS) $(lib_LDFLAGS) $(SONAME_FLAG) -o $@;
+	$(CXX) $(filter %.o,$^) $(LDFLAGS) $(SONAME_FLAG) -o $@;
 
 
 # ---------------------------------------------------------------------------- #
@@ -449,12 +450,12 @@ $(BINDIR)/%: bin/% | install-dirs
 
 # Darwin has to relink
 ifneq (Linux,$(OS))
-LINK_INAME_FLAG = -install_name '$(LIBDIR)/$(LIBFLOXPKGDB)'
+LINK_INAME_FLAG = -install_name '@rpath/$(LIBFLOXPKGDB)'
 $(LIBDIR)/$(LIBFLOXPKGDB): CXXFLAGS += $(lib_CXXFLAGS)
+$(LIBDIR)/$(LIBFLOXPKGDB): LDFLAGS  += $(lib_LDFLAGS)
 $(LIBDIR)/$(LIBFLOXPKGDB): $(lib_SRCS:.cc=.o)
 	$(MKDIR_P) $(@D);
-	$(CXX) $(filter %.o,$^) $(LDFLAGS) $(lib_LDFLAGS) $(LINK_INAME_FLAG)  \
-	       -o $@;
+	$(CXX) $(filter %.o,$^) $(LDFLAGS) -o $@;
 
 $(BINDIR)/pkgdb: $(bin_SRCS:.cc=.o) $(LIBDIR)/$(LIBFLOXPKGDB)
 	$(MKDIR_P) $(@D);
