@@ -138,6 +138,10 @@ jq_edit() {
 
 # bats test_tags=resolver:lockfile, resolver:groups, resolver:optional
 
+# XXX: This test case shows an undesirable behavior.
+# Use it as a case study for making improvements and later, remove it or modify
+# it to reflect the new behavior.
+
 # Like the test above but adds `nodejsNew' after the lock is created.
 # This changes the resolution of `nodejs' to use _staging_ instead of
 # _unstable_, making it impossible to resolve `nodejsNew' later.
