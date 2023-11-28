@@ -449,7 +449,7 @@ $(BINDIR)/%: bin/% | install-dirs
 
 # Darwin has to relink
 ifneq (Linux,$(OS))
-LINK_INAME_FLAG = -Wl,-install_name,$(LIBDIR)/$(LIBFLOXPKGDB)
+LINK_INAME_FLAG = -install_name '$(LIBDIR)/$(LIBFLOXPKGDB)'
 $(LIBDIR)/$(LIBFLOXPKGDB): CXXFLAGS += $(lib_CXXFLAGS)
 $(LIBDIR)/$(LIBFLOXPKGDB): $(lib_SRCS:.cc=.o)
 	$(MKDIR_P) $(@D);
