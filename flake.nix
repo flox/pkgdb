@@ -121,6 +121,7 @@
         # For tests
         batsWith
         pkgs.jq
+        pkgs.yj
         # For doc
         pkgs.doxygen
       ];
