@@ -381,8 +381,8 @@ Environment::lockPackage( const LockedInputRaw & input,
  * - If groups are combined into a new group with a new name, we want to try to
  * use one of the old locked inputs (for now we just use the first one we find).
  *
- * If, on the other hand, a package has changed, we don't want to use its locked
- * input.
+ * If, on the other hand, a package has changed, we don't want to use its
+ * locked input.
  *
  * @return a locked input related to the group if we can find one, or else
  *         `std::nullopt`
@@ -417,12 +417,13 @@ Environment::getGroupInput( const InstallDescriptors & group,
                    * old lockfile and present in the new manifest.
                    *
                    * Don't use a locked input if the package has changed.
-                   * The * following fields control what the package actually
-                   * *is*, * while:
+                   * The fields handled below control what the package actually
+                   * *is* while:
                    * - `optional' and `systems' control how we behave if
                    *   resolution fails, but they don't change the package.
-                   * - `priority' is a setting for mkEnv
-                   * - `group' is handled below
+                   * - `priority' is a setting for `mkEnv' and is passed through
+                   *   without effecting resolution.
+                   * - `group' is handled below.
                    */
                   if ( ( descriptor.name == oldDescriptor.name )
                        && ( descriptor.path == oldDescriptor.path )
@@ -617,8 +618,8 @@ Environment::lockSystem( const System & system )
           [&]( const ResolutionFailure & failure )
           {
             /* We should only hit this on the first iteration.
-             * TODO: throw sooner rather than trying to resolve every
-             * group? */
+             * TODO: throw sooner rather than trying to resolve
+             * every group? */
             if ( failure.empty() )
               {
                 throw ResolutionFailureException(
