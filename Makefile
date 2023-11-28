@@ -303,13 +303,13 @@ nix_LDFLAGS := $(nix_LDFLAGS)
 ifndef flox_pkgdb_LDFLAGS
 ifeq (Linux,$(OS))
 flox_pkgdb_LDFLAGS = -Wl,--enable-new-dtags '-Wl,-rpath,$$ORIGIN/../lib'
-else  # Darwin
-ifneq "$(findstring install,$(MAKECMDGOALS))" ""
-flox_pkgdb_LDFLAGS = '-L$(LIBDIR)'
-endif # ifneq $(,$(findstring install,$(MAKECMDGOALS)))
 flox_pkgdb_LDFLAGS += '-L$(MAKEFILE_DIR)/lib' -lflox-pkgdb
 else  # Darwin
+ifneq "$(findstring install,$(MAKECMDGOALS))" ""
+flox_pkgdb_LDFLAGS = '-L$(LIBDIR)' -lflox-pkgdb
+else
 flox_pkgdb_LDFLAGS += '-l:$(MAKEFILE_DIR)/lib/libflox-pkgdb.$(libExt)'
+endif # ifneq $(,$(findstring install,$(MAKECMDGOALS)))
 endif # ifeq (Linux,$(OS))
 endif # ifndef flox_pkgdb_LDFLAGS
 
