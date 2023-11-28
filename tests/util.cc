@@ -218,6 +218,42 @@ test_hasPrefix0()
 
 /* -------------------------------------------------------------------------- */
 
+bool
+test_ltrim_copy0()
+{
+  std::string str( "  foo " );
+  EXPECT_EQ( flox::ltrim_copy( str ), "foo " );
+  EXPECT_EQ( flox::ltrim_copy( str ), flox::ltrim_copy( str ) );
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+bool
+test_rtrim_copy0()
+{
+  std::string str( "  foo " );
+  EXPECT_EQ( flox::rtrim_copy( str ), "  foo" );
+  EXPECT_EQ( flox::rtrim_copy( str ), flox::rtrim_copy( str ) );
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
+bool
+test_trim_copy0()
+{
+  std::string str( "  foo " );
+  EXPECT_EQ( flox::trim_copy( str ), "foo" );
+  EXPECT_EQ( flox::trim_copy( str ), flox::trim_copy( str ) );
+  return true;
+}
+
+
+/* -------------------------------------------------------------------------- */
+
 int
 main()
 {
@@ -236,6 +272,10 @@ main()
   RUN_TEST( variantJSON1 );
   RUN_TEST( variantJSON2 );
   RUN_TEST( variantJSON3 );
+
+  RUN_TEST( ltrim_copy0 );
+  RUN_TEST( rtrim_copy0 );
+  RUN_TEST( trim_copy0 );
 
   RUN_TEST( hasPrefix0 );
 
