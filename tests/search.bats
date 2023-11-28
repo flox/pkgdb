@@ -24,11 +24,19 @@ setup_file() {
   # such a way that would make it difficult to eventually parallelize in
   # the future.
   export BATS_NO_PARALLELIZE_WITHIN_FILE=true;
+
+  export GA_GLOBAL_MANIFEST="$TESTS_DIR/data/manifest/global-ga0.toml";
 }
 
 # Dump parameters for a query on `nixpkgs'.
 genParams() {
   jq -r '.query.match|=null' "$TDATA/params0.json"|jq "${1?}";
+}
+
+# Dump empty params with a global manifest
+genGMParams() {
+  # "{\"global-manifest\": \"$GA_GLOBAL_MANIFEST\"}" | jq "${1?}";
+  echo '{"global-manifest": "'"$GA_GLOBAL_MANIFEST"'"}' | jq "${1?}";
 }
 
 genParamsNixpkgsFlox() {
@@ -309,6 +317,218 @@ genParamsNixpkgsFlox() {
   assert_success;
   assert_output 'null';
 
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# bats tests_tags=search:error
+
+@test "'pkgdb search' JSON error when no query present" {
+  skip "FIXME: empty search should return no results"
+  params=$(genGMParams '.query=null');
+  run "$PKGDB" search  --ga-registry "$params";
+  # output depends on resolution of pkgdb#177
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# bats test_tags=search:error, search:manifest
+
+@test "'pkgdb search' JSON error when no manifests are provided" {
+  skip "FIXME: search requires a global manifest, but succeeds without one"
+  run "$PKGDB" search --ga-registry '{"query": {"match": "ripgrep"}}';
+  assert_failure;
+  assert_output --partial "foo";
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# bats test_tags=search:error, search:manifest
+
+@test "'pkgdb search' JSON error when manifest path does not exist" {
+  params=$(genGMParams '.manifest="/does/not/exist"');
+  run "$PKGDB" search --ga-registry "$params";
+  assert_failure;
+  category_msg=$(echo "$output" | jq '.category_message');
+  context_msg=$(echo "$output" | jq '.context_message');
+  assert_equal "$category_msg" '"invalid manifest file"';
+  assert_equal "$context_msg" '"no such path: /does/not/exist"';
+}
+
+
+# bats test_tags=search:error, search:manifest, search:global-manifest
+
+@test "'pkgdb search' JSON error when global manifest path does not exist" {
+  params=$(genGMParams '.["global-manifest"]="/does/not/exist"');
+  run "$PKGDB" search --ga-registry "$params";
+  assert_failure;
+  category_msg=$(echo "$output" | jq '.category_message');
+  context_msg=$(echo "$output" | jq '.context_message');
+  assert_equal "$category_msg" '"invalid manifest file"';
+  assert_equal "$context_msg" '"no such path: /does/not/exist"';
+}
+
+
+# bats test_tags=search:error, search:lockfile
+
+@test "'pkgdb search' JSON error when lockfile path does not exist" {
+  params=$(genGMParams '.lockfile="/does/not/exist"');
+  run "$PKGDB" search --ga-registry "$params";
+  assert_failure;
+  category_msg=$(echo "$output" | jq '.category_message');
+  context_msg=$(echo "$output" | jq '.context_message');
+  assert_equal "$category_msg" '"invalid lockfile"';
+  assert_equal "$context_msg" '"no such path: /does/not/exist"';
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# bats tests_tags=search:error
+
+@test "'pkgdb search' JSON error with unexpected query field" {
+  params=$(genGMParams '.query.foo="bar"');
+  run "$PKGDB" search --ga-registry "$params";
+  assert_failure;
+  category_msg=$(echo "$output" | jq '.category_message');
+  context_msg=$(echo "$output" | jq -r '.context_message');
+  assert_equal "$category_msg" '"error parsing search query"';
+  assert_equal "$context_msg" "unrecognized key 'query.foo'.";
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# bats tests_tags=search:error, search:lockfile
+
+@test "'pkgdb search' JSON error when lockfile has invalid format" {
+  params=$(genGMParams '.query.match="ripgrep"|.lockfile={"foo": "bar"}');
+  run "$PKGDB" search --ga-registry "$params";
+  assert_failure;
+  category_msg=$(echo "$output" | jq '.category_message');
+  context_msg=$(echo "$output" | jq -r '.context_message');
+  assert_equal "$category_msg" '"invalid lockfile"';
+  assert_equal "$context_msg" "encountered unexpected field \`foo' while parsing locked package";
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# bats tests_tags=search:error
+
+@test "'pkgdb search' JSON error when params not valid JSON" {
+  skip "FIXME: need better error message when search params not valid JSON";
+  params='{';
+  run "$PKGDB" search --ga-registry "$params";
+  assert_failure;
+  # exact output depends on resolution of pkgdb#184
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# bats tests_tags=search:error, search:registry
+
+@test "'pkgdb search' no indirect flake references" {
+  skip "FIXME: need better error message when indirect flakeref found";
+  params=$(jq -c '.' "$TDATA/params2.json");
+  run "$PKGDB" search "$params";
+  assert_failure;
+  # exact output depends on resolution of pkgdb#183
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# bats tests_tags=search:error, search:registry
+
+@test "'pkgdb search' JSON error when input does not exist" {
+  params=$(jq -c '.' "$TDATA/params3.json");
+  run "$PKGDB" search -q "$params";
+  assert_failure;
+  category_msg=$(echo "$output" | jq '.category_message');
+  context_msg=$(echo "$output" | jq -r '.context_message');
+  caught_msg=$(echo "$output" | jq -r '.caught_message');
+  assert_equal "$category_msg" '"error locking flake"';
+  assert_equal "$context_msg" 'failed to lock flake "github:flox/badrepo"';
+  # The caught Nix error is big, only check the beginning
+  assert_regex "$caught_msg" "^error:";
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# bats tests_tags=search
+
+@test "'pkgdb search' with '%' in search term" {
+  params=$(genGMParams '.query.match="hello%" | .manifest.options.systems=["x86_64-linux"]');
+  run --separate-stderr "$PKGDB" search -q --ga-registry "$params";
+  assert_success;
+  assert_equal "${#lines[@]}" 11;
+}
+
+# bats tests_tags=search
+
+@test "'pkgdb search' with ' in search term" {
+  skip "FIXME: no results";
+  params=$(genGMParams ".query.match=\"hello'\" | .manifest.options.systems=[\"x86_64-linux\"]");
+  run --separate-stderr "$PKGDB" search -q --ga-registry "$params";
+  assert_success;
+  assert_equal "${#lines[@]}" 11;
+}
+
+# bats tests_tags=search
+
+@test "'pkgdb search' with '\"' in search term" {
+  skip "FIXME: no results";
+  params=$(genGMParams '.query.match="hello"" | .manifest.options.systems=["x86_64-linux"]');
+  run --separate-stderr "$PKGDB" search -q --ga-registry "$params";
+  assert_success;
+  assert_equal "${#lines[@]}" 11;
+}
+
+# bats tests_tags=search
+
+@test "'pkgdb search' with '[' in search term" {
+  skip "FIXME: no results";
+  params=$(genGMParams '.query.match="hello[" | .manifest.options.systems=["x86_64-linux"]');
+  run --separate-stderr "$PKGDB" search -q --ga-registry "$params";
+  assert_success;
+  assert_equal "${#lines[@]}" 11;
+}
+
+# bats tests_tags=search
+
+@test "'pkgdb search' with ']' in search term" {
+  skip "FIXME: no results";
+  params=$(genGMParams '.query.match="hello]" | .manifest.options.systems=["x86_64-linux"]');
+  run --separate-stderr "$PKGDB" search -q --ga-registry "$params";
+  assert_success;
+  assert_equal "${#lines[@]}" 11;
+}
+
+# bats tests_tags=search
+
+@test "'pkgdb search' with '*' in search term" {
+  skip "FIXME: no results";
+  params=$(genGMParams '.query.match="hello*" | .manifest.options.systems=["x86_64-linux"]');
+  run --separate-stderr "$PKGDB" search -q --ga-registry "$params";
+  assert_success;
+  assert_equal "${#lines[@]}" 11;
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+@test "'pkgdb search' works with IFD" {
+  run sh -c "NIX_CONFIG=\"allow-import-from-derivation = true\" $PKGDB search -q --ga-registry --match hello";
+  assert_success;
+
+  run [ "${#lines[@]}" -gt 0 ];
+  assert_success;
 }
 
 
