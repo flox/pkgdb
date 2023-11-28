@@ -185,7 +185,7 @@ public:
   /** Match a relative attribute path. */
   std::optional<flox::AttrPath> path;
 
-  /** Force resolution is a given input, _flake reference_. */
+  /** Force resolution in a given input, _flake reference_. */
   std::optional<nix::FlakeRef> input;
 
   /**

@@ -57,8 +57,15 @@ Lockfile::checkGroups() const
                 {
                   continue;
                 }
-              auto maybeLocked
-                = this->lockfileRaw.packages.at( system ).at( iid );
+
+              auto maybeSystem = this->lockfileRaw.packages.find( system );
+              if ( maybeSystem == this->lockfileRaw.packages.end() )
+                {
+                  continue;
+                }
+
+              auto maybeLocked = maybeSystem->second.at( iid );
+
               /* Package was unresolved, we don't enforce `optional' here. */
               if ( ! maybeLocked.has_value() ) { continue; }
 
