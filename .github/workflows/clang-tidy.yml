@@ -95,7 +95,11 @@ jobs:
 
       - name: Create Tidy Log
         run: |
+          set -eu;
+          set -o pipefail;
           cat <<'EOF' > script.sh
+            set -eu;
+            set -o pipefail;
             status=0;
             rm -f ./tidy.log;
 
@@ -139,8 +143,8 @@ jobs:
                 fi
               else
                 status="$?";
-                printf '::error file=%s,title=clang-tidy error::' "$src";
-                ghEscape tidy.log
+                printf '::error file=%s,title=clang-tidy Error::%s\n'  \
+                       "$src" "Failed to process file \`$src'";
               fi
               rm -f ./tidy.log;
             done
