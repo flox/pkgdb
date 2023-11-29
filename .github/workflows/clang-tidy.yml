@@ -113,15 +113,11 @@ jobs:
                 printf '::error file=%s,title=clang-tidy error::' "$src";
                 ghEscape tidy.log
               fi
+              rm -f ./tidy.log;
             done
-            rm -f ./tidy-file.log;
             exit "$status";
           ';
           echo "TIDY_STATUS=$?" >> "$GITHUB_ENV";
-
-      - name: Emit Annotations
-        run: |
-          CLANG_FILE='';
 
 
 # ---------------------------------------------------------------------------- #
