@@ -16,6 +16,12 @@ Checks: >
   ,-cppcoreguidelines-owning-memory
   ,-cppcoreguidelines-macro-usage
   ,-bugprone-easily-swappable-parameters
+  ,-bugprone-unchecked-optional-access
+
+# `bugprone-unchecked-optional-access' has an unresolved bug which causes
+# it to trigger infinite recursion.
+# Upstream is in no hurry to fix it:
+# https://github.com/llvm/llvm-project/issues/55530
 
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
