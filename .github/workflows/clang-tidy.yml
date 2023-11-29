@@ -95,10 +95,8 @@ jobs:
 
       - name: Create Tidy Log
         run: |
-          cat <<'EOF' > script.sh
+          cat <<'EOF' > script.bash
             status=0;
-            rm -f ./tidy.log;
-
             # Convert some characters to hex to escape them for annotations.
             ghEscape() {
               sed -e 's/%/%25/g' -e 's/:/%0A/g' -e 's/,/%2C/g' "${1:--}"  \
@@ -106,33 +104,7 @@ jobs:
               printf '\n';
             }
 
-            # Create an empty array that will contain all the filepaths of
-            # files modified.
-            modified=()
-            git fetch origin ${{ github.base_ref }};
-            # Handle file names with spaces.
-            while IFS='' read -r line; do
-              # Only process headers and sources.
-              case "$line" in
-                *.hh|*.cc)
-                  # Append the absolute filepath.
-                  modified+=( "$( realpath "$line"; )" );
-                ;;
-                *) :; ;;
-              esac
-              # `git diff-tree` outputs all the files that differ between the
-              # different commits.
-              # By specifying `--diff-filter=d`, it doesn't report
-              # deleted files.
-            done < <(
-              git diff-tree                                            \
-                  --no-commit-id --diff-filter=d --name-only -r        \
-                  "$( git rev-parse origin/${{ github.base_ref }}; )"  \
-                  HEAD                                                 \
-                  --;
-            );
-
-            for src in "${modified[@]}"; do
+            for src in $( ./build-aux/changed-sources ); done
               echo "clang-tidy is checking file \`$src'" >&2;
               sh -c 'clang-tidy "$src"||printf ERROR;' > tidy.log;
               # TODO
@@ -151,9 +123,9 @@ jobs:
             done
             exit "$status";
           EOF
-          nix develop --no-update-lock-file --command sh ./script.sh;
+          nix develop --no-update-lock-file --command bash ./script.sh;
           echo "TIDY_STATUS=$?" >> "$GITHUB_ENV";
-          rm script.sh;
+          rm script.bash;
 
 
 # ---------------------------------------------------------------------------- #
