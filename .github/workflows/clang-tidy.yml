@@ -105,14 +105,38 @@ jobs:
                |tr $'\n' ':'|sed 's/:/%0A/g';
             }
 
-            # TODO: only check modified files.
-            for src in $(
-              find include src tests -name '*.hh' -o -name '*.cc' -print;
-            ); do
+            # Find the merge base compared to master.
+            base="$( git merge-base refs/remotes/origin/main HEAD; )";
+            # Create an empty array that will contain all the filepaths of
+            # files modified.
+            modified=()
+            # Handle file names with spaces.
+            while IFS='' read -r line; do
+              # Only process headers and sources.
+              case "$line" in
+                *.hh) :; break;
+                *.cc) :; break;
+                *) continue;
+              esac
+              # Append the absolute filepath.
+              modified+=( "$( realpath "$line"; )" );
+              # `git diff-tree` outputs all the files that differ between the
+              # different commits.
+              # By specifying `--diff-filter=d`, it doesn't report
+              # deleted files.
+            done < <(
+              git diff-tree --no-commit-id --diff-filter=d --name-only  \
+                            -r "$base" HEAD
+            );
+
+            for src in "${modified[@]}"; do
               if clang-tidy "$src" > tidy.log; then
                 # TODO
-                printf '::error file=%s,line=%s,endLine=%s,col=%s,endColumn=%s,title=N/A::This is an example error' "$src" 0 1 0 1;
-                printf '::warning file=%s,line=%s,endLine=%s,col=%s,endColumn=%s,title=N/A::This is an example warning' "$src" 0 1 0 1;
+                #echo "::warning file=$src,line=0,endLine=0,col=0,endColumn=0,title=Example Warning::This is an example warning";
+                if [[ "$( wc -l ./tidy.log|cut -d' ' -f1; )" -gt 0 ]]; then
+                  printf '::warning file=%s,title=Tidy Suggestions::' "$src";
+                  ghEscape tidy.log;
+                fi
               else
                 status="$?";
                 printf '::error file=%s,title=clang-tidy error::' "$src";
