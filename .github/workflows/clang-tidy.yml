@@ -137,14 +137,13 @@ jobs:
             );
 
             for src in "${modified[@]}"; do
-              if clang-tidy "$src" > tidy.log; then
-                # TODO
-                #echo "::warning file=$src,line=0,endLine=0,col=0,endColumn=0,title=Example Warning::This is an example warning";
-                if [[ "$( wc -l ./tidy.log|cut -d' ' -f1; )" -gt 0 ]]; then
-                  printf '::warning file=%s,title=Tidy Suggestions::' "$src";
-                  ghEscape tidy.log;
-                fi
-              else
+              { clang-tidy "$src"||printf ERROR; } > tidy.log;
+              # TODO
+              #echo "::warning file=$src,line=0,endLine=0,col=0,endColumn=0,title=Example Warning::This is an example warning";
+              if [[ "$( wc -l ./tidy.log|cut -d' ' -f1; )" -gt 0 ]]; then
+                printf '::warning file=%s,title=Tidy Suggestions::' "$src";
+                ghEscape tidy.log;
+              elif [[ "$( < tidy.log )" = ERROR ]]; then
                 status="$?";
                 printf '::error file=%s,title=clang-tidy Error::%s\n'  \
                        "$src" "Failed to process file \`$src'";
