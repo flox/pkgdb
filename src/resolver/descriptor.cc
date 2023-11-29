@@ -457,6 +457,65 @@ to_json( nlohmann::json & jto, const ManifestDescriptorRaw & descriptor )
     }
 }
 
+/* -------------------------------------------------------------------------- */
+
+ManifestDescriptorRaw::ManifestDescriptorRaw(
+  const std::string_view & descriptor )
+{
+  ManifestDescriptorRaw parsed;
+  size_t                cursor = 0;
+  // Grab the input if it exists
+  if ( auto inputSepIdx
+       = descriptor.find_first_of( ManifestDescriptorRaw::inputSigil );
+       inputSepIdx != std::string_view::npos )
+    {
+      parsed.packageRepository
+        = std::string( descriptor.substr( cursor, inputSepIdx ) );
+      cursor = inputSepIdx + 1;
+    }
+  // Grab the
+  size_t attrsEndIdx;
+  bool   hasVersion = false;
+  if ( auto versionSepIdx
+       = descriptor.find_first_of( ManifestDescriptorRaw::versionSigil );
+       versionSepIdx != std::string_view::npos )
+    {
+      attrsEndIdx = versionSepIdx;
+      hasVersion  = true;
+    }
+  else { attrsEndIdx = descriptor.size(); }
+  auto maybeAttrs = std::string( descriptor.substr( cursor, attrsEndIdx ) );
+  auto numAttrSeparators
+    = std::count_if( maybeAttrs.begin(),
+                     maybeAttrs.end(),
+                     []( auto attrChar ) { return attrChar == '.'; } );
+  switch ( numAttrSeparators )
+    {
+      case 0:
+        // We were given a `pname`
+        parsed.name = maybeAttrs;
+        break;
+      case 1:
+        // We were given a relative path
+        parsed.path = maybeAttrs;
+        break;
+      case 2:
+        // We were given an absolute path
+        parsed.absPath = maybeAttrs;
+        break;
+      default:
+        // Someone gave us an absolute path for an input type we don't
+        // yet support i.e. there are too many path components.
+        throw InvalidManifestDescriptorException( "invalid attribute path: `"
+                                                  + maybeAttrs + "'" );
+        break;
+    }
+  if ( hasVersion )
+    {
+      cursor         = attrsEndIdx + 1;
+      parsed.version = std::string( descriptor.substr( cursor ) );
+    }
+}
 
 /* -------------------------------------------------------------------------- */
 
@@ -467,8 +526,8 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
 {
   /* Determine if `version' was a range or not.
    * NOTE: The string "4.2.0" is not a range, but "4.2" is!
-   *       If you want to explicitly match the `version` field with "4.2" then
-   *       you need to use "=4.2". */
+   *       If you want to explicitly match the `version` field with
+   *       "4.2" then you need to use "=4.2". */
   if ( raw.version.has_value() )
     {
       initManifestDescriptorVersion( *this, *raw.version );
@@ -525,7 +584,7 @@ ManifestDescriptor::ManifestDescriptor( const ManifestDescriptorRaw & raw )
 }
 
 
-/* -------------------------------------------------------------------------- */
+/* --------------------------------------------------------------------------*/
 
 void
 ManifestDescriptor::clear()
@@ -543,7 +602,8 @@ ManifestDescriptor::clear()
 }
 
 
-/* -------------------------------------------------------------------------- */
+/* --------------------------------------------------------------------------
+ */
 
 pkgdb::PkgQueryArgs &
 ManifestDescriptor::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
@@ -577,7 +637,8 @@ ManifestDescriptor::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 }
 
 
-/* -------------------------------------------------------------------------- */
+/* --------------------------------------------------------------------------
+ */
 
 }  // namespace flox::resolver
 

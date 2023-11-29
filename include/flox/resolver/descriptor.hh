@@ -44,6 +44,17 @@ struct ManifestDescriptorRaw
 
 public:
 
+  /** The delimiter for providing an input when the descriptor is a string */
+  static const auto inputSigil = ':';
+
+  /** The delimiter for specifying a version when the descriptor is a string */
+  static const auto versionSigil = '@';
+
+  /** The signifier that the version should be treated exactly
+   *  i.e. not a semver range
+   */
+  static const auto exactVersionSigil = '=';
+
   /**
    * Match `name`, `pname`, or `attrName`.
    * Maps to `flox::pkgdb::PkgQueryArgs::pnameOrAttrName`.
@@ -117,6 +128,9 @@ public:
   void
   clear();
 
+  ManifestDescriptorRaw() = default;
+
+  explicit ManifestDescriptorRaw( const std::string_view & descriptor );
 
 }; /* End struct `ManifestDescriptorRaw' */
 
@@ -155,6 +169,10 @@ FLOX_DEFINE_EXCEPTION( ParseManifestDescriptorRawException,
 
 /**
  * @brief A set of user defined requirements describing a package/dependency.
+ *
+ * May either be defined as a set of attributes or with a string matching
+ * this syntax:
+ * `[<input>:]((<attr>.)*<attrName>|<pname>)[@(<semver>|=<version>)]`
  */
 struct ManifestDescriptor
 {
@@ -199,6 +217,9 @@ public:
 
 
   ManifestDescriptor() = default;
+
+  explicit ManifestDescriptor( const std::string_view & descriptor )
+    : ManifestDescriptor( ManifestDescriptorRaw( descriptor ) ) {};
 
   explicit ManifestDescriptor( const ManifestDescriptorRaw & raw );
 
