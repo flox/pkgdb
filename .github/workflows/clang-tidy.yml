@@ -1,0 +1,131 @@
+# ============================================================================ #
+#
+# Run `clang-tidy' over the codebase and report warnings as annotations.
+#
+# ---------------------------------------------------------------------------- #
+
+name: Clang Tidy
+on:
+  # No need to run on `main` since we have `merge_group' and `pull_request'.
+  workflow_dispatch:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  clang-tidy:
+    name: Clang Tidy
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: cachix/install-nix-action@v22
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+            substituters = https://cache.nixos.org https://cache.floxdev.com
+            trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= flox-store-public-0:8c/B+kjIaQ+BloCmNkRUKwaVPFWkriSAd0JJvuDu4F0=
+            max-jobs = auto
+            cores = 0
+            substitute = true
+            builders-use-substitutes = true
+            fallback = true
+            connect-timeout = 5
+            stalled-download-timeout = 90
+            timeout = 0
+
+      - name: Setup AWS Cache Keys
+        run: |
+          echo '${{ secrets.FLOX_STORE_PUBLIC_NIX_SECRET_KEY }}'  \
+               > /tmp/secret-key
+          {
+            printf 'extra-substituters = s3://flox-store';
+            printf '?secret-key=/tmp/secret-key&write-nar-listing=1';
+            echo '&ls-compression=br';
+
+            printf 'extra-trusted-public-keys = ';
+            echo "${{ secrets.FLOX_STORE_PUBLIC_NIX_SECRET_KEY }}"  \
+              |nix key convert-secret-to-public;
+          }|sudo tee -a /etc/nix/nix.conf >/dev/null
+
+      - name: Nix AWS Setup
+        run: |
+          SERVICE_D='/etc/systemd/system/nix-daemon.service.d';
+          sudo mkdir -p "$SERVICE_D";
+          {
+            echo '[Service]';
+            printf 'Environment=AWS_ACCESS_KEY_ID=';
+            echo '${{ secrets.AWS_ACCESS_KEY_ID }}';
+            printf 'Environment=AWS_SECRET_ACCESS_KEY=';
+            echo '${{ secrets.AWS_SECRET_ACCESS_KEY }}';
+          }|sudo tee -a "$SERVICE_D/aws-credentials.conf" >/dev/null;
+
+      - name: Restart Nix Daemon
+        run: |
+          sudo systemctl daemon-reload;
+          sudo systemctl restart nix-daemon.service;
+
+      - name: Restore Nix Caches
+        id: nix-cache-restore
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            ~/.cache/nix
+          key: ubuntu-latest-nix-cache
+
+      - name: Setup
+        run: |
+          echo 'Runner Version' >&2;
+          { printf '    bash   version: '; bash   --version|head -n1; } >&2;
+          { printf '    nix    version: '; nix    --version; } >&2;
+          NO_WELCOME=: nix develop --no-update-lock-file --command sh -c '
+            echo "";
+            echo "Development Environment Versions";
+            printf "    nix    version: "; nix    --version;
+            printf "    CXX    version: "; $CXX --version|head -n1;
+          ' >&2;
+
+      - name: Create Tidy Log
+        run: |
+          nix develop --no-update-lock-file --command sh -c '
+            status=0;
+            rm -f ./tidy.log;
+
+            # Convert some characters to hex to escape them for annotations.
+            ghEscape() {
+              sed -e 's/%/%25/g' -e 's/:/%0A/g' -e 's/,/%2C/g' "${1:--}"  \
+               |tr $'\n' ':'|sed 's/:/%0A/g';
+            }
+
+            # TODO: only check modified files.
+            for src in $(
+              find include src tests -name '*.hh' -o -name '*.cc' -print;
+            ); do
+              if clang-tidy "$src" > tidy.log; then
+                # TODO
+                printf '::error file=%s,line=%s,endLine=%s,col=%s,endColumn=%s,title=N/A::This is an example error' "$src" 0 1 0 1;
+                printf '::warning file=%s,line=%s,endLine=%s,col=%s,endColumn=%s,title=N/A::This is an example warning' "$src" 0 1 0 1;
+              else
+                status="$?";
+                printf '::error file=%s,title=clang-tidy error::' "$src";
+                ghEscape tidy.log
+              fi
+            done
+            rm -f ./tidy-file.log;
+            exit "$status";
+          ';
+          echo "TIDY_STATUS=$?" >> "$GITHUB_ENV";
+
+      - name: Emit Annotations
+        run: |
+          CLANG_FILE='';
+
+
+# ---------------------------------------------------------------------------- #
+#
+#
+#
+# ============================================================================ #

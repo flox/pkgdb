@@ -130,7 +130,7 @@ Environment::getOldManifestRaw() const
  *
  * A system is skipped if systems is specified but that system is not.
  */
-bool
+[[nodiscard]] static bool
 systemSkipped( const System &                             system,
                const std::optional<std::vector<System>> & systems )
 {
@@ -399,8 +399,8 @@ Environment::getGroupInput( const InstallDescriptors & group,
   InstallDescriptors oldDescriptors = oldLockfile.getDescriptors();
 
   std::optional<LockedInputRaw> wrongGroupInput;
-  /* We could look for packages where just the iid has changed, but for now just
-   * use iid. */
+  /* We could look for packages where just the _iid_ has changed, but for now
+   * just use _iid_. */
   for ( const auto & [iid, descriptor] : group )
     {
       if ( auto it = oldSystemPackages.find( iid );
@@ -413,7 +413,7 @@ Environment::getGroupInput( const InstallDescriptors & group,
                    oldDescriptorPair != oldDescriptors.end() )
                 {
                   auto & [_, oldDescriptor] = *oldDescriptorPair;
-                  /* At this point we know the same iid is both locked in the
+                  /* At this point we know the same _iid_ is both locked in the
                    * old lockfile and present in the new manifest.
                    *
                    * Don't use a locked input if the package has changed.
@@ -423,8 +423,7 @@ Environment::getGroupInput( const InstallDescriptors & group,
                    *   resolution fails, but they don't change the package.
                    * - `priority' is a setting for `mkEnv' and is passed through
                    *   without effecting resolution.
-                   * - `group' is handled below.
-                   */
+                   * - `group' is handled below. */
                   if ( ( descriptor.name == oldDescriptor.name )
                        && ( descriptor.path == oldDescriptor.path )
                        && ( descriptor.version == oldDescriptor.version )
@@ -447,8 +446,7 @@ Environment::getGroupInput( const InstallDescriptors & group,
                        * We could come up with a better heuristic like most
                        * packages or newest, or we could try resolving in all
                        * of them.
-                       * For now, don't get too fancy.
-                       */
+                       * For now, don't get too fancy. */
                       if ( ! wrongGroupInput.has_value() )
                         {
                           wrongGroupInput = maybeLockedPackage->input;
@@ -504,7 +502,7 @@ Environment::tryResolveGroup( const InstallDescriptors & group,
   // TODO: Use `getCombinedRegistryRaw()'
   for ( const auto & [_, input] : *this->getPkgDbRegistry() )
     {
-      // If we already tried to resolve in this input, skip it.
+      /* If we already tried to resolve in this input - skip it. */
       if ( ! oldGroupInput.has_value() || *input == *oldGroupInput )
         {
           {
@@ -545,7 +543,7 @@ Environment::tryResolveGroupIn( const InstallDescriptors & group,
 
   for ( const auto & [iid, descriptor] : group )
     {
-      /** Skip unrequested systems. */
+      /* Skip unrequested systems. */
       if ( descriptor.systems.has_value()
            && ( std::find( descriptor.systems->begin(),
                            descriptor.systems->end(),
@@ -618,9 +616,8 @@ Environment::lockSystem( const System & system )
           /* Otherwise add a description of the resolution failure to msg. */
           [&]( const ResolutionFailure & failure )
           {
-            /* We should only hit this on the first iteration.
-             * TODO: throw sooner rather than trying to resolve
-             * every group? */
+            // TODO: Throw sooner rather than trying to resolve every group?
+            /* We should only hit this on the first iteration. */
             if ( failure.empty() )
               {
                 throw ResolutionFailureException(
@@ -650,8 +647,8 @@ Environment::lockSystem( const System & system )
   if ( ! groups.empty() ) { throw ResolutionFailureException( msg.str() ); }
 
   /* Copy over old lockfile entries we want to keep.
-     Make sure to update the priority if the entry was copied over from the old.
-   */
+   * Make sure to update the priority if the entry was copied over from
+   * the old. */
   if ( auto oldLockfile = this->getOldLockfile();
        oldLockfile.has_value()
        && oldLockfile->getLockfileRaw().packages.contains( system ) )
