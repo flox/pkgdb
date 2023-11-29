@@ -632,12 +632,12 @@ cc-check: $(TESTS:.cc=)
 	exit "$$_ec";
 
 #: Run all bats tests
+BATS_FILE ?= $(MAKEFILE_DIR)/tests
 bats-check: bin $(TEST_UTILS)
 	PKGDB="$(MAKEFILE_DIR)/bin/pkgdb"                        \
 	IS_SQLITE3="$(MAKEFILE_DIR)/tests/is_sqlite3"            \
 	  bats --print-output-on-failure --verbose-run --timing  \
-	       "$(MAKEFILE_DIR)/tests";
-
+	       "$(BATS_FILE)";
 
 # ---------------------------------------------------------------------------- #
 
