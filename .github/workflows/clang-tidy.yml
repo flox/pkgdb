@@ -132,10 +132,8 @@ jobs:
                   --;
             );
 
-            echo 'Modified Files:' >&2;
-            printf '%s\n' "${modified[@]}" >&2;
-
             for src in "${modified[@]}"; do
+              echo "clang-tidy is checking file \`$src'" >&2;
               sh -c 'clang-tidy "$src"||printf ERROR;' > tidy.log;
               # TODO
               #echo "::warning file=$src,line=0,endLine=0,col=0,endColumn=0,title=Example Warning::This is an example warning";
