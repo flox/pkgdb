@@ -114,12 +114,12 @@ jobs:
             while IFS='' read -r line; do
               # Only process headers and sources.
               case "$line" in
-                *.hh) :; ;;
-                *.cc) :; ;;
-                *) continue; ;;
+                *.hh|*.cc)
+                  # Append the absolute filepath.
+                  modified+=( "$( realpath "$line"; )" );
+                ;;
+                *) :; ;;
               esac
-              # Append the absolute filepath.
-              modified+=( "$( realpath "$line"; )" );
               # `git diff-tree` outputs all the files that differ between the
               # different commits.
               # By specifying `--diff-filter=d`, it doesn't report
@@ -131,6 +131,9 @@ jobs:
                   HEAD                                                 \
                   --;
             );
+
+            echo 'Modified Files:' >&2;
+            printf '%s\n' "${modified[@]}" >&2;
 
             for src in "${modified[@]}"; do
               sh -c 'clang-tidy "$src"||printf ERROR;' > tidy.log;
