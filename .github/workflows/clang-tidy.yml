@@ -95,11 +95,7 @@ jobs:
 
       - name: Create Tidy Log
         run: |
-          set -eu;
-          set -o pipefail;
           cat <<'EOF' > script.sh
-            set -eu;
-            set -o pipefail;
             status=0;
             rm -f ./tidy.log;
 
