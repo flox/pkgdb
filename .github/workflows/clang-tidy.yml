@@ -129,8 +129,9 @@ jobs:
               # By specifying `--diff-filter=d`, it doesn't report
               # deleted files.
             done < <(
-              git diff-tree --no-commit-id --diff-filter=d --name-only  \
-                            -r '${{ github.base_ref }}' HEAD --;
+              git diff-tree --no-commit-id --diff-filter=d --name-only       \
+                            -r "$( git rev-parse ${{ github.base_ref }}; )"  \
+                            HEAD --;
             );
 
             for src in "${modified[@]}"; do
