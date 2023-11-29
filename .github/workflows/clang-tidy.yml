@@ -113,6 +113,7 @@ jobs:
             # Create an empty array that will contain all the filepaths of
             # files modified.
             modified=()
+            git fetch origin ${{ github.base_ref }};
             # Handle file names with spaces.
             while IFS='' read -r line; do
               # Only process headers and sources.
@@ -129,7 +130,7 @@ jobs:
               # deleted files.
             done < <(
               git diff-tree --no-commit-id --diff-filter=d --name-only  \
-                            -r '${{ github.base_ref }}' HEAD
+                            -r '${{ github.base_ref }}' HEAD --;
             );
 
             for src in "${modified[@]}"; do
