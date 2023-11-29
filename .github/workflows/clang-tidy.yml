@@ -88,6 +88,11 @@ jobs:
             printf "    CXX    version: "; $CXX --version|head -n1;
           ' >&2;
 
+      - name: Create compile_commands.json
+        run: |
+          nix develop --no-update-lock-file '.#ci'               \
+                      --command make -j4 compile_commands.json;
+
       - name: Create Tidy Log
         run: |
           cat <<'EOF' > script.sh
@@ -119,6 +124,7 @@ jobs:
           EOF
           nix develop --no-update-lock-file --command sh ./script.sh;
           echo "TIDY_STATUS=$?" >> "$GITHUB_ENV";
+          rm script.sh;
 
 
 # ---------------------------------------------------------------------------- #
