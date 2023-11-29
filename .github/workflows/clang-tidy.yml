@@ -90,7 +90,7 @@ jobs:
 
       - name: Create compile_commands.json
         run: |
-          nix develop --no-update-lock-file '.#ci'               \
+          nix develop --no-update-lock-file                      \
                       --command make -j4 compile_commands.json;
 
       - name: Create Tidy Log
