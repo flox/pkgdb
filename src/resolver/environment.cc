@@ -139,6 +139,7 @@ systemSkipped( const System &                             system,
               == systems->end() );
 }
 
+
 /* -------------------------------------------------------------------------- */
 
 bool
@@ -148,37 +149,51 @@ Environment::groupIsLocked( const InstallDescriptors & group,
 {
   auto packages = oldLockfile.getLockfileRaw().packages;
   if ( ! packages.contains( system ) ) { return false; }
+
   SystemPackages oldSystemPackages = packages.at( system );
 
   InstallDescriptors oldDescriptors = oldLockfile.getDescriptors();
 
+  /* Check for upgrades. */
   for ( auto & [iid, descriptor] : group )
     {
-      /* Check for upgrades. */
-      if ( const bool * upgradeEverything
-           = std::get_if<bool>( &this->upgrades ) )
-        {
-          /* If we're upgrading everything, the group needs to be locked again.
-           */
-          if ( *upgradeEverything ) { return false; }
-        }
-      else
-        {
-          /* If the current iid is being upgraded, the group needs to be
-           * locked again. */
-          auto upgrades = std::get<std::vector<InstallID>>( this->upgrades );
-          if ( std::find( upgrades.begin(), upgrades.end(), iid )
-               != upgrades.end() )
-            {
-              return false;
-            }
-        }
+      {
+        bool stale = false;
+        std::visit(
+          overloaded { /* If we are upgrading everything, we treat all groups as
+                          "unlocked". */
+                       [&]( bool upgradeEverything )
+                       {
+                         if ( upgradeEverything ) { stale = true; }
+                       },
+
+                       /* If the current iid is being upgraded, the group needs
+                        * to be locked again. */
+                       [&]( std::vector<InstallID> upgrades )
+                       {
+                         if ( std::find( upgrades.begin(), upgrades.end(), iid )
+                              != upgrades.end() )
+                           {
+                             stale = true;
+                           }
+                       } },
+          this->upgrades );
+        if ( stale ) { return false; }
+      }
+
       /* If the descriptor has changed compared to the one in the lockfile
        * manifest, it needs to be locked again. */
       if ( auto oldDescriptorPair = oldDescriptors.find( iid );
-           oldDescriptorPair != oldDescriptors.end() )
+           oldDescriptorPair == oldDescriptors.end() )
+        {
+          /* If the descriptor doesn't even exist in the lockfile manifest, it
+           * needs to be locked again. */
+          return false;
+        }
+      else
         {
           auto & [_, oldDescriptor] = *oldDescriptorPair;
+
           /* We ignore `priority' and handle `systems' below. */
           if ( ( descriptor.name != oldDescriptor.name )
                || ( descriptor.path != oldDescriptor.path )
@@ -191,6 +206,7 @@ Environment::groupIsLocked( const InstallDescriptors & group,
             {
               return false;
             }
+
           /* Ignore changes to systems other than the one we're locking. */
           if ( systemSkipped( system, descriptor.systems )
                != systemSkipped( system, oldDescriptor.systems ) )
@@ -198,26 +214,29 @@ Environment::groupIsLocked( const InstallDescriptors & group,
               return false;
             }
         }
-      /* If the descriptor doesn't even exist in the lockfile manifest, it needs
-       * to be locked again. */
-      else { return false; }
-      // Check if the descriptor exists in the lockfile lock
+
+      /* Check if the descriptor exists in the lockfile lock */
       if ( auto oldLockedPackagePair = oldSystemPackages.find( iid );
-           oldLockedPackagePair != oldSystemPackages.end() )
+           oldLockedPackagePair == oldSystemPackages.end() )
         {
-          /* NOTE: we could relock if the prior locking attempt was null */
-          // auto & [_, oldLockedPackage] = *oldLockedPackagePair;
-          // if ( !oldLockedPackage.has_value()) { return false; }
+          /* If the descriptor doesn't even exist in the lockfile lock, it needs
+           * to be locked again.
+           * This should be unreachable since the descriptor shouldn't exist in
+           * the lockfile manifest if it doesn't exist in the lockfile. */
+          return false;
         }
-      /* If the descriptor doesn't even exist in the lockfile lock, it needs to
-       * be locked again. This should be unreachable since the descriptor
-       * shouldn't exist in the lockfile manifest if it doesn't exist in the
-       * lockfile lock. */
-      else { return false; }
+      // else
+      //   {
+      //     /* NOTE: we could relock if the prior locking attempt was null */
+      //     auto & [_, oldLockedPackage] = *oldLockedPackagePair;
+      //     if ( !oldLockedPackage.has_value()) { return false; }
+      //   }
     }
+
   /* We haven't found something unlocked, so everything must be locked. */
   return true;
 }
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -240,6 +259,7 @@ Environment::getUnlockedGroups( const System & system )
 
   return groupedDescriptors;
 }
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -264,6 +284,7 @@ Environment::getLockedGroups( const System & system )
 
   return groupedDescriptors;
 }
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -318,7 +339,7 @@ Environment::tryResolveDescriptorIn( const ManifestDescriptor & descriptor,
                                      const pkgdb::PkgDbInput &  input,
                                      const System &             system )
 {
-  /** Skip unrequested systems. */
+  /* Skip unrequested systems. */
   if ( descriptor.systems.has_value()
        && ( std::find( descriptor.systems->begin(),
                        descriptor.systems->end(),
