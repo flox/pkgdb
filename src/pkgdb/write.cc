@@ -449,8 +449,8 @@ PkgDb::scrape( nix::SymbolTable & syms, const Target & target, Todos & todo )
                 * due to a bug in nixpkgs which doesn't set
                 * recurseForDerivations attribute correctly.
                 */
-               || ( prefix.front() == "legacyPackages" && syms[aname] == "darwin" )
-             )
+               || ( ( prefix.front() == "legacyPackages" )
+                    && ( syms[aname] == "darwin" ) ) )
             {
               flox::AttrPath path = prefix;
               path.emplace_back( syms[aname] );
