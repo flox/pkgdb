@@ -614,6 +614,7 @@ Environment::lockSystem( const System & system )
             pkgs.merge( resolved );
             group = groups.erase( group );
           },
+
           /* Otherwise add a description of the resolution failure to msg. */
           [&]( const ResolutionFailure & failure )
           {
@@ -638,7 +639,7 @@ Environment::lockSystem( const System & system )
             for ( const auto & [iid, url] : failure )
               {
                 msg << "    failed to resolve `" << iid << "' in input `" << url
-                    << "'";
+                    << '\'';
               }
 
             ++group;
