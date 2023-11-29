@@ -110,8 +110,6 @@ jobs:
               printf '\n';
             }
 
-            # Find the merge base compared to master.
-            base="$( git merge-base refs/remotes/origin/main HEAD; )";
             # Create an empty array that will contain all the filepaths of
             # files modified.
             modified=()
@@ -131,7 +129,7 @@ jobs:
               # deleted files.
             done < <(
               git diff-tree --no-commit-id --diff-filter=d --name-only  \
-                            -r "$base" HEAD
+                            -r '${{ github.base_ref }}' HEAD
             );
 
             for src in "${modified[@]}"; do
