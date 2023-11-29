@@ -90,33 +90,33 @@ jobs:
 
       - name: Create Tidy Log
         run: |
-          nix develop --no-update-lock-file --command sh -c '
+          nix develop --no-update-lock-file --command sh -c "
             status=0;
             rm -f ./tidy.log;
 
             # Convert some characters to hex to escape them for annotations.
             ghEscape() {
-              sed -e 's/%/%25/g' -e 's/:/%0A/g' -e 's/,/%2C/g' "${1:--}"  \
-               |tr $'\n' ':'|sed 's/:/%0A/g';
+              sed -e 's/%/%25/g' -e 's/:/%0A/g' -e 's/,/%2C/g' \"\${1:--}\"  \
+               |tr \$'\n' ':'|sed 's/:/%0A/g';
             }
 
             # TODO: only check modified files.
-            for src in $(
+            for src in \$(
               find include src tests -name '*.hh' -o -name '*.cc' -print;
             ); do
-              if clang-tidy "$src" > tidy.log; then
+              if clang-tidy \"\$src\" > tidy.log; then
                 # TODO
-                printf '::error file=%s,line=%s,endLine=%s,col=%s,endColumn=%s,title=N/A::This is an example error' "$src" 0 1 0 1;
-                printf '::warning file=%s,line=%s,endLine=%s,col=%s,endColumn=%s,title=N/A::This is an example warning' "$src" 0 1 0 1;
+                printf '::error file=%s,line=%s,endLine=%s,col=%s,endColumn=%s,title=N/A::This is an example error' \"\$src\" 0 1 0 1;
+                printf '::warning file=%s,line=%s,endLine=%s,col=%s,endColumn=%s,title=N/A::This is an example warning' \"\$src\" 0 1 0 1;
               else
-                status="$?";
-                printf '::error file=%s,title=clang-tidy error::' "$src";
+                status=\"\$?\";
+                printf '::error file=%s,title=clang-tidy error::' \"\$src\";
                 ghEscape tidy.log
               fi
               rm -f ./tidy.log;
             done
-            exit "$status";
-          ';
+            exit \"\$status\";
+          ";
           echo "TIDY_STATUS=$?" >> "$GITHUB_ENV";
 
 

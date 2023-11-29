@@ -639,6 +639,7 @@ bats-check: bin $(TEST_UTILS)
 	  bats --print-output-on-failure --verbose-run --timing  \
 	       "$(BATS_FILE)";
 
+
 # ---------------------------------------------------------------------------- #
 
 #: Build binaries, libraries, tests, and generated `.gitignore' files
