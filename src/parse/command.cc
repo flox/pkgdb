@@ -16,19 +16,20 @@ namespace flox::parse {
 
 /* -------------------------------------------------------------------------- */
 
-DescriptorCommand::DescriptorCommand() :parser( "descriptor" )
+DescriptorCommand::DescriptorCommand() : parser( "descriptor" )
 {
   this->parser.add_description( "Parse a package descriptor" );
   this->parser.add_argument( "descriptor" )
     .help( "a package descriptor to parse" )
     .metavar( "DESCRIPTOR" )
     .action( [&]( const std::string & desc )
-             {
-               // TODO: ManifestDescriptor from string
-               this->descriptor = resolver::ManifestDescriptor(
-                 nlohmann::json( desc ).get<resolver::ManifestDescriptorRaw>()
-               );
-             } );
+             { this->descriptor = resolver::ManifestDescriptor( desc ); } );
+  this->parser.add_argument( "-t", "--to" )
+    .help( "output format of parsed descriptor" )
+    .metavar( "FORMAT" )
+    .nargs( 1 )
+    .default_value( std::string( "json" ) )
+    .action( [&]( const std::string & format ) { this->format = format; } );
 }
 
 
@@ -37,9 +38,24 @@ DescriptorCommand::DescriptorCommand() :parser( "descriptor" )
 int
 DescriptorCommand::run()
 {
-  pkgdb::PkgQueryArgs args;
-  this->descriptor.fillPkgQueryArgs( args );
-  std::cout << nlohmann::json( args ).dump( 2 ) << std::endl;
+  nlohmann::json output;
+  if ( this->format == "json" )
+    {
+      resolver::to_json( output, this->descriptor );
+    }
+  else if ( this->format == "query" )
+    {
+      pkgdb::PkgQueryArgs args;
+      this->descriptor.fillPkgQueryArgs( args );
+      pkgdb::to_json( output, args );
+    }
+  else
+    {
+      throw flox::FloxException( "unrecognized format: `" + this->format
+                                 + "'" );
+      return EXIT_FAILURE;
+    }
+  std::cout << output << std::endl;
   return EXIT_SUCCESS;
 }
 

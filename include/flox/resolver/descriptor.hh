@@ -261,6 +261,15 @@ public:
 /* -------------------------------------------------------------------------- */
 
 /**
+ * @brief Convert an @a flox::resolver::ManifestDescriptor to a
+ *              JSON object.
+ */
+void
+to_json( nlohmann::json & jto, const ManifestDescriptor & descriptor );
+
+/* -------------------------------------------------------------------------- */
+
+/**
  * @class flox::resolver::InvalidManifestDescriptorException
  * @brief An exception thrown when a package descriptor in a manifest
  *        is invalid.

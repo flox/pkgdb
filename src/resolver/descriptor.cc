@@ -637,8 +637,19 @@ ManifestDescriptor::fillPkgQueryArgs( pkgdb::PkgQueryArgs & pqa ) const
 }
 
 
-/* --------------------------------------------------------------------------
- */
+/* -------------------------------------------------------------------------- */
+
+void
+to_json( nlohmann::json & jto, const ManifestDescriptor & descriptor )
+{
+  jto = {
+    { "name", descriptor.name },       { "optional", descriptor.optional },
+    { "group", descriptor.group },     { "version", descriptor.version },
+    { "semver", descriptor.semver },   { "subtree", descriptor.subtree },
+    { "systems", descriptor.systems }, { "path", descriptor.path },
+    { "input", descriptor.input },     { "priority", descriptor.priority }
+  };
+}
 
 }  // namespace flox::resolver
 
