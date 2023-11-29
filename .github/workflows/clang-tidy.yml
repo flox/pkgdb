@@ -107,6 +107,7 @@ jobs:
             ghEscape() {
               sed -e 's/%/%25/g' -e 's/:/%0A/g' -e 's/,/%2C/g' "${1:--}"  \
                |tr $'\n' ':'|sed 's/:/%0A/g';
+              printf '\n';
             }
 
             # Find the merge base compared to master.
