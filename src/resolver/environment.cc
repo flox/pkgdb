@@ -142,11 +142,6 @@ systemSkipped( const System &                             system,
 
 /* -------------------------------------------------------------------------- */
 
-namespace detail {
-
-
-}  // namespace detail
-
 bool
 Environment::groupIsLocked( const InstallDescriptors & group,
                             const Lockfile &           oldLockfile,
