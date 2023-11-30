@@ -8,6 +8,11 @@ name: Clang Tidy
 on:
   # No need to run on `main` since we have `merge_group' and `pull_request'.
   workflow_dispatch:
+    inputs:
+      all:
+        description: 'Check all files even if they are unchanged'
+        required: false
+        type: boolean
   pull_request:
 
 concurrency:
@@ -93,34 +98,79 @@ jobs:
           nix develop --no-update-lock-file                      \
                       --command make -j4 compile_commands.json;
 
+
+      # Create a list of target files.
+      # If the workflow was triggered by a PR, only check changed files.
+      # If the workflow was triggered explicitly then we _might_ be
+      # explicitly asked to check all files using an input param.
+      - name: Create Target List ( PR )
+        if: ${{ github.event.pull_request }}
+        run: |
+          echo "Checking changed sources" >&2;
+          ./build-aux/changed-sources > targets;
+
+      - name: Create Target List ( Dispatch )
+        if: ${{ !github.event.pull_request }}
+        run: |
+          echo "all: ${{ inputs.all }}" >&2;
+          if [[ '${{ inputs.all }}' = true ]]; then
+            echo "Checking all sources" >&2;
+            # Keep this list aligned with `build-aux/changed-sources'
+            find include src test   \
+                 -name '*.cpp' -o   \
+                 -name '*.hpp' -o   \
+                 -name '*.hxx' -o   \
+                 -name '*.cxx' -o   \
+                 -name '*.cc'  -o   \
+                 -name '*.hh'  -o   \
+                 -name '*.c'   -o   \
+                 -name '*.h'   -o   \
+                 -name '*.ipp'      \
+                 -print > targets;
+          else
+            echo "Checking changed sources" >&2;
+            ./build-aux/changed-sources > targets;
+          fi
+
       - name: Create Tidy Log
         run: |
           cat <<'EOF' > script.bash
             status=0;
+
             # Convert some characters to hex to escape them for annotations.
             ghEscape() {
-              sed -e 's/%/%25/g' -e 's/:/%0A/g' -e 's/,/%2C/g' "${1:--}"  \
-               |tr $'\n' ':'|sed 's/:/%0A/g';
-              printf '\n';
+              sed -e 's/%/%25/g' -e 's/:/%0A/g' -e 's/,/%2C/g' "${1:--}";
             }
 
-            for src in $( ./build-aux/changed-sources ); done
+            formatLint() {
+              local _file _kind _line _col _title _body;
+              _file="$( jq -r '.file' "$1"; )";
+              _kind="$( jq -r '.kind' "$1"; )";
+              _line="$( jq -r '.line' "$1"; )";
+              _col="$( jq -r '.column' "$1"; )";
+              _title="$( jq -r '.title' "$1"|ghEscape; )";
+              _body="$( jq -r '.body|join( "%0A" )' "$1"|ghEscape; )";
+              printf '::%s file=%s,line=%s,col=%s,title=%s::%s\n'     \
+                     "$_kind" "$_file" "$_line" "$_column" "$_title"  \
+                     "$_body";
+            }
+
+            while IFS='' read -r src; do
               echo "clang-tidy is checking file \`$src'" >&2;
               sh -c 'clang-tidy "$src"||printf ERROR;' > tidy.log;
-              # TODO
-              #echo "::warning file=$src,line=0,endLine=0,col=0,endColumn=0,title=Example Warning::This is an example warning";
               if [[ "$( < tidy.log )" = ERROR ]]; then
                 status=1;
                 printf '::error file=%s,title=clang-tidy Error::%s\n'  \
                        "$src" "Failed to process file \`$src'";
               elif [[ "$( wc -l ./tidy.log|cut -d' ' -f1; )" -gt 0 ]]; then
-                printf '::warning file=%s,title=Tidy Suggestions::' "$src";
-                ghEscape tidy.log;
+                while IFS='' read -r line; do
+                  formatLint "$line";
+                done < tidy.log
               else
                 echo "clang-tidy generated no suggestions for file \`$src'" >&2;
               fi
               rm -f ./tidy.log;
-            done
+            done < ./targets
             exit "$status";
           EOF
           nix develop --no-update-lock-file --command bash ./script.sh;

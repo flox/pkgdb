@@ -136,6 +136,7 @@ readarray -t _modified < <(
 declare -a _sources;
 for mod in "${_modified[@]}"; do
   case "$mod" in
+    # Keep this list aligned with `.github/workflows/clang-tidy.yml'
     *.cpp|*.hpp|*.hxx|*.cxx|*.cc|*.hh|*.c|*.h|*.ipp) _sources+=( "$mod" ); ;;
     *) :; ;;
   esac

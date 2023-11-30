@@ -129,7 +129,7 @@ printCurrent() {
   echo "{
   \"file\": \"$_FILE\",
   \"line\": $_LINE,
-  \"col\": $_COL,
+  \"column\": $_COL,
   \"kind\": \"$_KIND\",
   \"title\": \"${_TITLE//\"/\\\"}\",
   \"body\": [";
