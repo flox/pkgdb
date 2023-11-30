@@ -4,7 +4,6 @@
 # Detect changed source C++ files between two revisions.
 # If no revisions are specified, `origin/main' and `HEAD' are used.
 #
-#
 # ---------------------------------------------------------------------------- #
 
 set -eu;
