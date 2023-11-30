@@ -203,13 +203,15 @@ private:
 protected:
 
   /**
-   * @brief Get locked input from a lockfile to try to use to resolve a group of
-   *        packages.
+   * @brief Get locked input from a lockfile to try to use to resolve a group
+   *        of packages.
    *
-   * Helper function for @a flox::resolver::Environment::lockSystem. Choosing
-   * the locked input for a group is full of edge cases, because the new group
-   * may be different than whatever was in the group in the old lockfile. We
-   * still want to reuse old locked inputs when we can. For example:
+   * Helper function for @a flox::resolver::Environment::lockSystem.
+   * Choosing the locked input for a group is full of edge cases, because the
+   * new group may be different than whatever was in the group in the
+   * old lockfile.
+   * We still want to reuse old locked inputs when we can.
+   * For example:
    * - If the group name has changed, but nothing else has, we want to use the
    *   locked input.
    * - If packages have been added to a group, we want to use the locked input
