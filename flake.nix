@@ -12,15 +12,13 @@
 
   inputs.floco.url                        = "github:aakropotkin/floco";
   inputs.floco.inputs.nixpkgs.follows     = "/nixpkgs";
-  inputs.argparse.url                     = "github:aakropotkin/argparse";
-  inputs.argparse.inputs.nixpkgs.follows  = "/nixpkgs";
   inputs.sqlite3pp.url                    = "github:aakropotkin/sqlite3pp";
   inputs.sqlite3pp.inputs.nixpkgs.follows = "/nixpkgs";
 
 
 # ---------------------------------------------------------------------------- #
 
-  outputs = { nixpkgs, floco, argparse, sqlite3pp, ... }: let
+  outputs = { nixpkgs, floco, sqlite3pp, ... }: let
 
 # ---------------------------------------------------------------------------- #
 
@@ -67,7 +65,6 @@
       overlays.semver
       overlays.nix
       sqlite3pp.overlays.default
-      argparse.overlays.default
     ];
 
     overlays.flox-pkgdb = final: prev: {
