@@ -25,7 +25,8 @@ DescriptorCommand::DescriptorCommand() : parser( "descriptor" )
     .action( [&]( const std::string & desc )
              { this->descriptor = resolver::ManifestDescriptor( desc ); } );
   this->parser.add_argument( "-t", "--to" )
-    .help( "output format of parsed descriptor ['json' (default), 'query']" )
+    .help(
+      "output format of parsed descriptor ['manifest' (default), 'query']" )
     .metavar( "FORMAT" )
     .nargs( 1 )
     .action( [&]( const std::string & format ) { this->format = format; } );
@@ -38,7 +39,7 @@ int
 DescriptorCommand::run()
 {
   nlohmann::json output;
-  if ( this->format == "json" )
+  if ( this->format == "manifest" )
     {
       resolver::to_json( output, this->descriptor );
     }

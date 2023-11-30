@@ -23,7 +23,7 @@ setup_file() {
 # ---------------------------------------------------------------------------- #
 
 @test "parse descriptor 'hello'" {
-  run "$PKGDB" parse descriptor --to json "hello";
+  run "$PKGDB" parse descriptor --to manifest "hello";
   assert_success;
   assert_equal $(echo "$output" | jq -r '.name') "hello";
   unset output;
@@ -34,7 +34,7 @@ setup_file() {
 
 @test "parse descriptor 'hello@1.2.3'" {
   query="hello@1.2.3";
-  run "$PKGDB" parse descriptor --to json "$query";
+  run "$PKGDB" parse descriptor --to manifest "$query";
   assert_success;
   assert_equal $(echo "$output" | jq -r '.name') "hello";
   assert_equal $(echo "$output" | jq -r '.version') "1.2.3";
@@ -47,7 +47,7 @@ setup_file() {
 
 @test "parse descriptor 'hello@1.2'" {
   query="hello@1.2";
-  run "$PKGDB" parse descriptor --to json "$query";
+  run "$PKGDB" parse descriptor --to manifest "$query";
   assert_success;
   assert_equal $(echo "$output" | jq -r '.name') "hello";
   assert_equal $(echo "$output" | jq -r '.semver') "1.2";
@@ -60,7 +60,7 @@ setup_file() {
 
 @test "parse descriptor 'packageset.hello@1.2'" {
   query="packageset.hello@1.2";
-  run "$PKGDB" parse descriptor --to json "$query";
+  run "$PKGDB" parse descriptor --to manifest "$query";
   assert_success;
   assert_equal $(echo "$output" | jq -r -c '.path') '["packageset","hello"]';
   assert_equal $(echo "$output" | jq -r '.semver') "1.2";
@@ -73,7 +73,7 @@ setup_file() {
 
 @test "parse descriptor 'legacyPackages.aarch64-darwin.hello@1.2'" {
   query="legacyPackages.aarch64-darwin.hello@1.2";
-  run "$PKGDB" parse descriptor --to json "$query";
+  run "$PKGDB" parse descriptor --to manifest "$query";
   assert_success;
   assert_equal $(echo "$output" | jq -r -c '.path') '["hello"]';
   assert_equal $(echo "$output" | jq -r '.subtree') "legacyPackages";
@@ -88,7 +88,7 @@ setup_file() {
 
 @test "parse descriptor 'legacyPackages.*.hello@1.2'" {
   query="legacyPackages.*.hello@1.2";
-  run "$PKGDB" parse descriptor --to json "$query";
+  run "$PKGDB" parse descriptor --to manifest "$query";
   assert_success;
   assert_equal $(echo "$output" | jq -r -c '.path') '["hello"]';
   assert_equal $(echo "$output" | jq -r '.subtree') "legacyPackages";
@@ -102,7 +102,7 @@ setup_file() {
 }
 
 @test "parse descriptor 'nixpkgs:hello'" {
-  run "$PKGDB" parse descriptor --to json "nixpkgs:hello";
+  run "$PKGDB" parse descriptor --to manifest "nixpkgs:hello";
   assert_success;
   assert_equal $(echo "$output" | jq -r '.name') "hello";
   assert_equal $(echo "$output" | jq -r '.input.id') "nixpkgs";
@@ -113,7 +113,7 @@ setup_file() {
 }
 
 @test "parse descriptor 'nixpkgs:hello@1.2.3'" {
-  run "$PKGDB" parse descriptor --to json "nixpkgs:hello@1.2.3";
+  run "$PKGDB" parse descriptor --to manifest "nixpkgs:hello@1.2.3";
   assert_success;
   assert_equal $(echo "$output" | jq -r '.name') "hello";
   assert_equal $(echo "$output" | jq -r '.input.id') "nixpkgs";
@@ -126,7 +126,7 @@ setup_file() {
 }
 
 @test "parse descriptor 'nixpkgs:hello@=1.2.3'" {
-  run "$PKGDB" parse descriptor --to json "nixpkgs:hello@=1.2.3";
+  run "$PKGDB" parse descriptor --to manifest "nixpkgs:hello@=1.2.3";
   assert_success;
   assert_equal $(echo "$output" | jq -r '.name') "hello";
   assert_equal $(echo "$output" | jq -r '.input.id') "nixpkgs";
@@ -139,7 +139,7 @@ setup_file() {
 }
 
 @test "parse descriptor 'nixpkgs:hello@=1.2'" {
-  run "$PKGDB" parse descriptor --to json "nixpkgs:hello@=1.2";
+  run "$PKGDB" parse descriptor --to manifest "nixpkgs:hello@=1.2";
   assert_success;
   assert_equal $(echo "$output" | jq -r '.name') "hello";
   assert_equal $(echo "$output" | jq -r '.input.id') "nixpkgs";
@@ -152,7 +152,7 @@ setup_file() {
 }
 
 @test "parse descriptor 'nixpkgs:hello@1.2'" {
-  run "$PKGDB" parse descriptor --to json "nixpkgs:hello@1.2";
+  run "$PKGDB" parse descriptor --to manifest "nixpkgs:hello@1.2";
   assert_success;
   assert_equal $(echo "$output" | jq -r '.name') "hello";
   assert_equal $(echo "$output" | jq -r '.input.id') "nixpkgs";
@@ -165,7 +165,7 @@ setup_file() {
 }
 
 @test "parse descriptor 'nixpkgs:hello@^1.2.3'" {
-  run "$PKGDB" parse descriptor --to json "nixpkgs:hello@^1.2.3";
+  run "$PKGDB" parse descriptor --to manifest "nixpkgs:hello@^1.2.3";
   assert_success;
   assert_equal $(echo "$output" | jq -r '.name') "hello";
   assert_equal $(echo "$output" | jq -r '.input.id') "nixpkgs";
@@ -178,7 +178,7 @@ setup_file() {
 }
 
 @test "parse descriptor 'nixpkgs:hello@>1.2.3'" {
-  run "$PKGDB" parse descriptor --to json "nixpkgs:hello@>1.2.3";
+  run "$PKGDB" parse descriptor --to manifest "nixpkgs:hello@>1.2.3";
   assert_success;
   assert_equal $(echo "$output" | jq -r '.name') "hello";
   assert_equal $(echo "$output" | jq -r '.input.id') "nixpkgs";
@@ -191,7 +191,7 @@ setup_file() {
 }
 
 @test "parse descriptor 'nixpkgs:packageset.hello@1.2.3'" {
-  run "$PKGDB" parse descriptor --to json "nixpkgs:packageset.hello@1.2.3";
+  run "$PKGDB" parse descriptor --to manifest "nixpkgs:packageset.hello@1.2.3";
   assert_success;
   assert_equal $(echo "$output" | jq -r -c '.path') '["packageset","hello"]';
   assert_equal $(echo "$output" | jq -r '.input.id') "nixpkgs";
@@ -204,7 +204,7 @@ setup_file() {
 }
 
 @test "parse descriptor 'nixpkgs:packageset.hello@=1.2.3'" {
-  run "$PKGDB" parse descriptor --to json "nixpkgs:packageset.hello@=1.2.3";
+  run "$PKGDB" parse descriptor --to manifest "nixpkgs:packageset.hello@=1.2.3";
   assert_success;
   assert_equal $(echo "$output" | jq -r -c '.path') '["packageset","hello"]';
   assert_equal $(echo "$output" | jq -r '.input.id') "nixpkgs";
@@ -218,7 +218,7 @@ setup_file() {
 
 @test "parse descriptor 'nixpkgs:legacyPackages.*.hello@1.2.3'" {
   query="nixpkgs:legacyPackages.*.hello@1.2.3"
-  run "$PKGDB" parse descriptor --to json "$query";
+  run "$PKGDB" parse descriptor --to manifest "$query";
   assert_success;
   assert_equal $(echo "$output" | jq -r -c '.path') '["hello"]';
   assert_equal $(echo "$output" | jq -r -c '.subtree') "legacyPackages";
@@ -234,7 +234,7 @@ setup_file() {
 
 @test "parse descriptor 'nixpkgs:legacyPackages.aarch64-darwin.hello@1.2'" {
   query="nixpkgs:legacyPackages.aarch64-darwin.hello@1.2"
-  run "$PKGDB" parse descriptor --to json "$query";
+  run "$PKGDB" parse descriptor --to manifest "$query";
   assert_success;
   assert_equal $(echo "$output" | jq -r -c '.path') '["hello"]';
   assert_equal $(echo "$output" | jq -r -c '.subtree') "legacyPackages";
@@ -250,7 +250,7 @@ setup_file() {
 
 @test "parse descriptor 'nixpkgs:legacyPackages.*.hello@1.2'" {
   query="nixpkgs:legacyPackages.*.hello@1.2"
-  run "$PKGDB" parse descriptor --to json "$query";
+  run "$PKGDB" parse descriptor --to manifest "$query";
   assert_success;
   assert_equal $(echo "$output" | jq -r -c '.path') '["hello"]';
   assert_equal $(echo "$output" | jq -r -c '.subtree') "legacyPackages";
@@ -266,7 +266,7 @@ setup_file() {
 
 @test "parse descriptor 'nixpkgs:legacyPackages.*.packageset.hello@1.2'" {
   query="nixpkgs:legacyPackages.*.packageset.hello@1.2"
-  run "$PKGDB" parse descriptor --to json "$query";
+  run "$PKGDB" parse descriptor --to manifest "$query";
   assert_success;
   assert_equal $(echo "$output" | jq -r -c '.path') '["packageset","hello"]';
   assert_equal $(echo "$output" | jq -r -c '.subtree') "legacyPackages";
