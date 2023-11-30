@@ -145,6 +145,11 @@ done
 
 # ---------------------------------------------------------------------------- #
 
+# If we got nothing don't print anything.
+if [[ "${#_sources[@]}" -eq 0 ]]; then exit 0; fi
+
+# ---------------------------------------------------------------------------- #
+
 # Print results
 if [[ -n "$ABSOLUTE" ]]; then
   _ROOT="$( $GIT rev-parse --show-toplevel; )";
