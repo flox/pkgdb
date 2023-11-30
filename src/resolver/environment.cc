@@ -467,7 +467,10 @@ ResolutionResult
 Environment::tryResolveGroup( const InstallDescriptors & group,
                               const System &             system )
 {
-  ResolutionFailure                failure;
+  /* Memoized list of resolution failures to avoid re-checking descriptors
+   * in inputs which are known to fail. */
+  ResolutionFailure failure;
+
   std::optional<pkgdb::PkgDbInput> oldGroupInput;
   if ( auto oldLockfile = this->getOldLockfile(); oldLockfile.has_value() )
     {
@@ -499,11 +502,12 @@ Environment::tryResolveGroup( const InstallDescriptors & group,
             }
         }
     }
+
   // TODO: Use `getCombinedRegistryRaw()'
   for ( const auto & [_, input] : *this->getPkgDbRegistry() )
     {
       /* If we already tried to resolve in this input - skip it. */
-      if ( ! oldGroupInput.has_value() || *input == *oldGroupInput )
+      if ( ! oldGroupInput.has_value() || ( ( *input ) == ( *oldGroupInput ) ) )
         {
           {
             auto maybeResolved
