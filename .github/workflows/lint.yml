@@ -61,6 +61,7 @@ jobs:
             ./build-aux/changed-sources > targets;
           fi
 
+      # TODO: If target list is empty, terminate workflow here
       - uses: cachix/install-nix-action@v22
         with:
           extra_nix_config: |
