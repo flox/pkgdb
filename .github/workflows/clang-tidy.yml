@@ -20,7 +20,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   clang-tidy:
-    name: Clang Tidy
+    name: Clang Tidy Report
     runs-on: ubuntu-latest
 
     steps:
