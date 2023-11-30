@@ -130,7 +130,7 @@ Environment::getOldManifestRaw() const
  *
  * A system is skipped if systems is specified but that system is not.
  */
-bool
+[[nodiscard]] static bool
 systemSkipped( const System &                             system,
                const std::optional<std::vector<System>> & systems )
 {
@@ -138,6 +138,7 @@ systemSkipped( const System &                             system,
          && ( std::find( systems->begin(), systems->end(), system )
               == systems->end() );
 }
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -148,18 +149,20 @@ Environment::groupIsLocked( const InstallDescriptors & group,
 {
   auto packages = oldLockfile.getLockfileRaw().packages;
   if ( ! packages.contains( system ) ) { return false; }
+
   SystemPackages oldSystemPackages = packages.at( system );
 
   InstallDescriptors oldDescriptors = oldLockfile.getDescriptors();
 
+  /* Check for upgrades. */
   for ( auto & [iid, descriptor] : group )
     {
       /* Check for upgrades. */
       if ( const bool * upgradeEverything
            = std::get_if<bool>( &this->upgrades ) )
         {
-          /* If we're upgrading everything, the group needs to be locked again.
-           */
+          /* If we are upgrading everything, we treat all groups
+           * as "unlocked". */
           if ( *upgradeEverything ) { return false; }
         }
       else
@@ -173,12 +176,20 @@ Environment::groupIsLocked( const InstallDescriptors & group,
               return false;
             }
         }
+
       /* If the descriptor has changed compared to the one in the lockfile
        * manifest, it needs to be locked again. */
       if ( auto oldDescriptorPair = oldDescriptors.find( iid );
-           oldDescriptorPair != oldDescriptors.end() )
+           oldDescriptorPair == oldDescriptors.end() )
+        {
+          /* If the descriptor doesn't even exist in the lockfile manifest, it
+           * needs to be locked again. */
+          return false;
+        }
+      else
         {
           auto & [_, oldDescriptor] = *oldDescriptorPair;
+
           /* We ignore `priority' and handle `systems' below. */
           if ( ( descriptor.name != oldDescriptor.name )
                || ( descriptor.path != oldDescriptor.path )
@@ -191,6 +202,7 @@ Environment::groupIsLocked( const InstallDescriptors & group,
             {
               return false;
             }
+
           /* Ignore changes to systems other than the one we're locking. */
           if ( systemSkipped( system, descriptor.systems )
                != systemSkipped( system, oldDescriptor.systems ) )
@@ -198,26 +210,29 @@ Environment::groupIsLocked( const InstallDescriptors & group,
               return false;
             }
         }
-      /* If the descriptor doesn't even exist in the lockfile manifest, it needs
-       * to be locked again. */
-      else { return false; }
-      // Check if the descriptor exists in the lockfile lock
+
+      /* Check if the descriptor exists in the lockfile lock */
       if ( auto oldLockedPackagePair = oldSystemPackages.find( iid );
-           oldLockedPackagePair != oldSystemPackages.end() )
+           oldLockedPackagePair == oldSystemPackages.end() )
         {
-          /* NOTE: we could relock if the prior locking attempt was null */
-          // auto & [_, oldLockedPackage] = *oldLockedPackagePair;
-          // if ( !oldLockedPackage.has_value()) { return false; }
+          /* If the descriptor doesn't even exist in the lockfile lock, it needs
+           * to be locked again.
+           * This should be unreachable since the descriptor shouldn't exist in
+           * the lockfile manifest if it doesn't exist in the lockfile. */
+          return false;
         }
-      /* If the descriptor doesn't even exist in the lockfile lock, it needs to
-       * be locked again. This should be unreachable since the descriptor
-       * shouldn't exist in the lockfile manifest if it doesn't exist in the
-       * lockfile lock. */
-      else { return false; }
+      // else
+      //   {
+      //     /* NOTE: we could relock if the prior locking attempt was null */
+      //     auto & [_, oldLockedPackage] = *oldLockedPackagePair;
+      //     if ( !oldLockedPackage.has_value()) { return false; }
+      //   }
     }
+
   /* We haven't found something unlocked, so everything must be locked. */
   return true;
 }
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -241,6 +256,7 @@ Environment::getUnlockedGroups( const System & system )
   return groupedDescriptors;
 }
 
+
 /* -------------------------------------------------------------------------- */
 
 std::vector<InstallDescriptors>
@@ -251,7 +267,7 @@ Environment::getLockedGroups( const System & system )
 
   auto groupedDescriptors = this->getManifest().getGroupedDescriptors();
 
-  /* Remove all groups that are ~not~ already locked. */
+  /* Remove all groups that are *not* already locked. */
   for ( auto group = groupedDescriptors.begin();
         group != groupedDescriptors.end(); )
     {
@@ -264,6 +280,7 @@ Environment::getLockedGroups( const System & system )
 
   return groupedDescriptors;
 }
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -318,7 +335,7 @@ Environment::tryResolveDescriptorIn( const ManifestDescriptor & descriptor,
                                      const pkgdb::PkgDbInput &  input,
                                      const System &             system )
 {
-  /** Skip unrequested systems. */
+  /* Skip unrequested systems. */
   if ( descriptor.systems.has_value()
        && ( std::find( descriptor.systems->begin(),
                        descriptor.systems->end(),
@@ -366,27 +383,6 @@ Environment::lockPackage( const LockedInputRaw & input,
 
 /* -------------------------------------------------------------------------- */
 
-/**
- * @brief Get locked input from a lockfile to try to use to resolve a group of
- *        packages.
- *
- * Helper function for @a flox::resolver::Environment::lockSystem. Choosing the
- * locked input for a group is full of edge cases, because the new group may be
- * different than whatever was in the group in the old lockfile. We still want
- * to reuse old locked inputs when we can. For example:
- * - If the group name has changed, but nothing else has, we want to use the
- * locked input.
- * - If packages have been added to a group, we want to use the locked input
- * from a package that was already in the group.
- * - If groups are combined into a new group with a new name, we want to try to
- * use one of the old locked inputs (for now we just use the first one we find).
- *
- * If, on the other hand, a package has changed, we don't want to use its
- * locked input.
- *
- * @return a locked input related to the group if we can find one, or else
- *         `std::nullopt`
- */
 std::optional<LockedInputRaw>
 Environment::getGroupInput( const InstallDescriptors & group,
                             const Lockfile &           oldLockfile,
@@ -399,8 +395,8 @@ Environment::getGroupInput( const InstallDescriptors & group,
   InstallDescriptors oldDescriptors = oldLockfile.getDescriptors();
 
   std::optional<LockedInputRaw> wrongGroupInput;
-  /* We could look for packages where just the iid has changed, but for now just
-   * use iid. */
+  /* We could look for packages where just the _iid_ has changed, but for now
+   * just use _iid_. */
   for ( const auto & [iid, descriptor] : group )
     {
       if ( auto it = oldSystemPackages.find( iid );
@@ -413,7 +409,7 @@ Environment::getGroupInput( const InstallDescriptors & group,
                    oldDescriptorPair != oldDescriptors.end() )
                 {
                   auto & [_, oldDescriptor] = *oldDescriptorPair;
-                  /* At this point we know the same iid is both locked in the
+                  /* At this point we know the same _iid_ is both locked in the
                    * old lockfile and present in the new manifest.
                    *
                    * Don't use a locked input if the package has changed.
@@ -423,8 +419,7 @@ Environment::getGroupInput( const InstallDescriptors & group,
                    *   resolution fails, but they don't change the package.
                    * - `priority' is a setting for `mkEnv' and is passed through
                    *   without effecting resolution.
-                   * - `group' is handled below.
-                   */
+                   * - `group' is handled below. */
                   if ( ( descriptor.name == oldDescriptor.name )
                        && ( descriptor.path == oldDescriptor.path )
                        && ( descriptor.version == oldDescriptor.version )
@@ -447,8 +442,7 @@ Environment::getGroupInput( const InstallDescriptors & group,
                        * We could come up with a better heuristic like most
                        * packages or newest, or we could try resolving in all
                        * of them.
-                       * For now, don't get too fancy.
-                       */
+                       * For now, don't get too fancy. */
                       if ( ! wrongGroupInput.has_value() )
                         {
                           wrongGroupInput = maybeLockedPackage->input;
@@ -469,7 +463,14 @@ ResolutionResult
 Environment::tryResolveGroup( const InstallDescriptors & group,
                               const System &             system )
 {
-  ResolutionFailure                failure;
+  /* List of resolution failures to group descriptors with the inputs they
+   * failed to resolve in. */
+  ResolutionFailure failure;
+
+  /* If there is an existing lock and it has this group pinned to an existing
+   * input+rev try to use it to resolve the group.
+   * If we fail collect a list of failed descriptors; presumably these are
+   * new group members. */
   std::optional<pkgdb::PkgDbInput> oldGroupInput;
   if ( auto oldLockfile = this->getOldLockfile(); oldLockfile.has_value() )
     {
@@ -480,15 +481,24 @@ Environment::tryResolveGroup( const InstallDescriptors & group,
           RegistryInput        registryInput( *lockedInput );
           nix::ref<nix::Store> store = this->getStore();
           oldGroupInput = pkgdb::PkgDbInput( store, registryInput );
+
           auto maybeResolved
             = this->tryResolveGroupIn( group, *oldGroupInput, system );
+
+          /* If we're able to resolve the group with the same input+rev as the
+           * old lockfile's pin, then we're done. */
+          // XXX: I tried `std::variant( overloaded { ... } )' pattern here but
+          //      template deduction failed with `gcc'.
+          //      Rather than adding deduction guides and stuff `std::get_if'
+          //      is fine here.
           if ( const SystemPackages * resolved
                = std::get_if<SystemPackages>( &maybeResolved ) )
             {
               return *resolved;
             }
-          else if ( const InstallID * iid
-                    = std::get_if<InstallID>( &maybeResolved ) )
+
+          if ( const InstallID * iid
+               = std::get_if<InstallID>( &maybeResolved ) )
             {
               failure.push_back( std::pair<InstallID, std::string> {
                 *iid,
@@ -501,11 +511,11 @@ Environment::tryResolveGroup( const InstallDescriptors & group,
             }
         }
     }
-  // TODO: Use `getCombinedRegistryRaw()'
+
   for ( const auto & [_, input] : *this->getPkgDbRegistry() )
     {
-      // If we already tried to resolve in this input, skip it.
-      if ( ! oldGroupInput.has_value() || *input == *oldGroupInput )
+      /* If we already tried to resolve in this input - skip it. */
+      if ( ! oldGroupInput.has_value() || ( ( *input ) == ( *oldGroupInput ) ) )
         {
           {
             auto maybeResolved
@@ -545,7 +555,7 @@ Environment::tryResolveGroupIn( const InstallDescriptors & group,
 
   for ( const auto & [iid, descriptor] : group )
     {
-      /** Skip unrequested systems. */
+      /* Skip unrequested systems. */
       if ( descriptor.systems.has_value()
            && ( std::find( descriptor.systems->begin(),
                            descriptor.systems->end(),
@@ -614,12 +624,12 @@ Environment::lockSystem( const System & system )
             pkgs.merge( resolved );
             group = groups.erase( group );
           },
+
           /* Otherwise add a description of the resolution failure to msg. */
           [&]( const ResolutionFailure & failure )
           {
-            /* We should only hit this on the first iteration.
-             * TODO: throw sooner rather than trying to resolve
-             * every group? */
+            // TODO: Throw sooner rather than trying to resolve every group?
+            /* We should only hit this on the first iteration. */
             if ( failure.empty() )
               {
                 throw ResolutionFailureException(
@@ -638,7 +648,7 @@ Environment::lockSystem( const System & system )
             for ( const auto & [iid, url] : failure )
               {
                 msg << "    failed to resolve `" << iid << "' in input `" << url
-                    << "'";
+                    << '\'';
               }
 
             ++group;
@@ -649,8 +659,8 @@ Environment::lockSystem( const System & system )
   if ( ! groups.empty() ) { throw ResolutionFailureException( msg.str() ); }
 
   /* Copy over old lockfile entries we want to keep.
-     Make sure to update the priority if the entry was copied over from the old.
-   */
+   * Make sure to update the priority if the entry was copied over from
+   * the old. */
   if ( auto oldLockfile = this->getOldLockfile();
        oldLockfile.has_value()
        && oldLockfile->getLockfileRaw().packages.contains( system ) )

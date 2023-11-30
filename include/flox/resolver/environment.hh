@@ -59,8 +59,29 @@ FLOX_DEFINE_EXCEPTION( ResolutionFailureException,
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * @brief A pair of _install ID_ and locked flake URLs used to record failed
+ *        resolution attempts for a given descriptor.
+ *
+ * This allows us to more easily format exception messages.
+ */
 using ResolutionFailure = std::vector<std::pair<InstallID, std::string>>;
-using ResolutionResult  = std::variant<ResolutionFailure, SystemPackages>;
+
+/**
+ * @brief Either a set of resolved packages ( for a given system ) or a memo
+ *        indicating that resolution failed for certain descriptors against
+ *        certain inputs.
+ *
+ * When attempting to resolve a group of packages for a given system,
+ * we either succeed and return @a flox::resolver::SystemPackages or
+ * fail and return @a flox::resolver::ResolutionFailure.
+ * This allows us to print descriptors that failed as groups for a
+ * given input+rev.
+ */
+using ResolutionResult = std::variant<ResolutionFailure, SystemPackages>;
+
+
+/* -------------------------------------------------------------------------- */
 
 /**
  * @brief A collection of data associated with an environment and its state.
@@ -136,14 +157,12 @@ private:
 
   /**
    * @brief Get groups that need to be locked as opposed to reusing locks from
-   * @a oldLockfile.
+   *        @a oldLockfile.
    */
   [[nodiscard]] std::vector<InstallDescriptors>
   getUnlockedGroups( const System & system );
 
-  /**
-   * @brief Get groups with locks that can be reused from @a oldLockfile.
-   */
+  /** @brief Get groups with locks that can be reused from @a oldLockfile. */
   [[nodiscard]] std::vector<InstallDescriptors>
   getLockedGroups( const System & system );
 
@@ -169,8 +188,8 @@ private:
    * @brief Try to resolve a group of descriptors
    *
    * Attempts to resolve using a locked input from the old lockfile if it exists
-   * for the group. If not, inputs from the combined environment registry are
-   * used.
+   * for the group. If not, inputs from the combined environment registry
+   * are used.
    *
    * @return `std::nullopt` if resolution fails, otherwise a set of
    *          resolved packages.
@@ -182,14 +201,13 @@ private:
    * @brief Try to resolve a group of descriptors in a given package database.
    *
    * @return InstallID of the package that can't be resolved if resolution
-   * fails, otherwise a set of resolved packages for the system.
+   *         fails, otherwise a set of resolved packages for the system.
    */
   [[nodiscard]] std::variant<InstallID, SystemPackages>
   tryResolveGroupIn( const InstallDescriptors & group,
                      const pkgdb::PkgDbInput &  input,
                      const System &             system );
 
-  // TODO: Only update changed descriptors.
   /**
    * @brief Lock all descriptors for a given system.
    *        This is a helper function of
@@ -202,29 +220,32 @@ private:
   void
   lockSystem( const System & system );
 
+
 protected:
 
   /**
-   * @brief Get locked input from a lockfile to try to use to resolve a group of
-   *        packages.
+   * @brief Get locked input from a lockfile to try to use to resolve a group
+   *        of packages.
    *
-   * Helper function for @a flox::resolver::Environment::lockSystem. Choosing
-   * the locked input for a group is full of edge cases, because the new group
-   * may be different than whatever was in the group in the old lockfile. We
-   * still want to reuse old locked inputs when we can. For example:
+   * Helper function for @a flox::resolver::Environment::lockSystem.
+   * Choosing the locked input for a group is full of edge cases, because the
+   * new group may be different than whatever was in the group in the
+   * old lockfile.
+   * We still want to reuse old locked inputs when we can.
+   * For example:
    * - If the group name has changed, but nothing else has, we want to use the
-   * locked input.
+   *   locked input.
    * - If packages have been added to a group, we want to use the locked input
-   * from a package that was already in the group.
+   *   from a package that was already in the group.
    * - If groups are combined into a new group with a new name, we want to try
-   * to use one of the old locked inputs (for now we just use the first one we
-   * find).
+   *   to use one of the old locked inputs ( for now we just use the first one
+   *   we find ).
    *
    * If, on the other hand, a package has changed, we don't want to use its
    * locked input.
    *
-   * @return a locked input related to the group if we can find one, or else
-   *         `std::nullopt`
+   * @return a locked input related to the group if we can find one,
+   *         otherwise `std::nullopt`.
    */
   [[nodiscard]] std::optional<LockedInputRaw>
   getGroupInput( const InstallDescriptors & group,
@@ -236,8 +257,8 @@ protected:
    *
    * Checks if:
    * - All descriptors are present in the old manifest.
-   * - No descriptors have changed in the old manifest such that the lock is
-   *   invalidated.
+   * - No descriptors have changed in the old manifest such that the lock
+   *   is invalidated.
    * - All descriptors are present in the old lock
    */
   [[nodiscard]] bool
