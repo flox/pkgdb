@@ -4,7 +4,7 @@
 #
 # ---------------------------------------------------------------------------- #
 
-name: Clang Tidy
+name: Clang Tidy Report
 on:
   # No need to run on `main` since we have `merge_group' and `pull_request'.
   workflow_dispatch:
@@ -20,7 +20,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   clang-tidy:
-    name: Clang Tidy Report
+    name: Clang Tidy
     runs-on: ubuntu-latest
 
     steps:
