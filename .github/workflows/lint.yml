@@ -83,10 +83,6 @@ jobs:
 
       - name: Setup
         run: |
-          # Get latest `git'
-          nix profile install 'nixpkgs#git';
-          export PATH="$HOME/.nix-profile/bin:$PATH";
-          echo "PATH=$PATH" >> "$GITHUB_ENV";
           {
             echo 'Runner Version';
             printf '    bash   version: '; bash --version|head -n1;
