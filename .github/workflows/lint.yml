@@ -91,7 +91,6 @@ jobs:
             echo 'Runner Version';
             printf '    bash   version: '; bash --version|head -n1;
             printf '    nix    version: '; nix  --version;
-            printf '    git    version: '; git  --version;
           } >&2;
 
           NO_WELCOME=: nix develop --no-update-lock-file --command sh -c '
@@ -99,7 +98,6 @@ jobs:
             echo "Development Environment Versions";
             printf '    bash   version: '; bash --version|head -n1;
             printf "    nix    version: "; nix  --version;
-            printf '    git    version: '; git  --version;
             printf "    CXX    version: "; $CXX --version|head -n1;
           ' >&2;
 
@@ -110,6 +108,7 @@ jobs:
       - name: Create Target List ( PR )
         if: ${{ github.event.pull_request }}
         run: |
+          git fetch origin main;
           echo "Checking changed sources" >&2;
           ./build-aux/changed-sources > targets;
 
@@ -132,6 +131,7 @@ jobs:
                  -name '*.ipp'      \
                  -print > targets;
           else
+            git fetch origin main;
             echo "Checking changed sources" >&2;
             ./build-aux/changed-sources > targets;
           fi
