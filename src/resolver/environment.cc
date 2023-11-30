@@ -142,6 +142,11 @@ systemSkipped( const System &                             system,
 
 /* -------------------------------------------------------------------------- */
 
+namespace detail {
+
+
+}  // namespace detail
+
 bool
 Environment::groupIsLocked( const InstallDescriptors & group,
                             const Lockfile &           oldLockfile,
@@ -157,29 +162,25 @@ Environment::groupIsLocked( const InstallDescriptors & group,
   /* Check for upgrades. */
   for ( auto & [iid, descriptor] : group )
     {
-      {
-        bool stale = false;
-        std::visit(
-          overloaded { /* If we are upgrading everything, we treat all groups
-                        * as "unlocked". */
-                       [&]( bool upgradeEverything )
-                       {
-                         if ( upgradeEverything ) { stale = true; }
-                       },
-
-                       /* If the current iid is being upgraded, the group needs
-                        * to be locked again. */
-                       [&]( std::vector<InstallID> upgrades )
-                       {
-                         if ( std::find( upgrades.begin(), upgrades.end(), iid )
-                              != upgrades.end() )
-                           {
-                             stale = true;
-                           }
-                       } },
-          this->upgrades );
-        if ( stale ) { return false; }
-      }
+      /* Check for upgrades. */
+      if ( const bool * upgradeEverything
+           = std::get_if<bool>( &this->upgrades ) )
+        {
+          /* If we are upgrading everything, we treat all groups
+           * as "unlocked". */
+          if ( *upgradeEverything ) { return false; }
+        }
+      else
+        {
+          /* If the current iid is being upgraded, the group needs to be
+           * locked again. */
+          auto upgrades = std::get<std::vector<InstallID>>( this->upgrades );
+          if ( std::find( upgrades.begin(), upgrades.end(), iid )
+               != upgrades.end() )
+            {
+              return false;
+            }
+        }
 
       /* If the descriptor has changed compared to the one in the lockfile
        * manifest, it needs to be locked again. */
