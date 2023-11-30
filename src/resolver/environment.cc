@@ -160,8 +160,8 @@ Environment::groupIsLocked( const InstallDescriptors & group,
       {
         bool stale = false;
         std::visit(
-          overloaded { /* If we are upgrading everything, we treat all groups as
-                          "unlocked". */
+          overloaded { /* If we are upgrading everything, we treat all groups
+                        * as "unlocked". */
                        [&]( bool upgradeEverything )
                        {
                          if ( upgradeEverything ) { stale = true; }
@@ -271,7 +271,7 @@ Environment::getLockedGroups( const System & system )
 
   auto groupedDescriptors = this->getManifest().getGroupedDescriptors();
 
-  /* Remove all groups that are ~not~ already locked. */
+  /* Remove all groups that are *not* already locked. */
   for ( auto group = groupedDescriptors.begin();
         group != groupedDescriptors.end(); )
     {
@@ -387,27 +387,6 @@ Environment::lockPackage( const LockedInputRaw & input,
 
 /* -------------------------------------------------------------------------- */
 
-/**
- * @brief Get locked input from a lockfile to try to use to resolve a group of
- *        packages.
- *
- * Helper function for @a flox::resolver::Environment::lockSystem. Choosing the
- * locked input for a group is full of edge cases, because the new group may be
- * different than whatever was in the group in the old lockfile. We still want
- * to reuse old locked inputs when we can. For example:
- * - If the group name has changed, but nothing else has, we want to use the
- * locked input.
- * - If packages have been added to a group, we want to use the locked input
- * from a package that was already in the group.
- * - If groups are combined into a new group with a new name, we want to try to
- * use one of the old locked inputs (for now we just use the first one we find).
- *
- * If, on the other hand, a package has changed, we don't want to use its
- * locked input.
- *
- * @return a locked input related to the group if we can find one, or else
- *         `std::nullopt`
- */
 std::optional<LockedInputRaw>
 Environment::getGroupInput( const InstallDescriptors & group,
                             const Lockfile &           oldLockfile,
