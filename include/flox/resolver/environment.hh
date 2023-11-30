@@ -60,11 +60,10 @@ FLOX_DEFINE_EXCEPTION( ResolutionFailureException,
 /* -------------------------------------------------------------------------- */
 
 /**
- * @brief A pair of _install ID_ and locked flake URLs used to memoize failed
+ * @brief A pair of _install ID_ and locked flake URLs used to record failed
  *        resolution attempts for a given descriptor.
  *
- * This allows us to skip attempting to resolve the same descriptor again in
- * the same inputs later.
+ * This allows us to more easily format exception messages.
  */
 using ResolutionFailure = std::vector<std::pair<InstallID, std::string>>;
 
@@ -76,8 +75,8 @@ using ResolutionFailure = std::vector<std::pair<InstallID, std::string>>;
  * When attempting to resolve a group of packages for a given system,
  * we either succeed and return @a flox::resolver::SystemPackages or
  * fail and return @a flox::resolver::ResolutionFailure.
- * This allows us to skip attempting to resolve the same descriptor again in
- * the same inputs later.
+ * This allows us to print descriptors that failed as groups for a
+ * given input+rev.
  */
 using ResolutionResult = std::variant<ResolutionFailure, SystemPackages>;
 

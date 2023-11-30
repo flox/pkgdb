@@ -468,8 +468,8 @@ ResolutionResult
 Environment::tryResolveGroup( const InstallDescriptors & group,
                               const System &             system )
 {
-  /* Memoized list of resolution failures to avoid re-checking descriptors
-   * in inputs which are known to fail. */
+  /* List of resolution failures to group descriptors with the inputs they
+   * failed to resolve in. */
   ResolutionFailure failure;
 
   /* If there is an existing lock and it has this group pinned to an existing
