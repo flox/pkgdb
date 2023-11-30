@@ -503,6 +503,10 @@ ManifestDescriptorRaw::ManifestDescriptorRaw(
         // We were given an absolute path
         this->absPath = maybeAttrs;
         break;
+      case 3:
+        // We were given an abosolute path inside nixpkgs
+        this->absPath = maybeAttrs;
+        break;
       default:
         // Someone gave us an absolute path for an input type we don't
         // yet support i.e. there are too many path components.

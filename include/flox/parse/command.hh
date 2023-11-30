@@ -30,7 +30,7 @@ private:
 
   resolver::ManifestDescriptor descriptor;
 
-  std::string format; /** Allowed values are "json" and "query" */
+  std::string format = "json"; /** Allowed values are "json" and "query" */
 
 public:
 

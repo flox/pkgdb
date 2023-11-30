@@ -25,10 +25,9 @@ DescriptorCommand::DescriptorCommand() : parser( "descriptor" )
     .action( [&]( const std::string & desc )
              { this->descriptor = resolver::ManifestDescriptor( desc ); } );
   this->parser.add_argument( "-t", "--to" )
-    .help( "output format of parsed descriptor" )
+    .help( "output format of parsed descriptor ['json' (default), 'query']" )
     .metavar( "FORMAT" )
     .nargs( 1 )
-    .default_value( std::string( "json" ) )
     .action( [&]( const std::string & format ) { this->format = format; } );
 }
 
