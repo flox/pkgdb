@@ -134,6 +134,7 @@ readarray -t _modified < <(
 
 # Filter down to C++ source files.
 declare -a _sources;
+_sources=();
 for mod in "${_modified[@]}"; do
   case "$mod" in
     # Keep this list aligned with `.github/workflows/clang-tidy.yml'
