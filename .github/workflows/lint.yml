@@ -83,28 +83,25 @@ jobs:
 
       - name: Setup
         run: |
-          echo 'Runner Version' >&2;
-          { printf '    bash   version: '; bash   --version|head -n1; } >&2;
-          { printf '    nix    version: '; nix    --version; } >&2;
-
           # Get latest `git'
           nix profile install 'nixpkgs#git';
           export PATH="$HOME/.nix-profile/bin:$PATH";
           echo "PATH=$PATH" >> "$GITHUB_ENV";
-          { printf '    git    version: '; git --version; } >&2;
+          {
+            echo 'Runner Version';
+            printf '    bash   version: '; bash --version|head -n1;
+            printf '    nix    version: '; nix  --version;
+            printf '    git    version: '; git  --version;
+          } >&2;
 
           NO_WELCOME=: nix develop --no-update-lock-file --command sh -c '
             echo "";
             echo "Development Environment Versions";
-            printf "    nix    version: "; nix    --version;
+            printf '    bash   version: '; bash --version|head -n1;
+            printf "    nix    version: "; nix  --version;
+            printf '    git    version: '; git  --version;
             printf "    CXX    version: "; $CXX --version|head -n1;
           ' >&2;
-
-      - name: Create compile_commands.json
-        run: |
-          nix develop --no-update-lock-file                      \
-                      --command make -j4 compile_commands.json;
-
 
       # Create a list of target files.
       # If the workflow was triggered by a PR, only check changed files.
@@ -138,6 +135,11 @@ jobs:
             echo "Checking changed sources" >&2;
             ./build-aux/changed-sources > targets;
           fi
+
+      - name: Create compile_commands.json
+        run: |
+          nix develop --no-update-lock-file                      \
+                      --command make -j4 compile_commands.json;
 
       - name: Create Tidy Log
         run: |
