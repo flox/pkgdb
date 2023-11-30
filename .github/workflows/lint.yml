@@ -179,7 +179,7 @@ jobs:
             done < ./targets
             exit "$status";
           EOF
-          nix develop --no-update-lock-file --command bash ./script.sh;
+          nix develop --no-update-lock-file --command bash ./script.bash;
           echo "TIDY_STATUS=$?" >> "$GITHUB_ENV";
           rm script.bash;
 
