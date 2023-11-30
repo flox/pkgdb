@@ -471,6 +471,10 @@ Environment::tryResolveGroup( const InstallDescriptors & group,
    * in inputs which are known to fail. */
   ResolutionFailure failure;
 
+  /* If there is an existing lock and it has this group pinned to an existing
+   * input+rev try to use it to resolve the group.
+   * If we fail collect a list of failed descriptors; presumably these are
+   * new group members. */
   std::optional<pkgdb::PkgDbInput> oldGroupInput;
   if ( auto oldLockfile = this->getOldLockfile(); oldLockfile.has_value() )
     {
@@ -481,15 +485,24 @@ Environment::tryResolveGroup( const InstallDescriptors & group,
           RegistryInput        registryInput( *lockedInput );
           nix::ref<nix::Store> store = this->getStore();
           oldGroupInput = pkgdb::PkgDbInput( store, registryInput );
+
           auto maybeResolved
             = this->tryResolveGroupIn( group, *oldGroupInput, system );
+
+          /* If we're able to resolve the group with the same input+rev as the
+           * old lockfile's pin, then we're done. */
+          // XXX: I tried `std::variant( overloaded { ... } )' pattern here but
+          //      template deduction failed with `gcc'.
+          //      Rather than adding deduction guides and stuff `std::get_if'
+          //      is fine here.
           if ( const SystemPackages * resolved
                = std::get_if<SystemPackages>( &maybeResolved ) )
             {
               return *resolved;
             }
-          else if ( const InstallID * iid
-                    = std::get_if<InstallID>( &maybeResolved ) )
+
+          if ( const InstallID * iid
+               = std::get_if<InstallID>( &maybeResolved ) )
             {
               failure.push_back( std::pair<InstallID, std::string> {
                 *iid,
@@ -503,7 +516,6 @@ Environment::tryResolveGroup( const InstallDescriptors & group,
         }
     }
 
-  // TODO: Use `getCombinedRegistryRaw()'
   for ( const auto & [_, input] : *this->getPkgDbRegistry() )
     {
       /* If we already tried to resolve in this input - skip it. */

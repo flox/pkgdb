@@ -81,6 +81,9 @@ using ResolutionFailure = std::vector<std::pair<InstallID, std::string>>;
  */
 using ResolutionResult = std::variant<ResolutionFailure, SystemPackages>;
 
+
+/* -------------------------------------------------------------------------- */
+
 /**
  * @brief A collection of data associated with an environment and its state.
  *
@@ -206,7 +209,6 @@ private:
                      const pkgdb::PkgDbInput &  input,
                      const System &             system );
 
-  // TODO: Only update changed descriptors.
   /**
    * @brief Lock all descriptors for a given system.
    *        This is a helper function of
@@ -218,6 +220,7 @@ private:
    */
   void
   lockSystem( const System & system );
+
 
 protected:
 
@@ -255,8 +258,8 @@ protected:
    *
    * Checks if:
    * - All descriptors are present in the old manifest.
-   * - No descriptors have changed in the old manifest such that the lock is
-   *   invalidated.
+   * - No descriptors have changed in the old manifest such that the lock
+   *   is invalidated.
    * - All descriptors are present in the old lock
    */
   [[nodiscard]] bool
