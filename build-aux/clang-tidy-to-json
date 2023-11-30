@@ -3,7 +3,6 @@
 #
 # Split `clang-tidy' output lines to JSON for easier processing.
 #
-#
 # ---------------------------------------------------------------------------- #
 
 set -eu;
