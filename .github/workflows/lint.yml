@@ -128,7 +128,7 @@ jobs:
           NO_WELCOME=: nix develop --no-update-lock-file --command sh -c '
             echo "";
             echo "Development Environment Versions";
-            printf '    bash   version: '; bash --version|head -n1;
+            printf "    bash   version: "; bash --version|head -n1;
             printf "    nix    version: "; nix  --version;
             printf "    CXX    version: "; $CXX --version|head -n1;
           ' >&2;
