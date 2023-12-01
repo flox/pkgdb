@@ -360,6 +360,8 @@ GAEnvironmentMixin::initGlobalManifest( GlobalManifestRaw manifestRaw )
 {
   if ( this->gaRegistry )
     {
+      (void) static_cast<GlobalManifestRawGA>( manifestRaw );
+
       if ( ! manifestRaw.registry.has_value() )
         {
           manifestRaw.registry = getGARegistry();
@@ -375,6 +377,8 @@ GAEnvironmentMixin::initManifest( ManifestRaw manifestRaw )
 {
   if ( this->gaRegistry )
     {
+      (void) static_cast<ManifestRawGA>( manifestRaw );
+
       if ( ! manifestRaw.registry.has_value() )
         {
           manifestRaw.registry = getGARegistry();
