@@ -483,35 +483,47 @@ ManifestDescriptorRaw::ManifestDescriptorRaw(
       hasVersion  = true;
     }
   else { attrsEndIdx = descriptor.size(); }
-  auto maybeAttrs
-    = std::string( descriptor.substr( cursor, attrsEndIdx - cursor ) );
-  auto numAttrSeparators
-    = std::count_if( maybeAttrs.begin(),
-                     maybeAttrs.end(),
-                     []( auto attrChar ) { return attrChar == '.'; } );
-  switch ( numAttrSeparators )
+  // Guard against `input:` e.g. an empty attrpath
+  if ( attrsEndIdx == cursor )
     {
-      case 0:
-        // We were given a `pname`
-        this->name = maybeAttrs;
-        break;
+      throw InvalidManifestDescriptorException(
+        "descriptor was missing a package name" );
+    }
+  auto attrsSubstr = descriptor.substr( cursor, attrsEndIdx - cursor );
+  std::vector<std::string> attrs = splitAttrPath( attrsSubstr );
+  // Guard against `input:.` e.g. attrpaths with empty components
+  for ( auto & attr : attrs )
+    {
+      if ( attr.empty() )
+        {
+          throw InvalidManifestDescriptorException(
+            "descriptor attribute name was malformed: `"
+            + std::string( attrsSubstr ) + "'" );
+        }
+    }
+  switch ( attrs.size() )
+    {
       case 1:
-        // We were given a relative path
-        this->path = maybeAttrs;
+        // Match against `name`, `pname`, or `attrName`
+        this->name = attrs[0];
         break;
       case 2:
-        // We were given an absolute path
-        this->absPath = maybeAttrs;
-        break;
-      case 3:
-        // We were given an abosolute path inside nixpkgs
-        this->absPath = maybeAttrs;
+        // We were definitely given a relative path
+        this->path = attrs;
         break;
       default:
-        // Someone gave us an absolute path for an input type we don't
-        // yet support i.e. there are too many path components.
-        throw InvalidManifestDescriptorException( "invalid attribute path: `"
-                                                  + maybeAttrs + "'" );
+        // Could be a relative or absolute path depending on the prefix
+        if ( attrs[0] == "legacyPackages" )
+          {
+            this->absPath = vectorMapOptional( attrs );
+          }
+        else if ( attrs.size() > 0 ) { this->path = attrs; }
+        else
+          {
+            // Someone gave us a path that's malformed e.g. it has zero length
+            throw InvalidManifestDescriptorException(
+              "invalid attribute path: `" + std::string( attrsSubstr ) + "'" );
+          }
         break;
     }
   if ( hasVersion )

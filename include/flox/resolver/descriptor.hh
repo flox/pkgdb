@@ -172,7 +172,7 @@ FLOX_DEFINE_EXCEPTION( ParseManifestDescriptorRawException,
  *
  * May either be defined as a set of attributes or with a string matching
  * this syntax:
- * `[<input>:]((<attr>.)*<attrName>|<pname>)[@(<semver>|=<version>)]`
+ * `[<input>:]((<attr>.)+<attrName>)|(<pname>|<attrName>|<name>)[@(<semver>|=<version>)]`
  */
 struct ManifestDescriptor
 {

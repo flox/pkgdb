@@ -403,6 +403,24 @@ merge_vectors( const std::vector<T> & lower, const std::vector<T> & higher )
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * @brief Constructs a @a std::vector<std::optional<T>> from a
+ * @a std::vector<T>.
+ */
+template<typename T>
+[[nodiscard]] std::vector<std::optional<T>>
+vectorMapOptional( const std::vector<T> & orig )
+{
+  std::vector<std::optional<T>> rsl;
+  for ( const T & val : orig )
+    {
+      rsl.emplace_back( std::make_optional<T>( val ) );
+    }
+  return rsl;
+}
+
+/* -------------------------------------------------------------------------- */
+
 }  // namespace flox
 
 

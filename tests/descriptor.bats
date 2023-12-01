@@ -279,3 +279,54 @@ setup_file() {
   assert_equal $(echo "$output" | jq -r -c '.subtrees') '["legacyPackages"]';
   assert_equal $(echo "$output" | jq -r '.semver') "1.2";
 }
+
+@test "parse descriptor 'nixpkgs:legacyPackages.*.linuxKernel.packages.linux_4_19@1.2'" {
+  # I know this package doesn't have this actual version, it's just an example of
+  # a deeply nested package set
+  query="nixpkgs:legacyPackages.*.linuxKernel.packages.linux_4_19@1.2"
+  run "$PKGDB" parse descriptor --to manifest "$query";
+  assert_success;
+  assert_equal $(echo "$output" | jq -r -c '.path') '["linuxKernel","packages","linux_4_19"]';
+  assert_equal $(echo "$output" | jq -r -c '.subtree') "legacyPackages";
+  assert_equal $(echo "$output" | jq -r '.input.id') "nixpkgs";
+  assert_equal $(echo "$output" | jq -r '.semver') "1.2";
+  unset output;
+  run "$PKGDB" parse descriptor --to query "$query";
+  assert_success;
+  assert_equal $(echo "$output" | jq -r -c '.relPath') '["linuxKernel","packages","linux_4_19"]';
+  assert_equal $(echo "$output" | jq -r -c '.subtrees') '["legacyPackages"]';
+  assert_equal $(echo "$output" | jq -r '.semver') "1.2";
+}
+
+@test "parse descriptor 'nixpkgs:'" {
+  query="nixpkgs:";
+  run "$PKGDB" parse descriptor --to manifest "$query";
+  assert_failure;
+  assert_output --partial "descriptor was missing a package name";
+  unset output;
+  run "$PKGDB" parse descriptor --to query "$query";
+  assert_failure;
+  assert_output --partial "descriptor was missing a package name";
+}
+
+@test "parse descriptor 'nixpkgs:.'" {
+  query="nixpkgs:.";
+  run "$PKGDB" parse descriptor --to manifest "$query";
+  assert_failure;
+  assert_output --partial "descriptor attribute name was malformed";
+  unset output;
+  run "$PKGDB" parse descriptor --to query "$query";
+  assert_failure;
+  assert_output --partial "descriptor attribute name was malformed";
+}
+
+@test "parse descriptor 'nixpkgs:..'" {
+  query="nixpkgs:..";
+  run "$PKGDB" parse descriptor --to manifest "$query";
+  assert_failure;
+  assert_output --partial "descriptor attribute name was malformed";
+  unset output;
+  run "$PKGDB" parse descriptor --to query "$query";
+  assert_failure;
+  assert_output --partial "descriptor attribute name was malformed";
+}
