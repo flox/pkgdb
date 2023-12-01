@@ -115,7 +115,7 @@ private:
 protected:
 
   /**
-   * @brief Manually set @a globalManifestPath.
+   * @brief Set @a globalManifestRaw by loading a manifest from `maybePath`.
    * Overrides any previous value before @a manifest is initialized.
    *
    *
@@ -127,7 +127,7 @@ protected:
   setGlobalManifestRaw( std::optional<std::filesystem::path> maybePath );
 
   /**
-   * @brief Manually set @a globalManifestPath.
+   * @brief Manually set @a globalManifestRaw.
    * Overrides any previous value before @a manifest is initialized.
    *
    *
@@ -152,7 +152,7 @@ protected:
   initGlobalManifest( GlobalManifestRaw manifestRaw );
 
   /**
-   * @brief Manually set @a manifestPath.
+   * @brief Set @a manifestRaw by loading a manifest from @a `maybePath`.
    *
    * Overrides any previous value before @a manifest is initialized.
    *
@@ -164,7 +164,7 @@ protected:
   setManifestRaw( std::optional<std::filesystem::path> maybePath );
 
   /**
-   * @brief Manually set @a manifestPath.
+   * @brief Manually set @a manifestRaw.
    *
    * Overrides any previous value before @a manifest is initialized.
    *
@@ -179,7 +179,7 @@ protected:
   /**
    * @brief Initialize the @a manifest member variable.
    *
-   * Creates a @a flox::resolver::EnvironmentManifest from @a manifestPath
+   * Creates a @a flox::resolver::EnvironmentManifest from @a manifestRaw
    * stored in the current instance.
    *
    * This function exists so that child classes can override how their manifest
@@ -189,7 +189,8 @@ protected:
   initManifest( ManifestRaw manifestRaw );
 
   /**
-   * @brief Set the @a lockfilePath member variable.
+   * @brief Set the @a lockfilePath member variable by loading a lockfile from
+   * `path`.
    *
    * @throws @a EnvironmentMixinException if called after @a lockfile is
    * initialized, as it is no longer allowed to change the lockfile.
@@ -207,8 +208,7 @@ protected:
   setLockfileRaw( LockfileRaw lockfileRaw );
 
   /**
-   * @brief Initialize a @a flox::resolver::Lockfile from @a lockfilePath stored
-   * in the current instance.
+   * @brief Initialize a @a flox::resolver::Lockfile from @a lockfileRaw.
    *
    * If @a lockfilePath is not set return an empty @a std::optional.
    */
@@ -259,13 +259,6 @@ public:
   const EnvironmentManifest &
   getManifest();
 
-  // /** @brief Get the filesystem path to the lockfile ( if any ). */
-  // [[nodiscard]] const std::optional<std::filesystem::path> &
-  // getLockfilePath() const
-  // {
-  //   return this->lockfilePath;
-  // }
-
   /**
    * @brief Lazily initialize and return the @a lockfile.
    *
@@ -279,13 +272,16 @@ public:
   /**
    * @brief Laziliy initialize and return the @a environment.
    *
-   * The member variable @a manifest or @a manifestPath must be set for
-   * initialization to succeed.
    * Member variables associated with the _global manifest_ and _lockfile_
    * are optional.
+   *
+   * @throws @a EnvironmentMixinException if the @a getManifest() returns an
+   * empty optional.
    */
   [[nodiscard]] Environment &
   getEnvironment();
+
+  /* -------------------------- argument parsers ---------------------------- */
 
   /**
    * @brief Sets the path to the global manifest file to load
@@ -350,30 +346,18 @@ protected:
 
   /**
    * @brief Initialize the @a globalManifest member variable.
-   *        This form enforces `--ga-registry` by disallowing `registry` in its
-   *        input, and injecting a hard coded `registry`.
-   *
-   * This may only be called once and must be called before
-   * `getEnvironment()` is ever used - otherwise an exception will be thrown.
-   *
-   * This function exists so that child classes can initialize their
-   * @a flox::resolver::EnvirontMixin base at runtime without accessing
-   * private member variables.
+   *        When `--ga-registry` is set it enforces a GA compliant manifest by
+   *        disallowing `registry` in its input,
+   *        and injects a hard coded `registry`.
    */
   GlobalManifest
   initGlobalManifest( GlobalManifestRaw manifestRaw ) override;
 
   /**
    * @brief Initialize the @a manifest member variable.
-   *        This form enforces `--ga-registry` by disallowing `registry` in its
-   *        input, and injecting a hard coded `registry`.
-   *
-   * This may only be called once and must be called before
-   * `getEnvironment()` is ever used - otherwise an exception will be thrown.
-   *
-   * This function exists so that child classes can initialize their
-   * @a flox::resolver::EnvirontMixin base at runtime without accessing
-   * private member variables.
+   *        When `--ga-registry` is set it enforces a GA compliant manifest by
+   *        disallowing `registry` in its input,
+   *        and injects a hard coded `registry`.
    */
   EnvironmentManifest
   initManifest( ManifestRaw manifestRaw ) override;
@@ -389,17 +373,6 @@ public:
    */
   argparse::Argument &
   addGARegistryOption( argparse::ArgumentParser & parser );
-
-  // /**
-  //  * @brief Lazily initialize and return the @a globalManifest.
-  //  *
-  //  * If @a globalManifest is set simply return it.
-  //  * If @a globalManifest is unset, but @a globalManifestPath is set then
-  //  * load from the file.
-  //  */
-  // [[nodiscard]] const std::optional<GlobalManifest> &
-  // getGlobalManifest() override;
-
 
 }; /* End class `GAEnvironmentMixin' */
 
