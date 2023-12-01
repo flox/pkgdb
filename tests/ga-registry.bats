@@ -148,6 +148,7 @@ setup_file() {
   assert_success;
 }
 
+
 # ---------------------------------------------------------------------------- #
 
 # bats test_tags=manifest:ga-registry, lock:ga-registry
