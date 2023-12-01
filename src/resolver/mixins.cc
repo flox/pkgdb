@@ -228,6 +228,7 @@ EnvironmentMixin::initGlobalManifest( GlobalManifestRaw manifestRaw )
   return GlobalManifest( std::move( manifestRaw ) );
 }
 
+
 /* -------------------------------------------------------------------------- */
 
 EnvironmentManifest
