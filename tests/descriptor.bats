@@ -346,3 +346,47 @@ setup_file() {
   assert_failure;
   assert_output --partial "descriptor attribute name was malformed";
 }
+
+@test "parse descriptor 'nixpkgs:*.foo'" {
+  query="nixpkgs:*.foo";
+  run "$PKGDB" parse descriptor --to manifest "$query";
+  assert_failure;
+  assert_output --partial "globs are only allowed to replace entire system names";
+  unset output;
+  run "$PKGDB" parse descriptor --to query "$query";
+  assert_failure;
+  assert_output --partial "globs are only allowed to replace entire system names";
+}
+
+@test "parse descriptor 'nixpkgs:*.foo.bar'" {
+  query="nixpkgs:*.foo.bar";
+  run "$PKGDB" parse descriptor --to manifest "$query";
+  assert_failure;
+  assert_output --partial "globs are only allowed to replace entire system names";
+  unset output;
+  run "$PKGDB" parse descriptor --to query "$query";
+  assert_failure;
+  assert_output --partial "globs are only allowed to replace entire system names";
+}
+
+@test "parse descriptor 'nixpkgs:packages.foo.*'" {
+  query="nixpkgs:packages.foo.*";
+  run "$PKGDB" parse descriptor --to manifest "$query";
+  assert_failure;
+  assert_output --partial "globs are only allowed to replace entire system names";
+  unset output;
+  run "$PKGDB" parse descriptor --to query "$query";
+  assert_failure;
+  assert_output --partial "globs are only allowed to replace entire system names";
+}
+
+@test "parse descriptor 'nixpkgs:packages.foo.b*ar'" {
+  query='nixpkgs:packages.foo.b*ar';
+  run "$PKGDB" parse descriptor --to manifest "$query";
+  assert_failure;
+  assert_output --partial "globs are only allowed to replace entire system names";
+  unset output;
+  run "$PKGDB" parse descriptor --to query "$query";
+  assert_failure;
+  assert_output --partial "globs are only allowed to replace entire system names";
+}

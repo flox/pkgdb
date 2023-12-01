@@ -490,40 +490,41 @@ ManifestDescriptorRaw::ManifestDescriptorRaw(
         "descriptor was missing a package name" );
     }
   auto attrsSubstr = descriptor.substr( cursor, attrsEndIdx - cursor );
-  std::vector<std::string> attrs = splitAttrPath( attrsSubstr );
+  auto attrsWithHandledGlobs
+    = maybeSplitAttrPathGlob( std::string( attrsSubstr ) );
+  auto attrsMaybeContainingGlobs = splitAttrPath( attrsSubstr );
   // Guard against `input:.` e.g. attrpaths with empty components
-  for ( auto & attr : attrs )
+  for ( auto & attr : attrsWithHandledGlobs )
     {
-      if ( attr.empty() )
+      if ( attr.has_value() && attr.value().empty() )
         {
           throw InvalidManifestDescriptorException(
             "descriptor attribute name was malformed: `"
             + std::string( attrsSubstr ) + "'" );
         }
     }
-  switch ( attrs.size() )
+  // Handle the attribute path provided by the user
+  switch ( attrsWithHandledGlobs.size() )
     {
       case 1:
         // Match against `name`, `pname`, or `attrName`
-        this->name = attrs[0];
+        this->name = validatedSingleAttr( attrsWithHandledGlobs );
         break;
       case 2:
         // We were definitely given a relative path
-        this->path = attrs;
+        this->path = validatedRelativePath( attrsWithHandledGlobs,
+                                            attrsMaybeContainingGlobs );
         break;
       default:
         // Could be a relative or absolute path depending on the prefix
-        if ( ( attrs[0] == "legacyPackages" ) || ( attrs[0] == "packages" ) )
+        if ( isAbsolutePath( attrsWithHandledGlobs ) )
           {
-            this->absPath = vectorMapOptional( attrs );
+            this->absPath = validatedAbsolutePath( attrsWithHandledGlobs );
           }
-        else if ( attrs.size() > 0 ) { this->path = attrs; }
         else
           {
-            // Someone gave us a path that's malformed e.g. it has zero length
-            // Note that this _should_ be unreachable
-            throw InvalidManifestDescriptorException(
-              "invalid attribute path: `" + std::string( attrsSubstr ) + "'" );
+            this->path = validatedRelativePath( attrsWithHandledGlobs,
+                                                attrsMaybeContainingGlobs );
           }
         break;
     }
@@ -532,6 +533,88 @@ ManifestDescriptorRaw::ManifestDescriptorRaw(
       cursor        = attrsEndIdx + 1;
       this->version = std::string( descriptor.substr( cursor ) );
     }
+}
+
+/* -------------------------------------------------------------------------- */
+
+std::optional<std::string>
+validatedSingleAttr( const AttrPathGlob & attrs )
+{
+  if ( attrs[0].has_value() ) { return attrs[0]; }
+  throw InvalidManifestDescriptorException(
+    "globs are only allowed to replace entire system names: `"
+    + displayableGlobbedPath( attrs ) + "'" );
+}
+
+bool
+globInAttrName( const AttrPathGlob & attrs )
+{
+  for ( const std::optional<std::string> & attr : attrs )
+    {
+      if ( attr.has_value()
+           && ( std::find( attr.value().begin(), attr.value().end(), '*' )
+                != attr.value().end() ) )
+        {
+          return true;
+        }
+    }
+  return false;
+}
+
+std::vector<std::string>
+validatedRelativePath( const AttrPathGlob &             attrs,
+                       const std::vector<std::string> & strings )
+{
+  // Don't allow globs in relative paths. Relative paths don't contain
+  // the system name, so there's no reason for a glob to be here at all.
+  bool containsGlobbedAttr
+    = std::find( attrs.begin(), attrs.end(), std::nullopt ) != attrs.end();
+  if ( containsGlobbedAttr )
+    {
+      throw InvalidManifestDescriptorException(
+        "globs are only allowed to replace entire system names: `"
+        + displayableGlobbedPath( attrs ) + "'" );
+    }
+  else if ( globInAttrName( attrs ) )
+    {
+      throw InvalidManifestDescriptorException(
+        "globs are only allowed to replace entire system names: `"
+        + displayableGlobbedPath( attrs ) + "'" );
+    }
+  else if ( attrs.size() < 2 )
+    {
+      throw InvalidManifestDescriptorException(
+        "relative paths must contain at least 2 attributes" );
+    }
+  return strings;
+}
+
+AttrPathGlob
+validatedAbsolutePath( const AttrPathGlob & attrs )
+{
+  // We've already checked that the path is absolute, don't need to check the
+  // prefix
+  auto nGlobs       = std::count( attrs.begin(), attrs.end(), std::nullopt );
+  bool tooManyGlobs = nGlobs > 1;
+  bool systemNotGlobbed = attrs[1] != std::nullopt;
+  if ( tooManyGlobs || globInAttrName( attrs )
+       || ( ( nGlobs == 1 ) && systemNotGlobbed ) )
+    {
+      throw InvalidManifestDescriptorException(
+        "globs are only allowed to replace entire system names: `"
+        + displayableGlobbedPath( attrs ) + "'" );
+    }
+  return attrs;
+}
+
+bool
+isAbsolutePath( const AttrPathGlob & attrs )
+{
+  if ( attrs.size() < 3 ) { return false; }
+  auto                  maybePrefix      = attrs[0];
+  std::set<std::string> absolutePrefixes = { "legacyPackages", "packages" };
+  return ( maybePrefix.has_value()
+           && absolutePrefixes.contains( maybePrefix.value() ) );
 }
 
 /* -------------------------------------------------------------------------- */

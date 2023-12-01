@@ -22,6 +22,7 @@
 #include <nlohmann/json.hpp>
 
 #include "flox/core/exceptions.hh"
+#include "flox/core/types.hh"
 
 
 /* -------------------------------------------------------------------------- */
@@ -418,6 +419,14 @@ vectorMapOptional( const std::vector<T> & orig )
     }
   return rsl;
 }
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief Convert a @a AttrPathGlob to a string for display.
+ */
+std::string
+displayableGlobbedPath( const AttrPathGlob & attrs );
 
 /* -------------------------------------------------------------------------- */
 
