@@ -264,6 +264,22 @@ setup_file() {
   assert_equal $(echo "$output" | jq -r '.semver') "1.2";
 }
 
+@test "parse descriptor 'myflake:packages.*.hello@1.2'" {
+  query="myflake:packages.*.hello@1.2"
+  run "$PKGDB" parse descriptor --to manifest "$query";
+  assert_success;
+  assert_equal $(echo "$output" | jq -r -c '.path') '["hello"]';
+  assert_equal $(echo "$output" | jq -r -c '.subtree') "packages";
+  assert_equal $(echo "$output" | jq -r '.input.id') "myflake";
+  assert_equal $(echo "$output" | jq -r '.semver') "1.2";
+  unset output;
+  run "$PKGDB" parse descriptor --to query "$query";
+  assert_success;
+  assert_equal $(echo "$output" | jq -r -c '.relPath') '["hello"]';
+  assert_equal $(echo "$output" | jq -r -c '.subtrees') '["packages"]';
+  assert_equal $(echo "$output" | jq -r '.semver') "1.2";
+}
+
 @test "parse descriptor 'nixpkgs:legacyPackages.*.packageset.hello@1.2'" {
   query="nixpkgs:legacyPackages.*.packageset.hello@1.2"
   run "$PKGDB" parse descriptor --to manifest "$query";

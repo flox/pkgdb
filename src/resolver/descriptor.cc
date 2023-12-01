@@ -476,7 +476,7 @@ ManifestDescriptorRaw::ManifestDescriptorRaw(
   size_t attrsEndIdx;
   bool   hasVersion = false;
   if ( auto versionSepIdx
-       = descriptor.find_first_of( ManifestDescriptorRaw::versionSigil );
+       = descriptor.find( ManifestDescriptorRaw::versionSigil );
        versionSepIdx != std::string_view::npos )
     {
       attrsEndIdx = versionSepIdx;
@@ -513,7 +513,7 @@ ManifestDescriptorRaw::ManifestDescriptorRaw(
         break;
       default:
         // Could be a relative or absolute path depending on the prefix
-        if ( attrs[0] == "legacyPackages" )
+        if ( ( attrs[0] == "legacyPackages" ) || ( attrs[0] == "packages" ) )
           {
             this->absPath = vectorMapOptional( attrs );
           }
@@ -521,6 +521,7 @@ ManifestDescriptorRaw::ManifestDescriptorRaw(
         else
           {
             // Someone gave us a path that's malformed e.g. it has zero length
+            // Note that this _should_ be unreachable
             throw InvalidManifestDescriptorException(
               "invalid attribute path: `" + std::string( attrsSubstr ) + "'" );
           }
