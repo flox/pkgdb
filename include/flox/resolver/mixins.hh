@@ -72,9 +72,6 @@ private:
   /** Path to project level manifest. ( required ) */
   std::optional<std::filesystem::path> manifestPath;
 
-  // /** Path to project's lockfile ( if any ). */
-  // std::optional<std::filesystem::path> lockfilePath;
-
   /* ----------------------------- lazy fields ------------------------------ */
 
 
