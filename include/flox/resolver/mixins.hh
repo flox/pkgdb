@@ -148,7 +148,7 @@ protected:
    * This function exists so that child classes can change how their global
    * manifest is initialized.
    */
-  virtual GlobalManifest
+  [[nodiscard]] virtual GlobalManifest
   initGlobalManifest( GlobalManifestRaw manifestRaw );
 
   /**
@@ -185,7 +185,7 @@ protected:
    * This function exists so that child classes can override how their manifest
    * is initialized.
    */
-  virtual EnvironmentManifest
+  [[nodiscard]] virtual EnvironmentManifest
   initManifest( ManifestRaw manifestRaw );
 
   /**
@@ -212,11 +212,11 @@ protected:
    *
    * If @a lockfilePath is not set return an empty @a std::optional.
    */
-  virtual Lockfile
+  [[nodiscard]] virtual Lockfile
   initLockfile( LockfileRaw lockfileRaw );
 
 
-  const std::optional<LockfileRaw> &
+  [[nodiscard]] const std::optional<LockfileRaw> &
   getLockfileRaw()
   {
     return this->lockfileRaw;
@@ -240,7 +240,7 @@ public:
    * If @a globalManifest is unset, try to initialize it using
    * @a initGlobalManifest().
    */
-  const std::optional<GlobalManifest>
+  [[nodiscard]] const std::optional<GlobalManifest>
   getGlobalManifest();
 
   /** @brief Get the filesystem path to the manifest ( if any ). */
@@ -256,7 +256,7 @@ public:
    * If @a manifest is set simply return it.
    * If @a manifest is unset, initialize it using @a initManifest().
    */
-  const EnvironmentManifest &
+  [[nodiscard]] const EnvironmentManifest &
   getManifest();
 
   /**
@@ -266,7 +266,7 @@ public:
    * If @a lockfile is unset, but @a lockfilePath is set then
    * load from the file.
    */
-  const std::optional<Lockfile> &
+  [[nodiscard]] const std::optional<Lockfile> &
   getLockfile();
 
   /**
@@ -350,7 +350,7 @@ protected:
    *        disallowing `registry` in its input,
    *        and injects a hard coded `registry`.
    */
-  GlobalManifest
+  [[nodiscard]] GlobalManifest
   initGlobalManifest( GlobalManifestRaw manifestRaw ) override;
 
   /**
@@ -359,7 +359,7 @@ protected:
    *        disallowing `registry` in its input,
    *        and injects a hard coded `registry`.
    */
-  EnvironmentManifest
+  [[nodiscard]] EnvironmentManifest
   initManifest( ManifestRaw manifestRaw ) override;
 
 
