@@ -125,7 +125,6 @@ SearchCommand::initEnvironment()
 {
   /* Init global manifest. */
 
-
   if ( auto path = this->params.getGlobalManifestPath(); path.has_value() )
     {
       this->setGlobalManifestRaw( *path );
